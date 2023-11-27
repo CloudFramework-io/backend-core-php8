@@ -10,7 +10,7 @@ class API extends RESTful
     {
 
         /** @var Firebase $firebase */
-        $firebase = $this->core->loadClass('Firebase',['https://cloudframework-io.firebaseio.com/','AAAACyO8RKY:APA91bH_1CIIf22FZLiDdnQqJBZtwt-hCrCc89uKwsqoK9KD7MIvc4Yxg2QzJb9FuWjUjt4q6pIpXqFxUkEgj3nhDBIuwf8vXjtT69KuYgNpTbTl19xKS3rybcMGqsRUHU17cBoPdJQC']);
+        $firebase = $this->core->loadClass('Firebase',['https://cloudframework-io.firebaseio.com/','***********']);
         if($firebase->error) return($this->setErrorFromCodelib('system-error',$firebase->errorMsg));
 
         // --- storing an array ---
