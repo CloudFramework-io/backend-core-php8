@@ -1,0 +1,24 @@
+{
+  "name": "cloudframework-io/backend-core-php8",
+  "keywords": ["appengine", "google", "framework", "sql", "datastore", "nosql","mysql","mongo","gcp","bigquery","gae","cloudframwork","api","backend","kubernets"],
+  "description": "CLOUDRAMEWORK PHP8 CORE FRAMEWORK TO DEVELOP BACKEND APIs and SCRIPTs optimized for APPENGINE, FUNCTIONS, KUBERNETS and other server technologies",
+  "type":"library",
+  "minimum-stability": "stable",
+  "license": "MIT",
+  "require": {
+    "google/cloud-datastore": "^1.13",
+    "google/cloud-storage": "^1.25",
+    "google/cloud-logging": "^1.22",
+    "google/apiclient": "^2.12",
+    "google/cloud-tasks": "^1.9",
+    "google/cloud-bigquery": "^1.23",
+    "google/cloud-secret-manager": "^1.7",
+    "zbateson/mail-mime-parser": "^2.1",
+    "google/cloud-pubsub": "^1.34"
+  },
+  "authors": [
+    { "name": "Héctor López", "email": "hl@cloudframework.io"},
+    { "name": "Fran Herrera", "email": "fran@cloudframework.io"},
+    { "name": "Adrian Martínez", "email": "am@cloudframework.io"}
+  ]
+}
