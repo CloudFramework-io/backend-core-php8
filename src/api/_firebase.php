@@ -2,7 +2,7 @@
 class API extends RESTful
 {
     const DEFAULT_URL = 'https://cloudframework-io.firebaseio.com/';
-    const DEFAULT_TOKEN = 'AIzaSyBf7CS96KDztQPWCpUhNcs1wvhpn0tKtds';
+    const DEFAULT_TOKEN = '*******';
     const DEFAULT_PATH = '/firebase/example';
 
 
