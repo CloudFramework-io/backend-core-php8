@@ -24,6 +24,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         /** @var DatastoreClient|null  */
         var $datastore = null;              // DatastoreClient
         var $error = false;                 // When error true
+        var $errorCode = 503;               // Default Error Code
         var $errorMsg = [];                 // When error array of messages
         var $options = [];
         var $entity_name = null;
@@ -180,6 +181,29 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
                     //$i = strtolower($i);  // Let's work with lowercase
 
+                    if($value && preg_match('/(\||^)unique(\||$)/', $this->schema['props'][$_key][2]??'')) {
+                        $_search = $this->fetchAll('__key__',[$_key=>$value]);
+                        if($this->error) return;
+                        if($_search) {
+
+                            $_id = $row['KeyId']??($row['KeyName']??null);
+                            $_key_name =  $_id?(($row['KeyId']??'')?'KeyId':'KeyName'):'';
+                            if(!$_id) {
+                                $this->errorCode = 400;
+                                return $this->addError("The value of the unique field [$_key] already exist [".count($_search)."] entities");
+                            }
+                            else {
+                                if(count($_search)>1) {
+                                    $this->errorCode = 400;
+                                    return $this->addError("The value of the unique field [$_key] already exist in other entities");
+                                }
+                                elseif($_search[0][$_key_name]!=$_id)  {
+                                    $this->errorCode = 400;
+                                    return $this->addError("The value of the unique field [$_key] already exist in other entity");
+                                }
+                            }
+                        }
+                    }
                     // If the key or keyname is passed instead the schema key|keyname let's create
                     if (strtolower($_key) == 'key' || strtolower($_key) == 'keyid' || strtolower($_key) == 'keyname') {
                         $this->schema['props'][$_key][0] = $_key;
