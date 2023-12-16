@@ -9,6 +9,7 @@
  * X-Mandrill-Signature: mYCSmflkBKULrfItXfIsmmpht8Q=
  * @package CoreClasses
  */
+require_once $this->system->root_path.'/vendor/mandrill/mandrill/src/Mandrill.php'; //Not required with Composer
 class WorkFlows
 {
 
@@ -30,13 +31,10 @@ class WorkFlows
      * @param Core $core
      * @param array $model where [0] is the table name and [1] is the model ['model'=>[],'mapping'=>[], etc..]
      */
-    function __construct(Core7 &$core, $params = [])
+    function __construct(Core7 &$core, CFOs &$cfos)
     {
         $this->core = $core;
-        //region Create a
-        require_once $this->core->system->root_path.'/vendor/mandrill/mandrill/src/Mandrill.php'; //Not required with Composer
-
-        if(($params['mandrill_api_key']??null)) $this->setMandrillApiKey($params['mandrill_api_key']);
+        $this->cfos = $cfos;
     }
 
     /**
@@ -45,7 +43,9 @@ class WorkFlows
      * @throws Mandrill_Error
      */
     public function setMandrillApiKey($apiKey) {
-        $this->mandrill = new Mandrill($apiKey);
+        if(!$this->mandrill)
+            $this->mandrill = new Mandrill($apiKey);
+        else $this->mandrill->apikey = $apiKey;
     }
 
     /**
@@ -267,33 +267,22 @@ class WorkFlows
 
     /**
      * Retrieve an email template from the ERP
-     * @param CFOs $cfos
      * @param string $slug
      * @param string $type
      */
-    public function getERPEmailTemplate(CFOs &$cfos,string $slug,string $type='Mandrill') {
-
-        $this->cfos = $cfos;
-
-
+    public function getERPEmailTemplate(string $slug,string $type='Mandrill') {
+        if(!$this->mandrill) return $this->addError('getERPEmailTemplate(...) has been call without calling previously setMandrillApiKey(...)');
         $dsTemplate = $this->cfos->ds('CloudFrameWorkEmailTemplates')->fetchOneByKey($slug);
         if($this->cfos->ds('CloudFrameWorkEmailTemplates')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailTemplates')->errorMsg);
-
-        if($type=='Mandrill' && is_object($this->mandrill)) {
-            if(!$dsTemplate) {
+        if($type=='Mandrill') {
+            //if the template does no exist in CloudFrameWorkEmailTemplates or the DateUpdating is older than 24h reload from mandrill
+            if(!$dsTemplate || date('Y-m-d', strtotime($dsTemplate['DateUpdating']. ' + 1 days')) < date('Y-m-d')) {
                 if (!$mandrillTemplate = $this->getMandrillTemplate($slug)) return;
-                $template = $this->getEntityFromMandrillTemplate([], $mandrillTemplate);
-                $dsTemplate = $this->cfos->ds('CloudFrameWorkEmailTemplates')->createEntities($template)[0] ?? null;
+                $entity = $this->getEntityTransformedWithMandrillTemplateData($dsTemplate, $mandrillTemplate);
+                $dsTemplate = $this->cfos->ds('CloudFrameWorkEmailTemplates')->createEntities($entity)[0] ?? null;
                 if ($this->cfos->ds('CloudFrameWorkEmailTemplates')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailTemplates')->errorMsg);
-//                $template = $this->getEntityFromMandrillTemplate($dsTemplate,$mandrillTemplate);
-//                if($template['DateUpdating'] != $dsTemplate['DateUpdating']) {
-//                    $this->cfos->ds('CloudFrameWorkEmailTemplates')->createEntities($template);
-//                    if($this->cfos->ds('CloudFrameWorkEmailTemplates')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailTemplates')->errorMsg);
-//                }
-//                $dsTemplate = $template;
             }
         }
-
         return $dsTemplate;
 
     }
@@ -302,13 +291,12 @@ class WorkFlows
 
     /**
      * Retrieve an email template from the ERP
-     * @param CFOs $cfos
      * @param string $slug
      * @param string $type
      */
-    public function getERPEmailMessage(CFOs &$cfos,string $id,string $type='Mandrill',$update_processing=null)
+    public function getERPEmailMessage(string $id,string $type='Mandrill',$update_processing=null)
     {
-        $this->cfos = $cfos;
+        if(!$this->mandrill) return $this->addError('getERPEmailMessage(...) has been call without calling previously setMandrillApiKey(...)');
         $dsEmeail = $this->cfos->ds('CloudFrameWorkEmails')->fetchOne('*',['EngineId'=>$id])[0]??null;
         if($this->cfos->ds('CloudFrameWorkEmails')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmails')->errorMsg);
         if($type=='Mandrill' && is_object($this->mandrill)) {
@@ -324,8 +312,8 @@ class WorkFlows
         return $dsEmeail;
     }
 
-        /**
-     * @param CFOs $cfo class to hangle ERP CFO models
+    /**
+     * Send an email using CLOUDFRAMEWORK CLOUD-CHANNELS/EMAIL
      * @param array $params {
      *    Parameters by reference to send an email.
      *      - slug string Template Id to send
@@ -344,10 +332,12 @@ class WorkFlows
      *      - attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
      * }
      * @param string $type [optional] has to value: Mandrill
+     * @param string $linked_object [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedObject
+     * @param string $linked_id [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedId
      */
-    public function sendERPEmail(CFOs &$cfos,array &$params,string $type='Mandrill') {
-        if($type!='Mandrill') return $this->addError('sendEmail($type,array $params) only $type="Mandrill" is supported');
-        $this->cfos = $cfos;
+    public function sendERPEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='') {
+        if($type!='Mandrill') return $this->addError('sendERPEmail(...) has received a worng $type. [Mandrill] is the valid value');
+        if(!$this->mandrill) return $this->addError('sendERPEmail(...) has been call without calling previously setMandrillApiKey(...)');
         switch ($type) {
             case "Mandrill":
                 if(!$slug = $params['slug']??null) return $this->addError('sendEmail($params) missing slug in $params because the template does not have a default from email');
@@ -361,16 +351,16 @@ class WorkFlows
                 $reply_to = $params['reply_to']??null;
                 $bcc = $params['bcc']??null;
 
-                if(!$template = $this->getERPEmailTemplate($this->cfos,$slug)) return;
+                if(!$template = $this->getERPEmailTemplate($slug)) return;
                 $cat = $params['cat']??($template['Cat']??'NOT-DEFINED');
                 $html = $this->renderMandrillTemplate($slug,$data);
 
                 if(!is_array($to))
-                    $to = explode(',',$to??'');
+                    $to = array_filter(explode(',',$to??''));
                 if(!is_array($tags))
-                    $tags = explode(',',$tags??'');
+                    $tags = array_filter(explode(',',$tags??''));
                 if(!is_array($cc))
-                    $cc = explode(',',$cc??'');
+                    $cc = array_filter(explode(',',$cc??''));
                 $submission = [
                     "Cat"=>$cat,
                     "DateInsertion"=>'now',
@@ -385,6 +375,8 @@ class WorkFlows
                     "TemplateTXT"=>$template['TemplateTXT'],
                     "DateProcessing"=>null,
                     "StatusProcessing"=>'initiated',
+                    "LinkedObject"=>$linked_object?:null,
+                    "LinkedId"=>$linked_id?:null,
                     "JSONProcessing"=>['Reply-To'=>$reply_to,'bcc'=>$bcc,'TemplateVariables'=>$data,'Result'=>null],
                 ];
                 $dsSubmission = $this->cfos->ds('CloudFrameWorkEmailsSubmissions')->createEntities($submission)[0]??null;
@@ -461,10 +453,10 @@ class WorkFlows
         $from_name = $params['name']??($template['DefaultFromName']??'');
 
         if(!$emails_to = $params['to']??null) return $this->addError('sendMandrillEmail($params) missing to in $params');
-        if(!is_array($emails_to)) $emails_to = explode(',',$emails_to);
+        if(!is_array($emails_to)) $emails_to = array_filter(explode(',',$emails_to));
 
         $emails_cc = $params['cc']??[];
-        if($emails_cc && !is_array($emails_cc)) $emails_cc = explode(',',$emails_cc);
+        if($emails_cc && !is_array($emails_cc)) $emails_cc = array_filter(explode(',',$emails_cc));
 
         $email_bcc = $params['bcc']??null;
         $reply_to = $params['reply_to']??null;
@@ -569,7 +561,7 @@ class WorkFlows
      * @param array $template
      * @return array value of $entity modified with template variables
      */
-    private function getEntityFromMandrillTemplate(array $entity,array $template) {
+    private function getEntityTransformedWithMandrillTemplateData(array $entity, array $template) {
 
         $entity['KeyName']=$template['slug'];
         $entity['TemplateDescription']=$template['name'];
@@ -579,8 +571,10 @@ class WorkFlows
         $entity['DefaultFromEmail']=$template['publish_from_email'];
         $entity['DefaultFromName']=$template['publish_from_name'];
         $entity['PublishedDate']=$template['published_at'];
-        $entity['DateInsertion']=$template['created_at'];
-        $entity['DateUpdating']=substr($template['updated_at']??'',0,19);
+        $entity['TemplateUpdatedAt']=substr($template['updated_at']??'',0,19);
+        if(!isset($entity['DateInsertion']))
+            $entity['DateInsertion']=$template['created_at'];
+        $entity['DateUpdating']="now";
         $entity['Type']='Mandrill';
         $entity['TemplateHTML']=utf8_encode($template['publish_code']??'');
         $entity['TemplateTXT']=utf8_encode($template['publish_text']??'');

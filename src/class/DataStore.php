@@ -960,10 +960,9 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
          */
         function resetCache()
         {
-            if(!$this->useCache) return;
-            if ($this->cache === null) $this->initCache();
+            if ($this->cache === null) $this->cache = new CoreCache($this->core,'CF_DATASTORE');
             $this->cache_data = [];
-            $this->cache->set($this->entity_name . '_' . $this->namespace, $this->cache_data,null, $this->cacheSecretKey, $this->cacheSecretIV);
+            $this->cache->delete($this->entity_name . '_' . $this->namespace);
         }
 
         /**
@@ -1020,6 +1019,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 }
 
             }
+            $this->resetCache(); // Delete Cache for next queries..
             return $ret;
         }
 
@@ -1056,6 +1056,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 $this->setError($e->getMessage());
                 $this->addError('query');
             }
+            $this->resetCache(); // Delete Cache for next queries..
             return $ret;
         }
 

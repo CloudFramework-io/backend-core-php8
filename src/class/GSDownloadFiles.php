@@ -1,8 +1,8 @@
 <?php
 /**
- * CloudFramework Download GS Files v81.2311271 stored in Datastore tokens
+ * CloudFramework Download GS Files v74.0014 stored in Datastore tokens
  * author: hl@cloudframework.io
- * Based in "cloudframework-io/backend-core-php8": "^v81.2311271"
+ * Based in "cloudframework-io/appengine-php-core-7.4": "^v74.00143"
  * @package LabClasses
  */
 class GSDownloadFiles

@@ -1,6 +1,6 @@
 <?php
 /**
- * Core classes developed in ^PHP7.4 to be used to develop APIs, Scripts, Web Pages
+ * Core classes developed in ^PHP8.1 to be used to develop APIs, Scripts, Web Pages
  *
  * Core7 class is included in your APIs as $this->core and it includes objects
  * of other classes to facilitate your developments.
@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = 'v81.2311271';
+        var $_version = '8.1.1';  // 2023-12-16 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -4703,6 +4703,25 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
+         * Check if the URL passed exists
+         * @param string $url
+         * @return boolean
+         */
+        function urlExists(string $url)
+        {
+            $exists = true;
+            if(strpos($url,'http')!==0) $exists = false;
+            else {
+                $file_headers = @get_headers($url);
+                if(!$file_headers || strpos($file_headers[0]??'', '404') || strpos($file_headers[0]??'', '403')) {
+                    $exists = false;
+                }
+            }
+            return $exists;
+        }
+
+
+        /**
          * Returns a specific Header received in a API call
          * @param $str
          * @return mixed|string
@@ -5143,7 +5162,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
             // Reset $user variables
             $this->reset();
-            
+
             //region SET $user,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
             $tokenParts = explode('__',$token);
             if(count($tokenParts) != 3
@@ -5226,6 +5245,29 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             return true;
 
+        }
+
+        /**
+         * Update UserData in cache and in the Token of the user
+         * @return true|null
+         */
+        function updateERPUserDataInCache()
+        {
+            if(!$this->core->user->token) return($this->addError('WRONG_TOKEN_FORMAT','The user does not have any token'));
+            $tokenParts = explode('__',$this->core->user->token);
+            if(count($tokenParts) != 3
+                || !($namespace=$tokenParts[0])
+                || !($user_token=$tokenParts[1])
+                || !($key=$tokenParts[2]) )
+                return($this->addError('WRONG_TOKEN_FORMAT','The structure of the token is not right'));
+            //endregion
+
+            if($cache_data = $this->core->cache->get($namespace.'_'.$user_token)) {
+                $cache_data['data']['User'] = $this->data['User'];
+                $this->core->cache->set($namespace.'_'.$user_token,$cache_data);
+                $this->core->security->updateDSToken($this->token, $this->core->user->data['User'] );
+            }
+            return true;
         }
 
 
@@ -5335,6 +5377,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Get a user lang. 'en' default
+         * @return string
+         */
+        function isPortalUser()
+        {
+            return ($this->data['User']['PortalUser']??null)?true:false;
+        }
+
+        /**
          * Get de TimeZone of the user. UTC by default
          * @return string
          */
@@ -5438,6 +5489,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $api_namespace = 'cloudframework';
         var $api_user = 'user-unknown';
         var $api_lang = 'en';
+        var $api_creation_credentials = [];
         var $localize_files = null;
 
         function __construct(Core7 &$core)
@@ -5459,6 +5511,55 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->api_user = ($user)?:($this->core->user->id?:'user-unknown');
         }
 
+        /**
+         * Get the current default lang for localizations
+         * @return string
+         */
+        public function getDefaultLang() {
+            return $this->api_lang;
+        }
+
+        /**
+         * Get the current default lang for tags creation
+         * @return string
+         */
+        public function getDefaultCreationLang() {
+            return $this->api_lang;
+        }
+
+
+        /**
+         * Set default lang for localizations
+         * @param string $lang
+         */
+        public function setDefaultLang(string $lang) {
+            $this->api_lang = $lang;
+        }
+
+        /**
+         * Set credentials to create tags in the ERP
+         * @param array $lang
+         */
+        public function setCreationCredentials(array $credentials) {
+            $this->api_creation_credentials = $credentials;
+        }
+
+        /**
+         * Set default langs to convert on tags creation
+         * @param array $langs
+         */
+        public function setDefaultCreationToConvertLangs(array $langs) {
+            $this->api_creation_to_convert_langs = $langs;
+        }
+
+
+        /**
+         * Set default namespace for localizations
+         * @param string $namespace
+         */
+        public function setDefaultNamespace(string $namespace) {
+            $this->api_namespace = $namespace;
+        }
 
         /**
          * Get a Localization code from a localization file
@@ -5510,6 +5611,39 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
         }
 
+
+        /**
+         * Get a Localization code from a localization file
+         * @param string $tag the tag to translate with the pattern [{][$namepace:<namespace>,]<app_id>;<cat_id>;<tag_id>[;<subtag_id>][}]
+         * @param array $values
+         * @param bool $with_subtags
+         * @param string $namespace [optional]
+         * @return array|void
+         */
+        function createTags(string $tag, array $values, $with_subtags=false,$namespace='')
+        {
+
+            if(!$this->api_service) return $this->addError("Mising api_service. Use initLocalizationService()");
+            $parts = explode(';',trim($tag));
+            if(count($parts)!=3) return $this->addError("Wrong \$tag paramater. Use it with format [App;Cat;Tag]");
+            if(!$namespace) $namespace=$this->api_namespace?:'cloudframework';
+            if($with_subtags) {
+                $values = ['subtags'=>$values];
+            } else {
+                $values = ['langs'=>$values];
+            }
+            $url = $this->api_service."/{$namespace}/{$this->api_user}/apps/{$tag}?with_subtags=".(($with_subtags)?1:0);
+            $this->core->logs->add('Creating Localizations from API: '.$this->api_service."/{$namespace}/{$this->api_user}/apps/{$tag}",'localization_create_tag');
+            $localizations = $this->core->request->post_json_decode($url,$values,$this->api_creation_credentials,true);
+            if($this->core->request->error) {
+                $this->addError($this->core->request->errorMsg);
+                $this->core->request->reset();
+                return $localizations;
+            }
+            return $localizations['data'];
+        }
+
+
         /**
          * Get a Localization code from a localization file
          * @param string $tag the tag to translate with the pattern [{][$namepace:<namespace>,]<app_id>;<cat_id>;<tag_id>[;<subtag_id>][}]
@@ -5519,7 +5653,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         function getTag(string $tag, string $lang='', $namespace='')
         {
-            if(!strpos($tag,';')) return $tag;
+
+            if( !preg_match('/^[^;]+;[^;]+;[^;]+/',$tag))  return $tag;
             //delete {, } chars
             $tag = preg_replace('/({|})/','',trim($tag));
             if(!$namespace) $namespace=$this->api_namespace?:'cloudframework';
@@ -5529,6 +5664,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(strpos($tag,'$namespace:')===0 && strpos($tag,',')) {
                 list($namespace,$tag) = explode(',',$tag,2);
                 $namespace = str_replace('$namespace:','',$namespace);
+            }
+            // return tags with chars not valid
+            if(preg_match('/[^A-Z0-9a-z;_-]/',$tag) || !preg_match('/^[^;]+;[^;]+;[^;]+/',$tag)) {
+                return $tag;
             }
 
             //set $locFile
