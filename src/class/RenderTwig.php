@@ -204,7 +204,7 @@ if (!defined ("_RenderTwig_CLASS_") ) {
             }
             if(is_object($loader)) {
 
-                // Twig paramters
+                // Twig parameters
                 $params = array("debug" => (bool)$this->core->is->development());
                 if($this->core->config->get('twigCacheInMemory')) {
                     $spacename = ($this->config['twigCachePath'])?$this->config['twigCachePath']:$this->core->system->app_path;
