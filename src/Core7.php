@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.1.5';  // 2023-12-18 2
+        var $_version = '8.1.7';  // 2024-01-05 2
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -5178,10 +5178,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!$userData) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
             else {
                 $now = microtime(true);
+                $num_tokens = 0;
                 foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
                     if(($now - $tokenInfo['time']) > $this->expirationTime) {
                         unset($userData['tokens'][$tokenId]);
                         $updateCache = true;
+                    } else {
+                        $num_tokens++;
+                        if(!isset($userData['tokens'][$token]) && $num_tokens>=$this->maxTokens) {
+                            unset($userData['tokens'][$tokenId]);
+                            $updateCache = true;
+                        }
                     }
                 }
 
