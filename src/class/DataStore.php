@@ -3,6 +3,7 @@
 use Google\Cloud\Datastore\DatastoreClient;
 use Google\Cloud\Datastore\Key;
 use Google\Cloud\Datastore\Transaction;
+use Google\Cloud\Datastore\Query\Aggregation;
 
 if (!defined ("_DATASTORECLIENT_CLASS_") ) {
     define("_DATASTORECLIENT_CLASS_", TRUE);
@@ -947,6 +948,154 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
             return $ret;
         }
+
+        /**
+         * Execute a Datastore sum Query taking the following parameters
+         * @param string $field
+         * @param array $where
+         * @return integer|null If error it will return null
+         */
+        function sum(string $field , array $where = [])
+        {
+
+            //If the class has any error just return
+            if ($this->error) return false;
+
+            // Performance microtime
+            $time = microtime(true);
+            $this->core->__p->add('sum: '.$this->entity_name,  ' field:' . $field . ' where:' . $this->core->jsonEncode($where) , 'note');
+            $ret = null;
+            try {
+                $query = $this->datastore->query();
+                $query->kind($this->entity_name);
+
+                $bindings=[];
+                // Where construction
+                if (is_array($where)) {
+                    $i = 0;
+                    foreach ($where as $key => $value) {
+                        $comp = '=';
+                        if (preg_match('/[=><]/', $key)) {
+                            unset($where[$key]);
+                            if (strpos($key, '>=') === 0 || strpos($key, '<=') === 0 || strpos($key, '!=') === 0) {
+                                $comp = substr($key, 0, 2);
+                                $key = trim(substr($key, 2));
+                            } else {
+                                $comp = substr($key, 0, 1);
+                                $key = trim(substr($key, 1));
+                            }
+
+                            if (!array_key_exists($key, $where)) {
+                                $idkey = null;
+                                $where[$key . $idkey] = $value;
+                            } else {
+                                $idkey = "_2";
+                                $where[$key . $idkey] = $value;
+
+                            }
+                        }
+                        else {
+                            $idkey = null;
+                        }
+                        $fieldname = $key;
+
+                        // In the WHERE Conditions we have to transform date formats into date objects.
+                        // SELECT * FROM PremiumContracts WHERE PremiumStartDate >= DATETIME("2020-03-01T00:00:00z") AND PremiumStartDate <= DATETIME("2020-03-01T23:59:59z")
+                        if (array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['date', 'datetime', 'datetimeiso'])) {
+
+                            if(stripos($value,'now')!==false) $value = str_ireplace('now',date('Y-m-d'),$value);
+                            if (preg_match('/[=><]/', $value)) {
+                                if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
+                                    $comp = substr($value, 0, 2);
+                                    $value=substr($value,2);
+                                }
+                                else {
+                                    $comp = substr($value, 0, 1);
+                                    $value=substr($value,1);
+                                }
+
+                            }
+
+                            // Allow Smart date ranges where comp = '='
+                            if($comp=='=' && $value) {
+                                //apply filters
+                                if(strpos($value,'/')===false) {
+                                    $from = $value;
+                                    $to = $value;
+                                } else {
+                                    list($from,$to) = explode("/",$value,2);
+                                }
+                                if(strlen($from) == 4) {
+                                    $from.='-01-01 00:00:00';
+                                } elseif(strlen($from) == 7) {
+                                    $from.='-01 00:00:00';
+                                } elseif(strlen($from) == 10) {
+                                    $from.=' 00:00:00';
+                                }
+                                if(strlen($to) == 4) {
+                                    $to.='-12-31 23:59:59';
+                                } elseif(strlen($to) == 7) {
+                                    $to = date("Y-m-t 23:59:59", strtotime($to.'-01'));
+                                } elseif(strlen($to) == 10) {
+                                    $to.=' 23:59:59';
+                                }
+                                $query->filter($fieldname,'>=',new DateTime($from));
+                                $query->filter($fieldname,'<=',new DateTime($to));
+                            }
+                            else {
+                                if($value)
+                                    $query->filter($fieldname,$comp,new DateTime($value));
+                            }
+                        }
+                        else {
+
+                            //region IF field is integer transform value into integer
+                            if (is_string($value??'') && array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['integer'])) {
+                                $where[$key] = $value = intval($value);
+                            }
+                            //endregion
+
+                            //region IF SPECIAL SEARCH for values ending in % let's emulate a like string search
+                            if(is_string($value) && preg_match('/\%$/',$value) && strlen(trim($value))>1) {
+                                $value = preg_replace('/\%$/','',$value);
+                                $query->filter($fieldname,'>=',new DateTime($value));
+                                $value_to = $value.'z';  //122 = z
+                                $query->filter($fieldname,'<=',new DateTime($value_to));
+                            }
+                            //endregion
+                            //region IF value is ARRAY and the type is not list convert it into IN ARRAY
+                            elseif(is_array($value)){
+                                $query->filter($fieldname,'in',$value);
+                            }
+                            //endregion
+                            //region ELSE set normal to search
+                            else {
+                                $query->filter($fieldname,$comp,$value);
+                            }
+                            //endregion
+                        }
+                    }
+                }
+                $this->lastQuery = "sum({$field}) where ".json_encode($query->queryObject());
+
+                //region RUN $query->aggregation(Aggregation::sum($field)->alias('total')); AND return result
+                $_q = json_encode($query->queryObject());
+                $aggregationQuery = $query->aggregation(Aggregation::sum($field)->alias('total'));
+                /** @var Google\Cloud\Datastore\Query\AggregationQueryResult $res */
+                $res = $this->datastore->runAggregationQuery($aggregationQuery,['namespaceId'=>$this->namespace]);
+                if($this->debug)
+                    $this->core->logs->add($this->entity_name.".sum({$field}) [".(round(microtime(true)-$time,4))." secs]",'DataStore');
+                $ret=$res->get('total');
+                //endregion
+            }
+            catch (Exception $e) {
+                $this->setError($e->getMessage());
+                $this->addError('fetch');
+            }
+            $this->core->__p->add('sum: '.$this->entity_name, '', 'endnote');
+            return $ret;
+        }
+
 
         /**
          * Assign cache $result based on $key
