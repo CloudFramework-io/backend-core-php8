@@ -461,7 +461,7 @@ if (!defined ("_MYSQLI_CLASS_") ) {
 
             $joins = array();
             foreach ($values as $key => $value) {
-                if(strpos($value,'\\')) {
+                if($value && strpos($value,'\\')) {
                     $value = str_replace('\\','\\\\',$value);
                 }
                 $joins[] = $this->scapeValue($value);
@@ -488,6 +488,7 @@ if (!defined ("_MYSQLI_CLASS_") ) {
          * @return string
          */
         function scapeValue($value) {
+            if(!$value) return $value;
             if(is_object($this->_db))
                 return($this->_db->real_escape_string($value));
             else
