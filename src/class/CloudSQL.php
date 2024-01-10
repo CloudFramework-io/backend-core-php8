@@ -38,11 +38,12 @@ if (!defined ("_MYSQLI_CLASS_") ) {
     /**
      *  [$sql = $this->core->loadClass('CloudSQL')] Class to handle CloudSQL (mysql) interactions.
      *  Feel free to use a distribute it.
-     *  last-update 2021-11-17
+     *  last-update 2024-01-10
      * @package CoreClasses
      */
     class CloudSQL {
         // Base variables
+        var $_version = '202401101';
         var $_error=[];                      // Holds the last error
         var $_lastRes=false;                                        // Holds the last result set
         var $_lastQuery='';                                        // Holds the last result set
@@ -433,7 +434,6 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                 }
                 unset($args);
 
-
                 if(count($params) && count($params) != $n_percentsS) {
                     $this->setError("Number of %s ($n_percentsS) doesn't count match with number of arguments (".count($params)."). Query: $q -> ".print_r($params,true));
                     return(false);
@@ -469,12 +469,12 @@ if (!defined ("_MYSQLI_CLASS_") ) {
 
             // Execute replacements
             if($joins)foreach ($joins as $join) {
-                if(strpos($join,'$0')!=false) {
+                if($join && strpos($join,'$0')!=false) {
                     $join = str_replace('$0','__dollar_cero__',$join);
                     $q = preg_replace('/%s/',$join,$q,1);
                     $q = str_replace('__dollar_cero__','$0',$q);
                 } else {
-                    $q = preg_replace('/%s/',$join,$q,1);
+                    $q = preg_replace('/%s/',$join??'',$q,1);
                 }
             }
 
