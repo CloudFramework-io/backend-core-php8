@@ -792,13 +792,12 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             $this->core->__p->add('ds:fetchByKeys: '.$this->entity_name,  ' keys:' . $this->core->jsonEncode($keys),'note');
             if(!$keys) return;
             $ret = [];
-            if (!is_array($keys)) $keys = explode(',', $keys);
             $entities_keys = [];
             try {
                 foreach ($keys as $key) {
                     // force type TYPE_NAME if there is a field KeyName
                     if(isset($this->schema['data']['model']['KeyName'])) {
-                        $entities_keys[] = $this->datastore->key($this->entity_name, $key,['identifierType' => Key::TYPE_NAME,'namespaceId'=>$this->namespace]);
+                        $entities_keys[] = $this->datastore->key($this->entity_name, strval($key),['identifierType' => Key::TYPE_NAME,'namespaceId'=>$this->namespace]);
                     } else {
                         $entities_keys[] = $this->datastore->key($this->entity_name, $key,['namespaceId'=>$this->namespace]);
                     }
@@ -950,7 +949,8 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
 
         /**
-         * Execute a Datastore sum Query taking the following parameters
+         * Execute a Datastore aggregation sum Query over $field
+         *  * https://cloud.google.com/datastore/docs/aggregation-queries
          * @param string $field
          * @param array $where
          * @return integer|null If error it will return null
