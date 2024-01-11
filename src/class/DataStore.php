@@ -779,20 +779,24 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
         /**
          * Return entities by Keys
-         * @param $keys array|string if string can be values separated by ','. If array can be an array of string,integer elements
+         * @param array|string $keys  if string can be values separated by ','. If array can be an array of string,integer elements
          * @return array
          */
         function fetchByKeys($keys)
         {
+
+            //Validate $keys
+            if(!$keys) return $this->addError('fetchByKeys($keys) has received an empty value');
+            if(is_string($keys)) $keys = array_map('trim',explode(',',$keys));
 
             //Analyze execution time
             $time = microtime(true);
 
             //Global performance
             $this->core->__p->add('ds:fetchByKeys: '.$this->entity_name,  ' keys:' . $this->core->jsonEncode($keys),'note');
-            if(!$keys) return;
             $ret = [];
             $entities_keys = [];
+            if(is_string($keys)) _printe($keys);
             try {
                 foreach ($keys as $key) {
                     // force type TYPE_NAME if there is a field KeyName
