@@ -4074,7 +4074,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                             // This could be improved becuase the coding will produce 1738 format and 3986 format
                             $route .= http_build_query([$key => $value]) . '&';
                         } else {
-                            $route .= $key . '=' . rawurlencode($value) . '&';
+                            $route .= $key . '=' . rawurlencode($value??'') . '&';
                         }
                     }
                 } else {
@@ -4410,7 +4410,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                             // This could be improved becuase the coding will produce 1738 format and 3986 format
                             $route .= http_build_query([$key => $value]) . '&';
                         } else {
-                            $route .= $key . '=' . rawurlencode($value) . '&';
+                            $route .= $key . '=' . rawurlencode($value??'') . '&';
                         }
                     }
                 } else {
@@ -4664,7 +4664,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if (strlen($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
                 $params['email'] = $email;
             if ($this->core->config->get('CloudServiceLog')) {
-                $ret = $this->core->jsonDecode($this->get('queue/cf_logs/' . urlencode($app) . '/' . urlencode($type), $params, 'POST'), true);
+                $ret = $this->core->jsonDecode($this->get('queue/cf_logs/' . urlencode($app??'') . '/' . urlencode($type??''), $params, 'POST'), true);
                 if (is_array($ret) && !$ret['success']) $this->addError($ret);
             } else {
                 $ret = 'Sending to LogPath not yet implemented';
@@ -4785,6 +4785,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         // URL of the API service to verify token
         const APIServices = 'https://api.cloudframework.io/core/signin';
+        const APIPortalServices = 'https://api.cloudframework.io/erp/portal-users/2.0';
 
         function __construct(Core7 &$core)
         {
@@ -5217,6 +5218,111 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $userData['tokens'][$token] = ['error'=>null,'time'=>microtime(true)];
                 $cfUserInfo = $this->core->request->post_json_decode(
                     $this::APIServices.'/'.$namespace.'/check?_update&from_core7_user_object'
+                    ,['Fingerprint'=>$this->core->system->getRequestFingerPrint()]
+                    ,['X-WEB-KEY'=>'Core7UserObject'
+                    ,'X-DS-TOKEN'=>$token
+                    ,'X-EXTRA-INFO'=>$integration_key
+                ]);
+
+                if($this->core->request->error) {
+                    $userData['tokens'][$token]['error'] = $this->core->request->errorMsg;
+                    if($this->core->request->getLastResponseCode()==401) {
+                        $this->addError('SECURITY_ERROR','Token is not authorized');
+                    } else {
+                        $this->addError('TOKEN_ERROR_'.$this->core->request->getLastResponseCode(),$this->core->request->errorMsg);
+                    }
+                } else {
+                    $userData['data'] =  $cfUserInfo['data'];
+                    $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
+                }
+                $this->core->request->reset();
+                $this->core->cache->set($namespace.'_'.$user_token,$userData);
+                if($this->error) return;
+            }
+            //endregion
+
+            //region SET $this->{isAuth, namespace, token, id, data}
+            $this->isAuth = true;
+            $this->token = $token;
+            $this->activeTokens = count($userData['tokens']);
+            $this->namespace = $namespace;
+            $this->id = $userData['id'];
+            $this->data = $userData['data'];
+            unset($userData);
+            //endregion
+
+            return true;
+
+        }
+
+        /**
+         * Verify that a token is valid and update the following properties: namespace, userId, userData
+         * It allows to work with several active tokens at the same time
+         * @param string $token Token to verify with CloudFramework ERP
+         * @param string $integration_key Integration Key to call CloudFramework API for signing
+         * @param bool $refresh indicates if we have to ignore cached data with $refresh=true. Default is false
+         * @return false|void
+         */
+        function checkWebToken(string $token, string $integration_key,bool $refresh=false)
+        {
+            // Reset $user variables
+            $this->reset();
+
+
+            //region SET $user,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
+            $tokenParts = explode('__',$token);
+            if(count($tokenParts) != 3
+                || !($namespace=$tokenParts[0])
+                || !($user_token=$tokenParts[1])
+                || !($key=$tokenParts[2]) )
+                return($this->addError('WRONG_WEB_TOKEN_FORMAT','The structure of the token is not right'));
+            //endregion
+
+            //region SET $userData trying to get the info from cache deleting expired tokens and checking $this->maxTokens
+            $updateCache = false;
+            $userData = $this->core->cache->get($namespace.'_'.$user_token);
+            if(!$userData) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
+            else {
+                $now = microtime(true);
+                $num_tokens = 0;
+                foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
+                    if(($now - $tokenInfo['time']) > $this->expirationTime) {
+                        unset($userData['tokens'][$tokenId]);
+                        $updateCache = true;
+                    } else {
+                        $num_tokens++;
+                        if(!isset($userData['tokens'][$token]) && $num_tokens>=$this->maxTokens) {
+                            unset($userData['tokens'][$tokenId]);
+                            $updateCache = true;
+                        }
+                    }
+                }
+
+                //update Cache with the deleted tokens
+                if($updateCache) $this->core->cache->set($namespace.'_'.$user_token,$userData);
+
+                // Verify $token is not a token with error
+                if(isset($userData['tokens'][$token]) && $userData['tokens'][$token]['error']) {
+                    return($this->addError('TOKEN_NOT_VALID',['The token already has been used but it is not valid',$userData['tokens'][$token]['error']]));
+                }
+
+                // Verify number of active tokens
+                if(!isset($userData['tokens'][$token]) && count($userData['tokens']) >=$this->maxTokens) {
+                    return($this->addError('MAX_TOKENS_REACHED','The max number of tokens has been reached: '.$this->maxTokens));
+                }
+
+                $this->cached = true;
+
+            }
+            //endregion
+
+            //region CALL CloudFramework API Service IF $token DOEST not exist in $userData OR $refresh
+            if(!isset($userData['tokens'][$token]) || $refresh) {
+
+                $this->cached = false;
+                $userData['tokens'][$token] = ['error'=>null,'time'=>microtime(true)];
+                $cfUserInfo = $this->core->request->post_json_decode(
+                    $this::APIPortalServices.'/'.$namespace.'/web-oauth/'.$this->core->id.'?_update&from_core7_user_object'
                     ,['Fingerprint'=>$this->core->system->getRequestFingerPrint()]
                     ,['X-WEB-KEY'=>'Core7UserObject'
                     ,'X-DS-TOKEN'=>$token
