@@ -2,7 +2,7 @@
   "name": "company-name/project-name",
   "description": "Your description. More info https://www.notion.so/cloudframework/backend-core-php8-8-1-9-87237c3cf9434205b106fc657a5a771f",
   "require": {
-    "cloudframework-io/backend-core-php8": "^8.1.10"
+    "cloudframework-io/backend-core-php8": "^8.1.11"
   },
   "scripts": {
     "clean": [

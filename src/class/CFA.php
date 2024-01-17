@@ -8,6 +8,7 @@
  */
 class CFA
 {
+    var $version = '20240117';
     private $core;
     var $data = ['rows'=>[['label'=>'default_row']],'components'=>[]];
     var $labels=[];
@@ -23,7 +24,6 @@ class CFA
         $this->core = $core;
         $this->colors = new CFAColors();
     }
-
 
     /**
      * SET rows in the CFA to structure the greed
@@ -208,6 +208,12 @@ class CFACompenent
         return($this->component);
     }
 
+    public function filters() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentFilters')
+            $this->component = new CFACompenentFilters();
+        return($this->component);
+    }
+
     public function accordion() {
         if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentAccordion')
             $this->component = new CFACompenentAccordion();
@@ -259,6 +265,12 @@ class CFACompenent
             $this->component = new CFACompenentTaskTable();
         return($this->component);
     }
+
+    public function form() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentForm')
+            $this->component = new CFACompenentForm();
+        return($this->component);
+    }
 }
 /**
  * CFAColors Class component
@@ -290,7 +302,9 @@ class CFACompenentHeader
 
     public function icon($data) {$this->data['icon'] = $data; return $this;}
     public function title($data) {$this->data['title'] = $data; return $this;}
+    public function addTitleStyle($data) {$this->data['title-style'] = $data; return $this;}
     public function subtitle($data) {$this->data['subtitle'] = $data; return $this;}
+    public function addSubtitleStyle($data) {$this->data['subtitle-style'] = $data; return $this;}
     public function jsIconCall($js_function,$icon) {$this->data['js-call'] = $js_function;$this->data['js-ico'] = $icon; return $this;}
 }
 
@@ -385,7 +399,7 @@ class CFACompenentHTML
     public function p($data,$label='') {$this->data['html'].= "<p".(($label)?' id="'.$label.'"':'').">{$data}</p>";return $this;}
     public function hr($label='') {$this->data['html'].= "<hr".(($label)?' id="'.$label.'"':'')."/>";return $this;}
     public function pre($data,$label='') {$this->data['html'].= "<pre".(($label)?' id="'.$label.'"':'').">{$data}</pre>";return $this;}
-    public function textarea($data,$label='') {$this->data['html'].= "<textarea cols='90' rows='10'".(($label)?' id="'.$label.'"':'').">{$data}</textarea>";return $this;}
+    public function textarea($data,$label='') {if(!is_string($data)) $data = json_encode($data,JSON_PRETTY_PRINT);$this->data['html'].= "<textarea cols='90' rows='10'".(($label)?' id="'.$label.'"':'').">{$data}</textarea>";return $this;}
     public function testComponents($id,$json,$php) {
         $this->data['html'].= "
             <div  class='row'>
@@ -443,11 +457,30 @@ class CFACompenentTitles
     public function subtitle($data) {$this->data[$this->index]['subtitle'] = $data; return $this;}
     public function active($data) {$this->data[$this->index]['active'] = (bool)$data; return $this;}
     public function onclick($data) {$this->data[$this->index]['onclick'] = $data; return $this;}
+    public function addClass($data) {$this->data[$this->index]['class'] = $data; return $this;}
+    public function addStyle($data) {$this->data[$this->index]['style'] = $data; return $this;}
     public function addBadge($title,$color='',$border=false,$pill=false) {if(!isset($this->data[$this->index]['badges'])) $this->data[$this->index]['badges']=[]; $this->data[$this->index]['badges'][] = ['title'=>$title,'color'=>$color,'border'=>(bool)$border,'pill'=>(bool)$pill]; return $this;}
-    public function addLeftPhoto($src,$alt='') {if(!isset($this->data[$this->index]['left-photos'])) $this->data[$this->index]['left-photos']=[]; $this->data[$this->index]['left-photos'][] = ['url'=>$src,'alt'=>$alt]; return $this;}
-    public function addRightPhoto($src,$alt='') {if(!isset($this->data[$this->index]['right-photos'])) $this->data[$this->index]['right-photos']=[]; $this->data[$this->index]['right-photos'][] = ['url'=>$src,'alt'=>$alt]; return $this;}
-    public function addPhoto($src,$alt='') {if(!isset($this->data[$this->index]['photos'])) $this->data[$this->index]['photos']=[]; $this->data[$this->index]['photos'][] = ['url'=>$src,'alt'=>$alt]; return $this;}
-
+    public function addLeftPhoto($src,$alt='',$classes="rounded-circle") {
+        if(!isset($this->data[$this->index]['left-photos'])){
+            $this->data[$this->index]['left-photos']=[];
+            $this->data[$this->index]['left-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
+            return $this;
+        }
+    }
+    public function addRightPhoto($src,$alt='',$classes="rounded-circle") {
+        if(!isset($this->data[$this->index]['right-photos'])){
+            $this->data[$this->index]['right-photos']=[];
+            $this->data[$this->index]['right-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
+            return $this;
+        }
+    }
+    public function addPhoto($src,$alt='',$classes="rounded-circle") {
+        if(!isset($this->data[$this->index]['photos'])){
+            $this->data[$this->index]['photos']=[];
+            $this->data[$this->index]['photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
+            return $this;
+        }
+    }
 }
 /**
  * CFACompenentBoxes Class component
@@ -461,6 +494,7 @@ class CFACompenentBoxes
 
     public function add($title='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($title) $this->data[$this->index]['title']=$title; return $this;}
     public function title($data) {$this->data[$this->index]['title'] = $data; return $this;}
+    public function containerClass($data) {$this->data[$this->index]['container-class'] = $data; return $this;}
     public function ico($data) {$this->data[$this->index]['ico'] = $data; return $this;}
     public function color($data) {$this->data[$this->index]['color'] = $data; return $this;}
     public function total($data) {$this->data[$this->index]['total'] = $data; return $this;}
@@ -487,10 +521,10 @@ class CFACompenentPanels
     var $type = 'panels';
     var $index =0;
     var $data = [];
-    public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
-    public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
+    public function add(string $label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
+    public function label(string $label) {$this->data[$this->index]['label'] = $label; return $this;}
     public function size($data) {$this->data[$this->index]['size'] = $data; return $this;}
-    public function locked($data) {$this->data[$this->index]['locked'] = (bool)$data; return $this;}
+    public function locked($locked=true) {$this->data[$this->index]['locked'] = (bool)$locked; return $this;}
     public function collapse($data) {$this->data[$this->index]['collapse'] = (bool)$data; return $this;}
     public function show($data) {$this->data[$this->index]['show'] = (bool)$data; return $this;}
 }
@@ -604,6 +638,79 @@ class CFACompenentTabs
 }
 
 /**
+ * CFACompenentTabs Class component
+ */
+class CFACompenentFilters
+{
+    var $type = 'filters';
+    var $index = 0;
+    var $data = [];
+
+    /**
+     * Add a new Filter to populate with fields
+     * @param string $cfa_api
+     * @param $label
+     * @param $title
+     * @param string $icon
+     * @return $this
+     */
+    public function add(string $cfa_api, $label, $title, $icon = "")
+    {
+        if (isset($this->data[$this->index]) && $this->data[$this->index]) $this->index++;
+        $this->data[$this->index]['cfa_api'] = $cfa_api;
+        $this->data[$this->index]['label'] = $label;
+        $this->data[$this->index]['title'] = $title;
+        if ($icon) $this->data[$this->index]['icon'] = $icon;
+        $this->data[$this->index]['filters'] = [];
+        return $this;
+    }
+
+    public function insertNewLine() {
+        $this->data[$this->index]['filters'][] = [
+            'new_line'=>true
+        ];
+        return $this;
+    }
+
+    public function insertText(string $field_title,string $field_name, $default_value='',  $placeholder='', int $size=10) {
+        $this->data[$this->index]['filters'][] = [
+            'text'=>[
+                'field_title'=>$field_title,
+                'field_name'=>$field_name,
+                'placeholder'=>$placeholder,
+                'default_value'=>$default_value,
+                'has_defaultvalue'=>(strlen($default_value))?true:false,
+                'size'=>$size,
+            ]
+        ];
+        return $this;
+    }
+
+    public function insertSelect(string $field_title,string $field_name, $values,  string $selected='') {
+
+        $select_values = [];
+        if(is_string($values)) $values = explode(',',$values);
+        foreach ($values as $i=>$value) {
+            $row = [];
+            if(is_string($value)) $row = ['id'=>$i,'value'=>$value];
+            elseif(isset($value['id']) && isset($value['value'])) $row = $value;
+            else ['id'=>json_encode($value),'value'=>json_encode($value)];
+            if($selected == $row['id']) $row['selected'] = 'selected';
+            $select_values[] = $row;
+        }
+
+        $this->data[$this->index]['filters'][] = [
+            'select'=>[
+                'field_title'=>$field_title,
+                'field_name'=>$field_name,
+                'values'=>$select_values
+            ]
+        ];
+        return $this;
+    }
+}
+
+/**
  * CFACompenentSearchCards Class component
  */
 class CFACompenentSearchCards
@@ -674,6 +781,7 @@ class CFACompenentAlerts
     public function content($data) {$this->data[$this->index]['content'] = $data; return $this;}
     public function color($data) {$this->data[$this->index]['color'] = $data; return $this;}
     public function icon($data) {$this->data[$this->index]['ico'] = $data; return $this;}
+    public function class($data) {$this->data[$this->index]['class'] = $data; return $this;}
     public function onclick($data) {$this->data[$this->index]['onclick'] = $data; return $this;}
     public function addPhoto($src,$alt='') {if(!isset($this->data[$this->index]['photo'])) $this->data[$this->index]['photo']=[]; $this->data[$this->index]['photo'][] = ['url'=>$src,'alt'=>$alt]; return $this;}
     public function jsIconCall($js_function,$icon) {$this->data[$this->index]['js-call'] = $js_function;$this->data[$this->index]['js-ico'] = $icon; return $this;}
@@ -739,6 +847,7 @@ class CFACompenentTable
     var $index = 0;
     var $data = [];
     public function __construct($label='') { if($label) $this->data['label'] = $label;}
+    public function preHeader($preHeader) {$this->data['preHeader']=$preHeader; return $this;}
     public function label($label) {$this->data['label']=$label; return $this;}
     public function compact($bool=true) {$this->data['compact']=(bool)$bool; return $this;}
     public function style($data) {$this->data['style']=$data; return $this;}
@@ -901,4 +1010,17 @@ class CFACompenentTaskTable
     public function statuses($data) {$this->data['statuses'] = $data; return $this;}
     public function priorities($data) {$this->data['priorities'] = $data; return $this;}
     public function rows($data) {$this->data['rows'] = $data; return $this;}
+}
+/**
+ * CFACompenentForm Class component
+ */
+class CFACompenentForm
+{
+    var $type = 'form';
+    var $index = 0;
+    var $data = [];
+
+    public function __construct() { $this->data['uniqid'] = uniqid('form');}
+    public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
+    public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
 }

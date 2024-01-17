@@ -129,6 +129,12 @@ class CFI
     public function closeButton($title) { $this->json_object['close']=$title;}
 
     /**
+     * Set if the CFO list view has to be reloaded
+     * @param bool $reload default is true
+     */
+    public function reloadCFO(bool $reload=true) { $this->json_object['required_reload'] = $reload;}
+
+    /**
      * Change All the fields fields to readonly
      * @param array $fields array of fields to change. If empty it will change every field.
      */

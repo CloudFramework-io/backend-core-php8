@@ -834,7 +834,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
          */
         function fetchOneByKey($key)
         {
-            if(!$key || !strlen($key)) return;
+            if(!$key || (!is_string($key) && !is_numeric($key)) || !strlen($key)) return;
             //Analyze execution time
             $time = microtime(true);
             $this->core->__p->add('ds:fetchOneByKey: '.$this->entity_name,  ' key:' . $key,'note');

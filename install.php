@@ -1,4 +1,11 @@
 <?php
+/**
+ *  Create a file/directory structure to start a backend-core-php8 project allowing to run a local server.
+ *  Execute from <document-root>:
+ *  * `php vendor/cloudframework-io/backend-core-php8/install.php` for MAC server
+ *  * `php vendor/cloudframework-io/backend-core-php8/install.php replit` for REPLIT.COM PHP Web server
+ */
+
 $_root_path = (strlen($_SERVER['DOCUMENT_ROOT'])) ? $_SERVER['DOCUMENT_ROOT'] : $_SERVER['PWD'];
 
 echo "---------\n";
@@ -62,6 +69,5 @@ if(!$replit) {
 
 } else {
     echo " - Creating index.php for replit\n";
-    shell_exec('echo "<?php include \"vendor/cloudframework-io/backend-core-php8/src/dispatcher.php\";" > index.php');
-
+    shell_exec("echo \"<?php\nif(getenv('CF_GOOGLE_APPLICATION_CREDENTIALS')) {\n  putenv('GOOGLE_APPLICATION_CREDENTIALS=/tmp/credentials.json');\n  if(!is_file('/tmp/credentials.json'))\n    file_put_contents('/tmp/credentials.json',getenv('CF_GOOGLE_APPLICATION_CREDENTIALS'));\n}\ninclude 'vendor/cloudframework-io/backend-core-php8/src/dispatcher.php';\" > i.php");
 }
