@@ -3436,10 +3436,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Replace Accented characters to avoid Key troubles
          * source: https://stackoverflow.com/questions/3371697/replacing-accented-characters-php
-         * @param string $input  original input encrypted
-         * @return string
+         * @param string|array $input  original input encrypted
+         * @return string|array
          */
-        function replaceAccentedCharacters(string $input): string
+        function replaceAccentedCharacters($input)
         {
             $unwanted_array = array('Š'=>'S', 'š'=>'s', 'Ž'=>'Z', 'ž'=>'z', 'À'=>'A', 'Á'=>'A', 'Â'=>'A', 'Ã'=>'A', 'Ä'=>'A', 'Å'=>'A', 'Æ'=>'A', 'Ç'=>'C', 'È'=>'E', 'É'=>'E',
                 'Ê'=>'E', 'Ë'=>'E', 'Ì'=>'I', 'Í'=>'I', 'Î'=>'I', 'Ï'=>'I', 'Ñ'=>'N', 'Ò'=>'O', 'Ó'=>'O', 'Ô'=>'O', 'Õ'=>'O', 'Ö'=>'O', 'Ø'=>'O', 'Ù'=>'U',
@@ -3448,7 +3448,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'ö'=>'o', 'ø'=>'o', 'ù'=>'u', 'ú'=>'u', 'û'=>'u', 'ý'=>'y', 'þ'=>'b', 'ÿ'=>'y',
                 'Ğ'=>'G', 'İ'=>'I', 'Ş'=>'S', 'ğ'=>'g', 'ı'=>'i', 'ş'=>'s', 'ü'=>'u',
                 'ă'=>'a', 'Ă'=>'A', 'ș'=>'s', 'Ș'=>'S', 'ț'=>'t', 'Ț'=>'T');
-            return strtr($input,$unwanted_array);
+            if(is_array($input)) {
+                foreach ($input as $i=>$item) if(is_string($item)){
+                    $input[$i] =  strtr($item,$unwanted_array);
+                }
+                return $input;
+            } else {
+                return strtr($input,$unwanted_array);
+            }
         }
     }
 
