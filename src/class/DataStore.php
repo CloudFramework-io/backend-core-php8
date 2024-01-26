@@ -232,7 +232,12 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     else {
                         if (is_string($value)) {
                             // date & datetime values
-                            if ($this->schema['props'][$_key][1] == 'date' || $this->schema['props'][$_key][1] == 'datetime' || $this->schema['props'][$_key][1] == 'datetimeiso') {
+                            if ($this->schema['props'][$_key][1] == 'list') {
+                                if (strlen($value)) {
+                                    $value = explode(',',$value);
+                                }
+                            }
+                            elseif ($this->schema['props'][$_key][1] == 'date' || $this->schema['props'][$_key][1] == 'datetime' || $this->schema['props'][$_key][1] == 'datetimeiso') {
                                 if (strlen($value)) {
                                     // Fix the problem when value is returned as microtime
                                     try {
