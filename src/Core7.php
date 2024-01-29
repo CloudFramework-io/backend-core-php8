@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.1.11';  // 2024-01-17 1
+        var $_version = '8.1.12';  // 2024-01-29 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -5598,6 +5598,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     {
         protected $core;
         var $data = [];
+        var $auto_reset = false;
         var $reset = false;
         var $reset_files = [];
         var $cacheExpiration = -1;
@@ -5766,6 +5767,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Get a Localization code from a localization file
+         * If the tag is not found and $this->auto_reset is true it will try to load the dictionary agaain.
          * @param string $tag the tag to translate with the pattern [{][$namepace:<namespace>,]<app_id>;<cat_id>;<tag_id>[;<subtag_id>][}]
          * @param string $lang
          * @param string $namespace [optional]
@@ -5774,6 +5776,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         function getTag(string $tag, string $lang='', $namespace='')
         {
 
+            $source_tag = $tag;
             if( !preg_match('/^[^;]+;[^;]+;[^;]+/',$tag))  return $tag;
             //delete {, } chars
             $tag = preg_replace('/({|})/','',trim($tag));
@@ -5791,12 +5794,29 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             //set $locFile
+            //split the tag in $parts
             $parts = explode(';',$tag);
+
+            //if there are <2 $parts retrn $tag
             if(count($parts)<2) return $tag;
+
+            //read dictionary for "{$parts[0]};{$parts[1]}". If there is no dictionary return $tag
             $locFile = "{$parts[0]};{$parts[1]}";
-            if(!$this->readLocalizationData($locFile,$lang,$namespace)) return $tag;
-            if(count($parts)<3) return $this->data[$locFile][$lang]??$tag;
-            return $this->data[$locFile][$lang][$tag]??$tag;
+            if(!$this->readLocalizationData($locFile,$lang,$namespace)) {
+                $this->core->logs->add("{$locFile} does no exist",'localization_warning');
+                return $tag;
+            }
+
+            //search
+            $ret =  (count($parts)<3)?($this->data[$locFile][$lang]??$tag):($this->data[$locFile][$lang][$tag]??$tag);
+            if($ret==$tag) {
+                if($this->auto_reset && !$this->reset) {
+                    $this->resetLocalizationsCache();
+                    return $this->getTag($source_tag,$lang,$namespace);
+                }
+                $this->core->logs->add("[{$locFile}/{$lang}] - {$tag} does no exist",'localization_warning');
+            }
+            return $ret;
         }
 
         /**
