@@ -8,7 +8,7 @@
  */
 class CFA
 {
-    var $version = '20240117';
+    var $version = '20240201';
     private $core;
     var $data = ['rows'=>[['label'=>'default_row']],'components'=>[]];
     var $labels=[];
@@ -64,7 +64,7 @@ class CFA
      * @return CFA
      */
     public function addComponentInLabel(string $label){
-        if(!isset($this->labels[$label])) $this->labels[$label] = new CFACompenent();
+        if(!isset($this->labels[$label])) $this->labels[$label] = new CFAComponent();
         return($this->labels[$label]);
     }
 
@@ -94,181 +94,187 @@ class CFA
  * Class to handle fields in CFI
  * last_update: 20200502
  */
-class CFACompenent
+class CFAComponent
 {
 
     var $component = null;
 
     public function header($title='') {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentHeader')
-            $this->component = new CFACompenentHeader();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentHeader')
+            $this->component = new CFAComponentHeader();
         if($title) $this->component->title($title);
         return($this->component);
     }
 
     public function boxes() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentBoxes')
-            $this->component = new CFACompenentBoxes();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentBoxes')
+            $this->component = new CFAComponentBoxes();
         return($this->component);
     }
 
     public function html() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentHTML')
-            $this->component = new CFACompenentHTML();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentHTML')
+            $this->component = new CFAComponentHTML();
         return($this->component);
     }
 
     public function cols() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentCols')
-            $this->component = new CFACompenentCols();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentCols')
+            $this->component = new CFAComponentCols();
         return($this->component);
     }
 
     public function panels() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentPanels')
-            $this->component = new CFACompenentPanels();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentPanels')
+            $this->component = new CFAComponentPanels();
         return($this->component);
     }
 
     public function divs() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentDivs')
-            $this->component = new CFACompenentDivs();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentDivs')
+            $this->component = new CFAComponentDivs();
         return($this->component);
     }
 
     public function titles() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentTitles')
-            $this->component = new CFACompenentTitles();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentTitles')
+            $this->component = new CFAComponentTitles();
         return($this->component);
     }
 
     public function buttons() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentButtons')
-            $this->component = new CFACompenentButtons();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentButtons')
+            $this->component = new CFAComponentButtons();
         return($this->component);
     }
 
     public function formSelect() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentFormSelect')
-            $this->component = new CFACompenentFormSelect();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentFormSelect')
+            $this->component = new CFAComponentFormSelect();
+        return($this->component);
+    }
+
+    public function formDatePicker() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentFormDatePicker')
+            $this->component = new CFAComponentFormDatePicker();
         return($this->component);
     }
 
     public function breadcrumb() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentBreadcrumb')
-            $this->component = new CFACompenentBreadcrumb();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentBreadcrumb')
+            $this->component = new CFAComponentBreadcrumb();
         return($this->component);
     }
 
     public function pageBreadcrumb() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentPageBreadcrumb')
-            $this->component = new CFACompenentPageBreadcrumb();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentPageBreadcrumb')
+            $this->component = new CFAComponentPageBreadcrumb();
         return($this->component);
     }
 
     public function tabs() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentTabs')
-            $this->component = new CFACompenentTabs();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentTabs')
+            $this->component = new CFAComponentTabs();
         return($this->component);
     }
 
     public function tags() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentTags')
-            $this->component = new CFACompenentTags();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentTags')
+            $this->component = new CFAComponentTags();
         return($this->component);
     }
 
     public function alerts() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentAlerts')
-            $this->component = new CFACompenentAlerts();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentAlerts')
+            $this->component = new CFAComponentAlerts();
         return($this->component);
     }
 
     public function searchCards() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentSearchCards')
-            $this->component = new CFACompenentSearchCards();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentSearchCards')
+            $this->component = new CFAComponentSearchCards();
         return($this->component);
     }
 
     public function searchInput() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentSearchInput')
-            $this->component = new CFACompenentSearchInput();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentSearchInput')
+            $this->component = new CFAComponentSearchInput();
         return($this->component);
     }
 
     public function calendar() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentCalendar')
-            $this->component = new CFACompenentCalendar();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentCalendar')
+            $this->component = new CFAComponentCalendar();
         return($this->component);
     }
 
     public function table() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentTable')
-            $this->component = new CFACompenentTable();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentTable')
+            $this->component = new CFAComponentTable();
         return($this->component);
     }
 
     public function filters() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentFilters')
-            $this->component = new CFACompenentFilters();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentFilters')
+            $this->component = new CFAComponentFilters();
         return($this->component);
     }
 
     public function accordion() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentAccordion')
-            $this->component = new CFACompenentAccordion();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentAccordion')
+            $this->component = new CFAComponentAccordion();
         return($this->component);
     }
 
     public function chart() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentChart')
-            $this->component = new CFACompenentChart();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentChart')
+            $this->component = new CFAComponentChart();
         return($this->component);
     }
 
     public function jsonEditor() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentJsonEditor')
-            $this->component = new CFACompenentJsonEditor();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentJsonEditor')
+            $this->component = new CFAComponentJsonEditor();
         return($this->component);
     }
 
     public function codeFragment() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentCodeFragment')
-            $this->component = new CFACompenentCodeFragment();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentCodeFragment')
+            $this->component = new CFAComponentCodeFragment();
         return($this->component);
     }
 
     public function progressChart() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentProgressChart')
-            $this->component = new CFACompenentProgressChart();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentProgressChart')
+            $this->component = new CFAComponentProgressChart();
         return($this->component);
     }
 
     public function boxInfo() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentBoxInfo')
-            $this->component = new CFACompenentBoxInfo();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentBoxInfo')
+            $this->component = new CFAComponentBoxInfo();
         return($this->component);
     }
 
     public function kanban() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentKanban')
-            $this->component = new CFACompenentKanban();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentKanban')
+            $this->component = new CFAComponentKanban();
         return($this->component);
     }
     public function peopleCard() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentPeopleCard')
-            $this->component = new CFACompenentPeopleCard();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentPeopleCard')
+            $this->component = new CFAComponentPeopleCard();
         return($this->component);
     }
     public function taskTable() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentTaskTable')
-            $this->component = new CFACompenentTaskTable();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentTaskTable')
+            $this->component = new CFAComponentTaskTable();
         return($this->component);
     }
 
     public function form() {
-        if(!is_object($this->component) || get_class($this->component)!= 'CFACompenentForm')
-            $this->component = new CFACompenentForm();
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentForm')
+            $this->component = new CFAComponentForm();
         return($this->component);
     }
 }
@@ -286,9 +292,9 @@ class CFAColors
     var $secondary = 'secondary';
 }
 /**
- * CFACompenentHeader Class component
+ * CFAComponentHeader Class component
  */
-class CFACompenentHeader
+class CFAComponentHeader
 {
 
     var $type = 'header';
@@ -309,9 +315,9 @@ class CFACompenentHeader
 }
 
 /**
- * CFACompenentJsonEditor Class component
+ * CFAComponentJsonEditor Class component
  */
-class CFACompenentJsonEditor
+class CFAComponentJsonEditor
 {
 
     var $type = 'json-editor';
@@ -324,9 +330,9 @@ class CFACompenentJsonEditor
 }
 
 /**
- * CFACompenentCodeFragment Class component
+ * CFAComponentCodeFragment Class component
  */
-class CFACompenentCodeFragment
+class CFAComponentCodeFragment
 {
 
     var $type = 'code-fragment';
@@ -340,9 +346,9 @@ class CFACompenentCodeFragment
 }
 
 /**
- * CFACompenentProgressChart Class component
+ * CFAComponentProgressChart Class component
  */
-class CFACompenentProgressChart
+class CFAComponentProgressChart
 {
     var $type = 'progress-chart';
     var $data = [
@@ -362,9 +368,9 @@ class CFACompenentProgressChart
 }
 
 /**
- * CFACompenentBoxInfo Class component
+ * CFAComponentBoxInfo Class component
  */
-class CFACompenentBoxInfo
+class CFAComponentBoxInfo
 {
     var $type = 'boxInfo';
     var $data = [
@@ -385,9 +391,9 @@ class CFACompenentBoxInfo
 
 
 /**
- * CFACompenentHTML Class component
+ * CFAComponentHTML Class component
  */
-class CFACompenentHTML
+class CFAComponentHTML
 {
     var $type = 'html';
     var $data = ['html'=>''];
@@ -440,9 +446,9 @@ class CFACompenentHTML
 }
 
 /**
- * CFACompenentBoxes Class component
+ * CFAComponentTitles Class component
  */
-class CFACompenentTitles
+class CFAComponentTitles
 {
 
     var $type = 'titles';
@@ -462,30 +468,30 @@ class CFACompenentTitles
     public function addBadge($title,$color='',$border=false,$pill=false) {if(!isset($this->data[$this->index]['badges'])) $this->data[$this->index]['badges']=[]; $this->data[$this->index]['badges'][] = ['title'=>$title,'color'=>$color,'border'=>(bool)$border,'pill'=>(bool)$pill]; return $this;}
     public function addLeftPhoto($src,$alt='',$classes="rounded-circle") {
         if(!isset($this->data[$this->index]['left-photos'])){
-            $this->data[$this->index]['left-photos']=[];
-            $this->data[$this->index]['left-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
+            $this->data[$this->index]['left-photos']=[]; 
+            $this->data[$this->index]['left-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes]; 
             return $this;
-        }
+        } 
     }
     public function addRightPhoto($src,$alt='',$classes="rounded-circle") {
         if(!isset($this->data[$this->index]['right-photos'])){
-            $this->data[$this->index]['right-photos']=[];
-            $this->data[$this->index]['right-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
+            $this->data[$this->index]['right-photos']=[]; 
+            $this->data[$this->index]['right-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes]; 
             return $this;
         }
     }
     public function addPhoto($src,$alt='',$classes="rounded-circle") {
         if(!isset($this->data[$this->index]['photos'])){
-            $this->data[$this->index]['photos']=[];
+            $this->data[$this->index]['photos']=[]; 
             $this->data[$this->index]['photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
             return $this;
         }
     }
 }
 /**
- * CFACompenentBoxes Class component
+ * CFAComponentBoxes Class component
  */
-class CFACompenentBoxes
+class CFAComponentBoxes
 {
 
     var $type = 'boxes';
@@ -494,15 +500,18 @@ class CFACompenentBoxes
 
     public function add($title='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($title) $this->data[$this->index]['title']=$title; return $this;}
     public function title($data) {$this->data[$this->index]['title'] = $data; return $this;}
-    public function containerClass($data) {$this->data[$this->index]['container-class'] = $data; return $this;}
+    public function containerClass($data) {$this->data[$this->index]['containerClass'] = $data; return $this;}
     public function ico($data) {$this->data[$this->index]['ico'] = $data; return $this;}
     public function color($data) {$this->data[$this->index]['color'] = $data; return $this;}
+    public function textColor($data) {$this->data[$this->index]['textColor'] = $data; return $this;}
+    public function icoColor($data) {$this->data[$this->index]['icoColor'] = $data; return $this;}
+    public function style($data) {$this->data[$this->index]['style'] = $data; return $this;}
     public function total($data) {$this->data[$this->index]['total'] = $data; return $this;}
 }
 /**
- * CFACompenentCols Class component
+ * CFAComponentCols Class component
  */
-class CFACompenentCols
+class CFAComponentCols
 {
 
     var $type = 'cols';
@@ -513,9 +522,9 @@ class CFACompenentCols
     public function size($data) {$this->data[$this->index]['size'] = $data; return $this;}
 }
 /**
- * CFACompenentPanels Class component
+ * CFAComponentPanels Class component
  */
-class CFACompenentPanels
+class CFAComponentPanels
 {
 
     var $type = 'panels';
@@ -529,9 +538,9 @@ class CFACompenentPanels
     public function show($data) {$this->data[$this->index]['show'] = (bool)$data; return $this;}
 }
 /**
- * CFACompenentDivs Class component
+ * CFAComponentDivs Class component
  */
-class CFACompenentDivs
+class CFAComponentDivs
 {
 
     var $type = 'divs';
@@ -543,9 +552,9 @@ class CFACompenentDivs
     public function hide($data) {$this->data[$this->index]['hide'] = (bool)$data; return $this;}
 }
 /**
- * CFACompenentButtons Class component
+ * CFAComponentButtons Class component
  */
-class CFACompenentButtons
+class CFAComponentButtons
 {
     var $type = 'buttons';
     var $index =0;
@@ -558,9 +567,9 @@ class CFACompenentButtons
     public function onclick($data) {$this->data[$this->index]['onclick'] = $data; return $this;}
 }
 /**
- * CFACompenentFormSelect Class component
+ * CFAComponentFormSelect Class component
  */
-class CFACompenentFormSelect
+class CFAComponentFormSelect
 {
     var $type = 'form-select';
     var $data = [
@@ -574,10 +583,47 @@ class CFACompenentFormSelect
     public function onchange($data) {$this->data['onchange'] = $data; return $this;}
     public function addOption($value,$option,$selected=false) {$this->data['options'][] = ['value'=>$value,'option'=>$option,'selected'=>(bool)$selected]; return $this;}
 }
+
 /**
- * CFACompenentBreadcrumb Class component
+ * CFAComponentFormDatePicker Class component
  */
-class CFACompenentBreadcrumb
+class CFAComponentFormDatePicker
+{
+    var $type = 'form-datepicker';
+    var $data = [
+        'label'=>null,
+        'title'=>null,
+        'type'=>null,
+        'placeholder'=>null,
+        'showDropdowns'=>false,
+        'dropDownsMinYear'=>null,
+        'dropDownsMaxYear'=>null,
+        'minDate'=>null,
+        'maxDate'=>null,
+        'ranges'=>null,
+        'onchange'=>null,
+        'class'=>null,
+        'options'=>[],
+    ];
+    public function label($data) {$this->data['label'] = $data; return $this;}
+    public function title($data) {$this->data['title'] = $data; return $this;}
+    public function type($data) {$this->data['type'] = $data; return $this;}
+    public function placeholder($data) {$this->data['placeholder'] = $data; return $this;}
+    public function showDropdowns($data) {$this->data['showDropdowns'] = (bool)$data;; return $this;}
+    public function dropDownsMinYear($data) {$this->data['dropDownsMinYear'] = $data; return $this;}
+    public function dropDownsMaxYear($data) {$this->data['dropDownsMaxYear'] = $data; return $this;}
+    public function minDate($data) {$this->data['minDate'] = $data; return $this;}
+    public function maxDate($data) {$this->data['maxDate'] = $data; return $this;}
+    public function ranges($data) {$this->data['ranges'] = $data; return $this;}
+    public function onchange($data) {$this->data['onchange'] = $data; return $this;}
+    public function class($data) {$this->data['class'] = $data; return $this;}
+    public function addOption($value,$option,$selected=false) {$this->data['options'][] = ['value'=>$value,'option'=>$option,'selected'=>(bool)$selected]; return $this;}
+}
+
+/**
+ * CFAComponentBreadcrumb Class component
+ */
+class CFAComponentBreadcrumb
 {
     var $type = 'breadcrumb';
     var $data = [
@@ -595,9 +641,9 @@ class CFACompenentBreadcrumb
     public function concatPhoto($src,$alt="") {$this->data['elements'][] = ['photo'=>['url'=>$src,'alt'=>$alt]]; return $this;}
 }
 /**
- * CFACompenentBreadcrumb Class component
+ * CFAComponentBreadcrumb Class component
  */
-class CFACompenentPageBreadcrumb
+class CFAComponentPageBreadcrumb
 {
     var $type = 'pageBreadcrumb';
     var $data = [
@@ -617,30 +663,35 @@ class CFACompenentPageBreadcrumb
 }
 
 /**
- * CFACompenentTabs Class component
+ * CFAComponentTabs Class component
  */
-class CFACompenentTabs
+class CFAComponentTabs
 {
     var $type = 'tabs';
     var $index = 0;
     var $data = [];
 
-    public function add($label, $title, $icon = "",$active=false)
+    public function type($data) {$this->data['type'] = $data; return $this;}
+    public function activeColor($data) {$this->data['activeColor'] = $data; return $this;}
+    public function style($data) {$this->data['style'] = $data; return $this;}
+
+    public function add($label, $title, $icon = "", $active=false, $style=null)
     {
-        if (isset($this->data[$this->index]) && $this->data[$this->index]) $this->index++;
-        $this->data[$this->index]['label'] = $label;
-        $this->data[$this->index]['title'] = $title;
-        if ($icon) $this->data[$this->index]['ico'] = $icon;
-        if ($active) $this->data[$this->index]['active'] = true;
+        if (isset($this->data['data'][$this->index]) && $this->data['data'][$this->index]) $this->index++;
+        $this->data['data'][$this->index]['label'] = $label;
+        $this->data['data'][$this->index]['title'] = $title;
+        if ($icon) $this->data['data'][$this->index]['ico'] = $icon;
+        if ($active) $this->data['data'][$this->index]['active'] = true;
+        if ($style) $this->data['data'][$this->index]['style'] = $style;
         return $this;
     }
-    public function onclick($data) {$this->data[$this->index]['onclick'] = $data; return $this;}
+    public function onclick($data) {$this->data['data'][$this->index]['onclick'] = $data; return $this;}
 }
 
 /**
- * CFACompenentTabs Class component
+ * CFAComponentTabs Class component
  */
-class CFACompenentFilters
+class CFAComponentFilters
 {
     var $type = 'filters';
     var $index = 0;
@@ -711,9 +762,9 @@ class CFACompenentFilters
 }
 
 /**
- * CFACompenentSearchCards Class component
+ * CFAComponentSearchCards Class component
  */
-class CFACompenentSearchCards
+class CFAComponentSearchCards
 {
     var $type = 'search-cards';
     var $index = 0;
@@ -737,9 +788,9 @@ class CFACompenentSearchCards
 }
 
 /**
- * CFACompenentSearchInput Class component
+ * CFAComponentSearchInput Class component
  */
-class CFACompenentSearchInput
+class CFAComponentSearchInput
 {
     var $type = 'search-input';
     var $index = 0;
@@ -755,9 +806,9 @@ class CFACompenentSearchInput
 
 
 /**
- * CFACompenentTags Class component
+ * CFAComponentTags Class component
  */
-class CFACompenentTags
+class CFAComponentTags
 {
     var $type = 'tags';
     var $index =0;
@@ -769,9 +820,9 @@ class CFACompenentTags
 
 
 /**
- * CFACompenentAlerts Class component
+ * CFAComponentAlerts Class component
  */
-class CFACompenentAlerts
+class CFAComponentAlerts
 {
     var $type = 'alerts';
     var $index =0;
@@ -791,9 +842,9 @@ class CFACompenentAlerts
 }
 
 /**
- * CFACompenentCalendar Class component
+ * CFAComponentCalendar Class component
  */
-class CFACompenentCalendar
+class CFAComponentCalendar
 {
     var $type = 'calendar';
     var $index = 0;
@@ -824,9 +875,9 @@ class CFACompenentCalendar
 }
 
 /**
- * CFACompenentAccordion Class component
+ * CFAComponentAccordion Class component
  */
-class CFACompenentAccordion
+class CFAComponentAccordion
 {
     var $type = 'accordion';
     var $index = 0;
@@ -839,9 +890,9 @@ class CFACompenentAccordion
 }
 
 /**
- * CFACompenentTable Class component
+ * CFAComponentTable Class component
  */
-class CFACompenentTable
+class CFAComponentTable
 {
     var $type = 'table';
     var $index = 0;
@@ -850,6 +901,7 @@ class CFACompenentTable
     public function preHeader($preHeader) {$this->data['preHeader']=$preHeader; return $this;}
     public function label($label) {$this->data['label']=$label; return $this;}
     public function compact($bool=true) {$this->data['compact']=(bool)$bool; return $this;}
+    public function headerStyle($data) {$this->data['headerStyle'] = $data; return $this;}
     public function style($data) {$this->data['style']=$data; return $this;}
     public function cols(array $cols,$color='primary-500',$attributes='') {
         $this->data['hasHeaderData']=(bool)$cols;
@@ -897,15 +949,15 @@ class CFACompenentTable
     }
 }
 
-/**
- * CFACompenentChart Class component
- */
-class CFACompenentChart
+ /**
+  * CFAComponentChart Class component
+  */
+class CFAComponentChart
 {
     var $type = 'chart';
     var $index = 0;
     var $data = [];
-
+    
     public function __construct() { $this->data['id'] = uniqid('chart-component');}
     public function title($data) {$this->data['title'] = $data; return $this;}
     public function icon($data) {$this->data['icon'] = $data; return $this;}
@@ -916,16 +968,16 @@ class CFACompenentChart
     public function class($data) {$this->data['class'] = $data; return $this;}
 }
 
-/**
- * CFACompenentKanban Class component
- */
-class CFACompenentKanban
+ /**
+  * CFAComponentKanban Class component
+  */
+class CFAComponentKanban
 {
     var $type = 'kanban';
     var $data = [];
     var $boardIndex = 0;
-
-    public function __construct() {
+    
+    public function __construct() { 
         $this->data['id'] = uniqid('kanban');
         $this->data['items'] = [];
     }
@@ -935,7 +987,7 @@ class CFACompenentKanban
     public function itemClick($data=true) {$this->data['config']['itemClick'] = $data; return $this;}
     public function itemDragged($data=true) {$this->data['config']['itemDragged'] = $data; return $this;}
 
-
+   
 
     public function addBoard($title='') {
         if(isset($this->data['items'][$this->boardIndex]) && $this->data['items'][$this->boardIndex]) $this->boardIndex++; if($title) $this->data['items'][$this->boardIndex]['title']=$title; return $this;
@@ -959,68 +1011,68 @@ class CFACompenentKanban
 }
 
 /**
- * CFACompenentPeopleCard Class component
- */
-class CFACompenentPeopleCard
-{
-    var $type = 'people-card';
-    var $index = 0;
-    var $data = [];
-
-    public function __construct() { $this->data['id'] = uniqid('people-card');}
-    public function searchFilter($data) {$this->data['searchFilter'] = $data; return $this;}
-    public function name($data) {$this->data['name'] = $data; return $this;}
-    public function surname($data) {$this->data['surname'] = $data; return $this;}
-    public function second_surname($data) {$this->data['second_surname'] = $data; return $this;}
-    public function fullname($data) {$this->data['fullname'] = $data; return $this;}
-    public function email($data) {$this->data['email'] = $data; return $this;}
-    public function phone($data) {$this->data['phone'] = $data; return $this;}
-    public function avatar($data) {$this->data['avatar'] = $data; return $this;}
-    public function linkedin($data) {$this->data['linkedin'] = $data; return $this;}
-    public function videos($data) {$this->data['videos'] = $data; return $this;}
-    public function user_id($data) {$this->data['user_id'] = $data; return $this;}
-    public function level0($data) {$this->data['level0'] = $data; return $this;}
-    public function reports_to($data) {$this->data['reports_to'] = $data; return $this;}
-    public function areas($data) {$this->data['areas'] = $data; return $this;}
-    public function departments($data) {$this->data['departments'] = $data; return $this;}
-    public function position($data) {$this->data['position'] = $data; return $this;}
-    public function position_id($data) {$this->data['position_id'] = $data; return $this;}
-    public function position_name($data) {$this->data['position_name'] = $data; return $this;}
-    public function positions($data) {$this->data['positions'] = $data; return $this;}
-    public function competencies($data) {$this->data['competencies'] = $data; return $this;}
-    public function responsibilities($data) {$this->data['responsibilities'] = $data; return $this;}
-    public function tasks($data) {$this->data['tasks'] = $data; return $this;}
-    public function skills($data) {$this->data['skills'] = $data; return $this;}
-    public function edit_event($data) {$this->data['edit_event'] = $data; return $this;}
-    public function color($data) {$this->data['color'] = $data; return $this;}
-    public function class($data) {$this->data['class'] = $data; return $this;}
-}
+  * CFAComponentPeopleCard Class component
+  */
+  class CFAComponentPeopleCard
+  {
+      var $type = 'people-card';
+      var $index = 0;
+      var $data = [];
+      
+      public function __construct() { $this->data['id'] = uniqid('people-card');}
+      public function searchFilter($data) {$this->data['searchFilter'] = $data; return $this;}
+      public function name($data) {$this->data['name'] = $data; return $this;}
+      public function surname($data) {$this->data['surname'] = $data; return $this;}
+      public function second_surname($data) {$this->data['second_surname'] = $data; return $this;}
+      public function fullname($data) {$this->data['fullname'] = $data; return $this;}
+      public function email($data) {$this->data['email'] = $data; return $this;}
+      public function phone($data) {$this->data['phone'] = $data; return $this;}
+      public function avatar($data) {$this->data['avatar'] = $data; return $this;}
+      public function linkedin($data) {$this->data['linkedin'] = $data; return $this;}
+      public function videos($data) {$this->data['videos'] = $data; return $this;}
+      public function user_id($data) {$this->data['user_id'] = $data; return $this;}
+      public function level0($data) {$this->data['level0'] = $data; return $this;}
+      public function reports_to($data) {$this->data['reports_to'] = $data; return $this;}
+      public function areas($data) {$this->data['areas'] = $data; return $this;}
+      public function departments($data) {$this->data['departments'] = $data; return $this;}
+      public function position($data) {$this->data['position'] = $data; return $this;}
+      public function position_id($data) {$this->data['position_id'] = $data; return $this;}
+      public function position_name($data) {$this->data['position_name'] = $data; return $this;}
+      public function positions($data) {$this->data['positions'] = $data; return $this;}
+      public function competencies($data) {$this->data['competencies'] = $data; return $this;}
+      public function responsibilities($data) {$this->data['responsibilities'] = $data; return $this;}
+      public function tasks($data) {$this->data['tasks'] = $data; return $this;}
+      public function skills($data) {$this->data['skills'] = $data; return $this;}
+      public function edit_event($data) {$this->data['edit_event'] = $data; return $this;}
+      public function color($data) {$this->data['color'] = $data; return $this;}
+      public function class($data) {$this->data['class'] = $data; return $this;}
+  }
 /**
- * CFACompenentPeopleCard Class component
- */
-class CFACompenentTaskTable
-{
-    var $type = 'task-table';
-    var $index = 0;
-    var $data = [];
-
-    public function __construct() { $this->data['uniqid'] = uniqid('people-card');}
-    public function title($data) {$this->data['title'] = $data; return $this;}
-    public function cols($data) {$this->data['cols'] = $data; return $this;}
-    public function statuses($data) {$this->data['statuses'] = $data; return $this;}
-    public function priorities($data) {$this->data['priorities'] = $data; return $this;}
-    public function rows($data) {$this->data['rows'] = $data; return $this;}
-}
+  * CFAComponentPeopleCard Class component
+  */
+  class CFAComponentTaskTable
+  {
+      var $type = 'task-table';
+      var $index = 0;
+      var $data = [];
+      
+      public function __construct() { $this->data['uniqid'] = uniqid('people-card');}
+      public function title($data) {$this->data['title'] = $data; return $this;}
+      public function cols($data) {$this->data['cols'] = $data; return $this;}
+      public function statuses($data) {$this->data['statuses'] = $data; return $this;}
+      public function priorities($data) {$this->data['priorities'] = $data; return $this;}
+      public function rows($data) {$this->data['rows'] = $data; return $this;}
+  }
 /**
- * CFACompenentForm Class component
- */
-class CFACompenentForm
-{
-    var $type = 'form';
-    var $index = 0;
-    var $data = [];
-
-    public function __construct() { $this->data['uniqid'] = uniqid('form');}
-    public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
-    public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
-}
+  * CFAComponentForm Class component
+  */
+  class CFAComponentForm
+  {
+      var $type = 'form';
+      var $index = 0;
+      var $data = [];
+      
+      public function __construct() { $this->data['uniqid'] = uniqid('form');}
+      public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
+      public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
+  }
