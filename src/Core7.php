@@ -5580,10 +5580,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $code
          * @param null $message
          */
-        function addError($message)
+        function addError($code,$message)
         {
             $this->error = true;
-            $this->errorCode = true;
+            $this->errorCode = $code;
             $this->errorMsg[] = $message;
         }
 
@@ -6142,13 +6142,20 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                         //Merge variables with the extended object.
                         if(isset($this->models[$object]['data']['interface'])) foreach ($this->models[$object]['data']['interface'] as $object_property=>$data) {
-                            $this->models[$model_extended]['data']['interface'][$object_property] = $data;
+                            //merge objects
+                            if(in_array($object_property,['fields'])) {
+                                $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$data);
+                            }
+                            //replace objects
+                            else {
+                                $this->models[$model_extended]['data']['interface'][$object_property] = $data;
+                            }
                         }
-
                         $this->models[$object]['data'] = array_merge(['extended_from'=>$this->models[$object]['data']['extends']],array_merge($this->models[$model_extended]['data'],array_merge($this->models[$object]['data'],$this->models[$model_extended]['data'])));
                         $entity = $this->models[$object]['data']['extends'];
                     }
                     //endregion
+
 
                     //region REWRITE entity if $this->models[$object]['data']['entity']
                     if(isset($this->models[$object]['data']['entity'])) $entity = $this->models[$object]['data']['entity'];
