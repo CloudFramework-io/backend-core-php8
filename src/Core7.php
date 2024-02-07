@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.1.13';  // 2024-02-01 1
+        var $_version = '8.1.14';  // 2024-02-07 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -4773,7 +4773,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         private $core;
         var $isAuth = false;
         var $id;
-        var $namespace='Default';
+        var $namespace = 'Default';
         var $token;
         var $tokenExpiration;
         var $data = [];
@@ -4803,12 +4803,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Resent user variables
          */
-        public function reset() {
-            $this->isAuth=false;
-            $this->id=null;
-            $this->data=null;
-            $this->token=null;
-            $this->tokenExpiration=null;
+        public function reset()
+        {
+            $this->isAuth = false;
+            $this->id = null;
+            $this->data = null;
+            $this->token = null;
+            $this->tokenExpiration = null;
         }
 
         /**
@@ -4820,38 +4821,39 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param array $data
          * @param string $token
          */
-        function setAuth(bool $auth,string $user='',string $namespace='', string $token='', $data=null) {
+        function setAuth(bool $auth, string $user = '', string $namespace = '', string $token = '', $data = null)
+        {
 
             $this->reset();
             $this->isAuth = $auth;
 
-            if($user && $namespace) {
-                $userData = $this->core->cache->get($namespace.'_'.$user);
-                if(!$userData) $userData = ['id'=>$user,'tokens'=>[],'data'=>[]];
-                if($this->isAuth) {
+            if ($user && $namespace) {
+                $userData = $this->core->cache->get($namespace . '_' . $user);
+                if (!$userData) $userData = ['id' => $user, 'tokens' => [], 'data' => []];
+                if ($this->isAuth) {
                     $this->id = $userData['id'];
                     $this->data = $userData['data'];
-                    if($token) {
-                        if(count($userData['tokens']) >= $this->maxTokens) do {
+                    if ($token) {
+                        if (count($userData['tokens']) >= $this->maxTokens) do {
                             array_shift($userData['tokens']);
-                        } while(count($userData['tokens']) >= $this->maxTokens);
+                        } while (count($userData['tokens']) >= $this->maxTokens);
 
                         $this->token = $token;
-                        $userData['tokens'][$token] = ['error'=>null,'time'=>microtime(true)];
+                        $userData['tokens'][$token] = ['error' => null, 'time' => microtime(true)];
                     }
-                    if($data!==null) $userData['data'] = $data;
+                    if ($data !== null) $userData['data'] = $data;
 
 
-                    $this->core->cache->set($namespace.'_'.$user,$userData);
+                    $this->core->cache->set($namespace . '_' . $user, $userData);
                     $this->data = $userData['data'];
 
 
                 } else {
-                    if($token) {
-                        if(isset($userData['tokens'][$token])) unset($userData['tokens'][$token]);
-                        $this->core->cache->set($namespace.'_'.$user,$userData);
+                    if ($token) {
+                        if (isset($userData['tokens'][$token])) unset($userData['tokens'][$token]);
+                        $this->core->cache->set($namespace . '_' . $user, $userData);
                     } else {
-                        $this->core->cache->delete($namespace.'_'.$user);
+                        $this->core->cache->delete($namespace . '_' . $user);
                     }
                 }
 
@@ -4863,25 +4865,26 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $token
          * @return bool|void
          */
-        function checkUserToken(string $token) {
+        function checkUserToken(string $token)
+        {
 
             $this->reset();
 
-            $parts = explode('__',$token,4);
-            if(count($parts)!=4 || $parts[0]!='token' || !$parts[1] || !$parts[2]) return($this->addError('The token does not have a right format'));
+            $parts = explode('__', $token, 4);
+            if (count($parts) != 4 || $parts[0] != 'token' || !$parts[1] || !$parts[2]) return ($this->addError('The token does not have a right format'));
 
             $user = $parts[1];
             $namespace = $parts[2];
 
-            $userData = $this->core->cache->get($namespace.'_'.$user);
-            if(!$userData || !isset($userData['tokens'][$token]) || !isset($userData['tokens'][$token]['time'])) return($this->addError('Token is not found'));
+            $userData = $this->core->cache->get($namespace . '_' . $user);
+            if (!$userData || !isset($userData['tokens'][$token]) || !isset($userData['tokens'][$token]['time'])) return ($this->addError('Token is not found'));
 
             $now = microtime(true);
-            if(($now - $userData['tokens'][$token]['time']) > $this->expirationTime) {
+            if (($now - $userData['tokens'][$token]['time']) > $this->expirationTime) {
                 unset($userData['tokens'][$token]);
-                $this->core->cache->set($namespace.'_'.$user,$userData);
+                $this->core->cache->set($namespace . '_' . $user, $userData);
 
-                return($this->addError('Token is expired'));
+                return ($this->addError('Token is expired'));
 
             }
 
@@ -4905,34 +4908,35 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $namespace
          * @return string
          */
-        function createUserToken($user,$namespace='default',$data=null) {
+        function createUserToken($user, $namespace = 'default', $data = null)
+        {
 
             $this->reset();
 
             //region CHECK $user, $namespace
-            if(!$user) return($this->addError('The user is empty'));
-            if(!$namespace) return($this->addError('The namespace is empty'));
-            if(strpos($user,'__')!==false) return($this->addError('The user has "__" chars in the content'));
-            if(strpos($namespace,'__')!==false) return($this->addError('The namespace has "__" chars in the content'));
+            if (!$user) return ($this->addError('The user is empty'));
+            if (!$namespace) return ($this->addError('The namespace is empty'));
+            if (strpos($user, '__') !== false) return ($this->addError('The user has "__" chars in the content'));
+            if (strpos($namespace, '__') !== false) return ($this->addError('The namespace has "__" chars in the content'));
             //endregion
 
             //region SET $token and $userData reading from cache
-            $token =  'token__'.$user.'__'.$namespace.'__'.hash('md5',microtime(true));
+            $token = 'token__' . $user . '__' . $namespace . '__' . hash('md5', microtime(true));
 
-            $userData = $this->core->cache->get($namespace.'_'.$user);
-            if(!$userData) $userData = ['id'=>$user,'tokens'=>[],'data'=>[]];
+            $userData = $this->core->cache->get($namespace . '_' . $user);
+            if (!$userData) $userData = ['id' => $user, 'tokens' => [], 'data' => []];
             //endregion
 
             //region SET $now and REDUCE $userData['tokens'] to $this->maxTokens
             $now = microtime(true);
-            if(count($userData['tokens']) >= $this->maxTokens) do {
+            if (count($userData['tokens']) >= $this->maxTokens) do {
                 array_shift($userData['tokens']);
-            } while(count($userData['tokens']) >= $this->maxTokens);
-            $userData['tokens'][$token] = ['error'=>null,'time'=>$now];
+            } while (count($userData['tokens']) >= $this->maxTokens);
+            $userData['tokens'][$token] = ['error' => null, 'time' => $now];
             //endregion
 
             //region ASSIGN $data to $userData['data'] if not null
-            if($data!== null) $userData['data'] = $data;
+            if ($data !== null) $userData['data'] = $data;
             //endregion
 
             //region SET $this->isAuth, namespace, token, id, data}
@@ -4945,8 +4949,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region SAVE cache of $userData and return the token
-            $this->core->cache->set($namespace.'_'.$user,$userData);
-            return($token);
+            $this->core->cache->set($namespace . '_' . $user, $userData);
+            return ($token);
             //endregion
 
         }
@@ -4957,31 +4961,31 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $delete_all_tokens
          * @return bool
          */
-        function logoutUserToken(string $token='',$delete_all_tokens=false)
+        function logoutUserToken(string $token = '', $delete_all_tokens = false)
         {
             $this->reset();
-            if($token) {
+            if ($token) {
                 //region SET $user,$namespace
-                $parts = explode('__',$token,4);
-                if(count($parts)!=4 || $parts[0]!='token' || !$parts[1] || !$parts[2]) return($this->addError('The token does not have a right format'));
+                $parts = explode('__', $token, 4);
+                if (count($parts) != 4 || $parts[0] != 'token' || !$parts[1] || !$parts[2]) return ($this->addError('The token does not have a right format'));
                 $user_token = $parts[1];
                 $namespace = $parts[2];
                 //endregion
 
                 //region SET $userData
-                $userData = $this->core->cache->get($namespace.'_'.$user_token);
+                $userData = $this->core->cache->get($namespace . '_' . $user_token);
                 //endregion
 
 
-                if($delete_all_tokens) {
-                    if($userData) {
-                        $this->core->cache->delete($namespace.'_'.$user_token);
+                if ($delete_all_tokens) {
+                    if ($userData) {
+                        $this->core->cache->delete($namespace . '_' . $user_token);
                     }
                 } else {
-                    if($userData) {
-                        if(isset($userData['tokens'][$token])) {
+                    if ($userData) {
+                        if (isset($userData['tokens'][$token])) {
                             unset($userData['tokens'][$token]);
-                            $this->core->cache->set($namespace.'_'.$user_token,$userData);
+                            $this->core->cache->set($namespace . '_' . $user_token, $userData);
                         }
                     }
                 }
@@ -4991,58 +4995,63 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Generate Token from ERP login
-         * @param $user
-         * @param $password
-         * @param $namespace
-         * @param $integration_key
+         * Execute a sign-in over the CLOUD-PLATFORM using $user/$password in $platform_id
+         * and store the token and user info in $this->token, $this->data
+         * @param string $user
+         * @param string $password
+         * @param string $platform_id
+         * @param string $integration_key
          * @return bool|void
          */
-        function loginERP($user,$password, $namespace,$integration_key) {
+        function loginCloudPlatform(string $user, string $password, string $platform_id, string $integration_key)
+        {
 
             $payload = [
-                'type'=>'userpassword',
-                'user'=>$user,
-                'password'=>$password,
+                'type' => 'userpassword',
+                'user' => $user,
+                'password' => $password,
             ];
             $header = [
-                'X-WEB-KEY'=>'CoreUser',
-                'X-EXTRA-INFO'=>$integration_key
+                'X-WEB-KEY' => 'CoreUser',
+                'X-EXTRA-INFO' => $integration_key
             ];
 
-            $cfUserInfo =$this->core->request->post_json_decode($this::APIServices.'/'.$namespace.'/in',$payload,$header);
-            if($this->core->request->error) {
-                $this->addError($this->core->request->errorMsg);
+            $cfUserInfo = $this->core->request->post_json_decode($this::APIServices . '/' . $platform_id . '/in', $payload, $header);
+            if ($this->core->request->error) {
+                $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
                 $this->core->request->reset();
                 return;
             }
 
             //region SET $user_token,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
-            $tokenParts = explode('__',$cfUserInfo['data']['dstoken']);
-            if(count($tokenParts) != 3
-                || !($namespace=$tokenParts[0])
-                || !($user_token=$tokenParts[1])
-                || !($key=$tokenParts[2]) )
-                return($this->addError('WRONG_TOKEN_FORMAT','The structure of the token is not right'));
+            $tokenParts = explode('__', $cfUserInfo['data']['dstoken']);
+            if (count($tokenParts) != 3
+                || !($namespace = $tokenParts[0])
+                || !($user_token = $tokenParts[1])
+                || !($key = $tokenParts[2])) {
+
+                $this->addError('WRONG_TOKEN_FORMAT', 'The structure of the token is not right');
+                return false;
+            }
             //endregion
 
             //region READ $userData from $this->core->cache->get($namespace.'_'.$user_token)
-            $userData = $this->core->cache->get($namespace.'_'.$user_token);
-            if(!$userData) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
+            $userData = $this->core->cache->get($namespace . '_' . $user_token);
+            if (!$userData) $userData = ['id' => null, 'tokens' => [], 'data' => []];
             //endregion
 
             $now = microtime(true);
-            if(count($userData['tokens']) >= $this->maxTokens) do {
+            if (count($userData['tokens']) >= $this->maxTokens) do {
                 array_shift($userData['tokens']);
-            } while(count($userData['tokens']) >= $this->maxTokens);
+            } while (count($userData['tokens']) >= $this->maxTokens);
 
             $token = $cfUserInfo['data']['dstoken'];
-            $userData['tokens'][$token] = ['error'=>null,'time'=>$now];
+            $userData['tokens'][$token] = ['error' => null, 'time' => $now];
 
-            $userData['data'] =  $cfUserInfo['data'];
+            $userData['data'] = $cfUserInfo['data'];
             $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
 
-            $this->core->cache->set($namespace.'_'.$user_token,$userData);
+            $this->core->cache->set($namespace . '_' . $user_token, $userData);
 
             //region SET $this->{isAuth, namespace, token, id, data}
             $this->isAuth = true;
@@ -5054,8 +5063,20 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             return true;
+        }
 
-
+        /**
+         * Deprecated. Use loginCloudPlatform
+         * @param $user
+         * @param $password
+         * @param $namespace
+         * @param $integration_key
+         * @return bool|void
+         * @deprecated
+         */
+        function loginERP($user, $password, $namespace, $integration_key)
+        {
+            return $this->loginCloudPlatform($user, $password, $namespace, $integration_key);
         }
 
         /**
@@ -5064,36 +5085,36 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $delete_all_tokens
          * @return bool
          */
-        function logoutERPToken(string $token='',$delete_all_tokens=false)
+        function logoutERPToken(string $token = '', $delete_all_tokens = false)
         {
             $this->reset();
-            if($token) {
+            if ($token) {
                 //region SET $user,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
-                $tokenParts = explode('__',$token);
-                if(count($tokenParts) != 3
-                    || !($namespace=$tokenParts[0])
-                    || !($user_token=$tokenParts[1])
-                    || !($key=$tokenParts[2]) )
-                    return($this->addError('WRONG_TOKEN_FORMAT','The structure of the token is not right'));
+                $tokenParts = explode('__', $token);
+                if (count($tokenParts) != 3
+                    || !($namespace = $tokenParts[0])
+                    || !($user_token = $tokenParts[1])
+                    || !($key = $tokenParts[2]))
+                    return ($this->addError('WRONG_TOKEN_FORMAT', 'The structure of the token is not right'));
                 //endregion
 
                 //region SET $userData
-                $userData = $this->core->cache->get($namespace.'_'.$user_token);
+                $userData = $this->core->cache->get($namespace . '_' . $user_token);
                 //endregion
 
 
-                if($delete_all_tokens) {
-                    if($userData) {
-                        foreach ( $userData['tokens'] as $token_key=>$foo) if(strpos($token_key,'__signin_in_')){
+                if ($delete_all_tokens) {
+                    if ($userData) {
+                        foreach ($userData['tokens'] as $token_key => $foo) if (strpos($token_key, '__signin_in_')) {
                             $this->logoutERPToken($token_key);
                         }
-                        $this->core->cache->delete($namespace.'_'.$user_token);
+                        $this->core->cache->delete($namespace . '_' . $user_token);
                     }
                 } else {
-                    if($userData) {
-                        if(isset($userData['tokens'][$token])) {
+                    if ($userData) {
+                        if (isset($userData['tokens'][$token])) {
                             unset($userData['tokens'][$token]);
-                            $this->core->cache->set($namespace.'_'.$user_token,$userData);
+                            $this->core->cache->set($namespace . '_' . $user_token, $userData);
                         }
                     }
                 }
@@ -5102,56 +5123,56 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return true;
 
             $this->reset();
-            if($token) {
-                $parts = explode('__',$token,4);
-                if(count($parts)!=4 || $parts[0]!='token' || !$parts[1] || !$parts[2]) return($this->addError('The token does not have a right format'));
+            if ($token) {
+                $parts = explode('__', $token, 4);
+                if (count($parts) != 4 || $parts[0] != 'token' || !$parts[1] || !$parts[2]) return ($this->addError('The token does not have a right format'));
 
 
                 //region SET $user,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
-                $tokenParts = explode('__',$token);
-                if(count($tokenParts) != 3
-                    || !($namespace=$tokenParts[0])
-                    || !($user_token=$tokenParts[1])
-                    || !($key=$tokenParts[2]) )
-                    return($this->addError('WRONG_TOKEN_FORMAT','The structure of the token is not right'));
+                $tokenParts = explode('__', $token);
+                if (count($tokenParts) != 3
+                    || !($namespace = $tokenParts[0])
+                    || !($user_token = $tokenParts[1])
+                    || !($key = $tokenParts[2]))
+                    return ($this->addError('WRONG_TOKEN_FORMAT', 'The structure of the token is not right'));
                 //endregion
 
                 //region SET $userData
-                $userData = $this->core->cache->get($namespace.'_'.$user_token);
+                $userData = $this->core->cache->get($namespace . '_' . $user_token);
                 //endregion
 
 
-                if($delete_all_tokens) {
-                    if($userData) {
-                        foreach ( $userData['tokens'] as $token_key=>$foo) if(strpos($token_key,'__signin_in_')){
+                if ($delete_all_tokens) {
+                    if ($userData) {
+                        foreach ($userData['tokens'] as $token_key => $foo) if (strpos($token_key, '__signin_in_')) {
                             $header = [
-                                'X-WEB-KEY'=>'CoreUser',
-                                'X-DS-TOKEN'=>$token_key
+                                'X-WEB-KEY' => 'CoreUser',
+                                'X-DS-TOKEN' => $token_key
                             ];
-                            $this->core->request->get_json_decode($this::APIServices.'/'.$namespace.'/logout',null,$header);
-                            if($this->core->request->error) {
-                                $this->core->logs->add($this->core->request->errorMsg,'logout_erp_logout');
+                            $this->core->request->get_json_decode($this::APIServices . '/' . $namespace . '/logout', null, $header);
+                            if ($this->core->request->error) {
+                                $this->core->logs->add($this->core->request->errorMsg, 'logout_erp_logout');
                                 $this->core->request->reset();
                             }
                         }
-                        $this->core->cache->delete($namespace.'_'.$user_token);
+                        $this->core->cache->delete($namespace . '_' . $user_token);
                     }
                 } else {
-                    if($userData) {
-                        if(isset($userData['tokens'][$token])) {
-                            if(strpos($token,'__signin_in_')) {
+                    if ($userData) {
+                        if (isset($userData['tokens'][$token])) {
+                            if (strpos($token, '__signin_in_')) {
                                 $header = [
-                                    'X-WEB-KEY'=>'CoreUser',
-                                    'X-DS-TOKEN'=>$token
+                                    'X-WEB-KEY' => 'CoreUser',
+                                    'X-DS-TOKEN' => $token
                                 ];
-                                $this->core->request->get_json_decode($this::APIServices.'/'.$namespace.'/logout',null,$header);
-                                if($this->core->request->error) {
-                                    $this->core->logs->add($this->core->request->errorMsg,'logout_erp_logout');
+                                $this->core->request->get_json_decode($this::APIServices . '/' . $namespace . '/logout', null, $header);
+                                if ($this->core->request->error) {
+                                    $this->core->logs->add($this->core->request->errorMsg, 'logout_erp_logout');
                                     $this->core->request->reset();
                                 }
                             }
                             unset($userData['tokens'][$token]);
-                            $this->core->cache->set($namespace.'_'.$user_token);
+                            $this->core->cache->set($namespace . '_' . $user_token);
                         }
                     }
                 }
@@ -5159,14 +5180,26 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Use checkPlatformToken
+         * @deprecated
+         * @param string $token
+         * @param string $integration_key
+         * @param bool $refresh
+         * @return void
+         */
+        function checkERPToken(string $token, string $integration_key, bool $refresh = false) {
+            return $this->checkPlatformToken($token,$integration_key,$refresh);
+        }
+
+        /**
          * Verify that a token is valid and update the following properties: namespace, userId, userData
          * It allows to work with several active tokens at the same time
          * @param string $token Token to verify with CloudFramework ERP
          * @param string $integration_key Integration Key to call CloudFramework API for signing
-         * @param bool $refresh indicates if we have to ignore cached data with $refresh=true. Default is false
+         * @param bool $refresh if true it ignores cached data and call CLOUD-DIRECTORY API
          * @return false|void
          */
-        function checkERPToken(string $token, string $integration_key,bool $refresh=false)
+        function checkPlatformToken(string $token, string $integration_key,bool $refresh=false)
         {
             // Reset $user variables
             $this->reset();
@@ -5233,11 +5266,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                 if($this->core->request->error) {
                     $userData['tokens'][$token]['error'] = $this->core->request->errorMsg;
-                    if($this->core->request->getLastResponseCode()==401) {
-                        $this->addError('SECURITY_ERROR','Token is not authorized');
-                    } else {
-                        $this->addError('TOKEN_ERROR_'.$this->core->request->getLastResponseCode(),$this->core->request->errorMsg);
-                    }
+                    $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
                 } else {
                     $userData['data'] =  $cfUserInfo['data'];
                     $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
