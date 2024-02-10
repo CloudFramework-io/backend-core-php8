@@ -82,7 +82,7 @@ class CFOs {
                 }
                 $model = ($this->core->model->models['ds:' . $object] ?? null);
             }
-            if (($service_account_secret = ($model['data']['secret'] ?? null))) {
+            if (($service_account_secret = ($model['data']['secret'] ?? ($model['data']['interface']['secret']??null)))) {
                 if (is_string($service_account_secret)) {
                     if (!$service_account = $this->readSecret($service_account_secret)) {
                         $this->core->logs->add("CFO {$object} has a secret and it does not exist in CFOs->secrets[]. Set the secret value or call CFOs->avoidSecrets(true).", 'CFOs_warning');

@@ -313,6 +313,20 @@ class WorkFlows
     }
 
     /**
+     * Use method sendPlatformEmail
+     * @deprecated
+     * @param array $params
+     * @param string $type
+     * @param string $linked_object
+     * @param string $linked_id
+     * @return void
+     * @throws Mandrill_Error
+     */
+    public function sendERPEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='')
+    {
+        return $this->sendPlatformEmail($params,$type,$linked_object,$linked_id);
+    }
+    /**
      * Send an email using CLOUDFRAMEWORK CLOUD-CHANNELS/EMAIL
      * @param array $params {
      *    Parameters by reference to send an email.
@@ -335,7 +349,7 @@ class WorkFlows
      * @param string $linked_object [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedObject
      * @param string $linked_id [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedId
      */
-    public function sendERPEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='') {
+    public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='') {
         if($type!='Mandrill') return $this->addError('sendERPEmail(...) has received a worng $type. [Mandrill] is the valid value');
         if(!$this->mandrill) return $this->addError('sendERPEmail(...) has been call without calling previously setMandrillApiKey(...)');
         switch ($type) {
@@ -380,16 +394,20 @@ class WorkFlows
                     "JSONProcessing"=>['Reply-To'=>$reply_to,'bcc'=>$bcc,'TemplateVariables'=>$data,'Result'=>null],
                 ];
                 $this->cfos->useCFOSecret(true);
-                $dsSubmission = $this->cfos->ds('CloudFrameWorkEmailsSubmissions')->createEntities($submission);
-                if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
+                $dsSubmission = $this->cfos->ds('CloudFrameWorkEmailsSubmissions')->createEntities($submission)[0]??null;
+                if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) {
+                    return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
+                }
                 $result = $this->sendMandrillEmail($params);
                 $dsSubmission['StatusProcessing'] = $result['success']?'success':'error';
                 $dsSubmission['JSONProcessing']['Result'] = $result;
                 $dsSubmission['DateProcessing'] = "now";
-                $dsSubmission = $this->cfos->ds('CloudFrameWorkEmailsSubmissions')->createEntities($dsSubmission)[0]??null;
-                if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
 
-                if($result['success']) foreach ( $result['result'] as $i=>$item) {
+                $dsSubmission = $this->cfos->ds('CloudFrameWorkEmailsSubmissions')->createEntities($dsSubmission)[0]??null;
+                if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) {
+                    return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
+                }
+                if($result['success'] && is_array($result['result']??null)) foreach ( $result['result'] as $i=>$item) {
                     $email = [
                         "Cat"=>$dsSubmission['Cat'],
                         "SubmissionId"=>$dsSubmission['KeyId'],

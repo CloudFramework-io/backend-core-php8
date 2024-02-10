@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.1.14';  // 2024-02-07 1
+        var $_version = '8.1.15';  // 2024-02-10 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -4776,6 +4776,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $namespace = 'Default';
         var $token;
         var $tokenExpiration;
+        var $tokenExpiresIn;
         var $data = [];
         /** @var bool $cached says if the user data has been retrieved from cache */
         var $cached = false;
@@ -5000,10 +5001,83 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $user
          * @param string $password
          * @param string $platform_id
+         * @param string $ClientId
+         * @param string $web_key
+         * @return bool|void
+         */
+        function loadPortalUserWithUserPassword(string $user, string $password, string $platform_id, string $ClientId, string $web_key)
+        {
+
+            $payload = [
+                'username' => $user,
+                'userpassword' => $password,
+                'ClientId' => $ClientId,
+            ];
+            $header = [
+                'X-WEB-KEY' => 'CoreUser',
+                'X-WEB-KEY' => $web_key
+            ];
+
+            $cfUserInfo = $this->core->request->post_json_decode($this::APIPortalServices . '/' . $platform_id . '/web-oauth/signin', $payload, $header);
+            if ($this->core->request->error) {
+                $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
+                $this->core->request->reset();
+                return;
+            }
+
+            //region SET $user_token,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
+            $tokenParts = explode('__', $cfUserInfo['data']['web_token']);
+            if (count($tokenParts) != 3
+                || !($namespace = $tokenParts[0])
+                || !($user_token = $tokenParts[1])
+                || !($key = $tokenParts[2])) {
+
+                $this->addError('WRONG_TOKEN_FORMAT', 'The structure of the token is not right');
+                return false;
+            }
+            //endregion
+
+            //region READ $userData from $this->core->cache->get($namespace.'_'.$user_token)
+            $userData = $this->core->cache->get($namespace . '_' . $user_token);
+            if (!$userData) $userData = ['id' => null, 'tokens' => [], 'data' => []];
+            //endregion
+
+            $now = microtime(true);
+            if (count($userData['tokens']) >= $this->maxTokens) do {
+                array_shift($userData['tokens']);
+            } while (count($userData['tokens']) >= $this->maxTokens);
+
+            $token = $cfUserInfo['data']['web_token'];
+            $userData['tokens'][$token] = ['error' => null, 'time' => $now,'expires'=>$cfUserInfo['data']['expires']??null];
+            if($cfUserInfo['data']['expires']??null)
+                $this->tokenExpiresIn = $cfUserInfo['data']['expires']-time();
+            $userData['data'] = $cfUserInfo['data'];
+            $userData['id'] = $cfUserInfo['data']['user_data']['KeyId'];
+
+            $this->core->cache->set($namespace . '_' . $user_token, $userData);
+
+            //region SET $this->{isAuth, namespace, token, id, data}
+            $this->isAuth = true;
+            $this->token = $token;
+            $this->namespace = $namespace;
+            $this->id = $userData['id'];
+            $this->data = $userData['data'];
+            unset($userData);
+            //endregion
+
+            return true;
+        }
+
+        /**
+         * Execute a sign-in over the CLOUD-PLATFORM using $user/$password in $platform_id
+         * and store the token and user info in $this->token, $this->data
+         * @param string $user
+         * @param string $password
+         * @param string $platform_id
          * @param string $integration_key
          * @return bool|void
          */
-        function loginCloudPlatform(string $user, string $password, string $platform_id, string $integration_key)
+        function loadPlatformUserWithUserPassword(string $user, string $password, string $platform_id, string $integration_key)
         {
 
             $payload = [
@@ -5016,7 +5090,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'X-EXTRA-INFO' => $integration_key
             ];
 
-            $cfUserInfo = $this->core->request->post_json_decode($this::APIServices . '/' . $platform_id . '/in', $payload, $header);
+            $cfUserInfo = $this->core->request->post_json_decode($this::APIServices . '/' . $platform_id . '/in?_refresh_integration_keys&from_loadPlatformUserWithUserPassword', $payload, $header);
             if ($this->core->request->error) {
                 $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
                 $this->core->request->reset();
@@ -5047,7 +5121,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $token = $cfUserInfo['data']['dstoken'];
             $userData['tokens'][$token] = ['error' => null, 'time' => $now];
-
+            if($cfUserInfo['data']['User']['Expires']??null)
+                $this->tokenExpiresIn = $cfUserInfo['data']['User']['Expires']-time();
             $userData['data'] = $cfUserInfo['data'];
             $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
 
@@ -5076,7 +5151,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         function loginERP($user, $password, $namespace, $integration_key)
         {
-            return $this->loginCloudPlatform($user, $password, $namespace, $integration_key);
+            return $this->loadPlatformUserWithUserPassword($user, $password, $namespace, $integration_key);
         }
 
         /**
@@ -5188,7 +5263,114 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @return void
          */
         function checkERPToken(string $token, string $integration_key, bool $refresh = false) {
-            return $this->checkPlatformToken($token,$integration_key,$refresh);
+            return $this->loadPlatformUserWithToken($token,$integration_key,$refresh);
+        }
+
+
+        /**
+         * Verify that a Portal Web Token is valid and update the following properties: namespace, userId, userData
+         * It allows to work with several active tokens at the same time
+         * @param string $token Token to verify with CloudFramework ERP
+         * @param string $integration_key Integration Key to call CloudFramework API for signing
+         * @param bool $refresh if true it ignores cached data and call CLOUD-DIRECTORY API
+         * @return false|void
+         */
+        function loadPortalUserWithToken(string $token, string $ClientId, string $web_key, bool $refresh=false)
+        {
+            // Reset $user variables
+            $this->reset();
+
+            //region SET $user,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
+            $tokenParts = explode('__',$token);
+            if(count($tokenParts) != 3
+                || !($namespace=$tokenParts[0])
+                || !($user_token=$tokenParts[1])
+                || !($key=$tokenParts[2])
+                || strpos($tokenParts[1],'web_oauth_')!==0)
+                return($this->addError('WRONG_TOKEN_FORMAT','The structure of the token is not right'));
+            //endregion
+
+            //region SET $userData trying to get the info from cache deleting expired tokens and checking $this->maxTokens
+            $updateCache = false;
+            $userData = $this->core->cache->get($namespace.'_'.$user_token);
+            if(!$userData) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
+            else {
+                $now = microtime(true);
+                $num_tokens = 0;
+                foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
+                    if(($now - $tokenInfo['time']) > $this->expirationTime) {
+                        unset($userData['tokens'][$tokenId]);
+                        $updateCache = true;
+                    } else {
+                        $num_tokens++;
+                        if(!isset($userData['tokens'][$token]) && $num_tokens>=$this->maxTokens) {
+                            unset($userData['tokens'][$tokenId]);
+                            $updateCache = true;
+                        }
+                    }
+                }
+
+                //update Cache with the deleted tokens
+                if($updateCache) $this->core->cache->set($namespace.'_'.$user_token,$userData);
+
+                // Verify $token is not a token with error
+                if(isset($userData['tokens'][$token]) && $userData['tokens'][$token]['error']) {
+                    return($this->addError('TOKEN_NOT_VALID',['The token already has been used but it is not valid',$userData['tokens'][$token]['error']]));
+                }
+
+                // Verify number of active tokens
+                if(!isset($userData['tokens'][$token]) && count($userData['tokens']) >=$this->maxTokens) {
+                    return($this->addError('MAX_TOKENS_REACHED','The max number of tokens has been reached: '.$this->maxTokens));
+                }
+
+                $this->cached = true;
+
+            }
+            //endregion
+
+            //region CALL CloudFramework API Service IF $token DOEST not exist in $userData OR $refresh
+            if($expires = ($userData['data']['expires']??null)) {
+                $this->tokenExpiresIn = $expires-time();
+                if($expires >= time()) $expired=false;
+                else return($this->addError('TOKEN_EXPIRED','The expiration time of the token has been reached: '.date('Y-m-d H:i:s e',$expired)));
+            }
+            if(!isset($userData['tokens'][$token]) || $refresh) {
+
+                $this->cached = false;
+                $userData['tokens'][$token] = ['error'=>null,'time'=>microtime(true)];
+                $params = ['ClientId'=>$ClientId];
+                $headers = ['X-WEB-KEY'=>$web_key,'X-DS-TOKEN'=>$token];
+                $url = $this::APIPortalServices.'/'.$namespace.'/web-oauth/user-info/'.(str_replace('web_oauth_','',$user_token)).'?checkPortalToken';
+                $cfUserInfo = $this->core->request->get_json_decode(
+                    $url
+                    ,$params
+                    ,$headers);
+
+                if($this->core->request->error) {
+                    $userData['tokens'][$token]['error'] = $this->core->request->errorMsg;
+                    $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
+                } else {
+                    $userData['data']['user_data'] =  $cfUserInfo['data'];
+                    $userData['id'] = $userData['data']['user_data']['KeyId'];
+                }
+                $this->core->request->reset();
+                $this->core->cache->set($namespace.'_'.$user_token,$userData);
+                if($this->error) return;
+            }
+            //endregion
+
+            //region SET $this->{isAuth, namespace, token, id, data}
+            $this->isAuth = true;
+            $this->token = $token;
+            $this->activeTokens = count($userData['tokens']);
+            $this->namespace = $namespace;
+            $this->id = $userData['id'];
+            $this->data = $userData['data'];
+            unset($userData);
+            //endregion
+
+            return true;
+
         }
 
         /**
@@ -5196,10 +5378,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * It allows to work with several active tokens at the same time
          * @param string $token Token to verify with CloudFramework ERP
          * @param string $integration_key Integration Key to call CloudFramework API for signing
-         * @param bool $refresh if true it ignores cached data and call CLOUD-DIRECTORY API
+         * @param bool $refresh if true it ignores cached data and call CLOUD-DIRECTORY API to refresh information
          * @return false|void
          */
-        function checkPlatformToken(string $token, string $integration_key,bool $refresh=false)
+        function loadPlatformUserWithToken(string $token, string $integration_key, bool $refresh=false)
         {
             // Reset $user variables
             $this->reset();
@@ -5284,6 +5466,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->namespace = $namespace;
             $this->id = $userData['id'];
             $this->data = $userData['data'];
+            $this->expirationTime = $userData['data']['User']['Expires']??time();
+            $this->tokenExpiresIn = $this->expirationTime - time();
             unset($userData);
             //endregion
 
