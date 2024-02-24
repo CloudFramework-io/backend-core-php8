@@ -174,7 +174,7 @@ if (!defined("_RESTfull_CLASS_")) {
             header("Access-Control-Allow-Origin: $origin");
             header("Access-Control-Allow-Methods: $methods");
 
-            $allow_headers='Content-Type,Authorization,X-CloudFrameWork-AuthToken,X-CLOUDFRAMEWORK-SECURITY,X-DS-TOKEN,X-REST-TOKEN,X-EXTRA-INFO,X-WEB-KEY,X-SERVER-KEY,X-REST-USERNAME,X-REST-PASSWORD,X-APP-KEY,X-DATA-ENV';
+            $allow_headers='Content-Type,Authorization,X-Requested-With,cache-control,X-CloudFrameWork-AuthToken,X-CLOUDFRAMEWORK-SECURITY,X-DS-TOKEN,X-REST-TOKEN,X-EXTRA-INFO,X-WEB-KEY,X-SERVER-KEY,X-REST-USERNAME,X-REST-PASSWORD,X-APP-KEY,X-DATA-ENV';
             if($allow_extra_headers && is_string($allow_extra_headers)) $allow_headers.=','.strtoupper($allow_extra_headers);
 
             header("Access-Control-Allow-Headers: {$allow_headers}");

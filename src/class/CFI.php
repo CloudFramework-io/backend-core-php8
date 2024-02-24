@@ -1,17 +1,18 @@
 <?php
 
 /**
- * [$cfi = $this->core->loadClass('CFI');] Class CFI to handle CFO app for CloudFrameworkInterface
- * https://www.notion.so/cloudframework/CFI-PHP-Class-c26b2a1dd2254ddd9e663f2f8febe038
- * last_update: 20221003
+ * [$cfi = $this->core->loadClass('CFI');] Class CFI to handle CFO apps for CloudFrameworkInterface
+ * https://cloudframework.io/docs/es/cfis/aplicaciones-low-code
+ * last_update: 20240224
  * @package CoreClasses
  */
 class CFI
 {
-    private $version = '20221003';
+    private $version = '20240224';
     private $core;
     private $fields = [];
     private $buttons = [];
+
     var $json_object=['title'=>'Pending'
         ,'allow_copy'=>false
         ,'allow_delete'=>false
@@ -164,6 +165,8 @@ class CFIField {
 
     private $cfi;
     private $field;
+    var $object;
+
 
     /**
      * CFI constructor.
@@ -346,11 +349,12 @@ class CFIField {
      * Set if the field to type autocomplete
      * @return CFIField $this
      */
-    public function autocomplete(array $values,$defaultvalue='') {
+    public function autocomplete(array $values,$defaultvalue='',$allow_add=false) {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'autocomplete';
         $this->cfi->json_object['fields'][$this->field]['values'] = $values;
-        if($defaultvalue)
-            $this->cfi->json_object['fields'][$this->field]['defaultvalue'] = $defaultvalue;
+        $this->cfi->json_object['fields'][$this->field]['defaultvalue'] = $defaultvalue;
+        if($allow_add)
+            $this->cfi->json_object['fields'][$this->field]['allow_add'] = true;
         return $this;
     }
 
@@ -379,7 +383,9 @@ class CFIField {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'iframe';
         $this->cfi->json_object['fields'][$this->field]['iframe_height'] = $height;
         if($url) $this->cfi->json_object['fields'][$this->field]['iframe_url'] =$url;
-        return $this;}
+        return $this;
+    }
+
 
     /**
      * Set if the url for certain types like iframe
@@ -454,7 +460,140 @@ class CFIField {
         else $this->cfi->json_object['fields'][$this->field]['display_cfo'] = true;
         return $this;
     }
+
+
+    /**
+     * Set if the field to type html
+     * @param string $bucket optional bucket path as base of files
+     * @param string $folder optional folder to add to $folder. It shouldn't starts with '/'
+     * @return CFIServerDocuments $this->object
+     */
+    public function serverDocuments(string $bucket='',string $folder='') {
+        if(!isset($this->cfi->json_object['fields'][$this->field])) $this->cfi->json_object['fields'][$this->field] =[];
+        if(!is_object($this->object) || get_class($this->object) != 'CFIServerDocuments')
+            $this->object = new CFIServerDocuments($this->cfi->json_object['fields'][$this->field]);
+        if($bucket)
+            $this->object->bucket($bucket);
+        if($folder)
+            $this->object->folder($folder);
+        return $this->object;
+    }
 }
+
+/*
+ * Class to handle field type server_documents
+ * https://cloudframework.io/documentation/public/es/objetos-de-datos-cfos/type/server_documents
+ * last_update: 20200502
+ */
+class CFIServerDocuments
+{
+    var $field;
+
+    /**
+     * CFI constructor.
+     * @param array $field
+     */
+    function __construct(array &$field)
+    {
+        $this->field = &$field;
+        $this->field['type']='server_documents';
+    }
+
+    /**
+     * Assign the bucket where to store the files. IT should starts with gs:// ot it will add it to $bucket
+     * @param string $buket
+     * @return CFIServerDocuments $this
+     */
+    public function bucket(string $buket) {
+        if(strpos($buket,'gs://')!==0) $buket="gs://{$buket}";
+        $this->field['bucket']=$buket;
+        return $this;
+    }
+
+    /**
+     * Process an array of files with the structure of CloudFrameWorkDocuments
+     * and add it as documents in the field
+     * @param array $files
+     * @return CFIServerDocuments $this
+     */
+    public function processCloudFrameworkDocuments(array $files) {
+        foreach ($files as $file) {
+            $doc = [
+                'id'=>$file['KeyName']??null,
+                'date'=>$file['DateInsertion']??null,
+                'name'=>$file['doc_name']??null,
+                'size'=>$file['doc_size']??null,
+                'file_type'=>$file['doc_filetype']??null,
+                'url'=>$file['doc_url']??null,
+                'url_delete'=>$file['doc_url']??null,
+                'url_edit'=>$file['doc_url']??null,
+            ];
+            $this->addDocument($doc);
+        }
+        return $this;
+    }
+
+
+    /**
+     * Assign default values to the document definitions
+     * @param array $doc Document structure
+     *  $doc['id'] Id of the document
+     *  $doc['date'] Date of creation
+     *  $doc['name'] Name of the document
+     *  $doc['size'] Size of the document
+     *  $doc['file_type'] File type of the document
+     *  $doc['url'] URL to download the document
+     *  $doc['url_delete'] URL to delete the document
+     *  $doc['url_edit'] URL to update properties of the document
+     * @return CFIServerDocuments $this
+     */
+    public function addDocument(array $doc) {
+        if(!isset($this->field['uploaded_documents']))
+            $this->field['uploaded_documents']=[];
+        $doc = [
+            'id'=>$doc['id']??null,
+            'date'=>$doc['date']??null,
+            'name'=>$doc['name']??null,
+            'size'=>$doc['size']??null,
+            'file_type'=>$doc['file_type']??null,
+            'url'=>$doc['url']??null,
+            'url_delete'=>$doc['url_delete']??null,
+            'url_edit'=>$doc['url_edit']??null,
+        ];
+        $this->field['uploaded_documents'][] = $doc;
+        return $this;
+    }
+
+    /**
+     * Assign the folder where to store the files inside $this->field['bucket']
+     * @param string $folder
+     * @return CFIServerDocuments $this
+     */
+    public function folder(string $folder) {$this->field['folder']=$folder;return $this;}
+
+    /**
+     * It says if it allows multiple files
+     * @param bool $allow_multiple
+     * @return CFIServerDocuments $this
+     */
+    public function multiple(bool $allow_multiple=true) {$this->field['multiple']=$allow_multiple;return $this;}
+
+    /**
+     * It says what kind of files, or extensions will be accepted
+     * @param string $files_type example: image/*,application/pdf,.psd
+     * @return CFIServerDocuments $this
+     */
+    public function acceptedFiles(string $files_type) {$this->field['accepted_files']=$files_type;return $this;}
+
+    /**
+     * It says the max file size accepted (in bytes). By default is 5242880 bytes
+     * @param int $size example: 5242880
+     * @return CFIServerDocuments $this
+     */
+    public function maxFileSize(int $size) {$this->field['max_file_size']=$size;return $this;}
+}
+
+
 /*
  * Class to handle buttons in CFI
  * last_update: 20200502
@@ -498,7 +637,7 @@ class CFIButton {
      */
     public function align($align) { $this->button['align'] = $align; return $this;}
 
-        /**
+    /**
      * Type of Button
      * @param string $type Type of button: form, api
      * @return CFIButton $this

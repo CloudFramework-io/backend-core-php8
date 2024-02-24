@@ -782,18 +782,99 @@ if (!defined ("_Buckets_CLASS_") ) {
          * @return bool|void true if the file has been deleted. false if out exist and void if error
          */
         function deleteFile(string $filename_path) {
-            if(($filename_path[0]??null)!='/') return $this->addError('deleteFile($filename_path) $filename_path has to start with /');
+            if(!$filename_path = $this->checkFileNamePath($filename_path)) return false;
             try{
                 if(!$this->isFile($filename_path)) return false;
                 $ret = unlink($this->bucket.$filename_path);
                 if($ret === false) return $this->addError(error_get_last());
                 else return true;
             } catch(Exception $e) {
-                die($e->getMessage());
                 $this->addError($e->getMessage());
                 $this->addError(error_get_last());
                 return;
             }
+        }
+
+        /**
+         * copy a filename to other filename
+         *
+         * example:
+         * ```php
+         * if(!$bucket->copyFile('/tmp/file.txt','/tmp2/other_file.txt')) {
+         *     if($bucket->error) return ['errorCode'=>$bucket->errorCode,'errorMsg'=>$bucket->errorMsg];
+         *     else echo "/tmp/file.txt does not exist or can not be deleted";
+         * } else echo "/tmp/file.txt has been deleted";
+         * @param string $filename_path_source path to the file starting with '/' or 'gs://{bucket}/'
+         * @param string $filename_path_target path to the file starting with '/'or 'gs://{bucket}/'
+         * @return bool|void true if the file has been deleted. false if out exist and void if error
+         */
+        function copyFile(string $filename_path_source, string $filename_path_target) {
+
+            if(!$filename_path_source = $this->checkFileNamePath($filename_path_source)) return false;
+            if(!$filename_path_target = $this->checkFileNamePath($filename_path_target)) return false;
+            if($filename_path_source == $filename_path_target)  return $this->addError($this->bucket.$filename_path_source.' source files is equals to target_file');
+            try{
+                if(!$this->isFile($this->bucket.$filename_path_source)) return $this->addError($this->bucket.$filename_path_source.' does not exist');
+                if(!copy($this->bucket.$filename_path_source,$this->bucket.$filename_path_target))
+                    return $this->addError([$this->bucket.$filename_path_source,$this->bucket.$filename_path_target,error_get_last()]);
+                else
+                    return true;
+            } catch(Exception $e) {
+                $this->addError($e->getMessage());
+                $this->addError(error_get_last());
+                return;
+            }
+        }
+
+
+        /**
+         * move a filename to other filename
+         *
+         * example:
+         * ```php
+         * if(!$bucket->moveFile('/tmp/file.txt','/tmp2/other_file.txt')) {
+         *     if($bucket->error) return ['errorCode'=>$bucket->errorCode,'errorMsg'=>$bucket->errorMsg];
+         *     else echo "/tmp/file.txt does not exist or can not be deleted";
+         * } else echo "/tmp/file.txt has been deleted";
+         * @param string $filename_path_source path to the file starting with '/' or 'gs://{bucket}/'
+         * @param string $filename_path_target path to the file starting with '/'or 'gs://{bucket}/'
+         * @return bool|void true if the file has been deleted. false if out exist and void if error
+         */
+        function moveFile(string $filename_path_source, string $filename_path_target) {
+
+            if(!$filename_path_source = $this->checkFileNamePath($filename_path_source)) return false;
+            if(!$filename_path_target = $this->checkFileNamePath($filename_path_target)) return false;
+            if($filename_path_source == $filename_path_target)  return $this->addError($this->bucket.$filename_path_source.' source files is equals to target_file');
+
+            try{
+                if(!$this->isFile($this->bucket.$filename_path_source)) return $this->addError($this->bucket.$filename_path_source.' does not exist');
+                if(!rename($this->bucket.$filename_path_source,$this->bucket.$filename_path_target))
+                    return $this->addError([$this->bucket.$filename_path_source,$this->bucket.$filename_path_target,error_get_last()]);
+                else
+                    return true;
+            } catch(Exception $e) {
+                $this->addError($e->getMessage());
+                $this->addError(error_get_last());
+                return false;
+            }
+        }
+
+
+        /**
+         * Check $file_path_name checking if it starts with gs:// o /, returning just the filepath
+         * if it starts with gs:// and the bucket is different than $this->bucket it returns false
+         * @param $file_path
+         * @return string|bool
+         */
+        private function checkFileNamePath(string $file_name_path) {
+            $file_name_path = trim($file_name_path);
+            if(!$file_name_path) return $this->addError('$file_name_path is empty');
+            if(strpos($file_name_path,'gs://')===0) {
+                if(strpos($file_name_path,$this->bucket)!==0) return $this->addError("{$file_name_path} bucket does not match with {$this->bucket}");
+                $file_name_path = str_replace($this->bucket,'',$file_name_path);
+            }
+            if($file_name_path[0]!='/') $file_name_path="/{$file_name_path}";
+            return $file_name_path;
         }
 
         /**
@@ -819,30 +900,6 @@ if (!defined ("_Buckets_CLASS_") ) {
             try{
                 $url=null;
                 $object = $this->gs_bucket->object(substr($upload_file_path,1));
-
-                //region DEPRECATED $object->signedUploadUrl
-//                if(false) {
-//                    $signed_upload_url = $object->signedUploadUrl(new \DateTime($expiration_in_minutes.' min'), [
-//                        'version' => 'v4'
-//                    ]);
-//
-//                    $headers = [
-//                        'Content-Length' => 0,
-//                        'x-goog-resumable' => 'start',
-//                        'Origin' => '*'
-//                    ];
-//
-//                    // step 2 - beginSignedUploadSession (POST)
-//                    $response = $this->core->request->post($signed_upload_url, null, $headers);
-//
-//                    if (in_array($this->core->request->getLastResponseCode(), [200, 201])) {
-//                        $url = $this->core->request->getResponseHeader('Location');
-//                    } else {
-//                        die('error');
-//                    }
-//                }
-                //endregion
-
                 // This is to upload  but it requires a Google Signature
                 if(true) {
                     $url = $object->signedUrl(
