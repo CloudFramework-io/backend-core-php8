@@ -178,7 +178,6 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
          */
         public function validType($key, $type,  &$data) {
 
-
             if(!is_bool($data) && !is_array($data) && is_string($data) && !strlen($data)) return false;
 
             // database conversion types
@@ -188,7 +187,7 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
                 case "text": case "txt": return is_string($data);
                 case "number": $data = trim($data); return !preg_match('/[^0-9]/',$data);
                 case "tinyint":case "integer": if(strval(intval($data))===strval($data)) $data=intval($data);return is_integer($data);
-                case "double": case "decimal": case "float": if(floatval($data)!=0 || $data==="0" || $data === 0) $data=floatval($data);return is_float($data);
+                case "double": case "decimal": case "float": if(floatval($data)!=0 || $data==="0"|| preg_match('/^0\.0*$/',$data) || $data === 0) $data=floatval($data);return is_float($data);
                 case "bit": if(strval(intval($data))===strval($data)) $data=intval($data);return ($data==0 || $data==1);
                 case "model": return is_array($data) && !empty($data);
                 case "json": if(is_array($data)) $data = json_encode($data);return is_string($data) && is_array(json_decode($data,true));
