@@ -2326,33 +2326,60 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
-            return($this->readERPSecretVars($erp_user,$erp_platform_id,$erp_user));
+            return($this->readPlatformSecretVars($erp_user,$erp_platform_id,$erp_user));
         }
 
         /**
          * Return a specific secret var form ERP
+         * @deprecated Use getPlatformSecretVar
          * @param $var
          * @param string $erp_secret_id
          * @param string $erp_platform_id
          * @param string $erp_user
          */
         public function getERPSecretVar($var, string $erp_secret_id='', string $erp_platform_id='', string $erp_user='') {
-
-            // Read only when it is necessary
-            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id))
-                if(!$this->readERPSecretVars($erp_secret_id,$erp_platform_id,$erp_user)) return;
-            return $this->secret_vars['secrets'][$var]??null;
+            return $this->getPlatformSecretVar($var,$erp_secret_id,$erp_platform_id,$erp_user);
         }
 
         /**
-         * Return a secret var stored in CloudFramework Secret Manager through the ERP/BPA
+         * Return a specific secret var from CLOUD PLATFORM
+         * @param $var
+         * @param string $erp_secret_id
+         * @param string $erp_platform_id
+         * @param string $erp_user
+         */
+        public function getPlatformSecretVar($var, string $erp_secret_id='', string $erp_platform_id='', string $erp_user='')
+        {
+            // Read only when it is necessary
+            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id))
+                if(!$this->readPlatformSecretVars($erp_secret_id,$erp_platform_id,$erp_user)) return;
+            return $this->secret_vars['secrets'][$var]??null;
+        }
+
+            /**
+         * Deprecated. User readPlatformSecretVars
+         * $this->get('core.gcp.secrets.env_vars') in the $this->get('core.gcp.secrets.project_id')
+         *
+         * @deprecated Use readPlatformSecretVars
+         * @param string $erp_secret_id ID of the secret in the ERP. If this ID match with with
+         * @param string $erp_platform_id ID of the platform to look for the secret
+         * @param string $erp_user ID of the user who reads the secret
+         * @return mixed|null if the env var $var exist it returns the content and it can be any type
+         */
+        public function readERPSecretVars($erp_secret_id='',$erp_platform_id='',$erp_user='')
+        {
+            return $this->readPlatformSecretVars($erp_secret_id,$erp_platform_id,$erp_user);
+        }
+
+        /**
+         * Read secrets stored in CLOUD-PLATFORM
          * $this->get('core.gcp.secrets.env_vars') in the $this->get('core.gcp.secrets.project_id')
          * @param string $erp_secret_id ID of the secret in the ERP. If this ID match with with
          * @param string $erp_platform_id ID of the platform to look for the secret
          * @param string $erp_user ID of the user who reads the secret
          * @return mixed|null if the env var $var exist it returns the content and it can be any type
          */
-        public function readERPSecretVars($erp_secret_id='',$erp_platform_id='',$erp_user='') {
+        public function readPlatformSecretVars($erp_secret_id='',$erp_platform_id='',$erp_user='') {
 
             //region CHECK $erp_platform_id value
             if(!$erp_secret_id || !is_string($erp_secret_id)) {
@@ -2455,8 +2482,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Reset the cache for the ERP Secrets
+         * @deprecated use resetPlatformCache
          */
         public function resetERPCache() {
+            return $this->resetPlatformCache();
+        }
+
+        /**
+         * Reset the cache for the ERP Secrets
+         */
+        public function resetPlatformCache() {
             return $this->resetCache('ERP.secrets');
         }
 
@@ -3614,9 +3649,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Set a $spacename to set/get $objects
+         * @deprecated use setNameSpace. It will no longer exist in 8.2.xx
          * @param string $name
          */
-        function setSpaceName(string $name)
+        function setSpaceName(string $name) {
+            $this->setNameSpace($name);
+        }
+
+        /**
+         * Set a $spacename to set/get $objects
+         * @param string $name
+         */
+        function setNameSpace(string $name)
         {
             if (strlen($name??'')) {
                 $name = '_' . trim($name);
