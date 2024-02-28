@@ -269,23 +269,51 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                             } elseif ($this->schema['props'][$_key][1] == 'zip') {
                                 $value = mb_convert_encoding(gzcompress($value), 'UTF-8', 'ISO-8859-1');
                                 //$value = utf8_encode(gzcompress($value));
+                            } elseif ($this->schema['props'][$_key][1] == 'jsonzip') {
+                                if (!strlen($value)) {
+                                    $value = null;
+                                } else {
+                                    $value = json_decode($value); // Let's see if we receive a valid JSON
+                                    if (!json_last_error()) {
+                                        $value = $this->core->jsonEncode($value);
+                                        $value = mb_convert_encoding(gzcompress($value), 'UTF-8', 'ISO-8859-1');
+                                    } else {
+                                        return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has produced an error in JSON conversion'));
+                                    }
+                                }
                             } elseif ($this->schema['props'][$_key][1] == 'integer') {
                                 $value = intval($value);
                             } elseif ($this->schema['props'][$_key][1] == 'float') {
                                 $value = floatval($value);
                             }
-                        } else {
+                        }
+                        else {
                             if ($this->schema['props'][$_key][1] == 'json') {
                                 if (is_array($value) || is_object($value)) {
                                     $value = $this->core->jsonEncode($value, JSON_PRETTY_PRINT);
                                 } elseif (!strlen($value??'')) {
                                     $value = '{}';
                                 }
+                            } elseif ($this->schema['props'][$_key][1] == 'jsonzip') {
+                                if (is_array($value) || is_object($value)) {
+                                    $value = $this->core->jsonEncode($value);
+                                    if (!json_last_error()) {
+                                        $value = mb_convert_encoding(gzcompress($value), 'UTF-8', 'ISO-8859-1');
+                                    } else {
+                                        return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has produced an error in JSON conversion'));
+                                    }
+                                } elseif (!strlen($value??'')) {
+                                    $value = null;
+                                } else {
+                                    return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has received a no supported value'));
+                                }
                             } elseif ($this->schema['props'][$_key][1] == 'zip') {
-                                return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has received a no string value'));
+                                if($value)
+                                    return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has received a no string value'));
 
                             } elseif ($this->schema['props'][$_key][1] == 'txt') {
-                                return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has received a no string value'));
+                                if($value)
+                                    return ($this->setError($this->entity_name . ': ' . $this->schema['props'][$_key][0] . ' has received a no string value'));
 
                             } elseif ($this->schema['props'][$_key][1] == 'string') {
                                 if(is_numeric($value)) $value = strval($value);
@@ -319,7 +347,6 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     return;
                 }
             }
-
 
             // Bulk insertion
             if (!$this->error && count($entities)) try {
@@ -406,6 +433,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                             break;
                         case "json":
                         case "zip":
+                        case "jsonzip":
                         case "txt":
                             $index = false;
                             break;
@@ -801,7 +829,6 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             $this->core->__p->add('ds:fetchByKeys: '.$this->entity_name,  ' keys:' . $this->core->jsonEncode($keys),'note');
             $ret = [];
             $entities_keys = [];
-            if(is_string($keys)) _printe($keys);
             try {
                 foreach ($keys as $key) {
                     // force type TYPE_NAME if there is a field KeyName
@@ -923,8 +950,18 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                                 if(is_array($value)) $row[$key] = $value;
                                 else $row[$key] = json_decode($value, true);
                             }elseif ($this->schema['props'][$key][1] == 'zip') {
-                                $row[$key] = (mb_detect_encoding($value) == "UTF-8") ? gzuncompress(mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8')) : $value;
-                                //$row[$key] = (mb_detect_encoding($value) == "UTF-8") ? gzuncompress(utf8_decode($value)) : $value;
+                                if($value)
+                                    $row[$key] = (mb_detect_encoding($value) == "UTF-8") ? gzuncompress(mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8')) : $value;
+                                else
+                                    $row[$key] = null;
+                            } elseif ($this->schema['props'][$key][1] == 'jsonzip') {
+                                if($value) {
+                                    $row[$key] = (mb_detect_encoding($value) == "UTF-8") ? gzuncompress(mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8')) : $value;
+                                    if(is_array($value)) $row[$key] = $value;
+                                    else $row[$key] = json_decode($row[$key], true);
+                                } else
+                                    $row[$key] = null;
+
                             }elseif ($this->schema['props'][$key][1] == 'txt')
                                 $row[$key] = $value;
                             elseif ($value instanceof DateTimeImmutable) {
