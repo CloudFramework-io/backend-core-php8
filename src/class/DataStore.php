@@ -139,6 +139,8 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         /**
          * Set $this->useCache to true or false
          * @param boolean $activate
+         * @param string $secretKey optionally you can pass a secretKey for Encryption
+         * @param string $secretIV optionally you can pass a secretIV for Encryption
          */
         function activateCache($activate=true,$secretKey='',$secretIV=''){
             $this->useCache = ($activate)?true:false;
