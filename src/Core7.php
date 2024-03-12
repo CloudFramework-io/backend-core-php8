@@ -5754,12 +5754,27 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Get a user lang. 'en' default
-         * @return string
+         * Tell if the user is a PORTAL-USER
+         * @return bool
          */
         function isPortalUser()
         {
-            return ($this->data['User']['PortalUser']??null)?true:false;
+            return ($this->data['User']['PortalUser']??null)
+                && ($this->data['User']['KeyId']??false)
+                && $this->isAuth()
+                && $this->token;
+        }
+
+        /**
+         * Tell if the user is a PORTAL-USER
+         * @return bool
+         */
+        function isPlatformUser()
+        {
+            return !($this->data['User']['PortalUser']??false)
+                && ($this->data['User']['KeyName']??false)
+                && $this->isAuth()
+                && $this->token;
         }
 
         /**
