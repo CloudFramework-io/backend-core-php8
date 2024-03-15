@@ -55,6 +55,7 @@ class API extends RESTful
                 //bounce email
                 break;
             case "warmup":
+                // https://cloud.google.com/appengine/docs/standard/configuring-warmup-requests?tab=php
                 $this->core->logs->add($this->getHeaders(),'_ah_warmup');
                 $this->addReturnData('Warmup successful');
                 //bounce email
