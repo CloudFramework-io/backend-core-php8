@@ -1103,7 +1103,7 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
          * The error codes can be: 404 = not found, 403 = insufficient permissions
          * @param string $fileId
          * @param array $values Array of [ rows [cols]]
-         * @param string $range Where to start the update
+         * @param string $range Where to start the insertion
          * @return array|void
          */
         public function insertSpreadSheet($fileId, $values, $range = 'A1')
@@ -1161,7 +1161,7 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
          * Create a Spreadsheet file
          * @param string $spreadsheet_name
          * @param string $parent_id value of the parent folder id
-         * @return void
+         * @return string|void Id of the spreadSheet or 'void' if error.
          */
         public function createSpreadSheet(string $spreadsheet_name, string $parent_id = "")
         {
@@ -1175,7 +1175,7 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
                 $retFile = $this->drive->files->create($file, ['supportsAllDrives' => true]);
                 return $retFile->getId();
             } catch (Exception $e) {
-                return $this->addError(['createSpreadSheet', $e->getMessage()]);
+                return $this->addError('createSpreadSheetError', $e->getMessage());
             }
 
         }
