@@ -8,7 +8,7 @@
  */
 class CFA
 {
-    var $version = '20240201';
+    var $version = '20240322';
     private $core;
     var $data = ['rows'=>[['label'=>'default_row']],'components'=>[]];
     var $labels=[];
@@ -79,7 +79,10 @@ class CFA
                 'content'=>$content->component->data
             ];
         }
-        return $only_label?['components'=>$this->data['components']]:$this->data;
+
+        // https://stackoverflow.com/questions/46305169/php-json-encode-malformed-utf-8-characters-possibly-incorrectly-encoded
+        //json_encode error (5): Malformed UTF-8 characters, possibly incorrectly encoded
+        return mb_convert_encoding($only_label?['components'=>$this->data['components']]:$this->data, 'UTF-8', 'UTF-8');
     }
 
     /**
@@ -214,6 +217,12 @@ class CFAComponent
         return($this->component);
     }
 
+    public function advancedTable() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentAdvancedTable')
+            $this->component = new CFAComponentAdvancedTable();
+        return($this->component);
+    }
+
     public function filters() {
         if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentFilters')
             $this->component = new CFAComponentFilters();
@@ -325,7 +334,7 @@ class CFAComponentJsonEditor
         'json'=>null
     ];
     public function __construct() { $this->data['id'] = uniqid('json-editor');}
-    public function json($data) {$this->data['json'] = $data; return $this;}
+    public function json($data) {$this->data['json'] = is_array($data)?json_encode($data):$data; return $this;}
     public function type($data) {$this->data['type'] = $data; return $this;}
 }
 
@@ -603,6 +612,7 @@ class CFAComponentFormDatePicker
         'ranges'=>null,
         'onchange'=>null,
         'class'=>null,
+        'value'=>null,
         'options'=>[],
     ];
     public function label($data) {$this->data['label'] = $data; return $this;}
@@ -617,6 +627,7 @@ class CFAComponentFormDatePicker
     public function ranges($data) {$this->data['ranges'] = $data; return $this;}
     public function onchange($data) {$this->data['onchange'] = $data; return $this;}
     public function class($data) {$this->data['class'] = $data; return $this;}
+    public function value($data) {$this->data['value'] = $data; return $this;}
     public function addOption($value,$option,$selected=false) {$this->data['options'][] = ['value'=>$value,'option'=>$option,'selected'=>(bool)$selected]; return $this;}
 }
 
@@ -653,11 +664,12 @@ class CFAComponentPageBreadcrumb
     public function label($data) {$this->data['label'] = $data; return $this;}
     public function addElement($title,$url='',$active=false) {
         if(!isset($this->data['elements'])) $this->data['elements']=[];
-        $obj = new stdClass();
-        $obj->title = $title;
-        $obj->url = $url;
-        $obj->active = $active;
+        $obj = [];
+        $obj['title'] = $title;
+        $obj['url'] = $url;
+        $obj['active'] = $active;
         $this->data['elements'][] = $obj;
+
         return $this;
     }
 }
@@ -949,6 +961,32 @@ class CFAComponentTable
     }
 }
 
+/**
+ * CFAComponentAdvancedTable Class component
+ */
+class CFAComponentAdvancedTable
+{
+    var $type = 'advanced-table';
+    var $index = 0;
+    var $data = [];
+    public function __construct() { $this->data['id'] =  uniqid('advanced-table-component');}
+    public function id($data) {$this->data['id']=$data; return $this;}
+    public function cols($data) {$this->data['cols']=$data; return $this;}
+    public function rows($data) {$this->data['rows']=$data; return $this;}
+    public function maxHeight($data) {$this->data['maxHeight'] = $data; return $this;}
+    public function pagination($data) {$this->data['pagination'] = $data; return $this;}
+    public function paginationMode($data) {$this->data['paginationMode'] = $data; return $this;}
+    public function paginationPagesPerPage($data) {$this->data['paginationPagesPerPage'] = $data; return $this;}
+    public function paginationPerPageDropdown($data) {$this->data['paginationPerPageDropdown'] = $data; return $this;}
+    public function paginationSetCurrentPage($data) {$this->data['paginationSetCurrentPage'] = $data; return $this;}
+    public function buttons($data) {$this->data['buttons'] = $data; return $this;}
+    public function displaySearch($data) {$this->data['displaySearch'] = $data; return $this;}
+    public function selectRows($data) {$this->data['selectRows'] = $data; return $this;}
+    public function selectRowsButtons($data) {$this->data['selectRowsButtons'] = $data; return $this;}
+    public function styleType($data) {$this->data['styleType'] = $data; return $this;}
+
+}
+
  /**
   * CFAComponentChart Class component
   */
@@ -986,9 +1024,6 @@ class CFAComponentKanban
     public function addButton($data=true) {$this->data['config']['addButton'] = $data; return $this;}
     public function itemClick($data=true) {$this->data['config']['itemClick'] = $data; return $this;}
     public function itemDragged($data=true) {$this->data['config']['itemDragged'] = $data; return $this;}
-
-   
-
     public function addBoard($title='') {
         if(isset($this->data['items'][$this->boardIndex]) && $this->data['items'][$this->boardIndex]) $this->boardIndex++; if($title) $this->data['items'][$this->boardIndex]['title']=$title; return $this;
     }
@@ -998,12 +1033,12 @@ class CFAComponentKanban
     public function dragTo($data) {$this->data['items'][$this->boardIndex]['dragTo'] = $data; return $this;}
     public function addItem($data) {
         if(!isset($this->data['items'][$this->boardIndex]['item'])){$this->data['items'][$this->boardIndex]['item'] = [];}
-        array_push($this->data['items'][$this->boardIndex]['item'], json_decode($data));
+        array_push($this->data['items'][$this->boardIndex]['item'], json_decode($data,true));
         return $this;
     }
 
     public function board($data) {
-        array_push( $this->data['items'], json_decode($data));
+        array_push( $this->data['items'], json_decode($data,true));
         return $this;
     }
 
@@ -1061,6 +1096,7 @@ class CFAComponentKanban
       public function cols($data) {$this->data['cols'] = $data; return $this;}
       public function statuses($data) {$this->data['statuses'] = $data; return $this;}
       public function priorities($data) {$this->data['priorities'] = $data; return $this;}
+      public function default_view($data) {$this->data['default_view'] = $data; return $this;}
       public function rows($data) {$this->data['rows'] = $data; return $this;}
   }
 /**
