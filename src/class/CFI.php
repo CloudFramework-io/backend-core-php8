@@ -335,6 +335,16 @@ class CFIField {
         return $this;}
 
     /**
+     * Set if the field to type boolean
+     * @param string $title optional title
+     * @return CFIField $this
+     */
+    public function boolean($title='') {
+        $this->cfi->json_object['fields'][$this->field]['type'] = 'boolean';
+        if($title) $this->cfi->json_object['fields'][$this->field]['name'] = $title;
+        return $this;}
+
+    /**
      * Set if the field to type select
      * @return CFIField $this
      */
