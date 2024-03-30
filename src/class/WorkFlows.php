@@ -532,8 +532,9 @@ class WorkFlows
                 if(is_array($email_cc)) {
                     if(!($email_cc['email']??null)) return $this->addError('sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute');
                     $message['to'][] = ['email' => $email_cc['email'], 'name' => $email_cc['name'] ?? $email_cc['email'], 'type' => 'cc'];
-                }else
+                } else
                     $message['to'][] = ['email'=>$email_cc,'name'=> $email_cc,'type'=>'cc'];
+                $message['preserve_recipients'] = true;
             }
             //endregion
 
