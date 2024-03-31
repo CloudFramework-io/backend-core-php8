@@ -445,18 +445,19 @@ class WorkFlows
      * SET API for mandrill interation and SETUP $this->mandrill
      * @param array $params {
      *      info to be sent in the email
-     *      - from string email from sender. [optional] if the Mandrill Template has DefaultFromEmail
-     *      - name string name from sender. [optional] if the Mandrill Template has DefaultFromEmail
-     *      - subject string email subject. [optional] if the Mandrill Template has DefaultSubject
-     *      - to string|array email/s to send the email. If it is string the emails has to be separated by ','. If it is an array it has to be an array
+     *      * from string email from sender. [optional] if the Mandrill Template has DefaultFromEmail
+     *      * name string name from sender. [optional] if the Mandrill Template has DefaultFromEmail
+     *      * subject string email subject. [optional] if the Mandrill Template has DefaultSubject
+     *      * to string|array email/s to send the email. If it is string the emails has to be separated by ','. If it is an array it has to be an array
      *           of objects with the following structure: ['email'=>(string),'name'=>(optional string)
-     *      - cc string|array [optional] email/s to send the email in cc. If it is string the emails has to be separated by ','. If it is an array it has to be an array
+     *      * cc string|array [optional] email/s to send the email in cc. If it is string the emails has to be separated by ','. If it is an array it has to be an array
      *           of objects with the following structure: ['email'=>(string),'name'=>(optional string)
-     *      - bcc string [optional] email to send a copy in bcc
-     *      - reply_to string [optional] email to redirect the replies of the email
-     *      - data array [optional] array of objects [key=>value] to be sent as variables to merge with the template
-     *      - tags array [optional] array tags to add to the emial [tag1,tag2..]
-     *      - attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
+     *      * bcc string [optional] email to send a copy in bcc
+     *      * reply_to string [optional] email to redirect the replies of the email
+     *      * data array [optional] array of objects [key=>value] to be sent as variables to merge with the template
+     *      * tags array [optional] array tags to add to the emial [tag1,tag2..]
+     *      * preserve_recipients boolean if it is true then the email will preserve the recipients headers instead to appear emails separated
+     *      * attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
      * }
      * @throws Mandrill_Error
      */
@@ -514,6 +515,9 @@ class WorkFlows
                 //'metadata' => array('website' => $domain)
             );
 
+            // It will preserve to: emails, and cc: emails to the receivers
+            if($params['preserve_recipients']??null)
+                $message['preserve_recipients'] = true;  // It shows in the email the to: emails and cc: emails
 
 
             //region to: into $message['to']
@@ -534,7 +538,6 @@ class WorkFlows
                     $message['to'][] = ['email' => $email_cc['email'], 'name' => $email_cc['name'] ?? $email_cc['email'], 'type' => 'cc'];
                 } else
                     $message['to'][] = ['email'=>$email_cc,'name'=> $email_cc,'type'=>'cc'];
-                $message['preserve_recipients'] = true;
             }
             //endregion
 
