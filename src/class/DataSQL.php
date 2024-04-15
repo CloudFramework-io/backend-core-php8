@@ -179,7 +179,7 @@ class DataSQL
 
     /**
      * Return one record based on a key
-     * @param $key can ba an string or number
+     * @param string|int $key it can ba an string or number
      * @param string $fields if null $fields = $this->getFields()
      */
     function fetchOneByKey($key, string $fields='') {

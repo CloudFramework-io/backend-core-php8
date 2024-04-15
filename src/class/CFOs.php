@@ -310,12 +310,8 @@ class CFOs {
      */
     public function db ($object,$connection='default'): DataSQL
     {
-
-        if(!isset($this->dbObjects[$object]))
-            $this->dbInit($object,$connection);
-
+        if(!isset($this->dbObjects[$object])) $this->dbInit($object,$connection);
         return $this->dbObjects[$object];
-
     }
 
     /**
