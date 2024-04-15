@@ -12,10 +12,10 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
     /**
      * [$sql = $this->core->loadClass('DataStore');] Class to Handle Datastore databases with CloudFramework models
      *
-     * # https://cloud.google.com/datastore/docs/concepts/entities
-     * # https://cloud.google.com/datastore/docs/concepts/queries#datastore-datastore-limit-gql
-     * # https://googleapis.github.io/google-cloud-php/#/docs/google-cloud/v0.121.0/datastore/datastoreclient
-     * # https://github.com/GoogleCloudPlatform/php-docs-samples/blob/master/datastore/api/src/functions/concepts.php
+     * * https://cloud.google.com/datastore/docs/concepts/entities
+     * * https://cloud.google.com/datastore/docs/concepts/queries#datastore-datastore-limit-gql
+     * * https://googleapis.github.io/google-cloud-php/#/docs/google-cloud/v0.121.0/datastore/datastoreclient
+     * * https://github.com/GoogleCloudPlatform/php-docs-samples/blob/master/datastore/api/src/functions/concepts.php
      * @package CoreClasses
      */
     class DataStore
@@ -1034,6 +1034,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 //endregion
             }
             catch (Exception $e) {
+                $this->lastQuery = "SELECT sum({$field}) where ".json_encode($where);
                 $this->setError($e->getMessage());
                 $this->addError('fetch');
             }
@@ -1066,7 +1067,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 $bindings=[];
                 // Where construction
                 if (is_array($where)) $this->processWhere($where,$query);
-                $this->lastQuery = "avg({$field}) where ".json_encode($query->queryObject());
+                $this->lastQuery = "SELECT avg({$field}) where ".json_encode($query->queryObject());
 
                 //region RUN $query->aggregation(Aggregation::sum($field)->alias('total')); AND return result
                 $_q = json_encode($query->queryObject());
@@ -1079,6 +1080,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 //endregion
             }
             catch (Exception $e) {
+                $this->lastQuery = "SELECT avg({$field}) where ".json_encode($where);
                 $this->setError($e->getMessage());
                 $this->addError('fetch');
             }
@@ -1111,7 +1113,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 $bindings=[];
                 // Where construction
                 if (is_array($where)) $this->processWhere($where,$query);
-                $this->lastQuery = "count() where ".json_encode($query->queryObject());
+                $this->lastQuery = "SELECT count(*) where ".json_encode($query->queryObject());
 
                 //region RUN $query->aggregation(Aggregation::sum($field)->alias('total')); AND return result
                 $_q = json_encode($query->queryObject());
@@ -1124,6 +1126,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 //endregion
             }
             catch (Exception $e) {
+                $this->lastQuery = "SELECT count(*) where ".json_encode($where);
                 $this->setError($e->getMessage());
                 $this->addError('fetch');
             }
@@ -1168,7 +1171,9 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
                     // In the WHERE Conditions we have to transform date formats into date objects.
                     // SELECT * FROM PremiumContracts WHERE PremiumStartDate >= DATETIME("2020-03-01T00:00:00z") AND PremiumStartDate <= DATETIME("2020-03-01T23:59:59z")
-                    if (array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['date', 'datetime', 'datetimeiso'])) {
+                    if (array_key_exists($key, $this->schema['props'])
+                        && in_array($this->schema['props'][$key][1], ['date', 'datetime', 'datetimeiso']))
+                    {
 
                         if(stripos($value,'now')!==false) $value = str_ireplace('now',date('Y-m-d'),$value);
                         if (preg_match('/[=><]/', $value)) {
@@ -1225,9 +1230,9 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         //region IF SPECIAL SEARCH for values ending in % let's emulate a like string search
                         if(is_string($value) && preg_match('/\%$/',$value) && strlen(trim($value))>1) {
                             $value = preg_replace('/\%$/','',$value);
-                            $query->filter($fieldname,'>=',new DateTime($value));
+                            $query->filter($fieldname,'>=',$value);
                             $value_to = $value.'z';  //122 = z
-                            $query->filter($fieldname,'<=',new DateTime($value_to));
+                            $query->filter($fieldname,'<=',$value_to);
                         }
                         //endregion
                         //region IF value is ARRAY and the type is not list convert it into IN ARRAY
