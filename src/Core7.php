@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.1.20';  // 2024-03-22 1
+        var $_version = '8.1.21';  // 2024-04-15 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -6278,7 +6278,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $ret_models = $this->getCache($models);
             if(!$ret_models || isset($ret_models['Unknown'])) {
                 $ret_models =  $this->core->request->get_json_decode('https://api.cloudframework.io/erp/models/export',['models'=>$models],['X-WEB-KEY'=>$api_key]);
-                if($this->core->request->error)  return($this->addError($this->core->request->errorMsg));
+                if($this->core->request->error)  {
+                    _printe('aaa',$this->core->request->errorMsg,['models'=>$models]);
+
+                    return($this->addError($this->core->request->errorMsg));
+                }
                 $ret_models = $ret_models['data'];
                 if(!isset($ret_models['Unknown']))
                     $this->updateCache($models,$ret_models);
