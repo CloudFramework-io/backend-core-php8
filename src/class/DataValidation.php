@@ -204,6 +204,7 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
                 case "key": return strval(intval($data)) == $data;
                 case "date": return $this->validateDate($data);
                 case "datetime": return $this->validateDateTime($data);
+                case "timestamp": return $this->validateDateTime($data);
                 case "datetimeiso": return $this->validateDateTimeISO($data);
                 case "currency": return is_numeric($data);
                 case "boolean": if(!is_bool($data) && ($data=='1' || $data=='0')) $data = ($data == '1'); if(!is_bool($data) && ($data=='true' || $data=='false')) $data = ($data == 'true');return is_bool($data);
