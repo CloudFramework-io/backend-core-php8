@@ -272,6 +272,7 @@ class WorkFlows
      */
     public function getERPEmailTemplate(string $slug,string $type='Mandrill') {
         if(!$this->mandrill) return $this->addError('getERPEmailTemplate(...) has been call without calling previously setMandrillApiKey(...)');
+        $this->cfos->useCFOSecret(true);
         $dsTemplate = $this->cfos->ds('CloudFrameWorkEmailTemplates')->fetchOneByKey($slug);
         if($this->cfos->ds('CloudFrameWorkEmailTemplates')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailTemplates')->errorMsg);
         if($type=='Mandrill') {
@@ -284,10 +285,7 @@ class WorkFlows
             }
         }
         return $dsTemplate;
-
     }
-
-
 
     /**
      * Retrieve an email template from the ERP
