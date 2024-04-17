@@ -298,7 +298,7 @@ if (!defined("_RESTfull_CLASS_")) {
             if(!($ret = $this->checkFormParamsFromModel($model,true,$codelibbase,$data,$dictionaries))) return;
 
             if(is_array($model)) foreach ($model as $field=>$props) {
-                if(array_key_exists('validation',$props) && strpos($props['validation'],'internal')!==false && array_key_exists($field,$data)) {
+                if(array_key_exists('validation',$props) && preg_match('/(^internal|\|internal)/',$props['validation']) && array_key_exists($field,$data)) {
                     $this->setErrorFromCodelib($codelibbase.'-'.$field,$field.' is internal and can not be rewritten');
                     return false;
                 }
@@ -319,7 +319,7 @@ if (!defined("_RESTfull_CLASS_")) {
             if(!($ret = $this->checkFormParamsFromModel($model,false,$codelibbase,$data,$dictionaries))) return;
 
             if(is_array($model)) foreach ($model as $field=>$props) {
-                if(array_key_exists('validation',$props) && strpos($props['validation'],'internal')!==false && array_key_exists($field,$data)) {
+                if(array_key_exists('validation',$props) && preg_match('/(^internal|\|internal)/',$props['validation']) && array_key_exists($field,$data)) {
                     $this->setErrorFromCodelib($codelibbase.'-'.$field,$field.' is internal and can not be rewritten');
                     return false;
                 }
