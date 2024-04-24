@@ -624,7 +624,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * Set an error using $code
          * @param $code
          * @param string $extramsg
-         * @retun void
+         * @return false
          */
         function setErrorFromCodelib($code,$extramsg='') {
             $formatted_message =$extramsg;
@@ -638,6 +638,7 @@ if (!defined("_RESTfull_CLASS_")) {
                 ,preg_replace('/:.*/','' ,$code??'')
                 ,($extramsg)?:$this->getCodeLib($code??'')
             );
+            return false;
         }
 
         /**

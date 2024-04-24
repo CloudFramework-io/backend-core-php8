@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.1.22';  // 2024-04-16 1
+        var $_version = '8.1.23';  // 2024-04-24 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -2394,7 +2394,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if(!$erp_platform_id) return($this->addError('readERPSecretVars(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
             //endregion
-
             //region CHECK $erp_user value
             if(!$erp_user || !is_string($erp_user)) {
                 $erp_user = $this->core->config->get('core.erp.user_id.'.$erp_platform_id);
@@ -2417,7 +2416,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region READ $user_secrets from cache and RETURN it if it exist
             $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
             $user_secrets = $this->getCache($key,'ERP.secrets');
-
             //verify $user_secrets['id'] match with $erp_user
             //fix bug when in production the $erp_user is returning default
             if($erp_user=='default' && isset($user_secrets['id'])) $erp_user = $user_secrets['id'];
@@ -2461,10 +2459,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $secrets = $this->core->request->get_json_decode($url,null,$headers);
 
             if($this->core->request->error) {
-                return($this->addError($this->core->request->errorMsg));
+                return($this->addError(($secrets['message']??null)?:$this->core->request->errorMsg));
                 $this->core->request->reset();
                 $this->core->errors->reset();
             }
+
             $user_secrets['secret-id'] = ($erp_secret_id)?:$user_secrets['id'];
             $user_secrets['secrets'] = $secrets['data']['secrets'];
             //endregion
@@ -5442,7 +5441,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region SET $userData trying to get the info from cache deleting expired tokens and checking $this->maxTokens
             $updateCache = false;
             $userData = $this->core->cache->get($namespace.'_'.$user_token);
-            if(!$userData) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
+            if(!$userData || $refresh) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
             else {
                 $now = microtime(true);
                 $num_tokens = 0;
@@ -5689,6 +5688,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
             if(!($this->data['User']['UserPrivileges']??null)) return false;
             return (isset($this->data['User']['UserPrivileges']) && in_array($privilege,$this->data['User']['UserPrivileges']??[]));
+        }
+
+        /**
+         * Tell if the user has any $privileges.
+         * @param string|array $privileges It can be an array of string or a string with privileges separated by ','
+         * @return bool
+         */
+        function hasAnyPrivilege($privileges)
+        {
+            if(!is_array($privileges)) $privileges = explode(',',$privileges);
+            $found = false;
+            foreach ($privileges as $privilege) if(is_string($privilege)){
+                if($this->hasPrivilege($privilege)) return true;
+            }
+            return false;
         }
 
         /**
