@@ -397,7 +397,7 @@ class WorkFlows
                     return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
                 }
                 $result = $this->sendMandrillEmail($params);
-                $dsSubmission['StatusProcessing'] = $result['success']?'success':'error';
+                $dsSubmission['StatusProcessing'] = ($result['success']??null)?'success':'error';
                 $dsSubmission['JSONProcessing']['Result'] = $result;
                 $dsSubmission['DateProcessing'] = "now";
 
@@ -405,7 +405,8 @@ class WorkFlows
                 if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) {
                     return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
                 }
-                if($result['success'] && is_array($result['result']??null)) foreach ( $result['result'] as $i=>$item) {
+
+                if($result && ($result['success']??null) && is_array($result['result']??null)) foreach ( $result['result'] as $i=>$item) {
                     $email = [
                         "Cat"=>$dsSubmission['Cat'],
                         "SubmissionId"=>$dsSubmission['KeyId'],
