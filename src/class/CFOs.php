@@ -48,7 +48,7 @@ class CFOs {
      */
     public function readCFOs ($cfos)
     {
-        $models = $this->core->model->readModelsFromCloudFramework($cfos,$this->integrationKey);
+        $models = $this->core->model->readModelsFromCloudFramework($cfos,$this->integrationKey,$this->core->user->id.'_'.$this->namespace.'_'.($this->core->system->url['host']??'nohost'));
         if($this->core->model->error) {
             return $this->addError($this->core->model->errorMsg[0]??$this->core->model->errorMsg);
         }
