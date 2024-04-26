@@ -6086,8 +6086,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //if there are <2 $parts retrn $tag
             if(count($parts)<2) return $tag;
 
+            //if the tag has the structure [{app};{cat};{code};]  (with no subcode), then it is an error
+            if(isset($parts[3]) && !$parts[3]) return $tag;
+
             //read dictionary for "{$parts[0]};{$parts[1]}". If there is no dictionary return $tag
             $locFile = "{$parts[0]};{$parts[1]}";
+
+            //read $locFile dictionary
             if(!$this->readLocalizationData($locFile,$lang,$namespace)) {
                 $this->core->logs->add("{$locFile} does no exist",'localization_warning');
                 return $tag;
@@ -6284,16 +6289,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Read models from CloudFramework
          * @param $models string Models separated by ,
          * @param $api_key string API Key of the licence
+         * @param string $source optional parameter to send the platform id
          * @return boolean|void
          */
-        function readModelsFromCloudFramework($models,$api_key) {
+        function readModelsFromCloudFramework($models,$api_key,string $source='') {
 
             // To reset cache they have to call $this->resetCache();
             $ret_models = $this->getCache($models);
             if(!$ret_models || isset($ret_models['Unknown'])) {
-                $ret_models =  $this->core->request->get_json_decode('https://api.cloudframework.io/erp/models/export',['models'=>$models],['X-WEB-KEY'=>$api_key]);
+                $ret_models =  $this->core->request->get_json_decode('https://api.cloudframework.io/erp/models/export',['models'=>$models,'source'=>($source?:$this->core->user->id.'_'.$this->core->user->namespace.'_'.($this->core->system->url['host']??'nohost'))],['X-WEB-KEY'=>$api_key]);
                 if($this->core->request->error)  {
-                    return($this->addError($this->core->request->errorMsg));
+                    return($this->addError(['https://api.cloudframework.io/erp/models/export',$this->core->request->errorMsg]));
                 }
                 $ret_models = $ret_models['data'];
                 if(!isset($ret_models['Unknown']))
