@@ -559,8 +559,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // only setup datastorage if gc_project_id
             if($this->gc_project_id) {
                 if(!isset($_GET['_no_register_stream_wrapper'])) {
-                    $this->gc_datastorage_client = new StorageClient(['projectId' => $this->gc_project_id]);
-                    $this->gc_datastorage_client->registerStreamWrapper();
+                    try {
+                        $this->gc_datastorage_client = new StorageClient(['projectId' => $this->gc_project_id]);
+                        $this->gc_datastorage_client->registerStreamWrapper();
+                    } catch (Exception $e) {
+                        echo $e->getMessage();
+                        if(strpos($e->getMessage(),'GOOGLE_APPLICATION_CREDENTIALS')) {
+                            echo "\n\nYou can set in config.json the variable [core.gcp.credentials] with the path to the google credentials file";
+                        }
+                        exit;
+                    }
                 }
             }
         }
@@ -1441,8 +1449,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         private function isConditionalTag($tag)
         {
-            $tags = ["uservar", "authvar", "confvar", "sessionvar", "servervar", "auth", "noauth", "development", "production"
-                , "indomain", "domain", "interminal", "url", "noturl", "inurl", "notinurl", "beginurl", "notbeginurl"
+            $tags = ["uservar", "authvar", "confvar", "sessionvar", "servervar", "auth", "noauth", "development", "production","local"
+                , "indomain", "domain", "host","interminal", "url", "noturl", "inurl", "notinurl", "beginurl", "notbeginurl"
                 , "inmenupath", "notinmenupath", "isversion", "false", "true"];
             return in_array(strtolower($tag), $tags);
         }
@@ -1517,18 +1525,20 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         else
                             $ret = !$this->core->user->isAuth();
                         break;
+                    case "local":
                     case "development":
-                        $ret = $this->core->is->development();
+                        $ret = $this->core->is->localEnvironment();
                         break;
                     case "production":
                         $ret = $this->core->is->production();
                         break;
                     case "indomain":
                     case "domain":
+                    case "host":
                         $domains = explode(",", $tagvalue);
                         foreach ($domains as $ind => $inddomain) if (strlen(trim($inddomain))) {
                             if (trim(strtolower($tagcode)) == "domain") {
-                                if (strtolower($_SERVER['HTTP_HOST']) == strtolower(trim($inddomain)))
+                                if (strtolower($_SERVER['HTTP_HOST']??'') == strtolower(trim($inddomain)))
                                     $ret = true;
                             } else {
                                 if (isset($_SERVER['HTTP_HOST']) && stripos($_SERVER['HTTP_HOST'], trim($inddomain)) !== false)
@@ -1542,7 +1552,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     case "url":
                     case "noturl":
                         $urls = explode(",", $tagvalue);
-
                         // If noturl the condition is upsidedown
                         if (trim(strtolower($tagcode)) == "noturl") $ret = true;
                         foreach ($urls as $ind => $url) if (strlen(trim($url))) {
