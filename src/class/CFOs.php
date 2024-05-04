@@ -12,8 +12,11 @@ class CFOs {
     var $version = '202301051';
     /** @var string $integrationKey To connect with the ERP */
     var $integrationKey='';
+
     var $error = false;                 // When error true
+    var $errorCode = null;                   // Code of error
     var $errorMsg = [];                 // When error array of messages
+
     var $namespace = 'default';
     var $project_id = null;
     var $service_account = null;
@@ -43,14 +46,14 @@ class CFOs {
 
 
     /**
-     * @param $cfos
-     * @return array|void if there is no error return an array with the model structure
+     * @param string $cfos
+     * @return array|false if there is no error return an array with the model structure
      */
-    public function readCFOs ($cfos)
+    public function readCFOs (string $cfos)
     {
         $models = $this->core->model->readModelsFromCloudFramework($cfos,$this->integrationKey,$this->core->user->id.'_'.$this->namespace.'_'.($this->core->system->url['host']??'nohost'));
         if($this->core->model->error) {
-            return $this->addError($this->core->model->errorMsg[0]??$this->core->model->errorMsg);
+            return $this->addError('model-error',$this->core->model->errorMsg[0]??$this->core->model->errorMsg);
         }
         return $models;
     }
@@ -84,7 +87,7 @@ class CFOs {
             }
             if (($service_account_secret = ($model['data']['secret'] ?? ($model['data']['interface']['secret']??null)))) {
                 if (is_string($service_account_secret)) {
-                    if (!$service_account = $this->readSecret($service_account_secret)) {
+                    if (!$service_account = $this->getCFOSecret($service_account_secret)) {
                         $this->core->logs->add("CFO {$object} has a secret and it does not exist in CFOs->secrets[]. Set the secret value or call CFOs->avoidSecrets(true).", 'CFOs_warning');
                         $this->createFooDatastoreObject($object);
                         $this->dsObjects[$object]->error = true;
@@ -171,7 +174,7 @@ class CFOs {
 
             if (($service_account_secret = ($model['data']['secret'] ?? null))) {
                 if (is_string($service_account_secret)) {
-                    if (!$service_account = $this->readSecret($service_account_secret)) {
+                    if (!$service_account = $this->getCFOSecret($service_account_secret)) {
                         $this->core->logs->add("CFO {$object} has a secret and it does not exist in CFOs->secrets[]. Set the secret value or call CFOs->avoidSecrets(true).", 'CFOs_warning');
                         $this->createFooBQObject($object);
                         $this->bqObjects[$object]->error = true;
@@ -258,7 +261,7 @@ class CFOs {
             //region EVALUATE IF $model['data']['secret'] exist to update $db_connection
             if (!$db_credentials && ($service_account_secret = ($model['data']['secret'] ?? null)) && !$this->avoid_secrets) {
                 if (is_string($service_account_secret)) {
-                    if(!$db_credentials = $this->readSecret($service_account_secret)) {
+                    if(!$db_credentials = $this->getCFOSecret($service_account_secret)) {
                         $this->core->logs->add("CFO {$object} has a secret and it does not exist in CFOs->secrets[]. Use the CFOs->setSecret()  or set CFOs->useCFOSecret(true).", 'CFOs_warning');
                         $this->createFooDBObject($object);
                         $this->dbObjects[$object]->error = true;
@@ -327,22 +330,19 @@ class CFOs {
         $this->lastDBObject = &$this->core->model->dbConnections[$connection];
 
         $ret= $this->core->model->dbQuery('CFO Direct Query for connection  '.$connection,$q,$params);
-        if($this->core->model->error) $this->addError($this->core->model->errorMsg);
+        if($this->core->model->error) $this->addError('database-error',$this->core->model->errorMsg);
         return($ret);
     }
 
     /**
      * @param string $object
-     * @return CloudSQL
+     * @return CloudSQL|bool returns false if error
      */
-    public function dbConnection (string $connection='default'): CloudSQL
+    public function dbConnection (string $connection='default'): CloudSQL|bool
     {
         if(!$connection) $connection='default';
-
-        if(!isset($this->core->model->dbConnections[$connection]))
-            $this->addError("connection [$connection] has not previously defined");
-
-        $this->core->model->dbInit($connection);
+        if(!$this->core->model->dbInit($connection))
+            return $this->addError('database-error',$this->core->model->errorMsg);
         return($this->core->model->db);
 
     }
@@ -389,7 +389,7 @@ class CFOs {
             $this->core->config->set("dbSocket",null);
 
         if(!$this->core->model->dbInit($connection)) {
-            $this->addError($this->core->model->errorMsg);
+            $this->addError('database-error',$this->core->model->errorMsg);
             return false;
         }
         else return true;
@@ -397,17 +397,57 @@ class CFOs {
     }
 
     /**
-     * @param string $secret
-     * @return array|void return the secret array of there is not errors
+     * Try to read from CLOUD-PLATFORM $secret
+     * @param string $platform_secret_variable name of the secret with se format: {secret-id}.{variable}
+     * @param string $platform_id optional platform id. If is not passed it will take $this->namespace
+     * @return bool
      */
-    public function readSecret(string $secret)
+    public function setDBCredentialsFromPlatformSecret(string $platform_secret_variable,string $platform_id='') {
+
+        if(!$platform_id) $platform = $this->namespace;
+        if(!strpos($platform_secret_variable,'.')) return $this->addError('function-conflict','setDBCredentialsFromPlatformSecret($platform_secret_variable) has received a value with wrong format. Use {secret_id}.{varname}')??false;
+        if(!$secret = $this->getPlatformSecret($platform_secret_variable,$platform_id)) return false;
+        if(!($secret['dbServer']) && !($secret['dbSocket']))  return $this->addError('secret-conflict','setDBCredentialsFromPlatformSecret($platform_secret_variable) has received secret with no [dbName or dbSocket] parameter')??false;
+        if ($this->core->is->localEnvironment()) {
+            if(!($secret['dbServer']))  {
+                return $this->addError('secret-conflict','setDBCredentialsFromPlatformSecret($platform_secret_variable) has received secret with no [dbServer] parameter for local environment')??false;
+            }
+            $secret['dbSocket'] = null;
+            $this->setDBCredentials($secret);
+        }
+        return true;
+    }
+
+    /**
+     * Return the PlatformSecret value of $secret only if $this->avoid_secrets is false. Else it will return empty array []
+     * It $platform_secret_id does not exist it will return an error
+     * @param string $platform_secret_id Secret to read with format {secret_id}.{varname}
+     * @return mixed return the secret value or null if error
+     */
+    public function getCFOSecret(string $platform_secret_id): mixed
     {
-        if(isset($this->secrets[$secret])) return $this->secrets[$secret];
         if($this->avoid_secrets) return [];
-        if(!strpos($secret,'.')) return $this->addError("secret [{$secret}] has a wrong format");
-        list($secret_id, $var_id ) = explode('.',$secret,2);
-        if(!$this->secrets[$secret] = $this->core->security->getERPSecretVar($var_id,$secret_id,$this->namespace)) return($this->addError($this->core->security->errorMsg));
-        return $this->secrets[$secret];
+        if(!strpos($platform_secret_id,'.')) return $this->addError('function-conflict',"CFOs.getCFOSecret(\$secret) has a wrong format. Use {secret_id}.{varname}");
+        else return $this->getPlatformSecret($platform_secret_id);
+
+    }
+
+    /**
+     * Read a PlatformSecret into $this->secrets[] and return the value.
+     * It $platform_secret_id does not exist it will return an error
+     * @param string $platform_secret_id Secret to read with format {secret_id}.{varname}
+     * @return mixed return the secret value or null if error
+     */
+    public function getPlatformSecret(string $platform_secret_id,$platform_id=''): mixed
+    {
+        if(!$platform_id) $platform = $this->namespace;
+        if(isset($this->secrets[$platform_secret_id])) return $this->secrets[$platform_secret_id];
+        if(!strpos($platform_secret_id,'.')) return $this->addError('function-conflict',"CFOs.readPlatformSecret(\$secret) has a wrong format. Use {secret_id}.{varname}");
+        list($secret_id, $var_id ) = explode('.',$platform_secret_id,2);
+        $this->secrets[$platform_secret_id] = $this->core->security->getPlatformSecretVar($var_id,$secret_id,$platform_id);
+        if($this->core->security->error)
+            return($this->addError('platform-secret-error',['CFOs.readPlatformSecret($secret) has produced an error.',$this->core->security->errorMsg]));
+        return $this->secrets[$platform_secret_id]?:[];
     }
 
     /**
@@ -420,7 +460,7 @@ class CFOs {
                                     "KeyName": ["keyname","index|minlength:4"]
                                   }',true);
             $this->dsObjects[$object] = $this->core->loadClass('Datastore',['Foo','default',$model]);
-            if ($this->dsObjects[$object]->error) return($this->addError($this->dsObjects[$object]->errorMsg));
+            if ($this->dsObjects[$object]->error) return($this->addError('datastore-error',$this->dsObjects[$object]->errorMsg));
         }
     }
 
@@ -434,7 +474,7 @@ class CFOs {
                                     "KeyName": ["string","index|minlength:4"]
                                   }',true);
             $this->bqObjects[$object] = $this->core->loadClass('DataBQ',['Foo',$model]);
-            if ($this->bqObjects[$object]->error) return($this->addError($this->dsObjects[$object]->errorMsg));
+            if ($this->bqObjects[$object]->error) return($this->addError('bigquery-error',$this->dsObjects[$object]->errorMsg));
         }
     }
 
@@ -450,7 +490,7 @@ class CFOs {
                                   }',true);
 
             $this->dbObjects[$object] = $this->core->loadClass('DataSQL',['Foo',['model'=>$model]]);
-            if ($this->dbObjects[$object]->error) return($this->addError($this->dbObjects[$object]->errorMsg));
+            if ($this->dbObjects[$object]->error) return($this->addError('database-error',$this->dbObjects[$object]->errorMsg));
         }
     }
 
@@ -692,12 +732,18 @@ class CFOs {
 
     /**
      * Add an error in the class
-     * @param $value
+     * @param string $code Code of error
+     * @param mixed $value
+     * @return bool Always return null to facilitate other return functions
      */
-    function addError($value)
+    function addError(string $code,$value)
     {
+
         $this->error = true;
+        $this->errorCode = $code;
         $this->errorMsg[] = $value;
+
+        return false;
     }
 
 }
