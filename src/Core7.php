@@ -2239,9 +2239,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
 
             //avoid to call the method more than once
-            if($this->last_key_cache) {
-                $this->core->logs->add('readERPDeveloperEncryptedSubKeys() has been call more than once. The first one was: '.$this->last_key_cache,'CoreSecurity');
-            }
+            if($this->last_key_cache) return true;
 
             //region CHECK $erp_platform_id value
             if(!$erp_platform_id || !is_string($erp_platform_id)) {
@@ -2268,16 +2266,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region GET from cache $keys if we are in production servers
-            // In production we store data in cache
-            if($this->core->is->production()){
-                $keys = $this->core->cache->get($key_cache,3600*24,date('Y-m-d'));
-            }
-            // In development (localhost) we store in session
-            else {
-                $keys = $this->core->session->get($key_cache);
-            }
+            $keys = $this->core->cache->get($key_cache,3600*24,date('Y-m-d'));
             //endregion
-
 
             //region CALL $url and SET $keys if empty $keys
             if(!$keys) {
@@ -2288,10 +2278,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 //endregion
 
                 //region SAVE from cache $keys if we are in production servers
-                if($this->core->is->production())
-                    $this->core->cache->set($key_cache,$keys,date('Y-m-d'));
-                else
-                    $this->core->session->set($key_cache,$keys);
+                $this->core->cache->set($key_cache,$keys,date('Y-m-d'));
                 //endregion
             }
             //endregion
