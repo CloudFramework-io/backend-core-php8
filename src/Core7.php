@@ -171,6 +171,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var  $errors;
         /** @var CoreConfig $config */
         var $config;
+        /** @var string $namespace Default namespace for the Platform */
+        var $namespace = 'default';
+        /** @var array $platform Platform Data Configuration */
+        var $platform = [];
         /** @var CoreSecurity $security */
         var $security;
         /** @var CoreCache $cache */
@@ -187,7 +191,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $model;
         /** @var CFILog $cfiLog */
         var $cfiLog;
-        /** @var string $gc_project_id GCP Google Project assciated */
+        /** @var string $gc_project_id GCP Google Project associated */
         var $gc_project_id;
         /** @var RESTful $api if we are executing an API code it will be the RESTful class */
         var $api;
@@ -622,6 +626,148 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             return $arr;
         }
+
+
+        /**
+         * Replace CloudFramework Tags {{Tag:{value of tag}}} or variable {{Variablename,defaultvalu} if $array_of_variables is sent. The Tags available are:
+         * @param string|null $text Potential string to replace. The allowed values will be:
+         *   * {{<SystemTag>:<TagVariable>[,defaultvalue]}} Allowed values:
+         *   * Platform:(namespace)
+         *   * User:(UserAuthUser.<variable>)
+         *   * UserVariable:(UserAuthUser.JSON.UserVariables.<variable>)
+         *   * GETVariable:<$_GET variable)
+         *   * POSTVariable:<$_POST variable)
+         *   * FORMVariable:<$_REQUEST variable)
+         *   if $array_of_variables is sent {{<Variable>>[,defaultvalue]}}
+         * @param array|null $array_of_variables
+         * @param bool $rawUrlEncode Apply a URL encode to the substitutions
+         * @return string|null
+         */
+        public function replaceCloudFrameworkTagsAndVariables($text, $array_of_variables=[], bool $rawUrlEncode=false) {
+
+            //region IF $text does not contains {{ xxxx }} the return $text
+            if(!is_string($text) || !$text || strpos($text,'{{')===false || strpos($text,'}}')===false) return($text);
+            $source = $text;
+            //endregion
+
+            //region FIND {{TYPE:tag}}
+            if(strpos($text,':')!==false) do {
+                //region SET $found = false, $value = '',  $default_value=''
+                $value = '';
+                $default_value='';
+                $found = null;
+                preg_match("/{{([A-z0-9_]*):([A-z0-9_,\- ]*)}}/", $text, $found);
+                //endregion
+                //region SEARCH $found[1] in Platform,User,UserVariables,GETVariables and SET $value
+                if($found) {
+
+                    //region IF $found[2] contains a ',' the right string will be set to $default_value
+                    if (strpos($found[2], ',')) {
+                        list($found[2], $default_value) = explode(',', $found[2], 2);
+                    }
+                    //endregion
+
+                    //region SWITH $found[1]
+                    switch ($found[1]) {
+                        case "Platform":
+                            switch (trim($found[2])) {
+                                case "Fingerprint":
+                                    $value = json_encode($this->core->system->getRequestFingerPrint());
+                                    break;
+
+                                case "namespace":
+                                    $value = $this->platform[$found[2]] ?? $this->namespace;
+                                    break;
+
+                                default:
+                                    $value = $this->platform[$found[2]] ?? null;
+                                    break;
+                            }
+                            break;
+                        case "User":
+                            $value = (isset($this->user->data['User'][$found[2]])) ? $this->user->data['User'][$found[2]] : '';
+                            if ($rawUrlEncode) $value = urlencode($value);
+                            break;
+                        case "UserVariables":
+                        case "UserVariable":
+                            $value = (isset($this->user->data['User']['UserVariables'][$found[2]])) ? $this->user->data['User']['UserVariables'][$found[2]] : '';
+                            if ($rawUrlEncode) $value = urlencode($value);
+                            break;
+                        case "GETVariables":
+                        case "GETVariable":
+                            $value = (isset($_GET[$found[2]])) ? $_GET[$found[2]] : '';
+                            if ($rawUrlEncode) $value = urlencode($value);
+                            break;
+                        case "POSTVariables":
+                        case "POSTVariable":
+                            $value = (isset($_POST[$found[2]])) ? $_POST[$found[2]] : '';
+                            if ($rawUrlEncode) $value = urlencode($value);
+                            break;
+                        case "FORMVariables":
+                        case "FORMVariable":
+                            $value = (isset($_REQUEST[$found[2]])) ? $_REQUEST[$found[2]] : '';
+                            if ($rawUrlEncode) $value = urlencode($value);
+                            break;
+                    }
+                    //endregion
+
+                    //region REPLACE str_replace($found[0], $value, $text) EVALUATING $default_value
+                    if (!$value && !strlen($value??'') && $default_value) $value = $default_value;
+                    $text = str_replace($found[0], $value??'', $text);
+                    //endregion
+
+                }
+                //endregion
+            }  while($found);
+            //endregion
+
+            // Explore extra variables
+            if($array_of_variables) do {
+                $found = null;
+                $value = '';
+                $default_value='';
+                preg_match('/{{([^}]*)}}/',$text,$found);
+                if($found ) {
+                    //region IF $found[2] contains a ',' the right string will be set to $default_value
+                    if (strpos($found[1], ',')) list($found[1], $default_value) = explode(',', $found[1], 2);
+                    //endregion
+
+                    //region SET $value to replace
+                    $value = $this->findValueWithDotsInArray($array_of_variables,$found[1]);
+                    // isset($array_of_variables[$found[1]]))?$array_of_variables[$found[1]]:'';
+                    if (!$value && $default_value) $value = $default_value;
+                    if(is_array($value)) $value = json_encode($value);
+                    if($rawUrlEncode) $value=urlencode($value);
+                    //endregion
+
+                    //region REPLACE $found[0] by $value in $text
+                    $text = str_replace($found[0],$value,$text);
+                    //endregion
+                }
+            } while ($found);
+
+            if(is_string($text)) {
+                $text = $this->localization->getTag($text);
+            }
+            return $text;
+
+        }
+
+        /**
+         * Return the value of $array[$var]. If $var has '.' separator it assumes that it is a subarray
+         * @param $array
+         * @param $var
+         * @return mixed|string
+         */
+        private function findValueWithDotsInArray(&$array, $var) {
+            if(!strpos($var,'.')) return $array[$var]??'';
+            else {
+                $parts = explode('.',$var,2);
+                if(isset($array[$parts[0]])) return $this->findValueWithDotsInArray($array[$parts[0]],$parts[1]);
+                else return '';
+            }
+        }
+
 
     }
 
@@ -5371,7 +5517,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if($expires = ($userData['data']['expires']??null)) {
                 $this->tokenExpiresIn = $expires-time();
                 if($expires >= time()) $expired=false;
-                else return($this->addError('TOKEN_EXPIRED','The expiration time of the token has been reached: '.date('Y-m-d H:i:s e',$expired)));
+                else return($this->addError('TOKEN_EXPIRED','The expiration time of the token has been reached: '.date('Y-m-d H:i:s e',$expires)));
             }
             if(!isset($userData['tokens'][$token]) || $refresh) {
 
@@ -5406,6 +5552,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->id = $userData['id'];
             $this->data = $userData['data'];
             unset($userData);
+            $this->core->namespace = $namespace;
             //endregion
 
             return true;
@@ -5508,6 +5655,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->expirationTime = $userData['data']['User']['Expires']??time();
             $this->tokenExpiresIn = $this->expirationTime - time();
             unset($userData);
+            $this->core->namespace = $namespace;
             //endregion
 
             return true;
@@ -5613,6 +5761,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->id = $userData['id'];
             $this->data = $userData['data'];
             unset($userData);
+            $this->core->namespace = $namespace;
             //endregion
 
             return true;
@@ -7490,6 +7639,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 ];
                 //endregion
 
+
                 $this->sendTerminal('Calling [https://api.cloudframework.io/core/signin/'.$namespace.'/in] with Google access token');
                 //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
                 $ret = $this->core->request->post_json_decode('https://api7.cloudframework.io/core/signin/'.$namespace.'/in',$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
@@ -7498,6 +7648,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     'time'=>microtime(true),
                     'token'=>$ret['data']['dstoken']];
                 $this->setCacheVar($user.'_'.$namespace.'_erp_token',$user_erp_token);
+                $this->core->namespace = $namespace;
                 //endregion
             }
             //endregion
