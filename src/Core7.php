@@ -627,10 +627,28 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return $arr;
         }
 
+        /**
+         * Give support for deprecated utf8_encode
+         * @param $value
+         * @return string|null
+         */
+        public function utf8Encode(string  $value) {
+            return (mb_detect_encoding($value) != "UTF-8") ? mb_convert_encoding($value, 'UTF-8',mb_detect_encoding($value)) : $value;
+        }
+
+        /**
+         * Give support for deprecated utf8_decode
+         * @param $value
+         * @return string|null
+         */
+        public function utf8Decode($value) {
+            return (mb_detect_encoding($value) == "UTF-8") ? mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8') : $value;
+        }
+
 
         /**
          * Replace CloudFramework Tags {{Tag:{value of tag}}} or variable {{Variablename,defaultvalu} if $array_of_variables is sent. The Tags available are:
-         * @param string|null $text Potential string to replace. The allowed values will be:
+         * @param string|null $data Potential string to replace. The allowed values will be:
          *   * {{<SystemTag>:<TagVariable>[,defaultvalue]}} Allowed values:
          *   * Platform:(namespace)
          *   * User:(UserAuthUser.<variable>)
@@ -643,20 +661,29 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param bool $rawUrlEncode Apply a URL encode to the substitutions
          * @return string|null
          */
-        public function replaceCloudFrameworkTagsAndVariables($text, $array_of_variables=[], bool $rawUrlEncode=false) {
+        public function replaceCloudFrameworkTagsAndVariables($data, &$array_of_variables=[], bool $rawUrlEncode=false) {
+
+            //region EVALUATE if $data is array to do a recursive call
+            if(is_array($data)) {
+                foreach ($data as $i => $datum) {
+                    $data[$i] = $this->replaceCloudFrameworkTagsAndVariables($datum, $array_of_variables, $rawUrlEncode);
+                }
+                return $data;
+            }
+            //endregion
 
             //region IF $text does not contains {{ xxxx }} the return $text
-            if(!is_string($text) || !$text || strpos($text,'{{')===false || strpos($text,'}}')===false) return($text);
-            $source = $text;
+            if(!is_string($data) || !$data || strpos($data,'{{')===false || strpos($data,'}}')===false) return($data);
+            $source = $data;
             //endregion
 
             //region FIND {{TYPE:tag}}
-            if(strpos($text,':')!==false) do {
+            if(strpos($data,':')!==false) do {
                 //region SET $found = false, $value = '',  $default_value=''
                 $value = '';
                 $default_value='';
                 $found = null;
-                preg_match("/{{([A-z0-9_]*):([A-z0-9_,\- ]*)}}/", $text, $found);
+                preg_match("/{{([A-z0-9_]*):([A-z0-9_,\- ]*)}}/", $data, $found);
                 //endregion
                 //region SEARCH $found[1] in Platform,User,UserVariables,GETVariables and SET $value
                 if($found) {
@@ -672,13 +699,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         case "Platform":
                             switch (trim($found[2])) {
                                 case "Fingerprint":
-                                    $value = json_encode($this->core->system->getRequestFingerPrint());
+                                case "fingerprint":
+                                    $value = json_encode($this->system->getRequestFingerPrint());
                                     break;
-
                                 case "namespace":
                                     $value = $this->platform[$found[2]] ?? $this->namespace;
                                     break;
-
+                                case "ip":
+                                    $value = $this->system->ip;
+                                    break;
+                                case "host":
+                                    $value = $this->system->url['host'];
+                                    break;
+                                case "url":
+                                    $value = $this->system->url['url'];
+                                    break;
                                 default:
                                     $value = $this->platform[$found[2]] ?? null;
                                     break;
@@ -713,7 +748,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                     //region REPLACE str_replace($found[0], $value, $text) EVALUATING $default_value
                     if (!$value && !strlen($value??'') && $default_value) $value = $default_value;
-                    $text = str_replace($found[0], $value??'', $text);
+                    $data = str_replace($found[0], $value??'', $data);
                     //endregion
 
                 }
@@ -726,7 +761,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $found = null;
                 $value = '';
                 $default_value='';
-                preg_match('/{{([^}]*)}}/',$text,$found);
+                preg_match('/{{([^}]*)}}/',$data,$found);
                 if($found ) {
                     //region IF $found[2] contains a ',' the right string will be set to $default_value
                     if (strpos($found[1], ',')) list($found[1], $default_value) = explode(',', $found[1], 2);
@@ -741,15 +776,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     //endregion
 
                     //region REPLACE $found[0] by $value in $text
-                    $text = str_replace($found[0],$value,$text);
+                    $data = str_replace($found[0],$value,$data);
                     //endregion
                 }
             } while ($found);
 
-            if(is_string($text)) {
-                $text = $this->localization->getTag($text);
+            if(is_string($data)) {
+                $data = $this->localization->getTag($data);
             }
-            return $text;
+            return $data;
 
         }
 
