@@ -9,18 +9,18 @@
  * X-Mandrill-Signature: mYCSmflkBKULrfItXfIsmmpht8Q=
  * @package CoreClasses
  */
-require_once $this->system->root_path.'/vendor/mandrill/mandrill/src/Mandrill.php'; //Not required with Composer
+// require_once $this->system->root_path.'/vendor/mandrill/mandrill/src/Mandrill.php'; //Not required with Composer
 class WorkFlows
 {
 
     var $version = '20230122';
     /** @var Core7 */
     var $core;
-    /** @var Mandrill */
-    var $mandrill;
+    /** @var MailchimpTransactional\ApiClient $mandrill */
+    var \MailchimpTransactional\ApiClient $mandrill;
 
     /** @var CFOs $cfos */
-    var $cfos = null;
+    var $cfos;
 
 
     var $error = false;                 // When error true
@@ -35,6 +35,7 @@ class WorkFlows
     {
         $this->core = $core;
         $this->cfos = $cfos;
+        $this->mandrill = new MailchimpTransactional\ApiClient();
     }
 
     /**
@@ -43,9 +44,7 @@ class WorkFlows
      * @throws Mandrill_Error
      */
     public function setMandrillApiKey($apiKey) {
-        if(!$this->mandrill)
-            $this->mandrill = new Mandrill($apiKey);
-        else $this->mandrill->apikey = $apiKey;
+        $this->mandrill->setApiKey($apiKey);
     }
 
     /**
@@ -92,7 +91,7 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $template = $this->mandrill->templates->info($slug);
+            $template = (array)$this->mandrill->templates->info(['name'=>$slug]);
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -118,8 +117,10 @@ class WorkFlows
             if(is_array($data['email_template_vars']??null)) foreach ($data['email_template_vars'] as $key=>$value) {
                 $vars[] = ['name'=>$key,'content'=>$value];
             }
-
-            $template = $this->mandrill->templates->render($slug,[],$vars);
+            $template = (array) $this->mandrill->templates->render([
+                'template_name'=>$slug,
+                'template_content'=>[],
+                'merge_vars'=>$vars]);
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -136,7 +137,7 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $webhooks = $this->mandrill->webhooks->getList();
+            $webhooks = (array)$this->mandrill->webhooks->list();
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -163,7 +164,7 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $domains = $this->mandrill->senders->domains();
+            $domains = (array)$this->mandrill->senders->domains();
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -194,7 +195,7 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $senders = $this->mandrill->senders->getList();
+            $senders = (array)$this->mandrill->senders->list();
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -229,7 +230,7 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $info = $this->mandrill->messages->info($id);
+            $info = (array)$this->mandrill->messages->info(['id'=>$id]);
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -258,7 +259,7 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $content = $this->mandrill->messages->content($id);
+            $content = $this->mandrill->messages->content(['id'=>$id]);
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -346,6 +347,7 @@ class WorkFlows
      * @param string $type [optional] has to value: Mandrill
      * @param string $linked_object [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedObject
      * @param string $linked_id [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedId
+     * @return bool|void
      */
     public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='') {
         if($type!='Mandrill') return $this->addError('sendERPEmail(...) has received a worng $type. [Mandrill] is the valid value');
@@ -407,6 +409,8 @@ class WorkFlows
                 }
 
                 if($result && ($result['success']??null) && is_array($result['result']??null)) foreach ( $result['result'] as $i=>$item) {
+                    $item = (array)$item;
+                    $result['result'][$i] = $item;
                     $email = [
                         "Cat"=>$dsSubmission['Cat'],
                         "SubmissionId"=>$dsSubmission['KeyId'],
@@ -421,7 +425,7 @@ class WorkFlows
                         "Tags"=>$tags,
                         "Opens"=>0,
                         "Clicks"=>0,
-                        "BODY_HTML"=>utf8_encode($html),
+                        "BODY_HTML"=>$this->core->utf8Encode($html),
                         "DateProcessing"=>"now",
                         "UpdateProcessing"=>"now",
                         "StatusProcessing"=>$item['status']??'unknown',
@@ -458,7 +462,7 @@ class WorkFlows
      *      * preserve_recipients boolean if it is true then the email will preserve the recipients headers instead to appear emails separated
      *      * attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
      * }
-     * @throws Mandrill_Error
+     * @return array the array will contain 'success' with true or false value.
      */
     public function sendMandrillEmail(array &$params) {
 
@@ -468,7 +472,7 @@ class WorkFlows
         if(!$template = $this->getMandrillTemplate($slug)) return;
         if(!$from = $params['from']??($template['DefaultFromEmail']??null)) return $this->addError('sendMandrillEmail($params) missing email in $params because the template does not have a default from email');
         if(!$subject = $params['subject']??($template['DefaultSubject']??null)) return $this->addError('sendMandrillEmail($params) missing subject in $params because the template does not have a default subject');
-        $from_name = $params['name']??($template['DefaultFromName']??'');
+        $from_name = $params['name']??($template['from_name']??'');
 
         if(!$emails_to = $params['to']??null) return $this->addError('sendMandrillEmail($params) missing to in $params');
         if(!is_array($emails_to)) $emails_to = array_filter(explode(',',$emails_to));
@@ -523,7 +527,10 @@ class WorkFlows
             $message['to'] = [];
             foreach ($emails_to as $email_to) {
                 if(is_array($email_to)) {
-                    if(!($email_to['email']??null)) return $this->addError('sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute');
+                    if(!($email_to['email']??null)) {
+                        $this->addError('sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute');
+                        return ['success'=>false,'result'=>'sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute'];
+                    }
                     $message['to'][] = ['email' => $email_to['email'], 'name' => $email_to['name'] ?? $email_to['email'], 'type' => 'to'];
                 }else
                     $message['to'][] = ['email'=>$email_to,'name'=> $email_to,'type'=>'to'];
@@ -533,7 +540,11 @@ class WorkFlows
             //region cc: into $message['to']
             foreach ($emails_cc as $email_cc) {
                 if(is_array($email_cc)) {
-                    if(!($email_cc['email']??null)) return $this->addError('sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute');
+                    if(!($email_cc['email']??null)) {
+                        $this->addError('sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute');
+                        return ['success'=>false,'result'=>'sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute'];
+
+                    }
                     $message['to'][] = ['email' => $email_cc['email'], 'name' => $email_cc['name'] ?? $email_cc['email'], 'type' => 'cc'];
                 } else
                     $message['to'][] = ['email'=>$email_cc,'name'=> $email_cc,'type'=>'cc'];
@@ -557,11 +568,18 @@ class WorkFlows
             $ip_pool = 'Main Pool';
 //            $send_at = date("Y-m-d h:m:i");
 //            $result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool, $send_at);
-            $result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool);
+            $body = [
+                'template_name'=>$slug,
+                'template_content'=>$template_content,
+                'message'=>$message,
+                'async'=>$async,
+                'ip_pool'=>$ip_pool,
+            ];
+            //$result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool);
+            $result = (array)$this->mandrill->messages->sendTemplate($body);
             return ['success'=>true,'result'=>$result];
         } catch (Error $e) {
             return ['success'=>false,'result'=>$e->getMessage()];
-            return $this->addError($e->getMessage());
         }
     }
 
@@ -597,13 +615,13 @@ class WorkFlows
             $entity['DateInsertion']=$template['created_at'];
         $entity['DateUpdating']="now";
         $entity['Type']='Mandrill';
-        $entity['TemplateHTML']=utf8_encode($template['publish_code']??'');
-        $entity['TemplateTXT']=utf8_encode($template['publish_text']??'');
+        $entity['TemplateHTML']=$this->core->utf8Encode($template['publish_code']??'');
+        $entity['TemplateTXT']=$this->core->utf8Encode($template['publish_text']??'');
         $entity['TemplateURL']="https://mandrillapp.com/templates/code?id=".urlencode($template['slug']);
         $entity['TemplateVariables']=[];
 
         //region extract Variables
-        $code = utf8_encode($template['publish_code']??'');
+        $code = $this->core->utf8Encode($template['publish_code']??'');
         do {
 
             $found = null;
