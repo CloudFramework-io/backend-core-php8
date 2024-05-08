@@ -659,17 +659,24 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                             $where[$key . $idkey] = $value;
 
                         }
-                    } else {
+                    }
+                    else {
                             $idkey = null;
                     }
                     $fieldname = $key;
 
                     // In the WHERE Conditions we have to transform date formats into date objects.
                     // SELECT * FROM PremiumContracts WHERE PremiumStartDate >= DATETIME("2020-03-01T00:00:00z") AND PremiumStartDate <= DATETIME("2020-03-01T23:59:59z")
-                    if (array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['date', 'datetime', 'datetimeiso'])) {
+                    if (array_key_exists($key, $this->schema['props'])
+                        && in_array($this->schema['props'][$key][1], ['date', 'datetime', 'datetimeiso'])) {
 
-                        if(stripos($value,'now')!==false) $value = str_ireplace('now',date('Y-m-d'),$value);
-                        if (preg_match('/[=><]/', $value)) {
+                        if($value===null || $value=='__null__') $value = null;
+                        elseif(stripos($value,'now')!==false) $value = str_ireplace('now',date('Y-m-d'),$value);
+                        elseif($value=='__notnull__') {
+                            $value = '>0001-01-01 00:00:00';
+                        }
+
+                        if ($value && preg_match('/[=><]/', $value)) {
                             if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
                                 $comp = substr($value, 0, 2);
                                 $value=substr($value,2);
@@ -729,18 +736,36 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                             $where[$key] = ($value)?new DateTime($value):null;
                             if ($i == 0) $_q .= " WHERE $fieldname {$comp} @{$key}";
                             else $_q .= " AND $fieldname {$comp} @{$key}";
+
                         }
                     }
                     else {
 
                         //region IF field is integer transform value into integer
-                        if (is_string($value??'') && array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['integer'])) {
-                            $where[$key] = $value = intval($value);
+                        if (is_string($value??'')
+                            && array_key_exists($key, $this->schema['props'])
+                            && in_array($this->schema['props'][$key][1], ['integer','float'])) {
+                            if($value=='__null__' || $value===null) $where[$key] = null;
+                            elseif($value=='__notnull__') {
+                                if ($i == 0) $_q .= " WHERE $fieldname <= @{$key}";
+                                else $_q .= " AND $fieldname <= @{$key}";
+
+                                $where[$key] = 9223372036854775807;
+                                $i++;
+                                $bindings[$key]=$where[$key];
+                                continue;
+                            }
+                            else {
+                                if($this->schema['props'][$key][1]  == 'integer')
+                                    $where[$key] = $value = intval($value);
+                                else
+                                    $where[$key] = $value = floatval($value);
+                            }
                         }
                         //endregion
 
                         //region IF SPECIAL SEARCH for values ending in % let's emulate a like string search
-                        if(is_string($value) && preg_match('/\%$/',$value) && strlen(trim($value))>1) {
+                        if($value!==null && is_string($value) && preg_match('/\%$/',$value) && strlen(trim($value))>1) {
                             if($order && strpos($order,$key)===false) $order = "{$key},{$order}";
                             $value = preg_replace('/\%$/','',$value);
                             $bindings[$key.'_from']=$value;
@@ -753,6 +778,18 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         }
                         //endregion
                         //region IF value is ARRAY and the type is not list convert it into IN ARRAY
+                        elseif($value!==null && is_string($value) && in_array($value,['__null__','__notnull__'])) {
+                            if($value=='__null__') {
+                                if ($i == 0) $_q .= " WHERE $fieldname = @{$key}";
+                                else $_q .= " AND $fieldname = @{$key}";
+                                $where[$key] = $value = null;
+                            }
+                            else {
+                                if ($i == 0) $_q .= " WHERE $fieldname >= @{$key}";
+                                else $_q .= " AND $fieldname >= @{$key}";
+                                $where[$key] = ' ';
+                            }
+                        }
                         elseif(is_array($value)){
 
                             if(array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['integer']))
