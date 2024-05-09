@@ -91,7 +91,9 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $template = (array)$this->mandrill->templates->info(['name'=>$slug]);
+            $template = $this->mandrill->templates->info(['name'=>$slug]);
+            $template = $this->core->jsonDecode($this->core->jsonEncode($template),true);
+
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -117,10 +119,12 @@ class WorkFlows
             if(is_array($data['email_template_vars']??null)) foreach ($data['email_template_vars'] as $key=>$value) {
                 $vars[] = ['name'=>$key,'content'=>$value];
             }
-            $template = (array) $this->mandrill->templates->render([
+            $template = $this->mandrill->templates->render([
                 'template_name'=>$slug,
                 'template_content'=>[],
                 'merge_vars'=>$vars]);
+            $template = $this->core->jsonDecode($this->core->jsonEncode($template),true);
+
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -137,7 +141,9 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $webhooks = (array)$this->mandrill->webhooks->list();
+            $webhooks = $this->mandrill->webhooks->list();
+            $webhooks = $this->core->jsonDecode($this->core->jsonEncode($webhooks),true);
+
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -164,7 +170,9 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $domains = (array)$this->mandrill->senders->domains();
+            $domains = $this->mandrill->senders->domains();
+            $domains = $this->core->jsonDecode($this->core->jsonEncode($domains),true);
+
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -195,7 +203,9 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $senders = (array)$this->mandrill->senders->list();
+            $senders = $this->mandrill->senders->list();
+            $senders = $this->core->jsonDecode($this->core->jsonEncode($senders),true);
+
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -230,7 +240,8 @@ class WorkFlows
     {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $info = (array)$this->mandrill->messages->info(['id'=>$id]);
+            $info = $this->mandrill->messages->info(['id'=>$id]);
+            $info = $this->core->jsonDecode($this->core->jsonEncode($info),true);
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -260,6 +271,7 @@ class WorkFlows
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $content = $this->mandrill->messages->content(['id'=>$id]);
+            $content = $this->core->jsonDecode($this->core->jsonEncode($content),true);
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -576,7 +588,9 @@ class WorkFlows
                 'ip_pool'=>$ip_pool,
             ];
             //$result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool);
-            $result = (array)$this->mandrill->messages->sendTemplate($body);
+            $result = $this->mandrill->messages->sendTemplate($body);
+            $result = $this->core->jsonDecode($this->core->jsonEncode($result),true);
+
             return ['success'=>true,'result'=>$result];
         } catch (Error $e) {
             return ['success'=>false,'result'=>$e->getMessage()];
@@ -648,6 +662,7 @@ class WorkFlows
      */
     private function getEntityFromMandrillMessage(array $entity,array $message, array $info=[],$update_processing=null) {
 
+        if($message['to'])
         if(!isset($entity["Cat"]))
             $entity["Cat"]='WEBHOOK-CREATED';
         if(!isset($entity["SubmissionId"]))
@@ -664,8 +679,8 @@ class WorkFlows
         $entity["Tags"]=$message['tags'];
         $entity["Opens"]=$info['opens']??0;
         $entity["Clicks"]=$info['clicks']??0;
-        $entity["BODY_HTML"]=utf8_encode($message['html']);
-        $entity["BODY_TXT"]=utf8_encode($message['text']);
+        $entity["BODY_HTML"]=$this->core->utf8Encode($message['html']);
+        $entity["BODY_TXT"]=$this->core->utf8Encode($message['text']);
         $entity["DateProcessing"]=date('Y-m-d H:i:s',$message['ts']);
         $entity["UpdateProcessing"]=$update_processing;
         $entity["StatusProcessing"]=$info['state']??'unknown';
