@@ -413,8 +413,8 @@ class CFOs {
                 return $this->addError('secret-conflict','setDBCredentialsFromPlatformSecret($platform_secret_variable) has received secret with no [dbServer] parameter for local environment')??false;
             }
             $secret['dbSocket'] = null;
-            $this->setDBCredentials($secret);
         }
+        $this->setDBCredentials($secret);
         return true;
     }
 
