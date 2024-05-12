@@ -1,4 +1,16 @@
 <?php
+//region CONTROL OPTIONS METHOD
+if (($_SERVER['REQUEST_METHOD']??'')=='OPTIONS') {
+    $_origin = ((array_key_exists('HTTP_ORIGIN',$_SERVER) && strlen($_SERVER['HTTP_ORIGIN'])) ? preg_replace('/\/$/', '', $_SERVER['HTTP_ORIGIN']) : '*');
+    header("Access-Control-Allow-Origin: {$_origin}");
+    header("Access-Control-Allow-Methods: *");
+    header("Access-Control-Allow-Headers: *");
+    header('Access-Control-Max-Age: 1000');
+    header("HTTP/1.1 204 OK");
+    exit();
+}
+//endregion
+
 //region SET $_root_path and autolad
 $_root_path = (strlen($_SERVER['DOCUMENT_ROOT'])) ? $_SERVER['DOCUMENT_ROOT'] : $_SERVER['PWD'];
 // Autoload libraries
