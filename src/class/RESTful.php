@@ -159,27 +159,62 @@ if (!defined("_RESTfull_CLASS_")) {
         }
 
         /**
-         * Setup CORS Headers to allow Ajax Web Calls
+         * Send CORS Headers to allow Ajax Web Calls
+         * https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+         *
          * @param string $methods
-         * @param string $origin
-         * @param string $allow_extra_headers If you need to add headers to be allowed use this variable.
+         * @param string $allow_origins '*' by default. Set domains separated by ',' to allow specific origins. It can start with http for specific urls
+         * @param string $allow_extra_headers Access-Control-Allow-Headers extra headers. The framework allows: Content-Type,Authorization,X-Requested-With,cache-control,X-CloudFrameWork-AuthToken,X-CLOUDFRAMEWORK-SECURITY,X-DS-TOKEN,X-REST-TOKEN,X-EXTRA-INFO,X-WEB-KEY,X-SERVER-KEY,X-REST-USERNAME,X-REST-PASSWORD,X-APP-KEY,X-DATA-ENV
          */
-        function sendCorsHeaders($methods = 'GET,POST,PUT', $origin = '',$allow_extra_headers='')
+        function sendCorsHeaders($methods = 'GET,POST,PUT', $allow_origins = '',$allow_extra_headers='')
         {
 
+            //region CALCULATE $origin taking $allow_origins
             // Rules for Cross-Domain AJAX
             // https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS
-            // $origin =((strlen($_SERVER['HTTP_ORIGIN']))?preg_replace('/\/$/', '', $_SERVER['HTTP_ORIGIN']):'*')
-            if (!strlen($origin)) $origin = ((array_key_exists('HTTP_ORIGIN',$_SERVER) && strlen($_SERVER['HTTP_ORIGIN'])) ? preg_replace('/\/$/', '', $_SERVER['HTTP_ORIGIN']) : '*');
-            header("Access-Control-Allow-Origin: $origin");
-            header("Access-Control-Allow-Methods: $methods");
+            $origin = ((array_key_exists('HTTP_ORIGIN',$_SERVER) && strlen($_SERVER['HTTP_ORIGIN'])) ? preg_replace('/\/$/', '', $_SERVER['HTTP_ORIGIN']) : '*');
+            if ($allow_origins && $allow_origins!='*') {
+                if(is_string($allow_origins)) $allow_origins = explode(',',$allow_origins);
+                $_found=false;
+                foreach ($allow_origins as $allow_origin) {
+                    if(strpos($origin,trim($allow_origin))!==false) {
+                        $_found=true;
+                    }
+                }
+                if(!$_found) $origin = $this->core->system->url['host_base_url'];
+            }
+            //endregion
 
+            //region Access-Control-Allow-Origin
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
+            $this->core->logs->add($origin,'trace');
+            header("Access-Control-Allow-Origin: {$origin}");
+            if($origin!='*')
+                header("Vary: Origin");
+            $this->core->logs->add($origin.' '.json_encode($allow_origins),'trace');
+            //endregion
+
+            //region Access-Control-Allow-Methods
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
+            header("Access-Control-Allow-Methods: $methods");
+            //endregion
+
+            //region Access-Control-Allow-Methods
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
             $allow_headers='Content-Type,Authorization,X-Requested-With,cache-control,X-CloudFrameWork-AuthToken,X-CLOUDFRAMEWORK-SECURITY,X-DS-TOKEN,X-REST-TOKEN,X-EXTRA-INFO,X-WEB-KEY,X-SERVER-KEY,X-REST-USERNAME,X-REST-PASSWORD,X-APP-KEY,X-DATA-ENV';
             if($allow_extra_headers && is_string($allow_extra_headers)) $allow_headers.=','.strtoupper($allow_extra_headers);
-
             header("Access-Control-Allow-Headers: {$allow_headers}");
+            //endregion
+
+            //region Access-Control-Allow-Credentials
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials
             header("Access-Control-Allow-Credentials: true");
+            //endregion
+
+            //region Access-Control-Allow-Max-Age
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Max-Age
             header('Access-Control-Max-Age: 1000');
+            //endregion
 
             // To avoid angular Cross-Reference
             if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -188,34 +223,31 @@ if (!defined("_RESTfull_CLASS_")) {
             }
         }
 
-
-        function setAuth($val, $msg = '')
-        {
-            if (!$val) {
-                $this->setError($msg, 401);
-            }
-        }
-
-
-        function checkMethod($methods, $msg = '')
+        /**
+         * CHECK if this->method is allowed
+         * @param string $methods allowed methods separated by ',': GET,POST
+         * @param string|arrat $error_msg error message in case it is not allowed
+         * @return bool
+         */
+        function checkMethod(string $methods, $error_msg = '')
         {
             if (strpos(strtoupper($methods), $this->method) === false) {
-                if (!strlen($msg)) $msg = 'Method ' . $this->method . ' is not supported';
-                $this->setErrorFromCodelib('method-error',$msg);
+                if (!strlen($error_msg)) $error_msg = 'Method ' . $this->method . ' is not supported';
+                $this->setErrorFromCodelib('method-error',$error_msg);
             }
             return ($this->error === 0);
         }
 
         /**
-         * Validate a $this->formParams[$key] value as mandatory
-         * @param $key
-         * @param string $msg
-         * @param array $values
-         * @param int $min_length
-         * @param null $code
+         * Check if $this->formParams[$key] value has been sent.
+         * @param string $key variable to be received in $this->formParams.
+         * @param string|array $error_msg in case of error is the message to be set in $this->setError(..)
+         * @param array $values if it is sent the check if the value match with any of $values or return error
+         * @param int $min_length min length of the content
+         * @param null|string $code error code to be returned. 'form-params-error' will be the default value
          * @return false|mixed|string
          */
-        function checkMandatoryFormParam($key, $msg = '', $values=[],$min_length = 1,$code=null)
+        function checkMandatoryFormParam(string $key, $error_msg = '', $values=[], $min_length = 1, $code=null)
         {
             if (isset($this->formParams[$key]) && is_string($this->formParams[$key]))
                 $this->formParams[$key] = trim($this->formParams[$key]);
@@ -225,10 +257,10 @@ if (!defined("_RESTfull_CLASS_")) {
                 || (is_array($this->formParams[$key]) && count($this->formParams[$key]) < $min_length)
                 || (is_array($values) && count($values) && !in_array($this->formParams[$key], $values))
             ) {
-                if (!strlen($msg))
-                    $msg = "{{$key}}" . ((!isset($this->formParams[$key])) ? ' form-param missing ' : ' form-params\' length is less than: ' . $min_length);
+                if (!strlen($error_msg))
+                    $error_msg = "{{$key}}" . ((!isset($this->formParams[$key])) ? ' form-param missing ' : ' form-params\' length is less than: ' . $min_length);
                 if(!$code) $code='form-params-error';
-                $this->setError($msg,400,$code,$msg);
+                $this->setError($error_msg,400,$code,$error_msg);
             }
             // Return
             return (($this->error !== 0)?false:$this->formParams[$key]);
