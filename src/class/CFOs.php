@@ -388,12 +388,7 @@ class CFOs {
         if($this->core->is->localEnvironment() && $this->core->config->get("dbSocket") && $this->core->config->get("dbServer"))
             $this->core->config->set("dbSocket",null);
 
-        if(!$this->core->model->dbInit($connection)) {
-            $this->addError('database-error',$this->core->model->errorMsg);
-            return false;
-        }
-        else return true;
-
+        return true;
     }
 
     /**
