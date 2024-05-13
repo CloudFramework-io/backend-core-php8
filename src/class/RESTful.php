@@ -386,7 +386,7 @@ if (!defined("_RESTfull_CLASS_")) {
 
             //region validate there are not internal fields
             foreach ($data as $key=>$datum) {
-                if(in_array($key,$model) && isset($model[$key]['validation']) && stripos($model[$key]['validation'],'internal')!==false)
+                if(in_array($key,$model) && isset($model[$key]['validation']) && preg_match('/(^|\|)internal($|\|)/',trim($model[$key]['validation'])) )
                     return($this->setErrorFromCodelib('params-error',$key . ': not allowed in form validation' ));
             }
             //endregion
@@ -396,6 +396,7 @@ if (!defined("_RESTfull_CLASS_")) {
                 /* @var $dv DataValidation */
                 $dv = $this->core->loadClass('DataValidation');
                 if (!$dv->validateModel($model, $data, $dictionaries, $all)) {
+
                     if ($dv->typeError == 'field') {
                         if (strlen($codelibbase))
                             $this->setErrorFromCodelib($codelibbase . '-' . $dv->field, $dv->errorMsg, 400, $codelibbase . '-' . $dv->field);
@@ -410,6 +411,7 @@ if (!defined("_RESTfull_CLASS_")) {
                     if (count($dv->errorFields))
                         $this->core->errors->add($dv->errorFields);
                 }
+
             }
             //endregion
 

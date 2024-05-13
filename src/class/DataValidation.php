@@ -32,7 +32,7 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
             foreach ($model as $key=>$value) {
                 //  because $all==true  Ignore those fields that does not exist in $data and are optional or internal
                 if($all && !key_exists($key,$data) && isset($value['validation'])
-                    && (preg_match('/(^|\|)optional($|\|):/',trim($value['validation']))  || preg_match('/(^|\|)internal($|\|):/',trim($value['validation'])))) continue;
+                    && (preg_match('/(^|\|)optional($|\|)/',trim($value['validation']))  || preg_match('/(^|\|)internal($|\|)/',trim($value['validation'])))) continue;
                 // because $all==false Ignore those fields that does not exist in $data and they are not mandatory
                 if(!$all && !key_exists($key,$data)) continue;
 
