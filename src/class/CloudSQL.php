@@ -325,17 +325,22 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                     return $ret;
                 }
                 else {
-                    if( ($this->_lastRes = $this->_db->query($_q)) ) {
-                        $_ok=true;
-                        $this->_lastInsertId = $this->_db->insert_id;
-                        $this->_affectedRows = $this->_db->affected_rows;
-                        if(is_object($this->_lastRes)) {
-                            $this->_lastRes->close();
+                    try {
+                        if( ($this->_lastRes = $this->_db->query($_q)) ) {
+                            $_ok=true;
+                            $this->_lastInsertId = $this->_db->insert_id;
+                            $this->_affectedRows = $this->_db->affected_rows;
+                            if(is_object($this->_lastRes)) {
+                                $this->_lastRes->close();
+                            }
+                            $this->_lastRes = false;
+                        } else {
+                            $_ok = false;
+                            $this->setError('Query Error [$q]: ' .  $this->_db->error);
                         }
-                        $this->_lastRes = false;
-                    } else {
+                    } catch (Exception $e) {
                         $_ok = false;
-                        $this->setError('Query Error [$q]: ' .  $this->_db->error);
+                        $this->setError('Query Error [$q]: ' . $e->getMessage());
                     }
                     $this->core->__p->add('command ','','endnote');
                     $this->_lastExecutionMicrotime = round(microtime(true)-$start_global_time,4);
