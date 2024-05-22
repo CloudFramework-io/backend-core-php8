@@ -633,7 +633,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @return string|null
          */
         public function utf8Encode(string  $value) {
-            return (mb_detect_encoding($value) != "UTF-8") ? mb_convert_encoding($value, 'UTF-8',mb_detect_encoding($value)) : $value;
+            return (mb_convert_encoding($value, 'UTF-8','ISO-8859-1'));
         }
 
         /**
@@ -642,7 +642,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @return string|null
          */
         public function utf8Decode($value) {
-            return (mb_detect_encoding($value) == "UTF-8") ? mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8') : $value;
+            return ( mb_convert_encoding($value, 'ISO-8859-1', 'UTF-8'));
         }
 
 
