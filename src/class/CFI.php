@@ -8,7 +8,7 @@
  */
 class CFI
 {
-    private $version = '20240224';
+    private $version = '20240523';
     private $core;
     private $fields = [];
     private $buttons = [];
@@ -487,6 +487,26 @@ class CFIField {
         if($folder)
             $this->object->folder($folder);
         return $this->object;
+    }
+
+
+
+    /**
+     * Add onchange property to the field
+     * @return CFIField $this
+     */
+    public function onchange(string $js) {
+        $this->cfi->json_object['fields'][$this->field]['onchange'] = $js;
+        return $this;
+    }
+
+    /**
+     * Add onclick property to the field
+     * @return CFIField $this
+     */
+    public function onclick(string $js) {
+        $this->cfi->json_object['fields'][$this->field]['onclick'] = $js;
+        return $this;
     }
 }
 
