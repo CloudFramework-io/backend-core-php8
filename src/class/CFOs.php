@@ -44,7 +44,6 @@ class CFOs {
         //region Create a
     }
 
-
     /**
      * @param string $cfos
      * @return array|false if there is no error return an array with the model structure
@@ -121,11 +120,14 @@ class CFOs {
         //region SET $this->dsObjects[$object] = $this->core->model->getModelObject('ds:'.$object,$options);
         $this->dsObjects[$object] = $this->core->model->getModelObject('ds:'.$object,$options);
         if($this->core->model->error) {
-            //$this->addError($this->core->model->errorMsg);
             //Return a Foo object instead to avoid exceptions in the execution
             $this->createFooDatastoreObject($object);
-            $this->dsObjects[$object]->error = true;
-            $this->dsObjects[$object]->errorMsg = $this->core->model->errorMsg;
+            if(is_object($this->dsObjects[$object]??null)) {
+                $this->dsObjects[$object]->error = true;
+                $this->dsObjects[$object]->errorMsg = $this->core->model->errorMsg;
+            } else {
+                $this->core->logs->add('Error creating Foo datastore Object when error','error_CFOs_dsInit');
+            }
             return false;
         }
         //endregion
@@ -216,7 +218,6 @@ class CFOs {
 
         return true;
     }
-
 
     /**
      * Return a bq $object
@@ -524,8 +525,6 @@ class CFOs {
         $this->avoid_secrets = !$use;
     }
 
-
-
     /**
      * Set $this->integrationKey to connect with CFO models
      * @param $key
@@ -558,8 +557,6 @@ class CFOs {
     function setDBConnection(array $db_connection) {
         $this->db_connection = $db_connection;
     }
-
-
 
     /**
      * Execute a Manual Query
@@ -597,8 +594,6 @@ class CFOs {
         if($error) return $this->setError($error);
         else return ['group'=>$group,'model'=>$ds_model];
     }
-
-
 
     /**
      * Return a structure with bigquery squema based on CF model

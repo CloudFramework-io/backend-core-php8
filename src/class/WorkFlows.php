@@ -41,10 +41,13 @@ class WorkFlows
     /**
      * SET API for mandrill interation and SETUP $this->mandrill
      * @param $apiKey
-     * @throws Mandrill_Error
      */
     public function setMandrillApiKey($apiKey) {
-        $this->mandrill->setApiKey($apiKey);
+        try {
+            $this->mandrill->setApiKey($apiKey);
+        } catch (Exception $e) {
+            $this->addError($e->getMessage());
+        }
     }
 
     /**
@@ -89,7 +92,7 @@ class WorkFlows
      */
     public function getMandrillTemplate($slug)
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $template = $this->mandrill->templates->info(['name'=>$slug]);
             $template = $this->core->jsonDecode($this->core->jsonEncode($template),true);
@@ -110,7 +113,7 @@ class WorkFlows
      */
     public function renderMandrillTemplate(string $slug,array $data)
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $vars = [];
             if(is_array($data)) foreach ($data as $key=>$value) {
@@ -139,7 +142,7 @@ class WorkFlows
      */
     public function getMandrillWebHooks()
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $webhooks = $this->mandrill->webhooks->list();
             $webhooks = $this->core->jsonDecode($this->core->jsonEncode($webhooks),true);
@@ -168,7 +171,7 @@ class WorkFlows
      */
     public function getMandrillDomains()
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $domains = $this->mandrill->senders->domains();
             $domains = $this->core->jsonDecode($this->core->jsonEncode($domains),true);
@@ -201,7 +204,7 @@ class WorkFlows
      */
     public function getMandrillSenders()
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $senders = $this->mandrill->senders->list();
             $senders = $this->core->jsonDecode($this->core->jsonEncode($senders),true);
@@ -238,7 +241,7 @@ class WorkFlows
      */
     public function getMandrillMessageInfo(string $id)
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $info = $this->mandrill->messages->info(['id'=>$id]);
             $info = $this->core->jsonDecode($this->core->jsonEncode($info),true);
@@ -268,7 +271,7 @@ class WorkFlows
      */
     public function getMandrillMessageContent(string $id)
     {
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $content = $this->mandrill->messages->content(['id'=>$id]);
             $content = $this->core->jsonDecode($this->core->jsonEncode($content),true);
@@ -284,7 +287,7 @@ class WorkFlows
      * @param string $type
      */
     public function getERPEmailTemplate(string $slug,string $type='Mandrill') {
-        if(!$this->mandrill) return $this->addError('getERPEmailTemplate(...) has been call without calling previously setMandrillApiKey(...)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('getERPEmailTemplate(...) has been call without calling previously setMandrillApiKey(...)');
         $this->cfos->useCFOSecret(true);
         $dsTemplate = $this->cfos->ds('CloudFrameWorkEmailTemplates')->fetchOneByKey($slug);
         if($this->cfos->ds('CloudFrameWorkEmailTemplates')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailTemplates')->errorMsg);
@@ -307,7 +310,7 @@ class WorkFlows
      */
     public function getERPEmailMessage(string $id,string $type='Mandrill',$update_processing=null)
     {
-        if(!$this->mandrill) return $this->addError('getERPEmailMessage(...) has been call without calling previously setMandrillApiKey(...)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('getERPEmailMessage(...) has been call without calling previously setMandrillApiKey(...)');
         $dsEmeail = $this->cfos->ds('CloudFrameWorkEmails')->fetchOne('*',['EngineId'=>$id])[0]??null;
         if($this->cfos->ds('CloudFrameWorkEmails')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmails')->errorMsg);
         if($type=='Mandrill' && is_object($this->mandrill)) {
@@ -354,6 +357,7 @@ class WorkFlows
      *      - cat string [optional] Category for the email. If it is not sent it will take the Category of the email template
      *      - data array [optional] array of objects [key=>value] to be sent as variables to merge with the template
      *      - tags array [optional] array tags to add to the emial [tag1,tag2..]
+     *      - important [optional] boolean if it is true then the email will send 'important' attribute
      *      - attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
      * }
      * @param string $type [optional] has to value: Mandrill
@@ -362,31 +366,47 @@ class WorkFlows
      * @return bool|void
      */
     public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='') {
-        if($type!='Mandrill') return $this->addError('sendERPEmail(...) has received a worng $type. [Mandrill] is the valid value');
-        if(!$this->mandrill) return $this->addError('sendERPEmail(...) has been call without calling previously setMandrillApiKey(...)');
+
+        if($type!='Mandrill') return $this->addError('sendPlatformEmail(...) has received a worng $type. [Mandrill] is the valid value');
+        if(!$this->mandrill->getApiKey()) return $this->addError('sendPlatformEmail(...) has been call without calling previously setMandrillApiKey(...)');
+
         switch ($type) {
             case "Mandrill":
+
+                //region INIT $slug, $from, $to, $subject mandatory values from $params
                 if(!$slug = $params['slug']??null) return $this->addError('sendEmail($params) missing slug in $params because the template does not have a default from email');
                 if(!$from = $params['from']??null) return $this->addError('sendEmail($params) missing from in $params because the template does not have a default from email');
-                $from_name = $params['name']??null;
                 if(!$to = $params['to']??null) return $this->addError('sendEmail($params) missing to in $params because the template does not have a default from email');
                 if(!$subject = $params['subject']??null) return $this->addError('sendEmail($params) missing subject in $params because the template does not have a default from email');
+                if(!is_array($to)) {
+                    $to = array_filter(explode(',', $to ?? ''));
+                }
+                //endregion
+
+                //region INIT $from_name,$tags,$cc,$reply_to,$bcc,$data optional values from $params
+                $from_name = $params['name']??null;
                 $tags = $params['tags']??null;
-                $data = $params['data']??[];
                 $cc = $params['cc']??null;
                 $reply_to = $params['reply_to']??null;
                 $bcc = $params['bcc']??null;
-
-                if(!$template = $this->getERPEmailTemplate($slug)) return;
-                $cat = $params['cat']??($template['Cat']??'NOT-DEFINED');
-                $html = $this->renderMandrillTemplate($slug,$data);
-
-                if(!is_array($to))
-                    $to = array_filter(explode(',',$to??''));
+                $data = $params['data']??[];
+                $important = $params['important']??null;
                 if(!is_array($tags))
                     $tags = array_filter(explode(',',$tags??''));
                 if(!is_array($cc))
                     $cc = array_filter(explode(',',$cc??''));
+                //endregion
+
+                //region READ $template from mandrill $slug. IF ERROR return void
+                if(!$template = $this->getERPEmailTemplate($slug)) return;
+                //endregion
+
+                //region INIT $cat from $template['Cat'] and $html form $this->renderMandrillTemplate($slug,$data)
+                $cat = $params['cat']??($template['Cat']??'NOT-DEFINED');
+                $html = $this->renderMandrillTemplate($slug,$data);
+                //endregion
+
+                //region INIT $submission[] with previous INITIATED variables
                 $submission = [
                     "Cat"=>$cat,
                     "DateInsertion"=>'now',
@@ -403,14 +423,32 @@ class WorkFlows
                     "StatusProcessing"=>'initiated',
                     "LinkedObject"=>$linked_object?:null,
                     "LinkedId"=>$linked_id?:null,
-                    "JSONProcessing"=>['Reply-To'=>$reply_to,'bcc'=>$bcc,'TemplateVariables'=>$data,'Result'=>null],
+                    "JSONProcessing"=>[
+                        'Reply-To'=>$reply_to,
+                        'bcc'=>$bcc,
+                        'TemplateVariables'=>$data,
+                        'important'=>$important,
+                        'attachments'=>null,
+                        'Result'=>null],
                 ];
+                if(is_array($params['attachments']??null)) {
+                    $submission['JSONProcessing']['attachments'] = array_column($params['attachments'],'name');
+                }
+                //endregion
+
+                //region SET $dsSubmission CREATING $submission into CloudFrameWorkEmailsSubmissions
                 $this->cfos->useCFOSecret(true);
                 $dsSubmission = $this->cfos->ds('CloudFrameWorkEmailsSubmissions')->createEntities($submission)[0]??null;
                 if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) {
                     return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
                 }
+                //endregion
+
+                //region SET $result of the email CALLING $this->sendMandrillEmail($params)
                 $result = $this->sendMandrillEmail($params);
+                //endregion
+
+                //region UPDATE $dsSubmission with $result into CloudFrameWorkEmailsSubmissions
                 $dsSubmission['StatusProcessing'] = ($result['success']??null)?'success':'error';
                 $dsSubmission['JSONProcessing']['Result'] = $result;
                 $dsSubmission['DateProcessing'] = "now";
@@ -419,40 +457,51 @@ class WorkFlows
                 if($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->error) {
                     return $this->addError($this->cfos->ds('CloudFrameWorkEmailsSubmissions')->errorMsg);
                 }
+                //endregion
 
-                if($result && ($result['success']??null) && is_array($result['result']??null)) foreach ( $result['result'] as $i=>$item) {
-                    $item = (array)$item;
-                    $result['result'][$i] = $item;
-                    $email = [
-                        "Cat"=>$dsSubmission['Cat'],
-                        "SubmissionId"=>$dsSubmission['KeyId'],
-                        "EngineTemplate"=>$slug,
-                        "EngineType"=>'Mandrill',
-                        "EngineId"=>$item['_id'],
-                        "Type"=>'OUT',
-                        "DateInsertion"=>'now',
-                        "From"=>$from,
-                        "To"=>$item['email']??$to,
-                        "Subject"=>$subject,
-                        "Tags"=>$tags,
-                        "Opens"=>0,
-                        "Clicks"=>0,
-                        "BODY_HTML"=>$this->core->utf8Encode($html),
-                        "DateProcessing"=>"now",
-                        "UpdateProcessing"=>"now",
-                        "StatusProcessing"=>$item['status']??'unknown',
-                        "JSONProcessing"=>['Result'=>$item,'Info'=>[]],
-                    ];
-                    $dsEmail = $this->cfos->ds('CloudFrameWorkEmails')->createEntities($email)[0]??null;
-                    if($this->cfos->ds('CloudFrameWorkEmails')->error) {
-                        $result['result'][$i]['CloudFrameWorkEmails'] = $this->cfos->ds('CloudFrameWorkEmails')->errorMsg;
-                    } else {
-                        $result['result'][$i]['CloudFrameWorkEmails'] = strval($dsEmail['KeyId']);
+                //region IF $result['success'] CREATE CloudFrameWorkEmails with each $result['result']
+                if($result && ($result['success']??null) && is_array($result['result']??null)) {
+                    foreach ($result['result'] as $i => $item) {
+                        $item = (array)$item;
+                        $result['result'][$i] = $item;
+                        $email = [
+                            "Cat" => $dsSubmission['Cat'],
+                            "SubmissionId" => $dsSubmission['KeyId'],
+                            "EngineTemplate" => $slug,
+                            "EngineType" => 'Mandrill',
+                            "EngineId" => $item['_id'],
+                            "Type" => 'OUT',
+                            "DateInsertion" => 'now',
+                            "From" => $from,
+                            "To" => $item['email'] ?? $to,
+                            "Subject" => $subject,
+                            "Tags" => $tags,
+                            "Opens" => 0,
+                            "Clicks" => 0,
+                            "BODY_HTML" => $this->core->utf8Encode($html),
+                            "DateProcessing" => "now",
+                            "UpdateProcessing" => "now",
+                            "StatusProcessing" => $item['status'] ?? 'unknown',
+                            "JSONProcessing" => ['Result' => $item, 'Info' => []],
+                        ];
+                        $dsEmail = $this->cfos->ds('CloudFrameWorkEmails')->createEntities($email)[0] ?? null;
+                        if ($this->cfos->ds('CloudFrameWorkEmails')->error) {
+                            $result['result'][$i]['CloudFrameWorkEmails'] = $this->cfos->ds('CloudFrameWorkEmails')->errorMsg;
+                        } else {
+                            $result['result'][$i]['CloudFrameWorkEmails'] = strval($dsEmail['KeyId']);
+                        }
                     }
                 }
+                //endregion
+
+                //region RETURN $result
                 return($result);
+                //endregion
+
                 break;
         }
+
+        return false;
     }
 
 
@@ -472,13 +521,14 @@ class WorkFlows
      *      * data array [optional] array of objects [key=>value] to be sent as variables to merge with the template
      *      * tags array [optional] array tags to add to the emial [tag1,tag2..]
      *      * preserve_recipients boolean if it is true then the email will preserve the recipients headers instead to appear emails separated
+     *      * important [optional] boolean if it is true then the email will send 'important' attribute
      *      * attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
      * }
      * @return array the array will contain 'success' with true or false value.
      */
     public function sendMandrillEmail(array &$params) {
 
-        if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
+        if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         if(!($slug = $params['slug']??null)) return $this->addError('sendMandrillEmail($params) missing slug in $params because the template does not have a default from email');
 
         if(!$template = $this->getMandrillTemplate($slug)) return;
@@ -500,6 +550,9 @@ class WorkFlows
         $tags = $params['tags']??[];
         if(!is_array($tags)) $tags=explode(',',$tags);
 
+        $important = ($params['important']??null)?true:false;
+
+
         $headers = [];
         if($reply_to && $this->core->is->validEmail($reply_to))
             $headers['Reply-To'] =$reply_to;
@@ -510,9 +563,9 @@ class WorkFlows
                 'from_email' => $from,
                 'from_name' => $from_name,
                 'headers' => $headers,
-                'important' => false,
-                'track_opens' => null,
-                'track_clicks' => null,
+                'important' => $important,
+                'track_opens' => null, //true by default
+                'track_clicks' => null, //true by default
                 'auto_text' => null,
                 'auto_html' => null,
                 'inline_css' => null,
@@ -544,7 +597,7 @@ class WorkFlows
                         return ['success'=>false,'result'=>'sendMandrillEmail($params) Wrong $params["to"] array. Missing email attribute'];
                     }
                     $message['to'][] = ['email' => $email_to['email'], 'name' => $email_to['name'] ?? $email_to['email'], 'type' => 'to'];
-                }else
+                } else
                     $message['to'][] = ['email'=>$email_to,'name'=> $email_to,'type'=>'to'];
             }
             //endregion
@@ -601,11 +654,13 @@ class WorkFlows
     /**
      * Add an error in the class
      * @param $value
+     * @return false to facilitate the return or other functions
      */
     function addError($value)
     {
         $this->error = true;
         $this->errorMsg[] = $value;
+        return false;
     }
 
     /**
