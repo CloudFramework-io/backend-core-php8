@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.3.6';  // 2024-05-14 1
+        var $_version = '8.3.7';  // 2024-05-28 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -713,6 +713,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                                     break;
                                 case "url":
                                     $value = $this->system->url['url'];
+                                    break;
+                                case "year":
+                                    $value = date('Y');
+                                    break;
+                                case "date":
+                                    $value = date('Y-m-d');
+                                    break;
+                                case "datetime":
+                                    $value = date('Y-m-d H:i:s');
                                     break;
                                 default:
                                     $value = $this->platform[$found[2]] ?? null;
@@ -7404,7 +7413,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     /**
      * Class to be extended for the creation of a scripts
      *
-     * The sintax is: `Class Logic extends CoreLogic2020() {..}`
+     * The syntax is: `Class Logic extends CoreLogic2020() {..}`
      *
      *
      * Normally your file has to be stored in the `logic/` directory and extend this class.
@@ -7692,6 +7701,359 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return $user_erp_token['token'];
             //endregion
 
+        }
+    }
+
+
+    /**
+     * Class to handle script
+     *
+     * Normally your file has to be stored in the {document_root}/`scripts` ofr definedn in 'core.scripts.path' config variable.
+     * @package Scripts
+     */
+    class CoreScripts
+    {
+
+        /** @var Core7 $core pointer to the Core class. `$this->core->...` */
+        protected $core;
+
+        /** @var string $method indicates the HTTP method used to access the script: GET, POST etc.. Default value is GET */
+        var $method = 'GET';
+
+        /** @var array $formParams Contains the variables passed in a GET,POST,PUT call intro an URL  */
+        var $formParams = array();
+
+        /** @var array $params contains the substrings paths of an URL script/param0/param1/..  */
+        var $params = array();
+
+        /**
+         * @var boolean $error Indicates if an error has been produced
+         */
+        public $error = false;
+
+        /** @var string|integer Code of the error  */
+        public $errorCode = '';
+
+        /** @var array $errorMsg Keep the error messages  */
+        public $errorMsg = [];
+
+        /** @var array $argv Keep the arguments passed to the logic if it runs as a script  */
+        public $argv = null;
+        var $tests;
+        /** @var CoreCache */
+        var $cache = null;
+        var $cache_secret_key = '';
+        var $cache_secret_iv = '';
+        var $cache_data = null;
+        var $vars = [];
+        var $sendTerminal=[];
+        var $time = null;
+
+        /**
+         * Scripts constructor.
+         * @param Core7 $core
+         * @param null $argv
+         */
+        function __construct(Core7 $core, $argv=null)
+        {
+
+            $this->core = $core;
+            if(!$this->core->platform) $this->core->platform = $this->core->config->get('core.erp.platform_id');
+            $this->initParameters($argv);
+            $this->cache = &$this->core->cache;
+            $this->time = microtime(true);
+
+        }
+
+        private function initParameters(&$argv) {
+
+            // take the script lines parts
+            $this->params = &$this->core->system->url['parts'];
+
+            // Process ARGV
+            $this->argv = $argv;
+
+            // Adding $vars
+            foreach ($this->argv as $item) {
+                if(strpos($item,'--')===0 && strpos($item,'=')) {
+                    list($var,$value) = explode('=',$item,2);
+                    $this->vars[$var] = $value;
+                }
+            }
+            //endregion
+
+        }
+
+        function hasOption($option) {
+            return(in_array('--'.$option, $this->argv));
+        }
+
+        function getOptionVar($option) {
+            return((isset($this->vars['--'.$option]))?$this->vars['--'.$option]:null);
+        }
+
+        /**
+         * Sent to Terminan
+         * @param func_get_args
+         * @return void
+         */
+        function sendTerminal() {
+
+            $args = func_get_args();
+            if($args) foreach ($args as $info) {
+                if(is_string($info)) echo $info."\n";
+                else print_r($info);
+            }
+
+            //            if($info)
+            //                $this->sendTerminal[] = "[ ".(round(microtime(true)-$this->time,4))." ms] ".((is_string($info))?$info:json_encode($info));
+        }
+
+        function readCache() {
+            // Read cache into $this->cache_data if not cache default value [];
+            $this->cache_data = ($this->cache->get('Core7_Scripts2020_cache',-1,'',$this->cache_secret_key,$this->cache_secret_iv))?:[];
+        }
+
+        function cleanCache() {
+            // Read cache into $this->cache_data if not cache default value [];
+            $this->cache_data = [];
+            $this->cache->set('Core7_Scripts2020_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
+        }
+
+        function getCacheVar($var) {
+            if($this->cache_data === null) $this->readCache();
+            return((isset($this->cache_data[$var]))?$this->cache_data[$var]:null);
+        }
+
+        function setCacheVar($var,$value) {
+            if($this->cache_data === null) $this->readCache();
+            $this->cache_data[$var] = $value;
+            $this->cache->set('Core7_Scripts2020_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
+        }
+
+        /**
+         * Execute a user Prompt
+         * @param $title
+         * @param null $default
+         * @param null $cache_var
+         * @return false|string|null
+         */
+        function prompt($title,$default=null,$cache_var=null) {
+
+            // Check Cache var
+            if($cache_var) {
+                $cache_content = $this->cache->get('Core7_Scripts2020_'.$cache_var,-1,'',$this->cache_secret_key,$this->cache_secret_iv);
+                if($cache_content) $default = $cache_content;
+            }
+
+            // Check default value
+            if($default) $title.="[{$default}] ";
+            $ret = readline($title);
+            if(!$ret) $ret=$default;
+
+            // Set Cache var
+            if($cache_var) {
+                $this->cache->set('Core7_Scripts2020_'.$cache_var,$ret,'',$this->cache_secret_key,$this->cache_secret_iv);
+            }
+            return $ret;
+        }
+
+        /**
+         * Execute a user Prompt user for a specific var
+         *  $options['title'] = titlte to be shown
+         *  $options['default'] = default value
+         *  $options['values'] = [array of valid values]
+         *  $options['cache_var'] = 'name to cache the result. If result is cached it rewrites default'
+         *  $options['type'] = password | number | float
+         *  $options['allowed_values'] = allowed values
+         *
+         * @param $options array array of options
+         * @return false|string|null
+         */
+        function promptVar($options) {
+
+            $title = (isset($options['title']) && $options['title'])?$options['title']:'missing title in prompt';
+            $default = (isset($options['default']) && $options['default'])?$options['default']:null;
+            $cache_var = (isset($options['cache_var']) && $options['cache_var'])?$options['cache_var']:null;
+            $type = (isset($options['type']) && $options['type'])?$options['type']:null;
+            $allowed_values = (isset($options['allowed_values']) && is_array($options['allowed_values']))?$options['allowed_values']:null;
+            // Check rewrite $default
+            if($cache_var && ($cache_content = $this->getCacheVar($options['cache_var']))) $default = $cache_content;
+
+            // Check default value
+            if($allowed_values) $title.= ' ['.implode(', ',$allowed_values).']';
+            if($default) {
+                if($type=='password') $title.=" (*******) :";
+                else $title.=" ({$default}) :";
+            } else {
+                $title.=' :';
+            }
+            do {
+                if($type=='password') {
+                    system('stty -echo');
+                    echo $title;
+                    $ret = trim(fgets(STDIN));
+                    echo "\n";
+                    system('stty echo');
+                    if(!$ret) $ret=$default;
+                } else {
+                    $ret = readline($title);
+                    if(!$ret) $ret=$default;
+                }
+                $error = ($allowed_values && !in_array($ret,$allowed_values))?true:false;
+            } while($error);
+
+
+            // Set Cache var
+            if($cache_var) $this->setCacheVar($cache_var,$ret);
+
+            return $ret;
+        }
+
+
+        /**
+         * Add an error in the script. This method exist to be compatible with RESTFull class
+         * @param $code
+         * @param $msg
+         * @return false to facilitate the return of other functions
+         */
+        function setErrorFromCodelib($code,$msg) {
+            $this->sendTerminal('ERROR: '.$code);
+            $this->sendTerminal([$code=>$msg]);
+            $this->errorCode = $code;
+            $this->addError([$code=>$msg]);
+            return false;
+        }
+
+        /**
+         * Execute a method if $method is defined.
+         * @param string $method name of the method
+         * @return bool
+         */
+        function useFunction($method) {
+            if(method_exists($this,$method)) {
+                $this->$method();
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         *
+         * @param string $user optional is the Google user email. If empty it will prompt it
+         * @return array|mixed|void
+         */
+        function getUserGoogleAccessToken(string $user='')
+        {
+            //region VERIFY $user or prompt it
+            if(!$user) {
+                $user = $this->getCacheVar('user_readUserGoogleCredentials');
+                do {
+                    $user_new = $this->prompt('Give me your Google User Email: ', $user);
+                } while (!$this->core->is->validEmail($user_new));
+                $this->setCacheVar('user_readUserGoogleCredentials',$user_new);
+                $user = $user_new;
+            }
+            $this->sendTerminal('Gathering Access Token for user: '.$user);
+            //endregion
+
+            //region SET $token from cache or gather a new one if expired
+            $token = $this->getCacheVar($user.'_token_readUserGoogleCredentials');
+            if(!$token || (microtime(true)-$token['time'] > 3500)) {
+                $token=[];
+                $gcloud_token_command = 'gcloud auth print-access-token --account='.$user;
+                $this->sendTerminal('gcloud auth print-access-token --account='.$user);
+                $auth['token'] = shell_exec($gcloud_token_command);
+                if(!$auth['token']) return($this->addError('The following command does not work: '.$gcloud_token_command));
+                $token_info = $this->core->request->post_json_decode('https://www.googleapis.com/oauth2/v1/tokeninfo',['access_token'=>$auth['token']],['Content-Type'=>'application/x-www-form-urlencoded']);
+                if($this->core->request->error)
+                    return($this->addError($this->core->request->errorMsg));
+
+                $token['time'] = microtime(true);
+                $token['token'] = $auth['token'];
+                $token['email'] = $user;
+                $token['info'] = $token_info;
+                $this->setCacheVar($user.'_token_readUserGoogleCredentials',$token);
+            }
+            //endregion
+
+            //region RETURN $token
+            return($token);
+            //endregion
+        }
+
+        /**
+         * Return the ERP for the user using a Google Access token for specific namespace
+         * @param string $namespace
+         * @param string $user
+         * @return mixed|void
+         */
+        function getERPTokenWithGoogleAccessToken($namespace='',$user='') {
+
+            //region VERIFY $namespace
+            if(!$namespace && !( $namespace = $this->core->config->get('core.erp.platform_id')))
+                return($this->addError('Missing $namespace var or core.erp.platform_id config var'));
+            //endregion
+
+            //region VERIFY $user or GET it from CACHE or GET it from getGoogleEmailAccount()
+            if(!$user && !($user = $this->getCacheVar($namespace.'_erp_user'))) {
+                $user = $this->core->security->getGoogleEmailAccount();
+                if($this->core->security->error) return($this->addError($this->core->security->errorMsg));
+                $this->setCacheVar($namespace.'_erp_user',$user);
+            }
+            //endregion
+
+            //region SET $user_erp_token from cache expiring in 23h or get it from https://api.cloudframework.io/core/signin
+            $user_erp_token = $this->getCacheVar($user.'_'.$namespace.'_erp_token');
+            if(!$user_erp_token || (microtime(true)-$user_erp_token['time']> 60*60*23)) {
+
+                //region GET $access_token from Google
+                // https://app.cloudframework.app/app.html#https://core20.web.app/ajax/ecm.html?page=/scripts/auth/erp-login-with-google-credentials
+                if(!($access_token = $this->getUserGoogleAccessToken($user))) return;
+                $token = $access_token['token'];
+                //endregion
+
+                //region SET $payload and POST: https://api.cloudframework.io/core/signin/cloudframework/in
+                $payload = [
+                    'user'=>$user,
+                    'token'=> $token,
+                    'type'=>'google_token'
+                ];
+                //endregion
+
+
+                $this->sendTerminal('Calling [https://api.cloudframework.io/core/signin/'.$namespace.'/in] with Google access token');
+                //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
+                $ret = $this->core->request->post_json_decode('https://api7.cloudframework.io/core/signin/'.$namespace.'/in',$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
+                if($this->core->request->error) return($this->addError($this->core->request->errorMsg));
+                $user_erp_token = [
+                    'time'=>microtime(true),
+                    'token'=>$ret['data']['dstoken']];
+                $this->setCacheVar($user.'_'.$namespace.'_erp_token',$user_erp_token);
+                $this->core->namespace = $namespace;
+                //endregion
+            }
+            //endregion
+
+            //region RETURN $user_erp_token['token']
+            return $user_erp_token['token'];
+            //endregion
+
+        }
+
+
+        /**
+         * Add an error in the class
+         * @param $value
+         * @return false to facilitate the return of other functions.
+         */
+        function addError($value)
+        {
+            $this->error = true;
+            $this->core->errors->add($value);
+            $this->errorMsg[] = $value;
+            return false;
         }
     }
 }
