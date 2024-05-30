@@ -581,15 +581,18 @@ if (!defined("_RESTfull_CLASS_")) {
         /**
          * Init the data to be returned
          * @param $data
+         * @return true
          */
         function setReturnData($data)
         {
             $this->returnData['data'] = $data;
+            return true;
         }
 
         /**
          * Add a new record to be returned
          * @param $value
+         * @return true
          */
         function addReturnData($value)
         {
@@ -600,6 +603,7 @@ if (!defined("_RESTfull_CLASS_")) {
                 if (!is_array($this->returnData['data'])) $this->returnData['data'] = array($this->returnData['data']);
                 $this->returnData['data'] = array_merge($this->returnData['data'], $value);
             }
+            return true;
 
         }
 
