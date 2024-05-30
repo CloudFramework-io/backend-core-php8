@@ -3254,17 +3254,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
             // Check if object has been created
             if (null === $this->dsToken) if(!$this->createDSToken()) return;
-
             $retToken = $this->dsToken->fetchByKeys($token);
-            if(count($retToken)) {
+            if(($retToken ?? false) && is_array($retToken) && count($retToken )) {
                 $retToken[0]['status'] = 0;
                 $ret = $this->dsToken->createEntities($retToken[0]);
-                if(count($ret)) {
+                if(($ret ?? false) && is_array($ret) && count($ret)) {
                     return(true);
                 }
             }
             return false;
-
         }
 
         function setDSToken($data, $prefix = '', $fingerprint_hash = '',$time_expiration=0)
