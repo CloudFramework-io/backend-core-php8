@@ -314,10 +314,108 @@ class DataSQL
         if($ret) $ret=$ret[0];
         return($ret);
     }
+
+
+    /**
+     * Return count
+     * @param string $fields_count optional params apply a count over it. '*' by default
+     * @param array|string $keysWhere where condition can be a string or array [key=>value, key=>value]
+     * @param array $params optional params to apply query substitutions if $keysWhere is string
+     * @return int|null
+     */
+    function count(string $fields_count='*', array|string $keysWhere=[],  $params=[])
+    {
+        if(!$fields_count) $fields_count='*';
+        return $this->aggregateFunction('COUNT',$fields_count,$keysWhere,$params);
+    }
+
+    /**
+     * Return sum
+     * @param string $field field apply a sum
+     * @param array|string $keysWhere where condition can be a string or array [key=>value, key=>value]
+     * @param array $params optional params to apply query substitutions if $keysWhere is string
+     * @return int|null
+     */
+    function sum(string $field,array|string $keysWhere=[],  $params=[])
+    {
+        if(!$field) return $this->addError('Missing value for $field');
+        return $this->aggregateFunction('SUM',$field,$keysWhere,$params);
+    }
+
+    /**
+     * Return sum
+     * @param string $field field apply an avg
+     * @param array|string $keysWhere where condition can be a string or array [key=>value, key=>value]
+     * @param array $params optional params to apply query substitutions if $keysWhere is string
+     * @return int|null
+     */
+    function avg(string $field='', array|string $keysWhere=[],  $params=[])
+    {
+        if(!$field) return $this->addError('Missing value for $field');
+        return $this->aggregateFunction('AVG',$field,$keysWhere,$params);
+
+    }
+
+    /**
+     * APPLY a query with $operator
+     * @param string $function it has to be SUM, COUNT, AVG,..: https://dev.mysql.com/doc/refman/8.0/en/aggregate-functions.html
+     * @param array|string $keysWhere
+     * @param string $field_operator
+     * @param $params
+     * @return false|mixed|void|null
+     */
+    public function aggregateFunction(string $function, string $field_operator, array|string $keysWhere=[],  $params=[]) {
+        if ($this->error) return false;
+
+        if(!in_array(strtoupper($function),['COUNT','AVG','SUM','BIT_AND','BIT_OR','BIT_XOR','GROUP_CONCAT','JSON_ARRAYAGG','JSON_OBJECTAGG','MAX','MIN','STD','STDDEV','STDDEV_POP','STDDEV_SAMP','VAR_POP','VAR_SAMP','VARIANCE']))
+            return $this->addError('Wrong aggregate function: '.$function);
+
+        //region SET $where
+        // Array with key=>value or empty
+        if(is_array($keysWhere) ) {
+            list($where, $_params) = $this->getQuerySQLWhereAndParams($keysWhere);
+            if($this->error) return;
+            $params = array_merge($params,$_params);
+        }
+
+        // String
+        elseif(is_string($keysWhere) && !empty($keysWhere)) {
+            $where =$keysWhere;
+        } else {
+            return($this->addError('fetch($keysWhere,$fields=null) $keyWhere has a wrong value'));
+        }
+        //endregion
+
+        //region SET $SQL with $where && $sqlFields
+        $from = $this->getQuerySQLFroms();
+        $SQL = "SELECT {$function}({$field_operator}) as total FROM {$from}";
+
+        // add extraWhere to all calls
+        if($this->extraWhere) {
+            if($where) $where.=" AND ".$this->extraWhere;
+            else  $where=$this->extraWhere;
+        }
+
+        // add SQL where condition
+        if($where) {
+            $SQL.=" WHERE {$where}";
+        }
+
+        //region READ $ret with $SQL
+        $ret= $this->core->model->dbQuery($this->entity_name.' fetch by querys: '.json_encode($keysWhere),$SQL,$params,$this->entity_schema['model']);
+        if($this->core->model->error) $this->addError($this->core->model->errorMsg);
+        //endregion
+
+        //region RETURN total or null if error
+        return($ret[0]['total']??null);
+        //endregion
+    }
+
     /**
      * Return records [0..n][record_structure] from the db object
      * @param array|string $keysWhere where condition can be a string or array [key=>value, key=>value]
-     * @param null $fields fields to be returned
+     * @param null|string $fields fields to be returned. By default $this->queryFields
+     * @param array $params optional params to apply query substitutions if $keysWhere is string
      * @return array|void
      */
     function fetch($keysWhere=[], $fields=null, $params=[]) {
