@@ -438,7 +438,7 @@ if (!defined ("_Buckets_CLASS_") ) {
                 //region UPDATE $record with the operation
                 $record['name'] = $file['name'];
                 $record['movedTo'] = $dest;
-                $record['size'] = filesize($file['path']);
+                $record['size'] = filesize($dest);
                 $ret[] = $record;
                 //endregion
             }
