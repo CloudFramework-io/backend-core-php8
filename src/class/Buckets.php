@@ -30,7 +30,7 @@ if (!defined ("_Buckets_CLASS_") ) {
          * ```
          * @var string $version version of the class
          */
-        var $version = '202305311';
+        var $version = '202405311';
 
         /** @ignore */
         var $bucket = '';
@@ -143,7 +143,7 @@ if (!defined ("_Buckets_CLASS_") ) {
             if(!$this->uploadedFiles)  return $this->addError('manageUploadFiles($path,$options) There is not $this->uploadedFiles ');
             //endregion
 
-            //region INIT $time to analyze perfomrance
+            //region INIT $time to analyze performance
             $time = microtime(true);
             $this->core->__p->add('Buckets.manageUploadFiles', $path, 'note');
             //endregion
@@ -257,6 +257,7 @@ if (!defined ("_Buckets_CLASS_") ) {
                                 //region SET $this->uploadedFiles[$key][$i]['movedTo']
                                 $this->uploadedFiles[$key][$i]['movedTo'] = $dest;
                                 //endregion
+
                                 //region IF $this->bucketInfo['iamConfiguration']['uniformBucketLevelAccess']['enabled'] SET $this->uploadedFiles[$key][$i]['uniformBucketLevelAccess']
                                 if (($this->bucketInfo['iamConfiguration']['uniformBucketLevelAccess']['enabled'] ?? null))
                                     $this->uploadedFiles[$key][$i]['uniformBucketLevelAccess'] = "active. You can not assign specific permissions to the object";
@@ -289,12 +290,12 @@ if (!defined ("_Buckets_CLASS_") ) {
             }
             //endregion
 
-            //region IF $this->debug add a log about the upload
+            //region END performance IF $this->debug add a log about the upload
             if($this->debug)
                 $this->core->logs->add("manageUploadFiles('{$path}') [processing uploaded files:".count($this->uploadedFiles)."]". ' [time='.(round(microtime(true)-$time,4)).' secs]','Buckets');
+            $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
             //endregion
 
-            $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
 
             //region RETURN $this->uploadedFiles
             return($this->uploadedFiles);
@@ -302,6 +303,162 @@ if (!defined ("_Buckets_CLASS_") ) {
         }
 
         /**
+         * Handle the upload of BigFiles
+         * @param array $_BIGFILES
+         * @param $path
+         * @param $options
+         * @return void|null
+         */
+        function manageUploadBigFiles(array $_BIGFILES,$path='', $options =[]) {
+
+            //region SET $base_dir to upload the files
+            $base_dir = $this->getBucketPath($path);
+            //endregion
+
+            //region INIT $files AND CHECK $_BIGFILES
+            if(!$_BIGFILES)  return $this->addError('manageUploadBigFiles($_BIGFILES,$path,$options) $_BIGFILES is empty ');
+            $ret=[];
+            //endregion
+
+            //region INIT $time to analyze performance
+            $time = microtime(true);
+            $this->core->__p->add('Buckets.manageUploadBigFiles', $path, 'note');
+            //endregion
+
+            //region CHECK if $base_dir is a directory
+            if(!$this->mkdir($base_dir)) {
+                $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
+                return($this->addError('the path to write the files does not exist: '.$base_dir));
+            }
+            //endregion
+
+            //region SET $public,$apply_hash_to_filenames,$allowed_extensions,$allowed_content_types from $options
+            $public=($options['public']??false)?true:false;
+            $apply_hash_to_filenames = ($options['apply_hash_to_filenames']??false)?true:false;
+            $allowed_extensions = ($options['allowed_extensions']??'')?explode(',',strtolower($options['allowed_extensions'])):[];
+            $allowed_content_types = ($options['allowed_content_types']??'')?explode(',',strtolower($options['allowed_content_types'])):[];
+            //endregion
+
+            //region IF $public verify the bucket can allow public files
+            if($public && is_object($this->gs_bucket) && ($this->gs_bucket->info()['iamConfiguration']['publicAccessPrevention']??null) == 'enforced') {
+                $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
+                return($this->addError('The bucket does not allow public objects, publicAccessPrevention=enforced in '.$this->bucket));
+            }
+            //endregion
+
+            //region RETURN error IF $public and $this->bucketInfo['iamConfiguration']['publicAccessPrevention']??null) == 'enforced'
+            if(($this->bucketInfo['iamConfiguration']['publicAccessPrevention']??null) == 'enforced' && $public)
+                return($this->addError('The bucket does not allow public objects, publicAccessPrevention=enforced in '.$this->bucket));
+            //endregion
+
+
+            //region LOOP $this->uploadedFiles and move them to $path
+            foreach ($_BIGFILES as $key => $file) {
+
+                //region INIT $extension, $mime and VERIFY structure
+                if(!($file['name']??null)) return($this->addError('$_BIGFILES structure is incorrect. Missing [name] attribute in file '.$key));
+                if(!($file['path']??null)) return($this->addError('$_BIGFILES structure is incorrect. Missing [path] attribute in file '.$key));
+                if(strpos($file['path'],'gs://'.$this->gs_bucket->name())!==0)  return($this->addError('$_BIGFILES conflict. [path] is not inside the current bucket for file '.$key));
+                $extension = '';
+                if(strpos($file['name'],'.')) {
+                    $parts = explode('.',$file['name']);
+                    $extension = strtolower($parts[count($parts)-1]);
+                }
+                $mime = $this->getMimeTypeFromExtension($extension);
+                //endregion
+
+                //region INIT $record
+                $record = [];
+                $record['hash_from_name'] = $file['name'];
+                $record['type'] = $mime;
+                $record['tmp_name'] = $file['path'];
+                //endregion
+
+                //region VERIFY $allowed_extensions and $allowed_content_types
+                if($allowed_extensions || $allowed_content_types) {
+
+                    // Do I have allowed extensions
+                    if($allowed_extensions) {
+                        $allow = false;
+                        if($extension)
+                            foreach ($allowed_extensions as $allowed_extension) {
+                                if(trim($allowed_extension) == $extension ) {
+                                    $allow=true;
+                                    break;
+                                }
+                            }
+
+                        if(!$allow) {
+                            $this->core->__p->add('Buckets.manageUploadBigFiles',null , 'endnote');
+                            $this->addError($file['name'].' does not have any of the following extensions: '.$options['allowed_extensions'],'extensions');
+                            return;
+                        }
+                    }
+
+                    // Do I have allowed content types
+                    if($allowed_content_types) {
+
+                        $allow = false;
+                        foreach ($allowed_content_types as $allowed_content_type) {
+                            if(strpos(strtolower($mime),trim($allowed_content_type)) !== false ) {
+                                $allow=true;
+                                break;
+                            }
+                        }
+                        if(!$allow) {
+                            $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
+                            return($this->addError($mime.' does not match with any of the following content-types: '.$options['allowed_content_types'],'content-type'));
+                        }
+                    }
+                }
+                //endregion
+
+                //region SET $file['name'] applying hash and CALL $this->moveFile
+                $file['name'] = date('Ymshis').uniqid('_upload'). md5($file['name']).'.'.$extension;
+                $dest = $base_dir.'/'.$file['name'];
+                if(!$this->moveFile($file['path'],$dest)) return;
+                //endregion
+
+                //region IF $this->bucketInfo['iamConfiguration']['uniformBucketLevelAccess']['enabled'] SET $this->uploadedFiles[$key][$i]['uniformBucketLevelAccess']
+                if (($this->bucketInfo['iamConfiguration']['uniformBucketLevelAccess']['enabled'] ?? null))
+                    $record['uniformBucketLevelAccess'] = "active. You can not assign specific permissions to the object";
+                //endregion
+
+                //region IF $public SET $this->uploadedFiles[$key][$i]['publicUrl'] and make the file accesible by AllUsers
+                if($public) {
+                    $file = preg_replace('/gs:\/\/[^\/]*\//','',$dest);
+                    $record['publicUrl'] = 'https://storage.googleapis.com/'.$this->gs_bucket->name().'/'.$file;
+                    $object = $this->gs_bucket->object($file);
+                    if (!($this->bucketInfo['iamConfiguration']['uniformBucketLevelAccess']['enabled'] ?? null))
+                        $object->update(['acl' => []], ['predefinedAcl' => 'PUBLICREAD']);
+                    $record['mediaLink'] = ($object->info()['mediaLink']??null);
+                }
+                //endregion
+
+                //region UPDATE $record with the operation
+                $record['name'] = $file['name'];
+                $record['movedTo'] = $dest;
+                $record['size'] = filesize($file['path']);
+                $ret[] = $record;
+                //endregion
+            }
+            //endregion
+
+            //region END performance IF $this->debug add a log about the upload
+            if($this->debug)
+                $this->core->logs->add("manageUploadBigFiles('{$path}') [processing uploaded files:".count($ret)."]". ' [time='.(round(microtime(true)-$time,4)).' secs]','Buckets');
+            $this->core->__p->add('Buckets.manageUploadBigFiles',null , 'endnote');
+            //endregion
+
+
+            //region RETURN $this->uploadedFiles
+            return(['files'=>$ret]);
+            //endregion
+
+        }
+
+
+            /**
          * Object constructor
          * example:
          *
@@ -845,11 +1002,11 @@ if (!defined ("_Buckets_CLASS_") ) {
             if(!$filename_path_source = $this->checkFileNamePath($filename_path_source)) return false;
             if(!$filename_path_target = $this->checkFileNamePath($filename_path_target)) return false;
             if($filename_path_source == $filename_path_target)  return $this->addError($this->bucket.$filename_path_source.' source files is equals to target_file');
-
             try{
-                if(!$this->isFile($this->bucket.$filename_path_source)) return $this->addError($this->bucket.$filename_path_source.' does not exist');
-                if(!rename($this->bucket.$filename_path_source,$this->bucket.$filename_path_target))
-                    return $this->addError([$this->bucket.$filename_path_source,$this->bucket.$filename_path_target,error_get_last()]);
+                $bucket = 'gs://'.$this->gs_bucket->name();
+                if(!$this->isFile($bucket.$filename_path_source)) return $this->addError($bucket.$filename_path_source.' does not exist');
+                if(!rename($bucket.$filename_path_source,$bucket.$filename_path_target))
+                    return $this->addError([$bucket.$filename_path_source,$bucket.$filename_path_target,error_get_last()]);
                 else
                     return true;
             } catch(Exception $e) {
@@ -870,8 +1027,9 @@ if (!defined ("_Buckets_CLASS_") ) {
             $file_name_path = trim($file_name_path);
             if(!$file_name_path) return $this->addError('$file_name_path is empty');
             if(strpos($file_name_path,'gs://')===0) {
-                if(strpos($file_name_path,$this->bucket)!==0) return $this->addError("{$file_name_path} bucket does not match with {$this->bucket}");
-                $file_name_path = str_replace($this->bucket,'',$file_name_path);
+                $bucket = 'gs://'.$this->gs_bucket->name();
+                if(strpos($file_name_path,$bucket)!==0) return $this->addError("{$file_name_path} bucket does not match with {$bucket}");
+                $file_name_path = str_replace($bucket,'',$file_name_path);
             }
             if($file_name_path[0]!='/') $file_name_path="/{$file_name_path}";
             return $file_name_path;
