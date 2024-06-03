@@ -9,6 +9,7 @@
     "google/cloud-datastore": "^1.26",
     "google/cloud-storage": "^1.36",
     "google/cloud-logging": "^1.28",
+    "google/cloud-translate": "^1.17",
     "google/apiclient": "^2.15",
     "google/cloud-tasks": "^1.13",
     "google/cloud-bigquery": "^1.28",
