@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.3.10';  // 2024-05-31 2
+        var $_version = '8.3.11';  // 2024-06-12 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -5694,8 +5694,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->namespace = $namespace;
             $this->id = $userData['id'];
             $this->data = $userData['data'];
-            $this->expirationTime = $userData['data']['User']['Expires']??time();
-            $this->tokenExpiresIn = $this->expirationTime - time();
+            //$this->expirationTime = $userData['data']['User']['Expires']??time();
+            $this->tokenExpiresIn = $this->expirationTime - intval(microtime(true)-$userData['tokens'][$token]['time']);
             unset($userData);
             $this->core->namespace = $namespace;
             //endregion
@@ -7577,11 +7577,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Add an error in the script. This method exist to be compatible with RESTFull class
          * @param $code
          * @param $msg
+         * @return false to facilitate the return of other functions
          */
         function setErrorFromCodelib($code,$msg) {
             $this->sendTerminal('ERROR: '.$code);
             $this->sendTerminal([$code=>$msg]);
             $this->addError([$code=>$msg]);
+            return false;
         }
 
         /**
