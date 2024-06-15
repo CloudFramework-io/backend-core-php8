@@ -151,6 +151,8 @@ if (!defined("_RESTfull_CLASS_")) {
             $this->addCodeLib('service-unavailable','The service is unavailable.',503);
             $this->addCodeLib('system-error','There is a problem in the platform.',503);
             $this->addCodeLib('datastore-error','There is a problem with the DataStore.',503);
+            $this->addCodeLib('database-error','There is a problem with the Database.',503);
+            $this->addCodeLib('programming-error','There is a problem with the DataStore.',503);
             $this->addCodeLib('db-error','There is a problem in the DataBase.',503);
             if(method_exists($this,'__codes')) {
                 $this->__codes();
