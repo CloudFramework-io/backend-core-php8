@@ -150,10 +150,15 @@ if (!defined("_RESTfull_CLASS_")) {
             $this->addCodeLib('not-implemented', 'There is something in the server not implemented yet',501);
             $this->addCodeLib('service-unavailable','The service is unavailable.',503);
             $this->addCodeLib('system-error','There is a problem in the platform.',503);
-            $this->addCodeLib('datastore-error','There is a problem with the DataStore.',503);
+            $this->addCodeLib('datastore-error','There is a problem with the Datastore.',503);
             $this->addCodeLib('database-error','There is a problem with the Database.',503);
+            $this->addCodeLib('bigquery-error','There is a problem with the BigQuery.',503);
+            $this->addCodeLib('ddos-error','DDoS rules is activated for the User or IP.',503);
+            $this->addCodeLib('cache-error','There is a problem with the Cache.',503);
             $this->addCodeLib('programming-error','There is a problem with the DataStore.',503);
-            $this->addCodeLib('db-error','There is a problem in the DataBase.',503);
+            $this->addCodeLib('db-error','There is a problem in the Database.',503);
+            $this->addCodeLib('ds-error','There is a problem in the Datastore.',503);
+            $this->addCodeLib('bq-error','There is a problem in the BigQuery.',503);
             if(method_exists($this,'__codes')) {
                 $this->__codes();
             }
