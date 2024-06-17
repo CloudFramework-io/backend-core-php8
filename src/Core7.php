@@ -5005,13 +5005,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $id;
         var $namespace = 'Default';
         var $token;
+        /** @var int $cacheExpiresIn Time to expire a token */
+        var $cacheExpiresIn = 3600;
         var $tokenExpiration;
         var $tokenExpiresIn;
+        var $cachedTokenExpiresIn;
         var $data = [];
         /** @var bool $cached says if the user data has been retrieved from cache */
         var $cached = false;
-        /** @var int $expirationTime Time to expire a token */
-        var $expirationTime = 3600;
+
         /** @var int $maxTokens Max number of tokens in $expirationTime to handle */
         var $maxTokens = 10;
         /** @var int Number of tokens active for the user */
@@ -5093,6 +5095,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Check a token previously generated
+         * @deprecated use loadPlatformUserWithToken
          * @param string $token
          * @return bool|void
          */
@@ -5111,7 +5114,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if (!$userData || !isset($userData['tokens'][$token]) || !isset($userData['tokens'][$token]['time'])) return ($this->addError('Token is not found'));
 
             $now = microtime(true);
-            if (($now - $userData['tokens'][$token]['time']) > $this->expirationTime) {
+            if (($now - $userData['tokens'][$token]['time']) > $this->cacheExpiresIn) {
                 unset($userData['tokens'][$token]);
                 $this->core->cache->set($namespace . '_' . $user, $userData);
 
@@ -5123,7 +5126,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->isAuth = true;
             $this->token = $token;
             $this->activeTokens = count($userData['tokens']);
-            $this->tokenExpiration = $this->expirationTime - ($now - $userData['tokens'][$token]['time']);
+            $this->cachedTokenExpiresIn =  intval($this->cacheExpiresIn - (microtime(true)-$userData['tokens'][$token]['time']));
+            $this->tokenExpiresIn = ($userData['data']['User']['Expires']??time())-time();
             $this->namespace = $namespace;
             $this->id = $userData['id'];
             $this->data = $userData['data'];
@@ -5173,7 +5177,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region SET $this->isAuth, namespace, token, id, data}
             $this->isAuth = true;
             $this->token = $token;
-            $this->tokenExpiration = $this->expirationTime;
+            $this->tokenExpiration = $this->cacheExpiresIn;
             $this->namespace = $namespace;
             $this->id = $userData['id'];
             $this->data = $userData['data'];
@@ -5279,8 +5283,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $token = $cfUserInfo['data']['web_token'];
             $userData['tokens'][$token] = ['error' => null, 'time' => $now,'expires'=>$cfUserInfo['data']['expires']??null];
-            if($cfUserInfo['data']['expires']??null)
-                $this->tokenExpiresIn = $cfUserInfo['data']['expires']-time();
+            if($cfUserInfo['data']['Expires']??null)
+                $this->tokenExpiresIn = $cfUserInfo['data']['Expires']-time();
             $userData['data'] = $cfUserInfo['data'];
             $userData['id'] = $cfUserInfo['data']['user_data']['KeyId'];
 
@@ -5573,7 +5577,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $now = microtime(true);
                 $num_tokens = 0;
                 foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
-                    if(($now - $tokenInfo['time']) > $this->expirationTime) {
+                    if(($now - $tokenInfo['time']) > $this->cacheExpiresIn) {
                         unset($userData['tokens'][$tokenId]);
                         $updateCache = true;
                     } else {
@@ -5679,7 +5683,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $now = microtime(true);
                 $num_tokens = 0;
                 foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
-                    if(($now - $tokenInfo['time']) > $this->expirationTime) {
+                    if(($now - $tokenInfo['time']) > $this->cacheExpiresIn) {
                         unset($userData['tokens'][$tokenId]);
                         $updateCache = true;
                     } else {
@@ -5743,7 +5747,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->id = $userData['id'];
             $this->data = $userData['data'];
             //$this->expirationTime = $userData['data']['User']['Expires']??time();
-            $this->tokenExpiresIn = $this->expirationTime - intval(microtime(true)-$userData['tokens'][$token]['time']);
+            $this->tokenExpiresIn = ($userData['data']['User']['Expires']??time())-time();
+            $this->cachedTokenExpiresIn =  intval($this->cacheExpiresIn - (microtime(true)-$userData['tokens'][$token]['time']));
             unset($userData);
             $this->core->namespace = $namespace;
             //endregion
@@ -5783,7 +5788,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $now = microtime(true);
                 $num_tokens = 0;
                 foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
-                    if(($now - $tokenInfo['time']) > $this->expirationTime) {
+                    if(($now - $tokenInfo['time']) > $this->cacheExpiresIn) {
                         unset($userData['tokens'][$tokenId]);
                         $updateCache = true;
                     } else {
