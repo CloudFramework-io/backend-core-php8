@@ -7,7 +7,6 @@
   "license": "MIT",
   "require": {
     "google/cloud-datastore": "^1.26",
-    "google/cloud-datastore-admin": "^0.8.5",
     "google/cloud-storage": "^1.36",
     "google/cloud-logging": "^1.28",
     "google/cloud-translate": "^1.17",
