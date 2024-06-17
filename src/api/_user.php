@@ -88,7 +88,7 @@ class API extends RESTful
         //region CREATE $token for $this->param['user] in $this->namespace and assign a data to be stored
         $data = ['updated_at'=>date('Y-m-d H:i:s')];                // Assign the data you think is relevant
         $this->core->user->maxTokens = $this->basic_max_tokens;            // Define the Max tokens to keep in memory. 10 by default. When it exceeds the number the first token is deleted
-        $this->core->user->expirationTime = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
+        $this->core->user->cacheExpiresIn = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
 
         // Create the token in cache memory
         if(!$this->core->user->createUserToken($this->formParams['user'],$this->basic_namespace,$data))
@@ -103,7 +103,7 @@ class API extends RESTful
                 'token'=>$this->core->user->token,
                 'expires'=>$this->core->user->tokenExpiration,
                 'max_tokens'=>$this->core->user->maxTokens,
-                'expiration_time'=>$this->core->user->expirationTime,
+                'expiration_time'=>$this->core->user->cacheExpiresIn,
                 'data'=>$this->core->user->data,
             ]);
         //endregion
@@ -113,6 +113,7 @@ class API extends RESTful
     /**
      * Verify a token sent through X-WEB-KEY header
      * how to use other endpoints
+     * @deprecated
      */
     private function basic_check()
     {
@@ -127,7 +128,7 @@ class API extends RESTful
 
         //region VERIFY $token is right
         $this->core->user->maxTokens = $this->basic_max_tokens;            // Define the Max tokens to keep in memory. 10 by default. When it exceeds the number the first token is deleted
-        $this->core->user->expirationTime = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
+        $this->core->user->cacheExpiresIn = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
 
         if(!$this->core->user->checkUserToken($token))  return $this->setErrorFromCodelib('security-error',$this->core->user->errorMsg);
         //endregion
@@ -141,7 +142,7 @@ class API extends RESTful
                 '$this->core->user->token'=>$this->core->user->token,
                 '$this->core->user->activeTokens'=>$this->core->user->activeTokens,
                 '$this->core->user->maxTokens'=>$this->core->user->maxTokens,
-                '$this->core->user->expirationTime'=>$this->core->user->expirationTime,
+                '$this->core->user->expirationTime'=>$this->core->user->cacheExpiresIn,
                 '$this->core->user->tokenExpiration'=>round($this->core->user->tokenExpiration),
                 '$this->core->user->data'=>$this->core->user->data,
             ]);
@@ -223,7 +224,7 @@ class API extends RESTful
         $integration_key = $this->formParams['integration_key'];
 
         $this->core->user->maxTokens = $this->basic_max_tokens;            // Define the Max tokens to keep in memory. 10 by default. When it exceeds the number the first token is deleted
-        $this->core->user->expirationTime = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
+        $this->core->user->cacheExpiresIn = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
         if(!$this->core->user->loginERP($user,$password,$namespace,$integration_key)) return ($this->setErrorFromCodelib('params-error',$this->core->user->errorMsg));
         //endregion
 
@@ -234,7 +235,7 @@ class API extends RESTful
                 'token'=>$this->core->user->token,
                 'expires'=>$this->core->user->tokenExpiration,
                 'max_tokens'=>$this->core->user->maxTokens,
-                'expiration_time'=>$this->core->user->expirationTime,
+                'expiration_time'=>$this->core->user->cacheExpiresIn,
                 'data'=>$this->core->user->data
             ]);
         //endregion
@@ -260,7 +261,7 @@ class API extends RESTful
 
         //region VERIFY $token is right
         $this->core->user->maxTokens = $this->basic_max_tokens;            // Define the Max tokens to keep in memory. 10 by default. When it exceeds the number the first token is deleted
-        $this->core->user->expirationTime = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
+        $this->core->user->cacheExpiresIn = $this->basic_expiration_time;  // Define the when the tokens has to expire 3600 seconds by defaults
         if(!$this->core->user->checkERPToken($token,$integration_key,$refresh))  return $this->setErrorFromCodelib('security-error',$this->core->user->errorMsg);
         //endregion
 
@@ -273,7 +274,7 @@ class API extends RESTful
                 '$this->core->user->token'=>$this->core->user->token,
                 '$this->core->user->activeTokens'=>$this->core->user->activeTokens,
                 '$this->core->user->maxTokens'=>$this->core->user->maxTokens,
-                '$this->core->user->expirationTime'=>$this->core->user->expirationTime,
+                '$this->core->user->expirationTime'=>$this->core->user->cacheExpiresIn,
                 '$this->core->user->tokenExpiration'=>round($this->core->user->tokenExpiration),
                 '$this->core->user->data'=>$this->core->user->data,
             ]);
