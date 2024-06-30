@@ -3430,14 +3430,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * It decode a JSON WEB TOKEN based on a public key
+         * It decode a JSON WEB TOKEN created with alg HS256
          * based on https://github.com/firebase/php-jwt
          * to generate publicKey ../scripts/jwtRS256.sh
          * @param $jwt
-         * @param null $publicKey optionally you can verify the signature of the token
+         * @param null $publicKey optionally you can verify the signature of the token created with a PrivateKey with $publicKey
          * @param null $keyId optionally you can verify header.kid of the token
-         * @param string $algorithm optionally you can verify the header.alg of the token: SHA256,RS256..
-         * @return string with a length of 32 chars
+         * @param string $algorithm optionally you can verify the header.alg of the token: HS256 is only supported
+         * @return array|false
          */
         public function jwt_decode($jwt,$publicKey=null,$keyId=null,$algorithm=null)
         {
@@ -3458,8 +3458,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if (false === ($sig = $this->urlsafeB64Decode($cryptob64))) {
                 return($this->addError('Invalid signature encoding'));
             }
-            if ($algorithm && (!array_key_exists('alg',$header) || $header['alg']!='SHA256')) {
-                return($this->addError('Empty algorithm in header or value != SHA256'));
+            if ($algorithm && (!array_key_exists('alg',$header) || $header['alg']!='HS256')) {
+                return($this->addError('Empty algorithm in header or value != HS256'));
             }
             if (array_key_exists('kid',$header) && $keyId && $header['kid']!=$keyId) {
                 return($this->addError('KeyId present in header and does not match with $keyId'));
@@ -3468,14 +3468,45 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region create $signature signing with the privateKey
             if($publicKey) {
                 if(!is_string($publicKey) || strlen($publicKey)< 10) return($this->addError('Wrong public key'));
-                if(!$algorithm) $algorithm='SHA256';
-                $success = @openssl_verify("$headb64.$bodyb64",$sig, $publicKey, $algorithm);
+                $success = @openssl_verify("$headb64.$bodyb64",$sig, $publicKey, 'SHA256');
                 if($success!==1) {
                     $this->addError(['error'=>true,'errorMsg'=>'OpenSSL verification failed. '.openssl_error_string()]);
                 }
             }
             //endregion
             return(['header'=>$header,'body'=>$payload,'signature'=>$cryptob64]);
+        }
+
+        /**
+         * It decodes a JSON WEB TOKEN using $secret to verify the signature with sha256 coded secret
+         * @param string $token
+         * @param string $secret
+         * @return array|false
+         */
+        public function jwt_decode_with_secret(string $token,string $secret)
+        {
+
+            //region VERIFY parameters
+            if(!$token) return $this->addError('jwt_decode_with_secret(string $token,string $secret) has received an empty $token');
+            if(!$secret) return $this->addError('jwt_decode_with_secret(string $token,string $secret) has received an empty $secret');
+            //endregion
+
+            //region FEED $token_data with $this->jwt_decode($token), IF ERROR RETURN false
+            if(!$token_data = $this->jwt_decode($token)) return $token_data;
+            //endregion
+
+            //region VERIFY $token signature with $secret. IF ERRROR RETURN false
+            list($headb64, $bodyb64, $cryptob64) = explode('.', $token);
+            $sig = $this->urlsafeB64Decode($cryptob64);
+            $expectedSignature = hash_hmac('sha256', $headb64 . '.' . $bodyb64, $secret, true);
+            if(!hash_equals($sig, $expectedSignature)) {
+                return $this->addError("token signature does not match with method \$secret");
+            }
+            //endregion
+
+            //region RETURN $token_data
+            return $token_data;
+            //endregion
         }
 
         /**
@@ -3608,11 +3639,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Add an error Message
          * @param $value
+         * @return false to facilitate the return of other functions
          */
         function addError($value)
         {
             $this->error = true;
             $this->errorMsg[] = $value;
+            return false;
         }
 
         /**
