@@ -4613,7 +4613,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
             $_time = microtime(TRUE);
             $this->core->__p->add("Request->{$verb}: ", "$route " . (($data === null) ? '{no params}' : '{with params}'), 'note');
-
             $route = $this->getServiceUrl($route);
             $this->responseHeaders = null;
 
@@ -7087,17 +7086,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Add a LOG entry in CloudFrameWorkLogs
-         * @param $app
-         * @param $action string 'ok', 'error', 'check'..
-         * @param $title
-         * @param $method
-         * @param $user
+         * @param string $app
+         * @param string $action string 'ok', 'error', 'check'..
+         * @param string $title
+         * @param string $method
+         * @param null|string $user
          * @param null|array $data
          * @param null|string $slack_url
          * @param null|array $rewrite_fingerprint if you want to rewrite the default fingerprint send it here
-         * @param $id
+         * @param null|string $id
          */
-        public function add($app, $action, $title, $method, $user, $data=null, $slack_url=null, $rewrite_fingerprint=null,$id=null) {
+        public function add(string $app, string $action, string $title, string $method, null|string $user, null|string|array $data=null, null|string $slack_url=null, null|array $rewrite_fingerprint=null,null|string $id=null) {
             if(!$this->initDSLogs()) return;
 
             //region SET $rewrite_fingerprint
