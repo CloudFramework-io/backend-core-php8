@@ -667,11 +667,11 @@ if (!defined("_RESTfull_CLASS_")) {
 
         /**
          * Set an error using $code
-         * @param $code
+         * @param string $code
          * @param string $extramsg
          * @return false
          */
-        function setErrorFromCodelib($code,$extramsg='') {
+        function setErrorFromCodelib(string $code,$extramsg='') {
             $formatted_message =$extramsg;
             if(is_array($formatted_message)) $formatted_message = json_encode($formatted_message,JSON_PRETTY_PRINT);
             if(strlen($formatted_message??'')) $formatted_message = " [{$formatted_message}]";
