@@ -3389,14 +3389,22 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * It generates a JSON WEB TOKEN based on a private key
-         * based on https://github.com/firebase/php-jwt
-         * to generate privateKey ../scripts/jwtRS256.sh
-         * @return string|null with a length of 32 chars or null. if null check $this->error, $this->>errorMsg
+         * Encode a JSON Web Token (JWT) using the given payload, key, and algorithm.
+         *
+         * @param mixed $payload The data to be encoded in the JWT. This can be any valid JSON-serializable value.
+         * @param string $key The private key used to sign the JWT. It must be a string of at least 10 characters.
+         * @param string|null $keyId (optional) The key ID to be included in the JWT header. If not provided, it will be omitted.
+         * @param array|null $head (optional) Additional headers to be included in the JWT. If not provided, the default header will be used.
+         * @param string $algorithm (optional) The cryptographic algorithm to be used for signing the JWT. The default is 'RS256'.
+         *                          Supported algorithms are 'RS256', 'RS384', 'RS512', 'HS256', 'HS384', and 'HS512'.
+         *                          If an unsupported algorithm is provided, an error will be returned.
+         *
+         * @return string|false The encoded JWT as a string. If an error occurs during encoding, false will be returned.
+         *
          */
-        public function jwt_encode($payload,$privateKey, $keyId = null, $head = null, $algorithm='SHA256')
+        public function jwt_encode($payload, $key, $keyId = null, $head = null, $algorithm='RS256')
         {
-            if(!is_string($privateKey) || strlen($privateKey)< 10) return($this->addError('Wrong private key'));
+            if(!is_string($key) || strlen($key)< 10) return($this->addError('Wrong private key'));
 
             $header = array('typ' => 'JWT', 'alg' => $algorithm);
             if ($keyId !== null) {
@@ -3407,39 +3415,97 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             //region create $signing_input
-            $segments = array();
-            $segments[] = $this->urlsafeB64Encode($this->core->jsonEncode($header));
-            $segments[] = $this->urlsafeB64Encode($this->core->jsonEncode($payload));
-            $signing_input = implode('.', $segments);
-            if($this->error) return;
+            $b64SafeHeader = $this->urlsafeB64Encode($this->core->jsonEncode($header));
+            $b64SafePayload = $this->urlsafeB64Encode($this->core->jsonEncode($payload));
+            $b64SafeSignature='';
+            $token='';
+            if($this->error) return false;
             //endregion
 
-            //region create $signature signing with the privateKey
-            $signature = '';
-            $success = openssl_sign($signing_input, $signature, $privateKey, $algorithm);
-            if(!$success) {
-                return($this->addError(['error'=>true,'errorMsg'=>'OpenSSL unable to sign data']));
+            //region SET $token SIGNING with different algorithms
+            switch (strtoupper($algorithm)) {
+                case "RS256":
+                case "RS384":
+                case "RS512":
+                    $signature = '';
+                    if(strtoupper($algorithm)=='RS256')
+                        $success = openssl_sign($b64SafeHeader.'.'.$b64SafePayload, $signature, $key, 'SHA256');
+                    if(strtoupper($algorithm)=='RS384')
+                        $success = openssl_sign($b64SafeHeader.'.'.$b64SafePayload, $signature, $key, 'SHA384');
+                    if(strtoupper($algorithm)=='RS512')
+                        $success = openssl_sign($b64SafeHeader.'.'.$b64SafePayload, $signature, $key, 'SHA512');
+
+                    if(!$success) {
+                        return($this->addError(['error'=>true,'errorMsg'=>'OpenSSL unable to sign data']));
+                    }
+                    $b64SafeSignature=$this->urlsafeB64Encode($signature);
+                    if($this->error) return false;
+                    $token = $b64SafeHeader.'.'.$b64SafePayload.'.'.$b64SafeSignature;
+                    break;
+                case "PS256":
+                case "PS384":
+                case "PS512":
+                    $ps_key = openssl_pkey_get_private($key);
+                    if (!$ps_key) {
+                        return($this->addError(['error'=>true,'errorMsg'=>'openssl_pkey_get_private($key) has returned an error']));
+                    }
+                    $signature = '';
+                    if(strtoupper($algorithm)=='PS256')
+                        $success = openssl_sign($b64SafeHeader.'.'.$b64SafePayload, $signature, $ps_key, 'SHA256');
+                    if(strtoupper($algorithm)=='PS384')
+                        $success = openssl_sign($b64SafeHeader.'.'.$b64SafePayload, $signature, $ps_key, 'SHA384');
+                    if(strtoupper($algorithm)=='PS512')
+                        $success = openssl_sign($b64SafeHeader.'.'.$b64SafePayload, $signature, $ps_key, 'SHA512');
+                    if(!$success) {
+                        return($this->addError(['error'=>true,'errorMsg'=>'OpenSSL unable to sign data']));
+                    }
+                    $b64SafeSignature=$this->urlsafeB64Encode($signature);
+                    if($this->error) return false;
+                    $token = $b64SafeHeader.'.'.$b64SafePayload.'.'.$b64SafeSignature;
+                    break;
+                case "HS256":
+                case "HS384":
+                case "HS512":
+                    if(strtoupper($algorithm)=='HS256')
+                        $signature = hash_hmac('sha256', $b64SafeHeader . "." . $b64SafePayload, $key, true);
+                    elseif(strtoupper($algorithm)=='HS384')
+                        $signature = hash_hmac('sha384', $b64SafeHeader . "." . $b64SafePayload, $key, true);
+                    elseif(strtoupper($algorithm)=='HS512')
+                        $signature = hash_hmac('sha512', $b64SafeHeader . "." . $b64SafePayload, $key, true);
+                    $b64SafeSignature=$this->urlsafeB64Encode($signature);
+                    if($this->error) return false;
+                    $token = $b64SafeHeader.'.'.$b64SafePayload.'.'.$b64SafeSignature;
+                    break;
+                    $signature = hash_hmac('sha512', $b64SafeHeader . "." . $b64SafePayload, $key, true);
+                    $b64SafeSignature=$this->urlsafeB64Encode($signature);
+                    if($this->error) return false;
+                    $token = $b64SafeHeader.'.'.$b64SafePayload.'.'.$b64SafeSignature;
+                    break;
+                default:
+                    return($this->addError(['error'=>true,'errorMsg'=>"Algorithm [{$algorithm}] is not supported"]));
+                    break;
             }
             //endregion
 
-            //region return the signature
-            $segments[] = $this->urlsafeB64Encode($signature);
-            if($this->error) return;
-            return implode('.', $segments);
+            //region return $token
+            return $token;
             //endregion
         }
 
         /**
-         * It decode a JSON WEB TOKEN created with alg HS256
-         * based on https://github.com/firebase/php-jwt
-         * to generate publicKey ../scripts/jwtRS256.sh
-         * @param $jwt
-         * @param null $publicKey optionally you can verify the signature of the token created with a PrivateKey with $publicKey
-         * @param null $keyId optionally you can verify header.kid of the token
-         * @param string $algorithm optionally you can verify the header.alg of the token: HS256 is only supported
-         * @return array|false
+         * Decode a JSON Web Token (JWT)
+         *
+         * @param string $jwt The JWT string to decode
+         * @param string|null $key (optional) The public key/secret used to verify the token signature
+         * @param string|null (optional) $keyId The Key ID (KID) present in the token header
+         * @param string $algorithm (optional) The cryptographic algorithm to be used for signing the JWT. The default is 'RS256'.
+         * *                          Supported algorithms are 'RS256', 'RS384', 'RS512', 'HS256', 'HS384', and 'HS512'.
+         * *                          If an unsupported algorithm is provided, an error will be returned.
+         * *
+         *
+         * @return array|false The decoded token as an associative array if successful, false otherwise
          */
-        public function jwt_decode($jwt,$publicKey=null,$keyId=null,$algorithm=null)
+        public function jwt_decode($jwt, $key=null, $keyId=null, $algorithm=null)
         {
 
             $tks = explode('.', $jwt);
@@ -3458,55 +3524,102 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if (false === ($sig = $this->urlsafeB64Decode($cryptob64))) {
                 return($this->addError('Invalid signature encoding'));
             }
-            if ($algorithm && (!array_key_exists('alg',$header) || $header['alg']!='HS256')) {
-                return($this->addError('Empty algorithm in header or value != HS256'));
-            }
             if (array_key_exists('kid',$header) && $keyId && $header['kid']!=$keyId) {
                 return($this->addError('KeyId present in header and does not match with $keyId'));
             }
 
             //region create $signature signing with the privateKey
-            if($publicKey) {
-                if(!is_string($publicKey) || strlen($publicKey)< 10) return($this->addError('Wrong public key'));
-                $success = @openssl_verify("$headb64.$bodyb64",$sig, $publicKey, 'SHA256');
-                if($success!==1) {
-                    $this->addError(['error'=>true,'errorMsg'=>'OpenSSL verification failed. '.openssl_error_string()]);
+            if($key) {
+
+                if(!$alg = ($header['alg']??null))
+                    return($this->addError('Missing alg from token header'));
+                if($algorithm && $algorithm!=$alg)
+                    return($this->addError('Token header algorithm does not match with $algorithm value: '.$algorithm));
+
+                switch (strtoupper($alg)) {
+
+                    case "RS256":
+                    case "RS384":
+                    case "RS512":
+                        if(!is_string($key) || strlen($key)< 10) return($this->addError('Wrong public key'));
+                        if(strtoupper($alg)=='RS256')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $key, 'SHA256');
+                        elseif(strtoupper($alg)=='RS384')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $key, 'SHA384');
+                        elseif(strtoupper($alg)=='RS512')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $key, 'SHA512');
+                        if($success!==1) {
+                            $error_msg ='';
+                            while($error=openssl_error_string())
+                                $error_msg.=$error;
+                            $this->addError(['error'=>true,'errorMsg'=>'OpenSSL verification failed. '.$error_msg]);
+                        }
+                        break;
+
+                    case "PS256":
+                    case "PS384":
+                    case "PS512":
+                        if(!is_string($key) || strlen($key)< 10) return($this->addError('Wrong public key'));
+                        $ps_key = openssl_pkey_get_public($key);
+                        if (!$ps_key) {
+                            return($this->addError(['error'=>true,'errorMsg'=>'openssl_pkey_get_private($key) has returned an error']));
+                        }
+                        if(strtoupper($alg)=='PS256')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $ps_key, 'SHA256');
+                        elseif(strtoupper($alg)=='PS384')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $ps_key, 'SHA384');
+                        elseif(strtoupper($alg)=='PS512')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $ps_key, 'SHA512');
+                        if($success!==1) {
+                            $error_msg ='';
+                            while($error=openssl_error_string())
+                                $error_msg.=$error;
+                            $this->addError(['error'=>true,'errorMsg'=>'OpenSSL verification failed. '.$error_msg]);
+                        }
+                        break;
+
+                    case "HS256":
+                    case "HS384":
+                    case "HS512":
+                        $sig = $this->urlsafeB64Decode($cryptob64);
+                        if(strtoupper($alg)=='HS256')
+                            $expectedSignature = hash_hmac('sha256', $headb64 . '.' . $bodyb64, $key, true);
+                        elseif(strtoupper($alg)=='HS384')
+                            $expectedSignature = hash_hmac('sha384', $headb64 . '.' . $bodyb64, $key, true);
+                        elseif(strtoupper($alg)=='HS512')
+                            $expectedSignature = hash_hmac('sha512', $headb64 . '.' . $bodyb64, $key, true);
+                        if(!hash_equals($sig, $expectedSignature)) {
+                            return $this->addError("token signature [{$alg}] does not match with token \$secret");
+                        }
+                        break;
+
+
+                    case "PS256":
+                    case "PS384":
+                    case "PS512":
+                        if(!is_string($key) || strlen($key)< 10) return($this->addError('Wrong public key'));
+                        if(strtoupper($alg)=='RS256')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $key, 'SHA256');
+                        elseif(strtoupper($alg)=='RS384')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $key, 'SHA384');
+                        elseif(strtoupper($alg)=='RS512')
+                            $success = openssl_verify("$headb64.$bodyb64",$sig, $key, 'SHA512');
+                        if($success!==1) {
+                            $error_msg ='';
+                            while($error=openssl_error_string())
+                                $error_msg.=$error;
+                            $this->addError(['error'=>true,'errorMsg'=>'OpenSSL verification failed. '.$error_msg]);
+                        }
+                        break;
+
+                    default:
+                        return($this->addError(['error'=>true,'errorMsg'=>"Algorithm [{$alg}] is not supported"]));
+                        break;
+
                 }
             }
             //endregion
             return(['header'=>$header,'body'=>$payload,'signature'=>$cryptob64]);
-        }
-
-        /**
-         * It decodes a JSON WEB TOKEN using $secret to verify the signature with sha256 coded secret
-         * @param string $token
-         * @param string $secret
-         * @return array|false
-         */
-        public function jwt_decode_with_secret(string $token,string $secret)
-        {
-
-            //region VERIFY parameters
-            if(!$token) return $this->addError('jwt_decode_with_secret(string $token,string $secret) has received an empty $token');
-            if(!$secret) return $this->addError('jwt_decode_with_secret(string $token,string $secret) has received an empty $secret');
-            //endregion
-
-            //region FEED $token_data with $this->jwt_decode($token), IF ERROR RETURN false
-            if(!$token_data = $this->jwt_decode($token)) return $token_data;
-            //endregion
-
-            //region VERIFY $token signature with $secret. IF ERRROR RETURN false
-            list($headb64, $bodyb64, $cryptob64) = explode('.', $token);
-            $sig = $this->urlsafeB64Decode($cryptob64);
-            $expectedSignature = hash_hmac('sha256', $headb64 . '.' . $bodyb64, $secret, true);
-            if(!hash_equals($sig, $expectedSignature)) {
-                return $this->addError("token signature does not match with method \$secret");
-            }
-            //endregion
-
-            //region RETURN $token_data
-            return $token_data;
-            //endregion
         }
 
         /**
