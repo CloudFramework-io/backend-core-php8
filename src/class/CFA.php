@@ -2,13 +2,13 @@
 
 /**
  * [$cfa = $this->core->loadClass('CFA');] Class CFA to handle WebApps for CloudFrameworkInterface
- * notion: xxxx
- * last_update: 20220226
+ * notion: https://cloudframework.io/docs/es/developers/frontend/frontend-classes/cloudframeworkcfa%C2%A9-class
+ * last_update: 20240719
  * @package CoreClasses
  */
 class CFA
 {
-    var $version = '20240322';
+    var $version = '20240719';
     private $core;
     var $data = ['rows'=>[['label'=>'default_row']],'components'=>[]];
     var $labels=[];
@@ -82,7 +82,11 @@ class CFA
 
         // https://stackoverflow.com/questions/46305169/php-json-encode-malformed-utf-8-characters-possibly-incorrectly-encoded
         //json_encode error (5): Malformed UTF-8 characters, possibly incorrectly encoded
-        return mb_convert_encoding($only_label?['components'=>$this->data['components']]:$this->data, 'UTF-8', 'UTF-8');
+        $result = $only_label ? ['components' => $this->data['components']] : $this->data;
+        if (is_array($result)) {
+            return $result; 
+        }
+        return mb_convert_encoding($result, 'UTF-8', 'UTF-8');
     }
 
     /**
@@ -154,6 +158,11 @@ class CFAComponent
     public function formSelect() {
         if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentFormSelect')
             $this->component = new CFAComponentFormSelect();
+        return($this->component);
+    }
+    public function select2() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentSelect2')
+            $this->component = new CFAComponentSelect2();
         return($this->component);
     }
 
@@ -594,6 +603,31 @@ class CFAComponentFormSelect
 }
 
 /**
+ * CFAComponentSelect2 Class component
+ */
+class CFAComponentSelect2
+{
+    var $type = 'select2';
+    var $data = [
+        'label'=>null,
+        'title'=>null,
+        'onchange'=>null,
+        'options'=>[],
+        'multiple'=>false,
+        'type'=>null,
+        'value'=>null,
+    ];
+    public function __construct() { $this->data['id'] = uniqid('select2');}
+    public function label($data) {$this->data['label'] = $data; return $this;}
+    public function title($data) {$this->data['title'] = $data; return $this;}
+    public function options($data) {$this->data['options']=$data; return $this;}
+    public function onchange($data) {$this->data['onchange'] = $data; return $this;}
+    public function multiple($data) {$this->data['multiple'] = $data; return $this;}
+    public function type($data) {$this->data['type'] = $data; return $this;}
+    public function value($data) {$this->data['value'] = $data; return $this;}
+}
+
+/**
  * CFAComponentFormDatePicker Class component
  */
 class CFAComponentFormDatePicker
@@ -981,10 +1015,10 @@ class CFAComponentAdvancedTable
     public function paginationSetCurrentPage($data) {$this->data['paginationSetCurrentPage'] = $data; return $this;}
     public function buttons($data) {$this->data['buttons'] = $data; return $this;}
     public function displaySearch($data) {$this->data['displaySearch'] = $data; return $this;}
+    public function fixedHeader($data) {$this->data['fixedHeader'] = $data; return $this;}
     public function selectRows($data) {$this->data['selectRows'] = $data; return $this;}
     public function selectRowsButtons($data) {$this->data['selectRowsButtons'] = $data; return $this;}
     public function styleType($data) {$this->data['styleType'] = $data; return $this;}
-
 }
 
  /**
@@ -1096,6 +1130,8 @@ class CFAComponentKanban
       public function cols($data) {$this->data['cols'] = $data; return $this;}
       public function statuses($data) {$this->data['statuses'] = $data; return $this;}
       public function priorities($data) {$this->data['priorities'] = $data; return $this;}
+      public function cats($data) {$this->data['cats'] = $data; return $this;}
+      public function tags($data) {$this->data['tags'] = $data; return $this;}
       public function default_view($data) {$this->data['default_view'] = $data; return $this;}
       public function rows($data) {$this->data['rows'] = $data; return $this;}
   }
