@@ -673,8 +673,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region IF $text does not contains {{ xxxx }} the return $text
-            if(!is_string($data) || !$data || strpos($data,'{{')===false || strpos($data,'}}')===false) return($data);
-            $source = $data;
+            if(!is_string($data) || !$data || strpos($data,'{{')===false || strpos($data,'}}')===false) {
+                //region EVALUATE apply multilang
+                if(is_string($data) && $data && substr_count($data,';')>1) $data = $this->localization->getTag($data);
+                //endregion
+                return($data);
+            }
             //endregion
 
             //region FIND {{TYPE:tag}}
@@ -703,7 +707,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                                     $value = json_encode($this->system->getRequestFingerPrint());
                                     break;
                                 case "namespace":
-                                    $value = $this->platform[$found[2]] ?? $this->namespace;
+                                    $value = $this->namespace;
+                                    break;
+                                case "project_id":
+                                    $value = $this->gc_project_id;
                                     break;
                                 case "ip":
                                     $value = $this->system->ip;
@@ -790,7 +797,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 }
             } while ($found);
 
-            if(is_string($data)) {
+            if(is_string($data) && $data && substr_count($data,';')>1) {
                 $data = $this->localization->getTag($data);
             }
             return $data;
@@ -6634,6 +6641,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $cache = null;
 
         protected $core;
+        /** @var array|null $models already read */
         var $models = null;
 
         /**
