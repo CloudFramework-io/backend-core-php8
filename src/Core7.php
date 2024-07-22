@@ -6636,6 +6636,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         protected $core;
         var $models = null;
 
+        /**
+         * Class constructor
+         * @param Core7 $core
+         */
         function __construct(Core7 &$core)
         {
             $this->core = $core;
@@ -6691,49 +6695,83 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     $this->updateCache($models,$ret_models);
             }
 
-            if(!$ret_models || isset($ret_models['Unknown']) || !$this->processModels($ret_models)) {
+            // SET $processed CFOs
+            $processed=[];
+            if( !$ret_models
+                || isset($ret_models['Unknown'])
+                || !($processed = $this->processModels($ret_models))) {
+
                 if(isset($ret_models['Unknown']))
                     $this->addError('The following models are unknown: '.implode(',',array_keys($ret_models['Unknown'])));
                 else
                     return ($this->addError($ret_models));
             }
+
+            // EVALUATE $processed['extends'] and read pending CFOs
+            if(is_array($processed['extends']??null))
+                foreach ($processed['extends'] as $cfo=>$type) {
+                    if(!($this->models["{$type}:{$cfo}"]??null)) {
+                        $this->readModelsFromCloudFramework($cfo, $api_key, $source);
+                        if($this->error) return false;
+                    }
+            }
+
             return $ret_models;
         }
 
         /**
          * Process the model received in models
          * @param $models array
+         * @return array with the structure
+         *    ['cfos'=>[{cfo-id=>type}],'extends'=>[cfo-id=>type]]
          */
         public function processModels($models) {
             // $models has to be an array
-            if(!is_array($models) || !$models) return;
+            if(!is_array($models) || !$models) return [];
 
+            // init $processed to report
+            $processed = [];
             if(array_key_exists('DataBaseTables',$models) && is_array($models['DataBaseTables']))
                 foreach ($models['DataBaseTables'] as $model=>$dataBaseTable) {
                     $this->models['db:'.$model] = ['type'=>'db','data'=>$dataBaseTable];
+                    $processed['cfos'][$model] = 'db';
+                    if($dataBaseTable['extends']??null) $processed['extends'][$dataBaseTable['extends']] = 'db';
                 }
             if(array_key_exists('DataStoreEntities',$models) && is_array($models['DataStoreEntities']))
                 foreach ($models['DataStoreEntities'] as $model=>$dsEntity) {
                     $this->models['ds:'.$model] = ['type'=>'ds','data'=>$dsEntity];
+                    $processed['cfos'][$model] = 'ds';
+                    if($dsEntity['extends']??null) $processed['extends'][$dsEntity['extends']] = 'ds';
                 }
             if(array_key_exists('BigqueryDataSets',$models) && is_array($models['BigqueryDataSets']))
                 foreach ($models['BigqueryDataSets'] as $model=>$bqDataset) {
                     $this->models['bq:'.$model] = ['type'=>'bq','data'=>$bqDataset];
+                    $processed['cfos'][$model] = 'bq';
+                    if($bqDataset['extends']??null) $processed['extends'][$bqDataset['extends']] = 'bq';
+
                 }
             if(array_key_exists('MongoDBCollections',$models) && is_array($models['MongoDBCollections']))
                 foreach ($models['MongoDBCollections'] as $model=>$mongoDBColletion) {
                     $this->models['mongodb:'.$model] = ['type'=>'mongodb','data'=>$mongoDBColletion];
+                    $processed['cfos'][$model] = 'mongodb';
+                    if($mongoDBColletion['extends']??null) $processed['extends'][$mongoDBColletion['extends']] = 'mongodb';
+
                 }
             if(array_key_exists('JSONTables',$models) && is_array($models['JSONTables']))
-                foreach ($models['JSONTables'] as $model=>$dsEntity) {
-                    $this->models['json:'.$model] = ['type'=>'json','data'=>$dsEntity];
+                foreach ($models['JSONTables'] as $model=>$jsonEntity) {
+                    $this->models['json:'.$model] = ['type'=>'json','data'=>$jsonEntity];
+                    $processed['cfos'][$model] = 'json';
+                    if($jsonEntity['extends']??null) $processed['extends'][$jsonEntity['extends']] = 'json';
                 }
 
             if(array_key_exists('APIUrls',$models) && is_array($models['APIUrls']))
                 foreach ($models['APIUrls'] as $model=>$apiUrl) {
                     $this->models['api:'.$model] = ['type'=>'api','data'=>$apiUrl];
+                    $processed['cfos'][$model] = 'api';
+                    if($apiUrl['extends']??null) $processed['extends'][$apiUrl['extends']] = 'api';
                 }
-            return true;
+
+            return $processed;
         }
 
         /**
@@ -6780,7 +6818,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                             }
                         }
 
-                        // Rewrite model if it is defined
+                        // Rewrite hasExternalWorkFlows,workFlows and model if it is defined
+                        $this->models[$model_extended]['data']['hasExternalWorkFlows'] = (bool)(($this->models[$object]['data']['hasExternalWorkFlows'] ?? false));
+                        $this->models[$model_extended]['data']['workFlows'] =  $this->models[$object]['data']['workFlows']??null;
                         if(isset($this->models[$object]['data']['model']) && $this->models[$object]['data']['model']) {
                             $this->models[$model_extended]['data']['model'] =  $this->models[$object]['data']['model'];
                         }
@@ -6812,29 +6852,42 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     if(isset($this->models[$object]['data']['extends']) && $this->models[$object]['data']['extends']) {
                         // look for the model
                         $model_extended = 'ds:'.$this->models[$object]['data']['extends'];
-                        if(!isset($this->models[$model_extended])) return($this->addError("Model extended $model_extended from model: $object does not exist",404));
+                        if(!isset($this->models[$model_extended])) return($this->addError("Model [$object] extends [$model_extended] and it does not previously read",404));
 
-                        // Rewrite model if it is defined
+                        // Rewrite hasExternalWorkFlows,workFlows and model if it is defined
+                        $this->models[$model_extended]['data']['hasExternalWorkFlows'] = (bool)(($this->models[$object]['data']['hasExternalWorkFlows'] ?? false));
+                        $this->models[$model_extended]['data']['workFlows'] =  $this->models[$object]['data']['workFlows']??null;
                         if(isset($this->models[$object]['data']['model'])) {
                             $this->models[$model_extended]['data']['model'] =  $this->models[$object]['data']['model'];
                         }
 
                         //Merge variables with the extended object.
-                        if(isset($this->models[$object]['data']['interface'])) foreach ($this->models[$object]['data']['interface'] as $object_property=>$data) {
-                            //merge objects
-                            if(in_array($object_property,['fields'])) {
-                                $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$data);
+                        if(isset($this->models[$object]['data']['interface']))
+                            foreach ($this->models[$object]['data']['interface'] as $object_property=>$data) {
+                                //merge objects
+                                if(in_array($object_property,['fields'])) {
+                                    $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$data);
+                                }
+                                //replace objects
+                                else {
+                                    $this->models[$model_extended]['data']['interface'][$object_property] = $data;
+                                }
                             }
-                            //replace objects
-                            else {
-                                $this->models[$model_extended]['data']['interface'][$object_property] = $data;
-                            }
-                        }
-                        $this->models[$object]['data'] = array_merge(['extended_from'=>$this->models[$object]['data']['extends']],array_merge($this->models[$model_extended]['data'],array_merge($this->models[$object]['data'],$this->models[$model_extended]['data'])));
+
+                        $this->models[$object]['data'] = array_merge(
+                                ['extended_from'=>$this->models[$object]['data']['extends']],
+                                array_merge(
+                                    $this->models[$model_extended]['data'],
+                                    array_merge(
+                                        $this->models[$object]['data'],
+                                        $this->models[$model_extended]['data']
+                                    )
+                                )
+                        );
+
                         $entity = $this->models[$object]['data']['extends'];
                     }
                     //endregion
-
 
                     //region REWRITE entity if $this->models[$object]['data']['entity']
                     if(isset($this->models[$object]['data']['entity'])) $entity = $this->models[$object]['data']['entity'];
@@ -6880,7 +6933,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             return null;
         }
-
 
         /**
          * Returns the array keys of the models
@@ -7019,6 +7071,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
+        /**
+         * Execute a SQL command
+         * @param $title
+         * @param $q
+         * @param $params
+         * @return bool|null|void
+         */
         public function dbCommand($title, $q,$params=[]) {
 
             $time = microtime(true);
@@ -7164,10 +7223,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             else return null;
         }
 
+        /**
+         * Add an error in the class
+         * @param $msg
+         * @param $code
+         * @return false to facilitate the return of other methods
+         */
         private function addError($msg,$code=0) {
             $this->error = true;
             $this->errorCode = $code;
             $this->errorMsg[] = $msg;
+            return false;
         }
 
 
