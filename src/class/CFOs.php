@@ -1,8 +1,8 @@
 <?php
 /**
- * [$cfos = $this->core->loadClass('CFOs');] Class CFOs to handle CFO app for CloudFrameworkInterface
+ * [$cfos = $this->core->loadClass('CFOs',$integrationKey);] Class CFOs to handle CFO app for CloudFrameworkInterface
  * https://www.notion.so/cloudframework/CFI-PHP-Class-c26b2a1dd2254ddd9e663f2f8febe038
- * last_update: 202201
+ * last_update: 20240725
  * @package CoreClasses
  */
 class CFOs {
@@ -758,6 +758,7 @@ class CFOWorkFlows {
     var $core;
     /** @var CFOs  */
     var $cfos;
+    var $cfoWorkFlows =[];
     /** @var WorkFlows $workFlows **/
     var $workFlows;
 
@@ -781,9 +782,21 @@ class CFOWorkFlows {
         $this->cfos = $cfos;
     }
 
-    function process(string $event,array &$data,$id,string $cfo='') {
+    /**
+     * Process the event and update the logs
+     *
+     * @param string $event The event to be processed
+     * @param array $data The data to be processed
+     * @param mixed $id value of $data array
+     * @param string $cfo The CFO used with $data
+     *
+     * @return bool return true on success and false on error
+     */
+    function process(string $event, array &$data, $id, string $cfo='') {
 
-        //region VERIFY $cfo value. If Empty try to set $this->cfos->last_cfo
+        //region INIT $this->logs and VERIFY $cfo value. If Empty try to set $this->cfos->last_cfo
+        $this->logs = [];
+        $this->messages = [];
         if(!$cfo) $cfo = $this->cfos->last_cfo;
         if(!$cfo) return $this->addError('params-error','Missing a $cfo value because $this->cfos->last_cfo is empty');
         //endregion
@@ -794,14 +807,48 @@ class CFOWorkFlows {
         }
         //endregion
 
-        //region INIT $this->logs AND SET $workFlow from $model['data']['workFlows']
-        $this->logs = [];
-        $workFlows = $model['data']['workFlows']['workflows']??[];
+        //region READ $this->cfoWorkFlows[$cfo] from $model['data']['workFlows'] and ds:CloudFrameWorkCFOWorkFlows
+        if(!($this->cfoWorkFlows[$cfo]??null)) {
+
+            //read $workFlows from the model
+            $workFlows = $model['data']['workFlows']['workflows'] ?? [];
+            //if hasExternalWorkFlows read them from ds:CloudFrameWorkCFOWorkFlows
+            if ($model['data']['hasExternalWorkFlows'] ?? null) {
+
+                //read $external_workflows from cache in ds:CloudFrameWorkCFOWorkFlows
+                $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->activateCache(true);
+                $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->getCache('external_cfo_'.$cfo);
+                if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error)
+                    return $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+
+                //if $external_workflows does not exists in cache
+                if($external_workflows===null){
+                        $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->fetchAll('*', ['CFOId' => $cfo]);
+                        if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error)
+                            return $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+                        $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->setCache('external_cfo_'.$cfo,$external_workflows);
+                }
+
+                if ($external_workflows) foreach ($external_workflows as $workflow) if ($workflow['Active']) {
+                    if (is_array($workflow['JSON'] ?? null))
+                        foreach ($workflow['JSON'] as $event_type => $events) {
+                            if (!isset($workFlows[$event_type])) $workFlows[$event_type] = [];
+                            if (is_array($events)) foreach ($events as $title => $event_data) {
+                                $workFlows[$event_type][] = array_merge(['title' => $title], $event_data);
+                            }
+                        }
+                }
+            }
+
+            //assign the $workFlows to $this->cfoWorkFlows[$cfo]
+            $this->cfoWorkFlows[$cfo] = $workFlows;
+            unset($workFlows);  // free memory
+        }
         //endregion
 
         //region SEARCH $event in $workFlow and try to execute UPDATING $logs
-        if(is_array($workFlows[$event]??null))
-            foreach ($workFlows[$event] as $_i=>$workflow) {
+        if(is_array($this->cfoWorkFlows[$cfo][$event]??null))
+            foreach ($this->cfoWorkFlows[$cfo][$event] as $_i=>$workflow) {
 
                 //region IGNORE workflows not active
                 if(!($workflow['active'])) continue;
@@ -834,7 +881,7 @@ class CFOWorkFlows {
                 }
                 //endregion
 
-                //region PROCESS $workflow['action'] == ['readRelations','sendEmail','updateCFOData','insertCFOData','setLocalizationLang','hook'
+                //region PROCESS $workflow['action'] == ['readRelations','sendEmail','updateCFOData','insertCFOData','setLocalizationLang','hook']
                 if ($workflow['action'] == 'readRelations') {
                     $this->readRelations($workflow, $data, $_i);
                 }
@@ -862,7 +909,7 @@ class CFOWorkFlows {
         //endregion
 
         //region RETURN $logs
-        return $this->logs;
+        return true;
         //endregion
 
     }
@@ -893,7 +940,8 @@ class CFOWorkFlows {
             //endregion
 
             //loop $workflow['relations'] in $relation where $relation['cfo'] exists
-            foreach ($workflow['relations'] as $relation) if (($relation['cfo'] ?? null) ) {
+            foreach ($workflow['relations'] as $relation) if (($relation['cfo'] ?? null) )
+            {
 
                 //region VERIFY $relation['cfo'] model exists
                 if (!$models = $this->cfos->readCFOs($relation['cfo'])) {
@@ -906,22 +954,32 @@ class CFOWorkFlows {
 
                 //region IF $relation has 'key' and 'value' lets read record by key
                 if( ($relation['key'] ?? null) && ($relation['value'] ?? null)) {
-                    if ($value = $this->core->replaceCloudFrameworkTagsAndVariables($relation['value'], $data)) {
+                    if ($value = $this->core->replaceCloudFrameworkTagsAndVariables($relation['value'], $data))
+                    {
                         //check if it is db model
                         if ($models['DataBaseTables']??null) {
+
                             //region READ $record from ds:$relation['cfo'] evaluating $relation['fields']
                             $record = $this->cfos->db($relation['cfo'])->fetchOne([$relation['key'] => $value],$relation['fields']??'*');
                             if ($this->cfos->db($relation['cfo'])->error) {
                                 $this->cfos->db($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
                                 $this->workflows_report($workflow['id'], $this->cfos->db($relation['cfo'])->errorMsg, 'cfo_workflow_error');
                                 $workflow['active'] = false;
-                                break;
+                                if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
+                            } else {
+                                if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
                             }
                             //endregion
 
-                        }elseif ($models['DataStoreEntities']??null) {
+                        }
+                        elseif ($models['DataStoreEntities']??null) {
 
-                            //region READ $record from ds:$relation['cfo']
+                            //region EVALUATE to apply namespace
+                            if($relation['namespace']??null)
+                                $this->cfos->ds($relation['cfo'])->namespace = $this->core->replaceCloudFrameworkTagsAndVariables($relation['namespace'],$data)?:$this->cfos->ds($relation['cfo'])->namespace;
+                            //endregion
+
+                            //region READ $record from ds:$relation['cfo']. IF ERROR $workflow['active']
                             if(in_array($relation['key'],['KeyId','KeyName']))
                                 $record = $this->cfos->ds($relation['cfo'])->fetchOneByKey($value);
                             else
@@ -931,7 +989,10 @@ class CFOWorkFlows {
                                 $this->cfos->ds($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
                                 $this->workflows_report($workflow['id'], $this->cfos->ds($relation['cfo'])->errorMsg, 'cfo_workflow_error');
                                 $workflow['active'] = false;
-                                break;
+                                if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
+
+                            } else {
+                                if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
                             }
                             //endregion
 
@@ -946,9 +1007,16 @@ class CFOWorkFlows {
                             }
                             //endregion
                         }
-                        $data[$relation['cfo']] = $record;
-                        $this->workflows_report($workflow['id'], [$relation['cfo'] => array_merge(['Keys'=>array_keys($record)],['WHERE'=>[$relation['key'] => $value]])]);
-                        if($workflow['message']??null) $this->workflows_report($workflow['id'], ['message' => $this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+
+                        //region REPORT $record if $workflow['active']
+                        if($workflow['active']) {
+                            $data[$relation['cfo']] = $record;
+                            $_report = [$relation['cfo'] => array_merge(['Keys' => array_keys($record)], ['WHERE' => [$relation['key'] => $value]])];
+                            if ($models['DataStoreEntities'] ?? null)
+                                $_report[$relation['cfo']]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
+                            $this->workflows_report($workflow['id'], $_report);
+                        }
+                        //endregion
                     }
                 }
                 //endregion
@@ -960,28 +1028,44 @@ class CFOWorkFlows {
                         $total = $this->cfos->db($relation['cfo'])->fetchOne($relation['where'],'count(*) total');
                         if ($this->cfos->db($relation['cfo'])->error) {
                             $this->cfos->db($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
-                            $this->workflows_report($workflow['id'], $this->cfos->db($relation['cfo'])->errorMsg, 'cfo_workflow_error');
+                            $this->workflows_report($workflow['id'], ['error'=>$this->cfos->db($relation['cfo'])->errorMsg]);
                             $workflow['active'] = false;
-                            break;
+                            if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
+                        } else {
+                            if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+                            $total = $total['total']??null;
                         }
-                        $record=[$relation['count']=>$total['total']];
-                        $data[$relation['cfo']] = $record;
-                        $this->workflows_report($workflow['id'], [$relation['cfo'] => array_merge(['Keys'=>array_keys($record)],['WHERE'=>$relation['where']])]);
-                        if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+                    }
+                    elseif($models['DataStoreEntities']??null) {
 
-                    } elseif($models['DataStoreEntities']??null) {
+                        //region EVALUATE to apply namespace
+                        if($relation['namespace']??null)
+                            $this->cfos->ds($relation['cfo'])->namespace = $this->core->replaceCloudFrameworkTagsAndVariables($relation['namespace'],$data)?:$this->cfos->ds($relation['cfo'])->namespace;
+                        //endregion
+
+                        //region QUERY into $total the count. IF ERROR SET $workflow['active'] = false;
                         $total = $this->cfos->ds($relation['cfo'])->count($relation['where']);
                         if ($this->cfos->ds($relation['cfo'])->error) {
                             $this->cfos->ds($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
                             $this->workflows_report($workflow['id'], $this->cfos->ds($relation['cfo'])->errorMsg, 'cfo_workflow_error');
                             $workflow['active'] = false;
-                            break;
+                            if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
+                        } else {
+                            if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
                         }
-                        $record=[$relation['count']=>$total];
-                        $data[$relation['cfo']] = $record;
-                        $this->workflows_report($workflow['id'], [$relation['cfo'] => array_merge(['Keys'=>array_keys($record)],['WHERE'=>$relation['where']])]);
-                        if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+                        //endregion
                     }
+
+                    //region REPORT result if $workflow['active']
+                    if($workflow['active']) {
+                        $record = [$relation['count'] => $total];
+                        $data[$relation['cfo']] = $total;
+                        $_report = array_merge(['total' => $total], ['WHERE' => $relation['where']]);
+                        if ($models['DataStoreEntities'] ?? null)
+                            $_report[$relation['cfo']]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
+                        $this->workflows_report($workflow['id'], [$relation['cfo'] => $_report]);
+                    }
+                    //endregion
                 }
                 //endregion
                 //region ELSE error
@@ -1043,7 +1127,7 @@ class CFOWorkFlows {
             $workflow['data']['_key_'] = $this->cfos->db($workflow['cfo'])->insert($workflow['data']);
             if($this->cfos->db($workflow['cfo'])->error) {
                 $this->cfos->db($workflow['cfo'])->errorMsg[] = "Error in workflows[{$_i}].insertDataInCFO";
-                $this->workflows_report($workflow['id'],$this->cfos->db($workflow['cfo'])->errorMsg, 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>$this->cfos->db($workflow['cfo'])->errorMsg]);
                 return false;
             }
             $this->workflows_report($workflow['id'],[$workflow['cfo']=>$workflow['data']]);
@@ -1051,11 +1135,11 @@ class CFOWorkFlows {
         elseif($models['DataStoreEntities']??null) {
             $entity = $this->cfos->ds($workflow['cfo'])->createEntities($workflow['data'])[0]??null;
             if($this->cfos->ds($workflow['cfo'])->error) {
-                $this->workflows_report($workflow['id'],$this->cfos->ds($workflow['cfo'])->errorMsg,'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace]);
                 return false;
             } else {
-                $this->workflows_report($workflow['id'],'Created entity in cfo: '.$workflow['cfo'],'workflow_insertDataInCFO');
-                $this->workflows_report($workflow['id'],['data'=>$entity]);
+                $this->workflows_report($workflow['id'],['report'=>'Created entity in cfo: '.$workflow['cfo']]);
+                $this->workflows_report($workflow['id'],['data'=>$entity,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace]);
             }
         }
         else {
@@ -1064,7 +1148,35 @@ class CFOWorkFlows {
         }
         //endregion
 
+        //region EVALUATE to process $workflow['message']
+        $this->processWorkFlowMessage($workflow,$data);
+        //endregion
+
         return true;
+    }
+
+    /**
+     * Process the workflow message and update the relevant variables and reports
+     *
+     * @param array $workflow The workflow array containing the message information
+     * @param array $data The data array containing the variables for replacement
+     * @return void
+     */
+    private function processWorkFlowMessage(array &$workflow, array &$data) {
+        //region EVALUATE to process $workflow['message']
+        if($workflow['message']??null) {
+            if(!is_array($workflow['message'])) $workflow['message'] = ['title'=>$workflow['message']];
+            $message = [
+                'title' => $this->core->replaceCloudFrameworkTagsAndVariables($workflow['message']['title']??'',$data),
+                'type'=>$workflow['message']['type']??'info',
+                'description'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message']['description']??null,$data),
+                'time'=>$workflow['message']['time']??-1,
+                'url'=>$workflow['message']['url']??null,
+            ];
+            $this->workflows_report($workflow['id'],['message'=>$message]);
+            $this->messages[] = $message;
+        }
+        //endregion
     }
 
     /**
@@ -1119,20 +1231,20 @@ class CFOWorkFlows {
             $record = $this->cfos->db($workflow['cfo'])->fetchOne([$workflow['key']=>$value]);
             if($this->cfos->db($workflow['cfo'])->error) {
                 $this->cfos->db($workflow['cfo'])->errorMsg[] = "Error in workflows[{$_i}].updateDataInCFO";
-                $this->workflows_report($workflow['id'],$this->cfos->db($workflow['cfo'])->errorMsg, 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>$this->cfos->db($workflow['cfo'])->errorMsg]);
                 return false;
             }
 
             //check the database record exists
             if(!$record) {
-                $this->workflows_report($workflow['id'],"Error in workflows[{$_i}].updateDataInCFO.{$workflow['cfo']}. Key [{$workflow['key']}='{$value}'] not found.", 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>"Error in workflows[{$_i}].updateDataInCFO.{$workflow['cfo']}. Key [{$workflow['key']}='{$value}'] not found."]);
                 return false;
             }
             $workflow['data'][$workflow['key']] = $value;
             $this->cfos->db($workflow['cfo'])->update($workflow['data']);
             if($this->cfos->db($workflow['cfo'])->error) {
                 $this->cfos->db($workflow['cfo'])->errorMsg[] = "Error in workflows[{$_i}].updateDataInCFO";
-                $this->workflows_report($workflow['id'],$this->cfos->db($workflow['cfo'])->errorMsg, 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>$this->cfos->db($workflow['cfo'])->errorMsg]);
                 return false;
             }
             $this->workflows_report($workflow['id'],[$workflow['cfo']=>$workflow['data']]);
@@ -1146,12 +1258,12 @@ class CFOWorkFlows {
             else
                 $entity = $this->cfos->ds($workflow['cfo'])->fetchOne('*', [$workflow['key'] => $value])[0] ?? null;
             if ($this->cfos->ds($workflow['cfo'])->error) {
-                $this->workflows_report($workflow['id'], $this->cfos->ds($workflow['cfo'])->errorMsg, 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'], ['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg]);
                 return false;
             }
             //check the datastore entity exists
             if(!$entity) {
-                $this->workflows_report($workflow['id'],"Error in workflows[{$_i}].updateDataInCFO.{$workflow['cfo']}. Key [{$workflow['key']}='{$value}'] not found.", 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>"Error in workflows[{$_i}].updateDataInCFO.{$workflow['cfo']}. Key [{$workflow['key']}='{$value}'] not found."]);
                 return false;
             }
 
@@ -1161,21 +1273,24 @@ class CFOWorkFlows {
                 $entity = array_merge($entity, $workflow['data']);
             $this->cfos->ds($workflow['cfo'])->createEntities($entity);
             if ($this->cfos->ds($workflow['cfo'])->error) {
-                $this->workflows_report($workflow['id'], $this->cfos->ds($workflow['cfo'])->errorMsg, 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'], ['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg]);
                 return false;
             }
-            $this->workflows_report($workflow['id'], [$workflow['cfo'] => ['key' => $workflow['key'], 'value' => $value, 'data' => $workflow['data']]]);
+            $this->workflows_report($workflow['id'], [$workflow['cfo'] => ['key' => $workflow['key'], 'value' => $value, 'data' => $workflow['data'],'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace]]);
 
         }
         //endregion
         //region ELSE error
         else {
-            $this->workflows_report($workflow['id'],$workflow['cfo'].' is not a type db:ds','cfo_workflow_error');
+            $this->workflows_report($workflow['id'],['error'=>$workflow['cfo'].' is not a type db:ds']);
             return false;
         }
         //endregion
 
-        if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+        //region EVALUATE to process $workflow['message']
+        $this->processWorkFlowMessage($workflow,$data);
+        //endregion
+
         return true;
     }
 
@@ -1210,7 +1325,7 @@ class CFOWorkFlows {
 
             //check $this->cfos->integrationKey
             if(!$this->cfos->integrationKey) {
-                $this->workflows_report($workflow['id'],'missing cfo integrationKey configuration', 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>'missing cfo integrationKey configuration']);
                 return;
             }
 
@@ -1218,19 +1333,21 @@ class CFOWorkFlows {
             $this->workFlows = $this->core->loadClass('WorkFlows',$this->cfos);
             $config = $this->cfos->ds('CloudFrameWorkModulesConfigs')->fetchOneByKey('email');
             if ($this->cfos->ds('CloudFrameWorkModulesConfigs')->error) {
-                $this->workflows_report($workflow['id'],$this->cfos->ds('CloudFrameWorkModulesConfigs')->errorMsg, 'email-config-datastore-error');
+                $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds('CloudFrameWorkModulesConfigs')->errorMsg]);
                 return;
             }
+            $this->workflows_report($workflow['id'],['namespace'=>$this->cfos->ds('CloudFrameWorkModulesConfigs')->namespace]);
+
             if (!$config) {
                 $config = ['KeyName' => 'email', 'DateUpdating' => 'now', 'Title' => 'Email Configuration', 'Description' => 'CLOUD-CHANNELS EMAIL Configuration', 'Config' => ['mandrill_api_key' => null]];
                 $this->cfos->ds('CloudFrameWorkModulesConfigs')->createEntities($config);
                 if ($this->cfos->ds('CloudFrameWorkModulesConfigs')->error) {
-                    $this->workflows_report($workflow['id'],$this->cfos->ds('CloudFrameWorkModulesConfigs')->errorMsg, 'email-config-datastore-error');
+                    $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds('CloudFrameWorkModulesConfigs')->errorMsg]);
                     return;
                 }
             }
             if (!($config['Config']['mandrill_api_key'] ?? null)) {
-                $this->workflows_report($workflow['id'],'Missing [CLOUD-CHANNELS/config/mandrill_api_key] in workflow ' . $hook_type . "[$_i]", 'cfo_workflow_error');
+                $this->workflows_report($workflow['id'],['error'=>'Missing [CLOUD-CHANNELS/config/mandrill_api_key] in workflow ' . $hook_type . "[$_i]"]);
                 return;
             }
             if ($config['Config']['mandrill_api_key'] ?? null) {
@@ -1356,20 +1473,8 @@ class CFOWorkFlows {
         ]);
         //endregion
 
-        //region EVALUATE $workflow['message']
-        if($workflow['message']??null) {
-            if(is_string($workflow['message']))
-                $workflow['message'] = ['title'=>$workflow['message']];
-            if($workflow['message']['title']??null) {
-                $this->messages[] = [
-                    'title' => $this->core->replaceCloudFrameworkTagsAndVariables($workflow['message']['title']??'',$data),
-                    'type'=>$workflow['message']['type']??'info',
-                    'description'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message']['description']??null,$data),
-                    'time'=>$workflow['message']['time']??-1,
-                    'url'=>$workflow['message']['url']??null,
-                ];
-            }
-        }
+        //region PROCESS $workflow['message']
+        $this->processWorkFlowMessage($workflow,$data);
         //endregion
 
     }
