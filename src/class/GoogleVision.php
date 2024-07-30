@@ -10,6 +10,7 @@ class CFGoogle
     var $error = false;
     var $errorMsg = [];
     var $client;
+    var $client_secret;
     var $scope;
     var $type = 'installed';
 
