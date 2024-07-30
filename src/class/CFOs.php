@@ -1560,7 +1560,7 @@ class CFOWorkFlows {
         // add in data _user id
         $data_to_send['_user'] = $this->dstoken_data['User']['KeyName'];
         // add in url user id
-        $hook['url'].= (strpos($hook['url'],'?')?'&':'?').'_user='.urlencode($this->dstoken_data['User']['KeyName']).'&_type='.urlencode($hook_type);
+        $hook['url'].= (strpos($hook['url'],'?')?'&':'?').'_user='.urlencode($this->dstoken_data['User']['KeyName'] ?? '').'&_type='.urlencode($hook_type ?? '');
         if($method=='GET') {
             $trigger_ret = $this->core->request->get_json_decode($hook['url'], null,$hook_headers);
         }elseif($method=='POST') {
