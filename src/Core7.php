@@ -4294,7 +4294,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $entity = ['KeyName'=>$path
                 ,'Fingerprint'=>$this->core->system->getRequestFingerPrint()
                 ,'DateUpdating'=>"now"
-                ,'Serialize'=>utf8_encode(gzcompress(serialize($data)))];
+                ,'Serialize'=>mb_convert_encoding(gzcompress(serialize($data)), 'UTF-8','ISO-8859-1')];
 
             $ret = $this->ds->createEntities([$entity]);
             if($this->ds->error) {
