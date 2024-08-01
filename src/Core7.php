@@ -156,7 +156,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.3.18';  // 2024-07-25
+        var $_version = '8.3.19';  // 2024-08-01
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -648,7 +648,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Replace CloudFramework Tags {{Tag:{value of tag}}} or variable {{Variablename,defaultvalu} if $array_of_variables is sent. The Tags available are:
-         * @param string|null $data Potential string to replace. The allowed values will be:
+         * @param string|array|null $data Potential string to replace. The allowed values will be:
          *   * {{<SystemTag>:<TagVariable>[,defaultvalue]}} Allowed values:
          *   * Platform:(namespace)
          *   * User:(UserAuthUser.<variable>)
@@ -659,7 +659,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          *   if $array_of_variables is sent {{<Variable>>[,defaultvalue]}}
          * @param array|null $array_of_variables
          * @param bool $rawUrlEncode Apply a URL encode to the substitutions
-         * @return string|null
+         * @return string|array|null
          */
         public function replaceCloudFrameworkTagsAndVariables($data, &$array_of_variables=[], bool $rawUrlEncode=false) {
 
@@ -672,16 +672,20 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
-            //region IF $text does not contains {{ xxxx }} the return $text
-            if(!is_string($data) || !$data || strpos($data,'{{')===false || strpos($data,'}}')===false) {
-                //region EVALUATE apply multilang
-                if(is_string($data) && $data && substr_count($data,';')>1) $data = $this->localization->getTag($data);
-                //endregion
-                return($data);
+
+            //region EVALUATE apply multilang
+            if(is_string($data) && substr_count($data,';')>1) {
+                $data = $this->localization->getTag($data);
             }
             //endregion
 
-            //region FIND {{TYPE:tag}}
+            //region IF $text does not contains {{ xxxx }} the return localized $text
+            if(!is_string($data) || !$data || strpos($data,'{{')===false || strpos($data,'}}')===false) {
+                return ($data);
+            }
+            //endregion
+
+            //region REPLACE System {{Platform,User,..:tag}} variables
             if(strpos($data,':')!==false) do {
                 //region SET $found = false, $value = '',  $default_value=''
                 $value = '';
@@ -689,6 +693,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $found = null;
                 preg_match("/{{([A-z0-9_]*):([A-z0-9_,\- ]*)}}/", $data, $found);
                 //endregion
+
                 //region SEARCH $found[1] in Platform,User,UserVariables,GETVariables and SET $value
                 if($found) {
 
@@ -772,7 +777,26 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }  while($found);
             //endregion
 
-            // Explore extra variables
+            //region REPLACE {{xx}} variables
+            if($array_of_variables) $this->replaceVariables($array_of_variables,$data,$rawUrlEncode);
+            //endregion
+            //region APPLY $this->localization->getTag($data) to find final translations
+            if(is_string($data) && $data && substr_count($data,';')>1) {
+                $data = $this->localization->getTag($data);
+                if($array_of_variables && strpos($data,'{{')!==false) {
+                    $this->replaceVariables($array_of_variables, $data, $rawUrlEncode);
+                }
+
+            }
+            //endregion
+
+            return $data;
+
+        }
+
+        private function replaceVariables(array &$array_of_variables,string &$data, bool $rawUrlEncode=false)
+        {
+            //region REPLACE $array_of_variables in $data
             if($array_of_variables) do {
                 $found = null;
                 $value = '';
@@ -796,12 +820,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     //endregion
                 }
             } while ($found);
-
-            if(is_string($data) && $data && substr_count($data,';')>1) {
-                $data = $this->localization->getTag($data);
-            }
-            return $data;
-
+            //endregion
         }
 
         /**
@@ -6454,8 +6473,33 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         function getTag(string $tag, string $lang='', $namespace='')
         {
 
+
+            //region IT it has spaces return the different parts
+            if(strpos($tag,' ')) {
+                $_spaces = explode(' ',$tag);
+                $ret ='';
+                foreach ($_spaces as $item) {
+                    if($ret) $ret.=' ';
+                    if($item) $ret.=$this->getTag($item,$lang,$namespace);
+                    else $ret.=$item;
+                }
+                return $ret;
+            }
+            //endregion
+
             $source_tag = $tag;
             if( !preg_match('/^[^;]+;[^;]+;[^;]+/',$tag))  return $tag;
+
+            // PROCESS $tag with {xxx} and return the result with recursive data
+            if(strpos($tag,'{')!==false && strpos($tag,'}')!==false) {
+                preg_match("/{([^{}]*)}($|[^}])/", $tag, $found);
+                while ($found) {
+                    $tag = str_replace($found[0], $this->getTag($found[1], $lang, $namespace), $tag);
+                    preg_match("/{([^{}]*)}($|[^}])/", $tag, $found);
+                }
+                return $tag;
+            }
+
             //delete {, } chars
             $tag = preg_replace('/({|})/','',trim($tag));
             if(!$namespace) $namespace=$this->api_namespace?:'cloudframework';
