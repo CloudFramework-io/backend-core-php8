@@ -804,7 +804,7 @@ class CFOWorkFlows {
 
         //region SEARCH $model for $cfo
         if(!$model=$this->searchModel($cfo)) {
-            return $this->addError('not-found',"[{$cfo}]");
+            return $this->addError('not-found',"NOT FOUND [{$cfo}]");
         }
         //endregion
 
