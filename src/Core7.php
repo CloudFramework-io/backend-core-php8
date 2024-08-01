@@ -6836,13 +6836,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function getModelObject(string $object,$options=[]) {
 
-            //region $this->readModelsFromCloudFramework if $options['cf_models_api_key']
+            //region EVALUATE TO $this->readModelsFromCloudFramework if !$this->models[$object]
             if(isset($options['cf_models_api_key']) && $options['cf_models_api_key'] &&  !isset($this->models[$object])) {
                 if(!$this->readModelsFromCloudFramework(preg_replace('/.*:/','',$object),$options['cf_models_api_key'])) return;
             }
             //endregion
 
-            // If the model does not include the '(ds|db):' we add it.
+            //region SET $object = 'ds|db|bq:'.$object AND VERIFY $this->models[$object] exist
             $source_object = $object;
             if(!strpos($object,':')) {
                 if(isset($this->models['db:'.$object])) $object = 'db:'.$object;
@@ -6855,9 +6855,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!isset($this->models[$object])) {
                 return($this->addError("Model $source_object does not exist",404));
             }
-            if(!isset($this->models[$object]['data'])) return($this->addError($object. 'Does not have data',503));
+            if(!isset($this->models[$object]['data']))
+                return($this->addError($object. 'Does not have data',503));
+            //endregion
 
             switch ($this->models[$object]['type']) {
+                //region PROCESS db OBJECTS
                 case "db":
                     list($type,$table) = explode(':',$object,2);
 
@@ -6892,7 +6895,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     if(!is_object($object_db = $this->core->loadClass('DataSQL',[$table,$this->models[$object]['data']]))) return;
                     return($object_db);
                     break;
+                //endregion
 
+                //region PROCESS ds OBJECTS
                 case "ds":
 
                     list($type,$entity) = explode(':',$object,2);
@@ -6925,7 +6930,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                                     $this->models[$model_extended]['data']['interface'][$object_property] = $data;
                                 }
                             }
-
                         $this->models[$object]['data'] = array_merge(
                                 ['extended_from'=>$this->models[$object]['data']['extends']],
                                 array_merge(
@@ -6960,7 +6964,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                     return($object_ds);
                     break;
-
+                //endregion
+                //region PROCESS bq OBJECTS
                 case "bq":
                     list($type,$dataset) = explode(':',$object,2);
 
@@ -6982,6 +6987,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     if(!is_object($object_bq = $this->core->loadClass('DataBQ',[$dataset,$this->models[$object]['data'],$options]))) return;
                     return($object_bq);
                     break;
+                //endregion
             }
             return null;
         }
