@@ -794,7 +794,8 @@ class CFOWorkFlows {
      */
     function process(string $event, array &$data, $id, string $cfo='') {
 
-        //region INIT $this->logs and VERIFY $cfo value. If Empty try to set $this->cfos->last_cfo
+        //region INIT $_time, $this->logs and VERIFY $cfo value. If Empty try to set $this->cfos->last_cfo
+        $_time = microtime(true);
         $this->logs = [];
         $this->messages = [];
         if(!$cfo) $cfo = $this->cfos->last_cfo;
@@ -818,14 +819,18 @@ class CFOWorkFlows {
                 //read $external_workflows from cache in ds:CloudFrameWorkCFOWorkFlows
                 $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->activateCache(true);
                 $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->getCache('external_cfo_'.$cfo);
-                if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error)
-                    return $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+                if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error) {
+                    $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+                    return false;
+                }
 
                 //if $external_workflows does not exists in cache
                 if($external_workflows===null){
                         $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->fetchAll('*', ['CFOId' => $cfo]);
-                        if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error)
-                            return $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+                        if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error) {
+                            $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+                            return false;
+                        }
                         $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->setCache('external_cfo_'.$cfo,$external_workflows);
                 }
 
@@ -846,66 +851,51 @@ class CFOWorkFlows {
         }
         //endregion
 
-        //region SEARCH $event in $workFlow and try to execute UPDATING $logs
+        //region EVALUATE to MERGE in $this->cfoWorkFlows[$cfo][$event] <= $this->cfoWorkFlows[$cfo]['common']
+        if(is_array($this->cfoWorkFlows[$cfo]['common']??null)) {
+            if(!is_array($this->cfoWorkFlows[$cfo][$event]??null)) $this->cfoWorkFlows[$cfo][$event] = [];
+            $_common = [];
+            foreach ($this->cfoWorkFlows[$cfo]['common'] as $_i=>$workflow) {
+                $_index_common='common: '.$_i;
+                if(isset($this->cfoWorkFlows[$cfo][$event][$_index_common])) $_index_common.=' '.md5(json_encode($workflow));
+                $_common[$_index_common] = &$this->cfoWorkFlows[$cfo]['common'][$_i];
+            }
+            $this->cfoWorkFlows[$cfo][$event] = array_merge($_common,$this->cfoWorkFlows[$cfo][$event]);
+        }
+        //endregion
+
+        //region LOOP $this->cfoWorkFlows[$cfo][$event] to EXECUTE WORKFLOWS
         if(is_array($this->cfoWorkFlows[$cfo][$event]??null))
             foreach ($this->cfoWorkFlows[$cfo][$event] as $_i=>$workflow) {
 
-                //region IGNORE workflows not active
-                if(!($workflow['active'])) continue;
-                //endregion
-
-                //region VERIFY $workflow['id'] is set or create it
-                if(!($workflow['id']??null)) $workflow['id'] = md5(json_encode($workflow));
-                $workflow['id']="{$workflow['id']} [{$workflow['action']},{$_i}]";
-                //endregion
-
-                //region EVALUATE conditional AND conitnue y false
-                if(($workflow['conditional']??''))  {
-                    if(!is_string($workflow['conditional'])) {$this->workflows_report($workflow['id'],'Error [conditional] is not an string in workflow '.$event."[$_i]",'cfo_workflow_error'); }
-                    $_eval = false;
-                    try {
-                        $_eval_expression = '$_eval = ('.str_replace(';','',$this->core->replaceCloudFrameworkTagsAndVariables($workflow['conditional'],$data)).');';
-                        eval($_eval_expression);
-                    } catch (Throwable $t) {
-                        $this->workflows_report($workflow['id'],"Error of expression in attribute [conditional] [{$_eval_expression}] in workflow {$event}[{$_i}]: ".$t->getMessage(),'cfo_workflow_error');
-                    }
-                    if(!$_eval) {
-                        $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [false] in workflow.'.$workflow['action'].' '.$event."[$_i]"],'cfo_workflow.'.$event);
-                        $this->workflows_report($workflow['id'],['condition'=>$_eval_expression],'cfo_workflow.conditional');
-                        continue;
-                    }
-                    else {
-                        $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [true] in workflow.'.$workflow['action'].' '.$event."[$_i]"],'cfo_workflow.'.$event);
-                        $this->workflows_report($workflow['id'],['condition'=>$workflow['conditional']],'cfo_workflow.conditional');
-                    }
-                }
+                //region EVALUATE $workflow['conditional'] and $workflow['active']
+                if(!$this->evaluateCondition($workflow,$data,$event,$_i)) continue;
                 //endregion
 
                 //region PROCESS $workflow['action'] == ['readRelations','sendEmail','updateCFOData','insertCFOData','setLocalizationLang','hook']
-                if ($workflow['action'] == 'readRelations') {
-                    $this->readRelations($workflow, $data, $_i);
-                }
-                elseif ($workflow['action'] == 'insertCFOData') {
-                    $this->insertCFOData($workflow, $data, $_i);
-                }
-                elseif ($workflow['action'] == 'updateCFOData') {
-                    $this->updateCFOData($workflow, $data,  $_i);
-                }
-                elseif ($workflow['action'] == 'sendEmail') {
-                    $this->sendEmail($workflow, $data, $id,  $cfo,$_i, $event);
-                }
-                elseif ($workflow['action'] == 'setLocalizationLang') {
-                    $this->setLocalizationLang($workflow, $data, $_i);
-                }
-                elseif ($workflow['action'] == 'hook') {
-                    $this->hook($workflow, $data, $_i, $event);
+                if (($workflow['action']??null) == 'workflows' && is_array($workflow['workflows']??null)) {
+                    $this->workflows_report($workflow['id'],['workflows'=>[]]);
+                    foreach ($workflow['workflows'] as $_j=>$sub_workflow) {
+                        if($this->evaluateCondition($sub_workflow,$data,$event,$_j))
+                            $this->evaluateWorkflow($sub_workflow,$data,$id,$event,$_i,$cfo);
+
+                        if(isset($this->logs[$sub_workflow['id']])) {
+                            $this->logs[$workflow['id']]['workflows'][$sub_workflow['id']] = $this->logs[$sub_workflow['id']];
+                            unset($this->logs[$sub_workflow['id']]);
+
+                        }
+                    }
                 }
                 else {
-                    $this->workflows_report($workflow['id'],"Unknown action [{$workflow['action']}]");
+                    $this->evaluateWorkflow($workflow,$data,$id,$event,$_i,$cfo);
                 }
                 //endregion
 
             }
+        //endregion
+
+        //region SET $this->logs['time'] with microtime(true)-$_time
+        $this->logs['time'] = round(microtime(true)-$_time,4);
         //endregion
 
         //region RETURN $logs
@@ -913,6 +903,125 @@ class CFOWorkFlows {
         //endregion
 
     }
+
+    /**
+     * Evaluate the condition of a given workflow
+     *
+     * @param array $workflow The workflow to evaluate
+     * @param array $data The data used in the evaluation
+     * @param string $event The event name
+     * @param int $_i The index of the workflow
+     * @return bool The result of the condition evaluation. Returns true if the condition is met, false otherwise.
+     */
+    private function evaluateCondition(&$workflow, &$data, $event, $_i)
+    {
+
+        //region VERIFY $workflow['id'] is set or create it
+        if(!($workflow['id']??null)) $workflow['id'] = md5(json_encode($workflow));
+        $workflow['id']="{$workflow['id']} [{$workflow['action']},{$_i}]";
+        //endregion
+
+        //region IGNORE workflows not active
+        if(!($workflow['active']??null)) return false;
+        //endregion
+
+        if(!($workflow['conditional']??'')) return true;
+
+        if(!is_string($workflow['conditional'])) {
+            $this->workflows_report($workflow['id'],'Error [conditional] is not an string in workflow '.$event."[$_i]");
+            return false;
+        }
+        
+        $_eval = false;
+        try {
+            $_eval_expression = '$_eval = ('.str_replace(';','',$this->core->replaceCloudFrameworkTagsAndVariables($workflow['conditional'],$data)).');';
+            eval($_eval_expression);
+        } catch (Throwable $t) {
+            $this->workflows_report($workflow['id'],"Error of expression in attribute [conditional] [{$_eval_expression}] in workflow {$event}[{$_i}]: ".$t->getMessage());
+        }
+        if(!$_eval) {
+            $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [false] in workflow.'.$workflow['action'].' '.$event."[$_i]"]);
+            $this->workflows_report($workflow['id'],['condition'=>$workflow['conditional'],'condition_evaluation'=>$_eval_expression]);
+        }
+        else {
+            $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [true] in workflow.'.$workflow['action'].' '.$event."[$_i]"]);
+            $this->workflows_report($workflow['id'],['condition'=>$workflow['conditional']]);
+        }
+
+        return $_eval;
+    }
+
+    /**
+     * Evaluate the workflow action and perform the corresponding action
+     *
+     * @param array $workflow The workflow data
+     * @param mixed $data The data to be processed
+     * @param int $id The ID of the workflow
+     * @param string $event The event trigger
+     * @param int $_i Index parameter
+     * @param mixed $cfo CFO parameter
+     * @return void
+     */
+    private function evaluateWorkflow(&$workflow, &$data, $id, $event, $_i, $cfo)
+    {
+        if ($workflow['action'] == 'setVariables') {
+            $this->setVaraibles($workflow, $data, $_i);
+        }
+        elseif ($workflow['action'] == 'readRelations') {
+            $this->readRelations($workflow, $data, $_i);
+        }
+        elseif ($workflow['action'] == 'insertCFOData') {
+            $this->insertCFOData($workflow, $data, $_i);
+        }
+        elseif ($workflow['action'] == 'updateCFOData') {
+            $this->updateCFOData($workflow, $data,  $_i);
+        }
+        elseif ($workflow['action'] == 'sendEmail') {
+            $this->sendEmail($workflow, $data, $id,  $cfo,$_i, $event);
+        }
+        elseif ($workflow['action'] == 'setLocalizationLang') {
+            $this->setLocalizationLang($workflow, $data, $_i);
+        }
+        elseif ($workflow['action'] == 'hook') {
+            $this->hook($workflow, $data, $_i, $event);
+        }
+        else {
+            $this->workflows_report($workflow['id'],"Unknown action [{$workflow['action']}]");
+        }
+    }
+
+
+    /**
+     * Process $workflow to set variables in the data model
+     * @param array $workflow
+     * @param array $data
+     * @param $_i
+     * @param $hook_type
+     * @return true|void|null
+     */
+    private function setVaraibles(array &$workflow,array &$data, $_i)
+    {
+
+        //region CHECK $workflow['action'] and $workflow['active']
+        if (!($workflow['active'] ?? false)) return;
+        if (($workflow['action'] ?? '') != 'setVariables') return $this->workflows_report($workflow['id'],'setVaraibles() has receive a wrong [action]');
+        //endregion
+
+        //region
+        //region READ $workflow['variables']
+        if(is_array(($workflow['variables'] ?? false))) {
+            //loop $workflow['relations'] in $relation where $relation['cfo'] exists
+            foreach ($workflow['variables'] as $var => $content) {
+                $workflow['variables'][$var] = $data[$var] = $content ? $this->core->replaceCloudFrameworkTagsAndVariables($content, $data) : $content;
+
+            }
+        }
+        $this->workflows_report($workflow['id'], ['variables' => $workflow['variables']]);
+        //endregion
+
+        return true;
+    }
+
 
     /**
      * Process $workflow to insert a record in a CFO
@@ -924,11 +1033,13 @@ class CFOWorkFlows {
      */
     private function readRelations(array &$workflow,array &$data, $_i)
     {
+
         //region CHECK $workflow['action'] and $workflow['active']
         if (!($workflow['active'] ?? false)) return;
         if (($workflow['action'] ?? '') != 'readRelations') return $this->workflows_report($workflow['id'],'readRelations() has receive a wrong [action]');
         //endregion
 
+        //region
         //region READ $workflow['relations']
         if(is_array(($workflow['relations'] ?? false))) {
 
@@ -943,13 +1054,21 @@ class CFOWorkFlows {
             foreach ($workflow['relations'] as $relation) if (($relation['cfo'] ?? null) )
             {
 
+                //region INIT $_time
+                $_time = microtime(true);
+                //endregion
+
                 //region VERIFY $relation['cfo'] model exists
                 if (!$models = $this->cfos->readCFOs($relation['cfo'])) {
                     $this->cfos->errorMsg[] = "Error in workflows[{$_i}].relation";
-                    $this->workflows_report($workflow['id'],$this->cfos->errorMsg, 'cfo_workflow_error');
+                    $this->workflows_report($workflow['id'],$this->cfos->errorMsg);
                     $workflow['active'] = false;
                     break;
                 }
+                //endregion
+
+                //region SET $_output_variable
+                $_output_variable = ($relation['output_variable']??null)?:$relation['cfo'];
                 //endregion
 
                 //region IF $relation has 'key' and 'value' lets read record by key
@@ -1010,11 +1129,15 @@ class CFOWorkFlows {
 
                         //region REPORT $record if $workflow['active']
                         if($workflow['active']) {
-                            $data[$relation['cfo']] = $record;
-                            $_report = [$relation['cfo'] => array_merge(['Keys' => array_keys($record)], ['WHERE' => [$relation['key'] => $value]])];
+                            $data[$_output_variable] = $record;
+                            $_report = [$_output_variable => array_merge(['CFO'=>$relation['cfo'],'Keys' => array_keys($record)], ['WHERE' => [$relation['key'] => $value]])];
                             if ($models['DataStoreEntities'] ?? null)
-                                $_report[$relation['cfo']]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
+                                $_report[$_output_variable]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
+                            $_report[$_output_variable]['time'] = round(microtime(true)-$_time,4);
                             $this->workflows_report($workflow['id'], $_report);
+                            if(!$record && ($relation['not_found_message']??null)) {
+                                $this->workflows_report($workflow['id'], ['message' => $this->core->replaceCloudFrameworkTagsAndVariables($relation['not_found_message'], $data)]);
+                            }
                         }
                         //endregion
                     }
@@ -1059,18 +1182,19 @@ class CFOWorkFlows {
                     //region REPORT result if $workflow['active']
                     if($workflow['active']) {
                         $record = [$relation['count'] => $total];
-                        $data[$relation['cfo']] = $total;
-                        $_report = array_merge(['total' => $total], ['WHERE' => $relation['where']]);
+                        $data[$_output_variable] = $total;
+                        $_report = [$_output_variable =>array_merge(['CFO'=>$relation['cfo'],'total' => $total], ['WHERE' => $relation['where']])];
                         if ($models['DataStoreEntities'] ?? null)
-                            $_report[$relation['cfo']]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
-                        $this->workflows_report($workflow['id'], [$relation['cfo'] => $_report]);
+                            $_report[$_output_variable]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
+                        $_report[$_output_variable]['time'] = round(microtime()-$_time,4);
+                        $this->workflows_report($workflow['id'], $_report);
                     }
                     //endregion
                 }
                 //endregion
                 //region ELSE error
                 else {
-                    $this->workflows_report($workflow['id'],"Error in workflows[{$_i}].relation.{$relation['cfo']}. value [{$relation['value']}] is empty.", 'cfo_workflow_error');
+                    $this->workflows_report($workflow['id'],"Error in workflows[{$_i}].relation.{$relation['cfo']}. [key/value] = [{$relation['key']}/{$relation['value']}] is empty in some attribute");
                     $workflow['active'] = false;
                     break;
                 }
@@ -1102,9 +1226,8 @@ class CFOWorkFlows {
         //endregion
 
         //region FEED $workflow['data']
-        foreach ($workflow['data'] as $key=>$datum) if($datum && !is_array($datum)) {
-            $workflow['data'][$key] = $this->core->replaceCloudFrameworkTagsAndVariables($datum,$data);
-        }
+        $workflow['data'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['data'],$data);
+
         //endregion
 
         //region CHECK  $this->cfos->integrationKey
@@ -1122,6 +1245,11 @@ class CFOWorkFlows {
         }
         //endregion
 
+        //region SET $_output_variable
+        $_output_variable = ($workflow['output_variable']??null)?:$workflow['cfo'];
+        $_time = microtime(true);
+        //endregion
+
         //region INSERT $workflow['data'] in $workflow['cfo']
         if($models['DataBaseTables']??null) {
             $workflow['data']['_key_'] = $this->cfos->db($workflow['cfo'])->insert($workflow['data']);
@@ -1130,23 +1258,26 @@ class CFOWorkFlows {
                 $this->workflows_report($workflow['id'],['error'=>$this->cfos->db($workflow['cfo'])->errorMsg]);
                 return false;
             }
-            $this->workflows_report($workflow['id'],[$workflow['cfo']=>$workflow['data']]);
+            $entity = &$workflow['data'];
+            $this->workflows_report($workflow['id'],[$_output_variable=>['CFO'=>$workflow['cfo'],'data'=>$entity,'time'=>round(microtime(true)-$_time,4)]]);
         }
         elseif($models['DataStoreEntities']??null) {
+            if($workflow['namespace']??null) $this->cfos->ds($workflow['cfo'])->namespace=$workflow['namespace'];
             $entity = $this->cfos->ds($workflow['cfo'])->createEntities($workflow['data'])[0]??null;
             if($this->cfos->ds($workflow['cfo'])->error) {
-                $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace]);
+                $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace,'time'=>round(microtime(true)-$_time,4)]);
                 return false;
             } else {
-                $this->workflows_report($workflow['id'],['report'=>'Created entity in cfo: '.$workflow['cfo']]);
-                $this->workflows_report($workflow['id'],['data'=>$entity,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace]);
+                $this->workflows_report($workflow['id'],[$_output_variable=>['CFO'=>$workflow['cfo'],'data'=>$entity,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace,'time'=>round(microtime(true)-$_time,4)]]);
             }
         }
         else {
-            $this->workflows_report($workflow['id'],$workflow['cfo'].' is not a type db:ds','cfo_workflow_error');
+            $this->workflows_report($workflow['id'],$workflow['cfo'].' is not a type db:ds');
             return false;
         }
         //endregion
+
+        $data[$_output_variable] = $entity;
 
         //region EVALUATE to process $workflow['message']
         $this->processWorkFlowMessage($workflow,$data);
@@ -1219,6 +1350,11 @@ class CFOWorkFlows {
         }
         //endregion
 
+        //region SET $_output_variable
+        $_output_variable = ($workflow['output_variable']??null)?:$workflow['cfo'];
+        $_time = microtime(true);
+        //endregion
+
         //region SET $value from replaceCloudFrameworkTagsAndVariables($workflow['value'])
         if (!$value = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['value'], $data)) {
             $this->workflows_report($workflow['id'],"Error in workflows[{$_i}].relation.{$workflow['cfo']}. value [{$workflow['value']}] is empty.", 'cfo_workflow_error');
@@ -1247,7 +1383,7 @@ class CFOWorkFlows {
                 $this->workflows_report($workflow['id'],['error'=>$this->cfos->db($workflow['cfo'])->errorMsg]);
                 return false;
             }
-            $this->workflows_report($workflow['id'],[$workflow['cfo']=>$workflow['data']]);
+            $this->workflows_report($workflow['id'],[$_output_variable=>['CFO'=>$workflow['cfo'],'data'=>$workflow['data']]]);
 
         }
         //endregion
@@ -1276,7 +1412,7 @@ class CFOWorkFlows {
                 $this->workflows_report($workflow['id'], ['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg]);
                 return false;
             }
-            $this->workflows_report($workflow['id'], [$workflow['cfo'] => ['key' => $workflow['key'], 'value' => $value, 'data' => $workflow['data'],'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace]]);
+            $this->workflows_report($workflow['id'],[$_output_variable=>['CFO'=>$workflow['cfo'],'key' => $workflow['key'], 'value' => $value,'data'=>$entity,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace,'time'=>round(microtime(true)-$_time,4)]]);
 
         }
         //endregion
@@ -1313,11 +1449,16 @@ class CFOWorkFlows {
         //endregion
 
         //region CHECK from $workflow: template, subject, to, conditional
-        if(!($workflow['template']??'')) {$this->workflows_report($workflow['id'],'Missing [template] in workflow '.$hook_type."[$_i]",'cfo_workflow_error'); }
+        if(!($workflow['from']??'')) {$this->workflows_report($workflow['id'],'Missing [from] in workflow '.$hook_type."[$_i]",'cfo_workflow_error'); }
+        if(!($workflow['to']??'')) {$this->workflows_report($workflow['id'],'Missing [to] in workflow '.$hook_type."[$_i]",'cfo_workflow_error'); }
         if(!($workflow['subject']??'')) {$this->workflows_report($workflow['id'],'Missing [subject] in workflow '.$hook_type."[$_i]",'cfo_workflow_error'); }
-        if(!key_exists('to',$workflow)) {$this->workflows_report($workflow['id'],'Missing [to] in workflow '.$hook_type."[$_i]",'cfo_workflow_error'); }
-        if(!($workflow['template']??'') || !($workflow['subject']??'') || !key_exists('to',$workflow) )
+        if(!($workflow['template']??'')) {$this->workflows_report($workflow['id'],'Missing [template] in workflow '.$hook_type."[$_i]",'cfo_workflow_error'); }
+        if(!($workflow['from']??'') || !($workflow['to']??'') || !($workflow['template']??'') || !($workflow['subject']??'') )
             return false;
+        //endregion
+
+        //region INIT $_time
+        $_time = microtime(true);
         //endregion
 
         //region SETUP $this->workFlows and Mandrill SETUP
@@ -1366,15 +1507,21 @@ class CFOWorkFlows {
         }
         //endregion
 
-        //region SET $params
+        //region SET $params to be used in the Email
         $params = [
             'cat'=>"CFO/{$cfo}/$hook_type",
             'slug'=>$workflow['template'],
-            'from'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['from']??'support@cloudframework.io',$data),
             'to'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['to'],$data),
             'subject'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['subject'],$data),
             'data'=>$data
         ];
+        //If the workflow does not have from, then the template has to have any default from defined
+        if($workflow['from']??null)
+            $params['from'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['from'],$data);
+       //If the workflow does not have from, then the template has to have any default from defined
+        if($workflow['cc']??null)
+            $params['cc'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['cc'],$data);
+
         //endregion
 
         //region VALIDATE $params['to']
@@ -1395,6 +1542,24 @@ class CFOWorkFlows {
         if(!($params['to']??'')) {
             $this->workflows_report($workflow['id'],'Empty substituted email [to:'.$workflow['to'].'] in workflow');
             return;
+        }
+        //endregion
+
+        //region VALIDATE $params['cc']
+        if(($params['cc']??null)) {
+            $ccs = (is_array($params['cc']))?$params['cc']:explode(',',$params['cc']);
+            foreach ($ccs as $_icc => $cc) {
+                if (!$cc) {
+                    unset($ccs[$_icc]);
+                    continue;
+                }
+                $ccs[$_icc] = trim($cc);
+                if (!$this->core->is->validEmail(trim($cc))) {
+                    $this->workflows_report($workflow['id'], 'Wrong email [cc] in workflow: ' . $cc);
+                    return;
+                }
+            }
+            $params['cc'] = array_values($ccs);
         }
         //endregion
 
@@ -1466,9 +1631,11 @@ class CFOWorkFlows {
         $this->workflows_report($workflow['id'],['email'=>[
             'from'=>$params['from'],
             'to'=>$params['to'],
+            'cc'=>$params['cc']??null,
             'subject'=>$params['subject'],
             'slug'=>$workflow['template'],
-            'result'=>$result['result']??$result
+            'result'=>$result['result']??$result,
+            'time'=>round(microtime(true)-$_time,4)
         ]
         ]);
         //endregion
