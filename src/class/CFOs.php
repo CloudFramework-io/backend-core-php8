@@ -9,7 +9,7 @@ class CFOs {
 
     /** @var Core7  */
     var $core;
-    var $version = '202301051';
+    var $version = '202408021';
     /** @var string $integrationKey To connect with the ERP */
     var $integrationKey='';
 
@@ -811,43 +811,31 @@ class CFOWorkFlows {
         //region READ $this->cfoWorkFlows[$cfo] from $model['data']['workFlows'] and ds:CloudFrameWorkCFOWorkFlows
         if(!($this->cfoWorkFlows[$cfo]??null)) {
 
-            //read $workFlows from the model
+            //region SET $workFlows from $model['data']['workFlows']['workflows']
             $workFlows = $model['data']['workFlows']['workflows'] ?? [];
-            //if hasExternalWorkFlows read them from ds:CloudFrameWorkCFOWorkFlows
-            if ($model['data']['hasExternalWorkFlows'] ?? null) {
+            //endregion
 
-                //read $external_workflows from cache in ds:CloudFrameWorkCFOWorkFlows
-                $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->activateCache(true);
-                $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->getCache('external_cfo_'.$cfo);
-                if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error) {
-                    $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
-                    return false;
-                }
+            //region EVALUATE TO READ EXTERNAL WORKFLOWS
 
-                //if $external_workflows does not exists in cache
-                if($external_workflows===null){
-                        $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->fetchAll('*', ['CFOId' => $cfo]);
-                        if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error) {
-                            $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
-                            return false;
-                        }
-                        $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->setCache('external_cfo_'.$cfo,$external_workflows);
-                }
-
-                if ($external_workflows) foreach ($external_workflows as $workflow) if ($workflow['Active']) {
-                    if (is_array($workflow['JSON'] ?? null))
-                        foreach ($workflow['JSON'] as $event_type => $events) {
-                            if (!isset($workFlows[$event_type])) $workFlows[$event_type] = [];
-                            if (is_array($events)) foreach ($events as $title => $event_data) {
-                                $workFlows[$event_type][] = array_merge(['title' => $title], $event_data);
-                            }
-                        }
-                }
+            //if $workFlows has @CFO_Id syntax then  read them from ds:CloudFrameWorkCFOWorkFlows where CFO Id = @CFO_Id
+            $external_workflow_id = null;
+            if(is_string($workFlows) && strpos($workFlows,'@')===0) {
+                $external_workflow_id = substr($workFlows,1);
+                $workFlows=[];
+                if(!$this->mergeExternalWorkFlows($workFlows,$external_workflow_id)) return false;
             }
 
-            //assign the $workFlows to $this->cfoWorkFlows[$cfo]
+            //if hasExternalWorkFlows read them from ds:CloudFrameWorkCFOWorkFlows where CFO Id = $cfo
+            if ($model['data']['hasExternalWorkFlows'] ?? null && $cfo!=$external_workflow_id) {
+                if(!$this->mergeExternalWorkFlows($workFlows,$cfo)) return false;
+            }
+            //endregion
+
+            //region UPDATE $this->cfoWorkFlows[$cfo] = $workFlows
             $this->cfoWorkFlows[$cfo] = $workFlows;
             unset($workFlows);  // free memory
+            //endregion
+
         }
         //endregion
 
@@ -904,6 +892,39 @@ class CFOWorkFlows {
 
     }
 
+    /**
+     * Merge external workflows into the given array of workflows.
+     *
+     * @param array $workFlows The array of workflows to merge into (passed by reference).
+     * @param string $external_workflow_id The ID of the external workflow.
+     *
+     * @return bool Returns true on success, false on error.
+     */
+    public function mergeExternalWorkFlows(array &$workFlows, string $external_workflow_id)
+    {
+
+
+        //region READ $external_workflows from ds:CloudFrameWorkCFOWorkFlows a CACHE IT
+        $external_workflows = $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->fetchAll('*', ['CFOId' => $external_workflow_id,'Active'=>true]);
+        if ($this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error) {
+            $this->workflows_report('reading-CloudFrameWorkCFOWorkFlows', $this->cfos->ds('CloudFrameWorkCFOWorkFlows')->error);
+            return false;
+        }
+        //endregion
+
+        //region MERGE in $workFlows <=$external_workflows
+        if ($external_workflows) foreach ($external_workflows as $item) if ($item['Active']) {
+            if (is_array($item['JSON'] ?? null))
+                foreach ($item['JSON'] as $event_type => $events) {
+                    if (!isset($workFlows[$event_type])) $workFlows[$event_type] = [];
+                    if (is_array($events)) foreach ($events as $title => $event_data) {
+                        $workFlows[$event_type][] = array_merge(['title' => $title], $event_data);
+                    }
+                }
+        }
+        //endregion
+        return true;
+    }
     /**
      * Evaluate the condition of a given workflow
      *
