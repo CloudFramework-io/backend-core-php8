@@ -1164,6 +1164,50 @@ class CFOWorkFlows {
                     }
                 }
                 //endregion
+                //region ELSE if $relation has 'group_field' field execute a count query over $relation['cfo']
+                elseif($relation['group_field'] ?? null){
+                    if($relation['where']) $relation['where'] = $this->core->replaceCloudFrameworkTagsAndVariables($relation['where'], $data);
+                    if ($models['DataBaseTables']??null) {
+                        //TODO implement on db
+
+                    } else {
+                        //region EVALUATE to apply namespace
+                        if($relation['namespace']??null) {
+                            $this->cfos->ds($relation['cfo'])->namespace = $this->core->replaceCloudFrameworkTagsAndVariables($relation['namespace'], $data) ?: $this->cfos->ds($relation['cfo'])->namespace;
+                        }
+                        //endregion
+
+                        //region QUERY into $total the count. IF ERROR SET $workflow['active'] = false;
+                        $records = $this->cfos->ds($relation['cfo'])->fetchAll('*',$relation['where'],$relation['order']??null);
+                        if ($this->cfos->ds($relation['cfo'])->error) {
+                            $this->cfos->ds($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
+                            $this->workflows_report($workflow['id'], $this->cfos->ds($relation['cfo'])->errorMsg, 'cfo_workflow_error');
+                            $workflow['active'] = false;
+                            if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
+                        } else {
+                            if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+                        }
+                        //endregion
+                    }
+
+                    //region REPORT result if $workflow['active']
+                    if($workflow['active']) {
+                        $data[$_output_variable] = [];
+                        if(is_array($records)) foreach ($records as $record) if(isset($record[$relation['group_field']])){
+                            if(!in_array($record[$relation['group_field']],$data[$_output_variable])) $data[$_output_variable][] =$record[$relation['group_field']];
+                        }
+                        if($data[$_output_variable])
+                            $data[$_output_variable] = implode(',',$data[$_output_variable]);
+                        $_report = [$_output_variable =>array_merge(['CFO'=>$relation['cfo'],'value' => $data[$_output_variable]], ['WHERE' => $relation['where']])];
+                        if ($models['DataStoreEntities'] ?? null)
+                            $_report[$_output_variable]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
+
+                        $_report[$_output_variable]['time'] = round(microtime(true)-$_time,4);
+                        $this->workflows_report($workflow['id'], $_report);
+                    }
+                    //endregion
+                }
+                //endregion
                 //region ELSE if $relation has 'count' field execute a count query over $relation['cfo']
                 elseif( ($relation['count'] ?? null)) {
                     if(!isset($relation['where'])) $relation['where']=[];
@@ -1207,7 +1251,7 @@ class CFOWorkFlows {
                         $_report = [$_output_variable =>array_merge(['CFO'=>$relation['cfo'],'total' => $total], ['WHERE' => $relation['where']])];
                         if ($models['DataStoreEntities'] ?? null)
                             $_report[$_output_variable]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
-                        $_report[$_output_variable]['time'] = round(microtime()-$_time,4);
+                        $_report[$_output_variable]['time'] = round(microtime(true)-$_time,4);
                         $this->workflows_report($workflow['id'], $_report);
                     }
                     //endregion
@@ -1545,6 +1589,7 @@ class CFOWorkFlows {
 
         //endregion
 
+
         //region VALIDATE $params['to']
         if($tos = explode(',',$params['to']??'')) {
             foreach ($tos as $_ito => $to) {
@@ -1579,6 +1624,8 @@ class CFOWorkFlows {
                     $this->workflows_report($workflow['id'], 'Wrong email [cc] in workflow: ' . $cc);
                     return;
                 }
+                //do not repeat in cc: emails of to:
+                if(in_array($ccs[$_icc],$params['to'])) unset($ccs[$_icc]);
             }
             $params['cc'] = array_values($ccs);
         }
