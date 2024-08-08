@@ -359,6 +359,7 @@ class WorkFlows
      *      - tags array [optional] array tags to add to the emial [tag1,tag2..]
      *      - important [optional] boolean if it is true then the email will send 'important' attribute
      *      - attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
+     *      - preserve_recipients [optional] boolean if it is true then the email will preserve the recipients headers instead to appear emails separated
      * }
      * @param string $type [optional] has to value: Mandrill
      * @param string $linked_object [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedObject
