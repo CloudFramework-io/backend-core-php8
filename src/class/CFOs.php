@@ -9,7 +9,7 @@ class CFOs {
 
     /** @var Core7  */
     var $core;
-    var $version = '202408021';
+    var $version = '202408081';
     /** @var string $integrationKey To connect with the ERP */
     var $integrationKey='';
 
@@ -758,6 +758,7 @@ class CFOWorkFlows {
     var $core;
     /** @var CFOs  */
     var $cfos;
+    var $version = '202408081';
     var $cfoWorkFlows =[];
     /** @var WorkFlows $workFlows **/
     var $workFlows;
@@ -1050,7 +1051,7 @@ class CFOWorkFlows {
      * @param array $data
      * @param $_i
      * @param $hook_type
-     * @return true|void|null
+     * @return bool
      */
     private function readRelations(array &$workflow,array &$data, $_i)
     {
@@ -1060,18 +1061,17 @@ class CFOWorkFlows {
         if (($workflow['action'] ?? '') != 'readRelations') return $this->workflows_report($workflow['id'],'readRelations() has receive a wrong [action]');
         //endregion
 
-        //region
         //region READ $workflow['relations']
         if(is_array(($workflow['relations'] ?? false))) {
 
-            //region CHECK $this->cfos is correctly configured
+            //region CHECK $this->cfos->integrationKey exists
             if(!$this->cfos->integrationKey) {
                 $this->workflows_report($workflow['id'],'missing cfo integrationKey configuration', 'cfo_workflow_error');
                 return false;
             }
             //endregion
 
-            //loop $workflow['relations'] in $relation where $relation['cfo'] exists
+            //region LOOP $workflow['relations'] in $relation where $relation['cfo'] exists
             foreach ($workflow['relations'] as $relation) if (($relation['cfo'] ?? null) )
             {
 
@@ -1146,6 +1146,9 @@ class CFOWorkFlows {
                                 }
                             }
                             //endregion
+                        } else {
+                            $this->workflows_report($workflow['id'], '$model is not DataBaseTables nor DataStoreEntities');
+                            $workflow['active'] = false;
                         }
 
                         //region REPORT $record if $workflow['active']
@@ -1164,13 +1167,26 @@ class CFOWorkFlows {
                     }
                 }
                 //endregion
+
                 //region ELSE if $relation has 'group_field' field execute a count query over $relation['cfo']
                 elseif($relation['group_field'] ?? null){
                     if($relation['where']) $relation['where'] = $this->core->replaceCloudFrameworkTagsAndVariables($relation['where'], $data);
+                    //database
                     if ($models['DataBaseTables']??null) {
-                        //TODO implement on db
-
-                    } else {
+                        $this->cfos->db($relation['cfo'])->setGroupBy($relation['group_field']);
+                        $records = $this->cfos->db($relation['cfo'])->fetch($relation['where'],$relation['group_field']);
+                        if ($this->cfos->db($relation['cfo'])->error) {
+                            $this->cfos->db($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
+                            $this->workflows_report($workflow['id'], ['error'=>$this->cfos->db($relation['cfo'])->errorMsg]);
+                            $workflow['active'] = false;
+                            if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
+                        } else {
+                            if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+                            $total = $total['total']??null;
+                        }
+                    }
+                    //datastore
+                    elseif ($models['DataStoreEntities']??null) {
                         //region EVALUATE to apply namespace
                         if($relation['namespace']??null) {
                             $this->cfos->ds($relation['cfo'])->namespace = $this->core->replaceCloudFrameworkTagsAndVariables($relation['namespace'], $data) ?: $this->cfos->ds($relation['cfo'])->namespace;
@@ -1181,24 +1197,30 @@ class CFOWorkFlows {
                         $records = $this->cfos->ds($relation['cfo'])->fetchAll('*',$relation['where'],$relation['order']??null);
                         if ($this->cfos->ds($relation['cfo'])->error) {
                             $this->cfos->ds($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
-                            $this->workflows_report($workflow['id'], $this->cfos->ds($relation['cfo'])->errorMsg, 'cfo_workflow_error');
+                            $this->workflows_report($workflow['id'], $this->cfos->ds($relation['cfo'])->errorMsg);
                             $workflow['active'] = false;
                             if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
                         } else {
                             if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
                         }
                         //endregion
+                    } else {
+                        $this->workflows_report($workflow['id'], '$model is not DataBaseTables nor DataStoreEntities');
+                        $workflow['active'] = false;
                     }
 
-                    //region REPORT result if $workflow['active']
+                    //region REPORT IF $workflow['active'] report the result
                     if($workflow['active']) {
                         $data[$_output_variable] = [];
                         if(is_array($records)) foreach ($records as $record) if(isset($record[$relation['group_field']])){
                             if(!in_array($record[$relation['group_field']],$data[$_output_variable])) $data[$_output_variable][] =$record[$relation['group_field']];
                         }
-                        if($data[$_output_variable])
-                            $data[$_output_variable] = implode(',',$data[$_output_variable]);
-                        $_report = [$_output_variable =>array_merge(['CFO'=>$relation['cfo'],'value' => $data[$_output_variable]], ['WHERE' => $relation['where']])];
+                        $total_results = 0;
+                        if($data[$_output_variable]) {
+                            $total_results = count($data[$_output_variable]);
+                            $data[$_output_variable] = implode(',', $data[$_output_variable]);
+                        }
+                        $_report = [$_output_variable =>['CFO'=>$relation['cfo'],'group_field'=>$relation['group_field'],'value' => "{$total_results} results separated by [,]",'WHERE' => $relation['where']]];
                         if ($models['DataStoreEntities'] ?? null)
                             $_report[$_output_variable]['namespace'] = $this->cfos->ds($relation['cfo'])->namespace;
 
@@ -1208,10 +1230,13 @@ class CFOWorkFlows {
                     //endregion
                 }
                 //endregion
+
                 //region ELSE if $relation has 'count' field execute a count query over $relation['cfo']
                 elseif( ($relation['count'] ?? null)) {
                     if(!isset($relation['where'])) $relation['where']=[];
                     if($relation['where']) $relation['where'] = $this->core->replaceCloudFrameworkTagsAndVariables($relation['where'], $data);
+
+                    //database
                     if ($models['DataBaseTables']??null) {
                         $total = $this->cfos->db($relation['cfo'])->fetchOne($relation['where'],'count(*) total');
                         if ($this->cfos->db($relation['cfo'])->error) {
@@ -1224,6 +1249,7 @@ class CFOWorkFlows {
                             $total = $total['total']??null;
                         }
                     }
+                    //datastore
                     elseif($models['DataStoreEntities']??null) {
 
                         //region EVALUATE to apply namespace
@@ -1243,6 +1269,11 @@ class CFOWorkFlows {
                         }
                         //endregion
                     }
+                    //else error
+                    else {
+                        $this->workflows_report($workflow['id'], '$model is not DataBaseTables nor DataStoreEntities');
+                        $workflow['active'] = false;
+                    }
 
                     //region REPORT result if $workflow['active']
                     if($workflow['active']) {
@@ -1257,7 +1288,8 @@ class CFOWorkFlows {
                     //endregion
                 }
                 //endregion
-                //region ELSE error
+
+                //region ELSE error and SET $workflow['active'] = false;
                 else {
                     $this->workflows_report($workflow['id'],"Error in workflows[{$_i}].relation.{$relation['cfo']}. [key/value] = [{$relation['key']}/{$relation['value']}] is empty in some attribute");
                     $workflow['active'] = false;
@@ -1265,8 +1297,11 @@ class CFOWorkFlows {
                 }
                 //endregion
             }
-            //if !$workflow['active'] continue to the next workflow
+            //endregion
+
+            //region RETURN false if !$workflow['active'] because any error has been produced
             if (!$workflow['active']) return false;
+            //endregion
         }
         //endregion
 
@@ -1628,6 +1663,8 @@ class CFOWorkFlows {
                 if(in_array($ccs[$_icc],$params['to'])) unset($ccs[$_icc]);
             }
             $params['cc'] = array_values($ccs);
+            if($params['cc'])
+                $params['preserve_recipients'] = true;
         }
         //endregion
 
