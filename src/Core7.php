@@ -1222,7 +1222,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Generate a fingerprint from the Request
          * @return array
          */
-        function getRequestFingerPrint()
+        public function getRequestFingerPrint(): array
         {
             // Return the fingerprint coming from a queue
             if (isset($_REQUEST['cloudframework_queued_fingerprint'])) {
@@ -1246,8 +1246,31 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $ret['time'] = date('Ymdhise');
             $ret['uri'] = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:null;
 
+            return ($ret);
+        }
 
+        /**
+         * Get the value of the specified header key from the $_SERVER superglobal
+         * @param string $headerKey The key of the header to retrieve
+         * @return string The value of the header key, or an empty string if it does not exist
+         */
+        public function getHeader(string $headerKey): string
+        {
+            $headerKey = strtoupper($headerKey);
+            $headerKey = str_replace('-', '_', $headerKey);
+            return ((isset($_SERVER['HTTP_' . $headerKey])) ? $_SERVER['HTTP_' . $headerKey] : '');
+        }
 
+        /**
+         * Return all the header keys sent by the user. In PHP those are $_SERVER['HTTP_{varname}']
+         * @return array
+         */
+        function getHeaders(): array
+        {
+            $ret = array();
+            foreach ($_SERVER as $key => $value) if (strpos($key, 'HTTP_') === 0) {
+                $ret[str_replace('HTTP_', '', $key)] = $value;
+            }
             return ($ret);
         }
 
