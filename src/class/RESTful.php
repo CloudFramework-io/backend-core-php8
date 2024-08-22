@@ -819,24 +819,18 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $headerKey The name of the header. Vars like X-VAR or X_VAR are treated like the same
          * @return string If the key does not exist return empty string
          */
-        function getHeader(string $headerKey)
+        function getHeader(string $headerKey): string
         {
-            $headerKey = strtoupper($headerKey);
-            $headerKey = str_replace('-', '_', $headerKey);
-            return ((isset($_SERVER['HTTP_' . $headerKey])) ? $_SERVER['HTTP_' . $headerKey] : '');
+            return $this->core->system->getHeader($headerKey);
         }
 
         /**
          * Return all the header keys sent by the user. In PHP those are $_SERVER['HTTP_{varname}']
          * @return array
          */
-        function getHeaders()
+        function getHeaders(): array
         {
-            $ret = array();
-            foreach ($_SERVER as $key => $value) if (strpos($key, 'HTTP_') === 0) {
-                $ret[str_replace('HTTP_', '', $key)] = $value;
-            }
-            return ($ret);
+            return $this->core->system->getHeaders();
         }
 
         function getHeadersToResend($extra_headers=null)
