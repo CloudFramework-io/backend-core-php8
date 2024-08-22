@@ -1,15 +1,15 @@
 <?php
-
 /**
  * [$cfi = $this->core->loadClass('CFI');] Class CFI to handle CFO apps for CloudFrameworkInterface
  * https://cloudframework.io/docs/es/cfis/aplicaciones-low-code
- * last_update: 20240224
+ * last_update: 20240822
  * @package CoreClasses
  */
 class CFI
 {
-    private $version = '20240523';
-    private $core;
+    private $version = '20240822';
+    /** @var Core7 $core */
+    var $core;
     private $fields = [];
     private $buttons = [];
 
@@ -68,7 +68,7 @@ class CFI
     public function setTile($title) {$this->json_object['title']=$title;}
 
     /**
-     * Change title of the App
+     * Add required_reload element in the return to tell CFO to reload the list
      * @param bool $required
      */
     public function requireReloadOnReturn(bool $required=true) {$this->json_object['required_reload']=$required;}
@@ -121,7 +121,11 @@ class CFI
      * @param string $align where to show the button in the bottom: right or left
      * @return CFIButton
      */
-    public function button($button_title='Button',string $align='right') { return $this->getButton($button_title);}
+    public function button($button_title='Button',string $align='right') {
+        $button = $this->getButton($button_title);
+        if($align) $button->align($align);
+        return $button;
+    }
 
     /**
      * set the title for close button
@@ -130,7 +134,7 @@ class CFI
     public function closeButton($title) { $this->json_object['close']=$title;}
 
     /**
-     * Set if the CFO list view has to be reloaded
+     * Add required_reload element in the return to tell CFO to reload the list
      * @param bool $reload default is true
      */
     public function reloadCFO(bool $reload=true) { $this->json_object['required_reload'] = $reload;}
@@ -163,6 +167,7 @@ class CFI
  */
 class CFIField {
 
+    /** @var CFI $cfi */
     private $cfi;
     private $field;
     var $object;
@@ -170,10 +175,10 @@ class CFIField {
 
     /**
      * CFI constructor.
-     * @param Core7 $core
-     * @param string $bucket
+     * @param CFI $cfi
+     * @param string $field
      */
-    function __construct (CFI &$cfi, $field)
+    function __construct (CFI &$cfi, string $field)
     {
         $this->cfi = $cfi;
         $this->field = $field;
@@ -332,7 +337,8 @@ class CFIField {
     public function html($title='') {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'html';
         if($title) $this->cfi->json_object['fields'][$this->field]['name'] = $title;
-        return $this;}
+        return $this;
+    }
 
     /**
      * Set if the field to type boolean
@@ -355,6 +361,7 @@ class CFIField {
             $this->cfi->json_object['fields'][$this->field]['defaultvalue'] = $defaultvalue;
         return $this;
     }
+
     /**
      * Set if the field to type autocomplete
      * @return CFIField $this
@@ -481,15 +488,13 @@ class CFIField {
     public function serverDocuments(string $bucket='',string $folder='') {
         if(!isset($this->cfi->json_object['fields'][$this->field])) $this->cfi->json_object['fields'][$this->field] =[];
         if(!is_object($this->object) || get_class($this->object) != 'CFIServerDocuments')
-            $this->object = new CFIServerDocuments($this->cfi->json_object['fields'][$this->field]);
+            $this->object = new CFIServerDocuments($this->cfi->core, $this->cfi->json_object['fields'][$this->field]);
         if($bucket)
             $this->object->bucket($bucket);
         if($folder)
             $this->object->folder($folder);
         return $this->object;
     }
-
-
 
     /**
      * Add onchange property to the field
@@ -518,13 +523,16 @@ class CFIField {
 class CFIServerDocuments
 {
     var $field;
+    /** @var Core7 $core */
+    private $core;
 
     /**
      * CFI constructor.
      * @param array $field
      */
-    function __construct(array &$field)
+    function __construct(Core7 &$core,array &$field)
     {
+        $this->core = $core;
         $this->field = &$field;
         $this->field['type']='server_documents';
     }
@@ -601,6 +609,14 @@ class CFIServerDocuments
      */
     public function folder(string $folder) {$this->field['folder']=$folder;return $this;}
 
+
+    /**
+     * Add bigFiles property to the field to allow Big Upload Files
+     * @param string $path It has to start with '/path'
+     * @return CFIServerDocuments $this
+     */
+    public function bigFilesPath(string $path) {$this->field['bigFiles']=$path;return $this;}
+
     /**
      * It says if it allows multiple files
      * @param bool $allow_multiple
@@ -609,15 +625,88 @@ class CFIServerDocuments
     public function multiple(bool $allow_multiple=true) {$this->field['multiple']=$allow_multiple;return $this;}
 
     /**
+     * Set the allow_delete field value of the object.
+     *
+     * @param bool $allow Indicates whether deletion is allowed or not. Default value is true.
+     * @return CFIServerDocuments $this
+     */
+    public function allowDelete(bool $allow=true) {$this->field['allow_delete']=$allow;return $this;}
+
+    /**
+     * Set the allow_edit field value of the object.
+     *
+     * @param bool $allow Indicates whether file name edit is allowed or not. Default value is true.
+     * @return CFIServerDocuments $this
+     */
+    public function allowEdit(bool $allow=true) {$this->field['allow_edit']=$allow;return $this;}
+
+    /**
+     * Set the allow_view field value of the object.
+     *
+     * @param bool $allow Indicates whether view file is allowed or not. Default value is true.
+     * @return CFIServerDocuments $this
+     */
+    public function allowView(bool $allow=true) {$this->field['allow_view']=$allow;return $this;}
+
+    /**
+     * Read documents from a specific Cloud Framework Object (CFO) and add them to the specified field.
+     *
+     * @param string $cfo The name of the Cloud Framework Object (CFO).
+     * @param string $field The name of the field to add the documents to.
+     * @param string $id The ID of the specific document.
+     * @param string $url The URL to the Cloud Framework API endpoint. Default is 'https://api.cloudframework.io/core/cfo/cfi'.
+     * @param array $headers Additional headers to be sent with the API request. By Default is an empty array so it will send X-WEB-KEY and X-DS-TOKEN from headers if it exists
+     */
+    public function readDocsFromCFO(string $cfo,string $field,string $id, $url = 'https://api.cloudframework.io/core/cfo/cfi',array $headers=[]) {
+
+        //region SET $url_to_get_docs_from_cfo, $endpoint_to_get_url_for_uploading
+        $url_to_get_docs_from_cfo = $url.'/'.urlencode($cfo).'/documents/'.urlencode($id).'/'.urlencode($field);
+        $endpoint_to_get_url_for_uploading = $url.'/'.urlencode($cfo).'/documents_url_to_upload/'.urlencode($id).'/'.urlencode($field).'?multiple='.($this->field['multiple']??false)?'true':'';
+        //endregion
+
+        //region SET attribute with $this->endPointToGetUrlForUploading
+        $this->endPointToGetUrlForUploading($endpoint_to_get_url_for_uploading);
+        //endregion
+
+        //region VERIFY $headers and READ $docs from endpoint $url_to_get_docs_from_cfo
+        if(!$headers) $headers = ['X-WEB-KEY'=>$this->core->system->getHeader('X-WEB-KEY'),'X-DS-TOKEN'=>$this->core->system->getHeader('X-DS-TOKEN')];
+        $docs = $this->core->request->get_json_decode($url_to_get_docs_from_cfo,null,$headers);
+        //endregion
+
+        //region ADD $docs result in the field
+        if($this->core->request->error) {
+            $this->field['error_reading_files'] = $this->core->request->errorMsg;
+            $this->core->request->reset();
+        }
+        else {
+            foreach ($docs['data']['docs']??[] as $doc) {
+                if(!($this->field['allow_delete']??null)) unset($doc['url_delete']);
+                if(!($this->field['allow_edit']??null)) unset($doc['url_edit']);
+                if(!($this->field['allow_view']??null)) unset($doc['url']);
+                $this->addDocument($doc);
+            }
+        }
+        //endregion
+    }
+
+    /**
      * It says what kind of files, or extensions will be accepted
      * @param string $files_type example: image/*,application/pdf,.psd
      * @return CFIServerDocuments $this
      */
     public function acceptedFiles(string $files_type) {$this->field['accepted_files']=$files_type;return $this;}
 
+
+    /**
+     * Method to tell what ENDPOINT to call for Uploading URL
+     * @param string $url_to_upload ENDPOINT to get the URL to upload a file
+     * @return CFIServerDocuments $this
+     */
+    public function endPointToGetUrlForUploading(string $url_to_upload) {$this->field['endpoint_to_get_url_for_uploading']=$url_to_upload;return $this;}
+
     /**
      * It says the max file size accepted (in bytes). By default is 5242880 bytes
-     * @param int $size example: 5242880
+     * @param int $size max file size in bytes example: 5242880
      * @return CFIServerDocuments $this
      */
     public function maxFileSize(int $size) {$this->field['max_file_size']=$size;return $this;}
@@ -691,7 +780,9 @@ class CFIButton {
      * @param $align
      * @return CFIButton $this
      */
-    public function onclick($js) { $this->button['js'] = $js; $this->button['type'] = 'onclick'; return $this;}
+    public function onclick($js) {
+        $this->button['js'] = $js; $this->button['type'] = 'onclick'; return $this;
+    }
 
 
     /**
