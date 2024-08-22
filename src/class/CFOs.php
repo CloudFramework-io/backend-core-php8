@@ -34,6 +34,8 @@ class CFOs {
 
     /** @var CFOWorkFlows $workFlows */
     var $workFlows = null;
+    /** @var CFOApi $api */
+    var $api = null;
 
 
     /**
@@ -47,6 +49,7 @@ class CFOs {
         $this->integrationKey = $integrationKey;
         $this->project_id = $this->core->gc_project_id;
         $this->workFlows = new CFOWorkFlows($core,$this);
+        $this->api = new CFOApi($core);
         //region Create a
     }
 
@@ -789,11 +792,11 @@ class CFOWorkFlows {
      * @param string $event The event to be processed
      * @param array $data The data to be processed
      * @param mixed $id value of $data array
-     * @param string $cfo The CFO used with $data
+     * @param string $cfo The CFO used with $data. If empty it takes $this->cfos->last_cfo
      *
      * @return bool return true on success and false on error
      */
-    function process(string $event, array &$data, $id, string $cfo='') {
+    public function process(string $event, array &$data, $id, string $cfo='') {
 
         //region INIT $_time, $this->logs and VERIFY $cfo value. If Empty try to set $this->cfos->last_cfo
         $_time = microtime(true);
@@ -901,7 +904,7 @@ class CFOWorkFlows {
      *
      * @return bool Returns true on success, false on error.
      */
-    public function mergeExternalWorkFlows(array &$workFlows, string $external_workflow_id)
+    private function mergeExternalWorkFlows(array &$workFlows, string $external_workflow_id)
     {
 
 
@@ -1908,4 +1911,198 @@ class CFOWorkFlows {
     }
 
 
+}
+
+
+/**
+ * Class to support CFO API call
+ */
+class CFOApi {
+    /** @var Core7  */
+    var $core;
+
+    /** @var string $api URL to be used in API CALLS */
+    protected $apiUrl = 'https://api.cloudframework.io/core/cfo/cfi';
+
+    /** @var array $headers headers to be used in API Calls */
+    protected $headers = ['X-WEB-KEY'=>null,'X-DS-TOKEN'];
+
+    // Error Variables
+    var $error = false;                 // When error true
+    var $errorCode = null;                   // Code of error
+    var $errorMsg = [];                 // When error array of messages
+
+
+    /**
+     * DataSQL constructor.
+     * @param Core $core
+     */
+    function __construct(Core7 &$core)
+    {
+        $this->core = $core;
+        $this->headers['X-WEB-KEY'] = $this->core->system->getHeader('X-WEB-KEY');
+        $this->headers['X-DS-TOKEN'] = $this->core->system->getHeader('X-DS-TOKEN');
+    }
+
+    /**
+     * Set the headers to be used in API Calls
+     *
+     * @param array $headers The headers to be set.
+     *
+     * @return void
+     */
+    public function setHeaders(array $headers)
+    {
+        $this->headers = $headers;
+    }
+
+    /**
+     * Set the api URL to be used in API Calls
+     *
+     * @param string $apiUrl The headers to be set.
+     *
+     * @return void
+     */
+    public function setAPIUrl(string $apiUrl)
+    {
+        $this->apiUrl = $apiUrl;
+    }
+
+    /**
+     * GET the structure to Display the data for a given CFO and ID
+     *
+     * @param string $cfo The CFO value
+     * @param string|int $id The ID value
+     * @param array $params optional array to send parameters or filters
+     * @return array|false Returns the data for the given CFO and ID
+     */
+    public function display(string $cfo, string|int $id,$params=[]): bool|array
+    {
+        return $this->getCFOEntity('display',$cfo,$id,$params);
+    }
+
+    /**
+     * GET the structure to Display the data for a given CFO and ID
+     *
+     * @param string $cfo The CFO value
+     * @param string|int $id The ID value
+     * @param array $params optional array to send parameters or filters
+     * @return array|false Returns the data for the given CFO and ID or false if error
+     */
+    public function update(string $cfo, string|int $id,$params=[]): bool|array
+    {
+        return $this->getCFOEntity('update',$cfo,$id,$params);
+    }
+
+    /**
+     * Get CFO entity from API
+     *
+     * @param string $command The command to execute: display|update
+     * @param string $cfo CFO value
+     * @param string|int $id ID of the entity
+     * @param array $params Additional parameters to pass in the request (default [])
+     *
+     * @return array|false Returns the data of the CFO entity if successful, otherwise null
+     */
+    private function getCFOEntity(string $command, string $cfo, string|int $id, $params=[]): bool|array
+    {
+        //region VERIFY $headers and READ $docs from endpoint $url_to_get_docs_from_cfo
+        $url = $this->apiUrl.'/'.urlencode($cfo).'/'.$command.'/'.urlencode($id);
+        $result = $this->core->request->get_json_decode($url,$params,$this->headers);
+        if($this->core->request->error) {
+            $this->addError('api-error',$this->core->request->errorMsg);
+            $this->core->request->reset();
+            return false;
+        }
+        //endregion
+
+        return $result['data']??$result;
+    }
+
+    /**
+     * Get CFO entities from API
+     *
+     * @param string $cfo CFO value
+     * @param array $params Additional parameters to pass in the request (default [])
+     *
+     * @return array|false Returns the data of the CFO entity if successful, otherwise null
+     */
+    private function getCFOEntities(string $cfo, array $params=[]): bool|array
+    {
+        //region VERIFY $headers and READ $docs from endpoint $url_to_get_docs_from_cfo
+        $url = $this->apiUrl.'/'.urlencode($cfo);
+        $result = $this->core->request->get_json_decode($url,$params,$this->headers);
+        if($this->core->request->error) {
+            $this->addError('api-error',$this->core->request->errorMsg);
+            $this->core->request->reset();
+            return false;
+        }
+        //endregion
+
+        return $result['data']??$result;
+    }
+
+    /**
+     * Read data from $cfo with $id
+     *
+     * @param string $cfo The CFO value
+     * @param string|int $id The ID value
+     * @return array|bool Returns an array of data if found, otherwise returns false
+     */
+    public function readEntity(string $cfo, string|int $id): bool|array
+    {
+        if(!$result = $this->getCFOEntity('display',$cfo,$id)) return false;
+        return $result['data']??[];
+    }
+
+    /**
+     * Read data from $cfo
+     *
+     * @param string $cfo The CFO value
+     * @param array $params Additional parameters to pass in the request (default [])
+     * @return array|bool Returns an array of data if found, otherwise returns false
+     */
+    public function readEntities(string $cfo, array $params=[]): bool|array
+    {
+        if(!$result = $this->getCFOEntities($cfo,$params)) return false;
+        return $result['data']??[];
+    }
+
+    /**
+     * Read data from $cfo
+     *
+     * @param string $cfo The CFO value
+     * @param string|int $id The ID value
+     * @param int $id The ID value
+     * @return array|bool Returns an array of data if found, otherwise returns false
+     */
+    public function updateEntity(string $cfo, string|int $id, array $data)
+    {
+        //region VERIFY $headers and READ $docs from endpoint $url_to_get_docs_from_cfo
+        $url = $this->apiUrl.'/'.urlencode($cfo).'/'.urlencode($id);
+        $result = $this->core->request->put_json_decode($url,$data,$this->headers);
+        if($this->core->request->error) {
+            $this->addError('api-error',$this->core->request->errorMsg);
+            $this->core->request->reset();
+            return false;
+        }
+        //endregion
+
+        return $result['data']??$result;
+    }
+
+    /**
+     * Add an error in the class
+     * @param string $code Code of error
+     * @param mixed $value
+     * @return bool Always return null to facilitate other return functions
+     */
+    function addError(string $code,$value)
+    {
+        $this->error = true;
+        $this->errorCode = $code;
+        $this->errorMsg[] = $value;
+
+        return false;
+    }
 }
