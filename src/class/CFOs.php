@@ -1625,8 +1625,10 @@ class CFOWorkFlows {
         if($workflow['cc']??null)
             $params['cc'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['cc'],$data);
 
+        //evaluate to send the email asynchronously
+        if($workflow['async']??null)
+            $params['async'] = true;
         //endregion
-
 
         //region VALIDATE $params['to']
         if($tos = explode(',',$params['to']??'')) {
