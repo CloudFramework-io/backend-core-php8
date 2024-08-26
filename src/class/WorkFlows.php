@@ -1,19 +1,16 @@
 <?php
-
-
 /**
  * [$cfos = $this->core->loadClass('CFOs');] Class CFOs to handle CFO app for CloudFrameworkInterface
- * https://www.notion.so/cloudframework/CFI-PHP-Class-c26b2a1dd2254ddd9e663f2f8febe038
+ * https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8/03-classes/WorkFlows
  * Mandrill references: https://mailchimp.com/developer/transactional/api/
- * last_update: 202201
- * X-Mandrill-Signature: mYCSmflkBKULrfItXfIsmmpht8Q=
+ * last_update: 20240826
  * @package CoreClasses
  */
 // require_once $this->system->root_path.'/vendor/mandrill/mandrill/src/Mandrill.php'; //Not required with Composer
 class WorkFlows
 {
 
-    var $version = '20230122';
+    var $version = '20240826';
     /** @var Core7 */
     var $core;
     /** @var MailchimpTransactional\ApiClient $mandrill */
@@ -359,6 +356,7 @@ class WorkFlows
      *      - tags array [optional] array tags to add to the emial [tag1,tag2..]
      *      - important [optional] boolean if it is true then the email will send 'important' attribute
      *      - attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
+     *      - async [optional] boolean if it is true then the email will be sent asynchronously
      *      - preserve_recipients [optional] boolean if it is true then the email will preserve the recipients headers instead to appear emails separated
      * }
      * @param string $type [optional] has to value: Mandrill
@@ -366,7 +364,8 @@ class WorkFlows
      * @param string $linked_id [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedId
      * @return bool|void
      */
-    public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='') {
+    public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='')
+    {
 
         if($type!='Mandrill') return $this->addError('sendPlatformEmail(...) has received a worng $type. [Mandrill] is the valid value');
         if(!$this->mandrill->getApiKey()) return $this->addError('sendPlatformEmail(...) has been call without calling previously setMandrillApiKey(...)');
@@ -520,9 +519,10 @@ class WorkFlows
      *      * bcc string [optional] email to send a copy in bcc
      *      * reply_to string [optional] email to redirect the replies of the email
      *      * data array [optional] array of objects [key=>value] to be sent as variables to merge with the template
-     *      * tags array [optional] array tags to add to the emial [tag1,tag2..]
+     *      * tags array [optional] array tags to add to the email [tag1,tag2..]
      *      * preserve_recipients boolean if it is true then the email will preserve the recipients headers instead to appear emails separated
      *      * important [optional] boolean if it is true then the email will send 'important' attribute
+     *      * async [optional] boolean if it is true then the email will be sent asynchronously
      *      * attachments array [optional] array objects to be sent as attachments. Format of each object: ['type'=>'{mime-type}(example:application/pdf)','name'=>'{filename}(example:file.pdf)','content'=>base64_encode({file-content})];
      * }
      * @return array the array will contain 'success' with true or false value.
@@ -630,7 +630,7 @@ class WorkFlows
                 $message['global_merge_vars'][] = ['name'=>$key,'content'=>$value];
             }
             //endregion
-            $async = false;
+            $async = ($params['async']??null)?true:false;
             $ip_pool = 'Main Pool';
 //            $send_at = date("Y-m-d h:m:i");
 //            $result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool, $send_at);
@@ -641,6 +641,7 @@ class WorkFlows
                 'async'=>$async,
                 'ip_pool'=>$ip_pool,
             ];
+
             //$result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool);
             $result = $this->mandrill->messages->sendTemplate($body);
             $result = $this->core->jsonDecode($this->core->jsonEncode($result),true);
