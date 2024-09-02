@@ -1,14 +1,13 @@
 <?php
-
 /**
  * [$cfa = $this->core->loadClass('CFA');] Class CFA to handle WebApps for CloudFrameworkInterface
- * notion: https://cloudframework.io/docs/es/developers/frontend/frontend-classes/cloudframeworkcfa%C2%A9-class
- * last_update: 20240719
+ * info: https://cloudframework.io/docs/es/developers/frontend/frontend-classes/cloudframeworkcfa%C2%A9-class
+ * last_update: 20240901
  * @package CoreClasses
  */
 class CFA
 {
-    var $version = '20240719';
+    var $version = '20240901';
     private $core;
     var $data = ['rows'=>[['label'=>'default_row']],'components'=>[]];
     var $labels=[];
@@ -84,7 +83,7 @@ class CFA
         //json_encode error (5): Malformed UTF-8 characters, possibly incorrectly encoded
         $result = $only_label ? ['components' => $this->data['components']] : $this->data;
         if (is_array($result)) {
-            return $result; 
+            return $result;
         }
         return mb_convert_encoding($result, 'UTF-8', 'UTF-8');
     }
@@ -128,6 +127,12 @@ class CFAComponent
     public function cols() {
         if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentCols')
             $this->component = new CFAComponentCols();
+        return($this->component);
+    }
+
+    public function rows() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentRows')
+            $this->component = new CFAComponentRows();
         return($this->component);
     }
 
@@ -415,6 +420,7 @@ class CFAComponentHTML
 {
     var $type = 'html';
     var $data = ['html'=>''];
+    public function reset() {$this->data['html']='';return $this;}
     public function plain($data) {$this->data['html'].= $data;return $this;}
     public function h1($data,$label='') {$this->data['html'].= "<h1".(($label)?' id="'.$label.'"':'').">{$data}</h1>";return $this;}
     public function h2($data,$label='') {$this->data['html'].= "<h2".(($label)?' id="'.$label.'"':'').">{$data}</h2>";return $this;}
@@ -486,21 +492,21 @@ class CFAComponentTitles
     public function addBadge($title,$color='',$border=false,$pill=false) {if(!isset($this->data[$this->index]['badges'])) $this->data[$this->index]['badges']=[]; $this->data[$this->index]['badges'][] = ['title'=>$title,'color'=>$color,'border'=>(bool)$border,'pill'=>(bool)$pill]; return $this;}
     public function addLeftPhoto($src,$alt='',$classes="rounded-circle") {
         if(!isset($this->data[$this->index]['left-photos'])){
-            $this->data[$this->index]['left-photos']=[]; 
-            $this->data[$this->index]['left-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes]; 
+            $this->data[$this->index]['left-photos']=[];
+            $this->data[$this->index]['left-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
             return $this;
-        } 
+        }
     }
     public function addRightPhoto($src,$alt='',$classes="rounded-circle") {
         if(!isset($this->data[$this->index]['right-photos'])){
-            $this->data[$this->index]['right-photos']=[]; 
-            $this->data[$this->index]['right-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes]; 
+            $this->data[$this->index]['right-photos']=[];
+            $this->data[$this->index]['right-photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
             return $this;
         }
     }
     public function addPhoto($src,$alt='',$classes="rounded-circle") {
         if(!isset($this->data[$this->index]['photos'])){
-            $this->data[$this->index]['photos']=[]; 
+            $this->data[$this->index]['photos']=[];
             $this->data[$this->index]['photos'][] = ['url'=>$src,'alt'=>$alt,'classes'=>$classes];
             return $this;
         }
@@ -523,6 +529,7 @@ class CFAComponentBoxes
     public function color($data) {$this->data[$this->index]['color'] = $data; return $this;}
     public function textColor($data) {$this->data[$this->index]['textColor'] = $data; return $this;}
     public function icoColor($data) {$this->data[$this->index]['icoColor'] = $data; return $this;}
+    public function styleType($data) {$this->data[$this->index]['styleType'] = $data; return $this;}
     public function style($data) {$this->data[$this->index]['style'] = $data; return $this;}
     public function total($data) {$this->data[$this->index]['total'] = $data; return $this;}
 }
@@ -533,6 +540,19 @@ class CFAComponentCols
 {
 
     var $type = 'cols';
+    var $index =0;
+    var $data = [];
+    public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
+    public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
+    public function size($data) {$this->data[$this->index]['size'] = $data; return $this;}
+}
+/**
+ * CFAComponentCols Class component
+ */
+class CFAComponentRows
+{
+
+    var $type = 'rows';
     var $index =0;
     var $data = [];
     public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
@@ -720,6 +740,7 @@ class CFAComponentTabs
     public function type($data) {$this->data['type'] = $data; return $this;}
     public function activeColor($data) {$this->data['activeColor'] = $data; return $this;}
     public function style($data) {$this->data['style'] = $data; return $this;}
+    public function borderNone($data) {$this->data['borderNone'] = $data; return $this;}
 
     public function add($label, $title, $icon = "", $active=false, $style=null)
     {
@@ -1019,17 +1040,18 @@ class CFAComponentAdvancedTable
     public function selectRows($data) {$this->data['selectRows'] = $data; return $this;}
     public function selectRowsButtons($data) {$this->data['selectRowsButtons'] = $data; return $this;}
     public function styleType($data) {$this->data['styleType'] = $data; return $this;}
+    public function sortOptions($data) {$this->data['sortOptions'] = $data; return $this;}
 }
 
- /**
-  * CFAComponentChart Class component
-  */
+/**
+ * CFAComponentChart Class component
+ */
 class CFAComponentChart
 {
     var $type = 'chart';
     var $index = 0;
     var $data = [];
-    
+
     public function __construct() { $this->data['id'] = uniqid('chart-component');}
     public function title($data) {$this->data['title'] = $data; return $this;}
     public function icon($data) {$this->data['icon'] = $data; return $this;}
@@ -1040,16 +1062,16 @@ class CFAComponentChart
     public function class($data) {$this->data['class'] = $data; return $this;}
 }
 
- /**
-  * CFAComponentKanban Class component
-  */
+/**
+ * CFAComponentKanban Class component
+ */
 class CFAComponentKanban
 {
     var $type = 'kanban';
     var $data = [];
     var $boardIndex = 0;
-    
-    public function __construct() { 
+
+    public function __construct() {
         $this->data['id'] = uniqid('kanban');
         $this->data['items'] = [];
     }
@@ -1080,71 +1102,71 @@ class CFAComponentKanban
 }
 
 /**
-  * CFAComponentPeopleCard Class component
-  */
-  class CFAComponentPeopleCard
-  {
-      var $type = 'people-card';
-      var $index = 0;
-      var $data = [];
-      
-      public function __construct() { $this->data['id'] = uniqid('people-card');}
-      public function searchFilter($data) {$this->data['searchFilter'] = $data; return $this;}
-      public function name($data) {$this->data['name'] = $data; return $this;}
-      public function surname($data) {$this->data['surname'] = $data; return $this;}
-      public function second_surname($data) {$this->data['second_surname'] = $data; return $this;}
-      public function fullname($data) {$this->data['fullname'] = $data; return $this;}
-      public function email($data) {$this->data['email'] = $data; return $this;}
-      public function phone($data) {$this->data['phone'] = $data; return $this;}
-      public function avatar($data) {$this->data['avatar'] = $data; return $this;}
-      public function linkedin($data) {$this->data['linkedin'] = $data; return $this;}
-      public function videos($data) {$this->data['videos'] = $data; return $this;}
-      public function user_id($data) {$this->data['user_id'] = $data; return $this;}
-      public function level0($data) {$this->data['level0'] = $data; return $this;}
-      public function reports_to($data) {$this->data['reports_to'] = $data; return $this;}
-      public function areas($data) {$this->data['areas'] = $data; return $this;}
-      public function departments($data) {$this->data['departments'] = $data; return $this;}
-      public function position($data) {$this->data['position'] = $data; return $this;}
-      public function position_id($data) {$this->data['position_id'] = $data; return $this;}
-      public function position_name($data) {$this->data['position_name'] = $data; return $this;}
-      public function positions($data) {$this->data['positions'] = $data; return $this;}
-      public function competencies($data) {$this->data['competencies'] = $data; return $this;}
-      public function responsibilities($data) {$this->data['responsibilities'] = $data; return $this;}
-      public function tasks($data) {$this->data['tasks'] = $data; return $this;}
-      public function skills($data) {$this->data['skills'] = $data; return $this;}
-      public function edit_event($data) {$this->data['edit_event'] = $data; return $this;}
-      public function color($data) {$this->data['color'] = $data; return $this;}
-      public function class($data) {$this->data['class'] = $data; return $this;}
-  }
+ * CFAComponentPeopleCard Class component
+ */
+class CFAComponentPeopleCard
+{
+    var $type = 'people-card';
+    var $index = 0;
+    var $data = [];
+
+    public function __construct() { $this->data['id'] = uniqid('people-card');}
+    public function searchFilter($data) {$this->data['searchFilter'] = $data; return $this;}
+    public function name($data) {$this->data['name'] = $data; return $this;}
+    public function surname($data) {$this->data['surname'] = $data; return $this;}
+    public function second_surname($data) {$this->data['second_surname'] = $data; return $this;}
+    public function fullname($data) {$this->data['fullname'] = $data; return $this;}
+    public function email($data) {$this->data['email'] = $data; return $this;}
+    public function phone($data) {$this->data['phone'] = $data; return $this;}
+    public function avatar($data) {$this->data['avatar'] = $data; return $this;}
+    public function linkedin($data) {$this->data['linkedin'] = $data; return $this;}
+    public function videos($data) {$this->data['videos'] = $data; return $this;}
+    public function user_id($data) {$this->data['user_id'] = $data; return $this;}
+    public function level0($data) {$this->data['level0'] = $data; return $this;}
+    public function reports_to($data) {$this->data['reports_to'] = $data; return $this;}
+    public function areas($data) {$this->data['areas'] = $data; return $this;}
+    public function departments($data) {$this->data['departments'] = $data; return $this;}
+    public function position($data) {$this->data['position'] = $data; return $this;}
+    public function position_id($data) {$this->data['position_id'] = $data; return $this;}
+    public function position_name($data) {$this->data['position_name'] = $data; return $this;}
+    public function positions($data) {$this->data['positions'] = $data; return $this;}
+    public function competencies($data) {$this->data['competencies'] = $data; return $this;}
+    public function responsibilities($data) {$this->data['responsibilities'] = $data; return $this;}
+    public function tasks($data) {$this->data['tasks'] = $data; return $this;}
+    public function skills($data) {$this->data['skills'] = $data; return $this;}
+    public function edit_event($data) {$this->data['edit_event'] = $data; return $this;}
+    public function color($data) {$this->data['color'] = $data; return $this;}
+    public function class($data) {$this->data['class'] = $data; return $this;}
+}
 /**
-  * CFAComponentPeopleCard Class component
-  */
-  class CFAComponentTaskTable
-  {
-      var $type = 'task-table';
-      var $index = 0;
-      var $data = [];
-      
-      public function __construct() { $this->data['uniqid'] = uniqid('people-card');}
-      public function title($data) {$this->data['title'] = $data; return $this;}
-      public function cols($data) {$this->data['cols'] = $data; return $this;}
-      public function statuses($data) {$this->data['statuses'] = $data; return $this;}
-      public function priorities($data) {$this->data['priorities'] = $data; return $this;}
-      public function cats($data) {$this->data['cats'] = $data; return $this;}
-      public function tags($data) {$this->data['tags'] = $data; return $this;}
-      public function default_view($data) {$this->data['default_view'] = $data; return $this;}
-      public function rows($data) {$this->data['rows'] = $data; return $this;}
-  }
+ * CFAComponentPeopleCard Class component
+ */
+class CFAComponentTaskTable
+{
+    var $type = 'task-table';
+    var $index = 0;
+    var $data = [];
+
+    public function __construct() { $this->data['uniqid'] = uniqid('people-card');}
+    public function title($data) {$this->data['title'] = $data; return $this;}
+    public function cols($data) {$this->data['cols'] = $data; return $this;}
+    public function statuses($data) {$this->data['statuses'] = $data; return $this;}
+    public function priorities($data) {$this->data['priorities'] = $data; return $this;}
+    public function cats($data) {$this->data['cats'] = $data; return $this;}
+    public function tags($data) {$this->data['tags'] = $data; return $this;}
+    public function default_view($data) {$this->data['default_view'] = $data; return $this;}
+    public function rows($data) {$this->data['rows'] = $data; return $this;}
+}
 /**
-  * CFAComponentForm Class component
-  */
-  class CFAComponentForm
-  {
-      var $type = 'form';
-      var $index = 0;
-      var $data = [];
-      
-      public function __construct() { $this->data['uniqid'] = uniqid('form');}
-      public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
-      public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
-  }
+ * CFAComponentForm Class component
+ */
+class CFAComponentForm
+{
+    var $type = 'form';
+    var $index = 0;
+    var $data = [];
+
+    public function __construct() { $this->data['uniqid'] = uniqid('form');}
+    public function label($data) {$this->data[$this->index]['label'] = $data; return $this;}
+    public function add($label='') {if(isset($this->data[$this->index]) &&$this->data[$this->index]) $this->index++; if($label) $this->data[$this->index]['label']=$label; return $this;}
+}
