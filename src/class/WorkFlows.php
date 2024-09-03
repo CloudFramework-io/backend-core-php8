@@ -342,6 +342,7 @@ class WorkFlows
      * @param array $params {
      *    Parameters by reference to send an email.
      *      - slug string Template Id to send
+     *      - html string optionally to slug you can send this variable with the HTML to send
      *      - from string email from sender. [optional] if the Mandrill Template has DefaultFromEmail
      *      - name string [optional] name from sender.
      *      - subject string email subject. [optional] if the Mandrill Template has DefaultSubject
@@ -374,7 +375,8 @@ class WorkFlows
             case "Mandrill":
 
                 //region INIT $slug, $from, $to, $subject mandatory values from $params
-                if(!$slug = $params['slug']??null) return $this->addError('sendEmail($params) missing slug in $params because the template does not have a default from email');
+                $html = $params['html']??null;
+                if(!($slug = $params['slug']??null) && !$html) return $this->addError('sendEmail($params) missing [slug] or [html] in $params to define the Email Body');
                 if(!$from = $params['from']??null) return $this->addError('sendEmail($params) missing from in $params because the template does not have a default from email');
                 if(!$to = $params['to']??null) return $this->addError('sendEmail($params) missing to in $params because the template does not have a default from email');
                 if(!$subject = $params['subject']??null) return $this->addError('sendEmail($params) missing subject in $params because the template does not have a default from email');
@@ -397,13 +399,18 @@ class WorkFlows
                     $cc = array_filter(explode(',',$cc??''));
                 //endregion
 
-                //region READ $template from mandrill $slug. IF ERROR return void
-                if(!$template = $this->getERPEmailTemplate($slug)) return;
+                //region INIT $cat from $template['Cat']
+                $cat = $params['cat']??($template['Cat']??'NOT-DEFINED');
                 //endregion
 
-                //region INIT $cat from $template['Cat'] and $html form $this->renderMandrillTemplate($slug,$data)
-                $cat = $params['cat']??($template['Cat']??'NOT-DEFINED');
-                $html = $this->renderMandrillTemplate($slug,$data);
+                //region IF $slug READ $template and rewrite $html
+                $template=null;
+                if($slug) {
+                    if (!$template = $this->getERPEmailTemplate($slug)) return;
+                    $html = $this->renderMandrillTemplate($slug,$data);
+                } else {
+                    $html = $this->core->replaceCloudFrameworkTagsAndVariables($html,$data);
+                }
                 //endregion
 
                 //region INIT $submission[] with previous INITIATED variables
@@ -417,8 +424,8 @@ class WorkFlows
                     "EmailTemplateId"=>$slug,
                     "Tags"=>$tags,
                     "EngineType"=>'Mandrill',
-                    "TemplateHTML"=>$template['TemplateHTML'],
-                    "TemplateTXT"=>$template['TemplateTXT'],
+                    "TemplateHTML"=>$template['TemplateHTML']??$html,
+                    "TemplateTXT"=>$template['TemplateTXT']??null,
                     "DateProcessing"=>null,
                     "StatusProcessing"=>'initiated',
                     "LinkedObject"=>$linked_object?:null,
@@ -509,6 +516,8 @@ class WorkFlows
      * SET API for mandrill interation and SETUP $this->mandrill
      * @param array $params {
      *      info to be sent in the email
+     *      * slug string template to use for the Body of the content
+     *      * html string optionally you can send the body content in this variable
      *      * from string email from sender. [optional] if the Mandrill Template has DefaultFromEmail
      *      * name string name from sender. [optional] if the Mandrill Template has DefaultFromEmail
      *      * subject string email subject. [optional] if the Mandrill Template has DefaultSubject
@@ -530,9 +539,13 @@ class WorkFlows
     public function sendMandrillEmail(array &$params) {
 
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
-        if(!($slug = $params['slug']??null)) return $this->addError('sendMandrillEmail($params) missing slug in $params because the template does not have a default from email');
+        $html =  $params['html']??null;
+        if(!($slug = $params['slug']??null) && !$html) return $this->addError('sendMandrillEmail($params) missing [slug] or [html] in $params for the Body of the Email');
 
-        if(!$template = $this->getMandrillTemplate($slug)) return;
+        if($slug)
+            if(!$template = $this->getMandrillTemplate($slug)) return;
+        else $template = $html;
+
         if(!$from = $params['from']??($template['DefaultFromEmail']??null)) return $this->addError('sendMandrillEmail($params) missing email in $params because the template does not have a default from email');
         if(!$subject = $params['subject']??($template['DefaultSubject']??null)) return $this->addError('sendMandrillEmail($params) missing subject in $params because the template does not have a default subject');
         $from_name = $params['name']??($template['from_name']??'');
@@ -583,6 +596,8 @@ class WorkFlows
                 //'google_analytics_campaign' => $domain,
                 //'metadata' => array('website' => $domain)
             );
+            if(!$slug)
+                $message['html'] = $html;
 
             // It will preserve to: emails, and cc: emails to the receivers
             if($params['preserve_recipients']??null)
@@ -632,8 +647,6 @@ class WorkFlows
             //endregion
             $async = ($params['async']??null)?true:false;
             $ip_pool = 'Main Pool';
-//            $send_at = date("Y-m-d h:m:i");
-//            $result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool, $send_at);
             $body = [
                 'template_name'=>$slug,
                 'template_content'=>$template_content,
@@ -641,9 +654,15 @@ class WorkFlows
                 'async'=>$async,
                 'ip_pool'=>$ip_pool,
             ];
+            if($slug) {
+                $body['template_name'] = $slug;
+                $body['template_content'] = $template_content;
+                $result = $this->mandrill->messages->sendTemplate($body);
+            } else {
+                $result = $this->mandrill->messages->send($body);
+            }
 
             //$result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool);
-            $result = $this->mandrill->messages->sendTemplate($body);
             $result = $this->core->jsonDecode($this->core->jsonEncode($result),true);
 
             return ['success'=>true,'result'=>$result];
