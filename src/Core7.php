@@ -6501,8 +6501,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(strpos($tag,' ')) {
                 $_spaces = explode(' ',$tag);
                 $ret ='';
-                foreach ($_spaces as $item) {
-                    if($ret) $ret.=' ';
+                foreach ($_spaces as $i=>$item) {
+                    if($i) $ret.=' ';
                     if($item) $ret.=$this->getTag($item,$lang,$namespace);
                     else $ret.=$item;
                 }
@@ -6515,16 +6515,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             // PROCESS $tag with {xxx} and return the result with recursive data
             if(strpos($tag,'{')!==false && strpos($tag,'}')!==false) {
-                preg_match("/{([^{}]*)}($|[^}])/", $tag, $found);
+                preg_match("/{([^{}]*)}/", $tag, $found);
                 while ($found) {
                     $tag = str_replace($found[0], $this->getTag($found[1], $lang, $namespace), $tag);
-                    preg_match("/{([^{}]*)}($|[^}])/", $tag, $found);
+                    preg_match("/{([^{}]*)}/", $tag, $found);
                 }
                 return $tag;
             }
 
-            //delete {, } chars
-            $tag = preg_replace('/({|})/','',trim($tag));
             if(!$namespace) $namespace=$this->api_namespace?:'cloudframework';
             if(!$lang) $lang=$this->api_lang;
 
