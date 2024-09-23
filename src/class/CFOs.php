@@ -869,7 +869,9 @@ class CFOWorkFlows {
                     $this->workflows_report($workflow['id'],['workflows'=>[]]);
                     foreach ($workflow['workflows'] as $_j=>$sub_workflow) {
                         if($this->evaluateCondition($sub_workflow,$data,$event,$_j))
+                        {
                             $this->evaluateWorkflow($sub_workflow,$data,$id,$event,$_i,$cfo);
+                        }
 
                         if(isset($this->logs[$sub_workflow['id']])) {
                             $this->logs[$workflow['id']]['workflows'][$sub_workflow['id']] = $this->logs[$sub_workflow['id']];
@@ -1625,6 +1627,10 @@ class CFOWorkFlows {
         if($workflow['cc']??null)
             $params['cc'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['cc'],$data);
 
+       //If the workflow does not have from, then the template has to have any default from defined
+        if($workflow['bcc']??null)
+            $params['bcc'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['bcc'],$data);
+
         //evaluate to send the email asynchronously
         if($workflow['async']??null)
             $params['async'] = true;
@@ -1673,6 +1679,28 @@ class CFOWorkFlows {
         }
         //endregion
 
+        //region VALIDATE $params['bcc']
+        if(($params['bcc'] ?? null)) {
+            $bccs = (is_array($params['bcc'])) ? $params['bcc'] : explode(',', $params['bcc']);
+            foreach ($bccs as $_ibcc => $bcc) {
+                if (!$bcc) {
+                    unset($bccs[$_ibcc]);
+                    continue;
+                }
+                $bccs[$_ibcc] = trim($bcc);
+                if (!$this->core->is->validEmail(trim($bcc))) {
+                    $this->workflows_report($workflow['id'], 'Wrong email [bcc] in workflow: ' . $bcc);
+                    return;
+                }
+                //do not repeat in bcc: emails of to:
+                if(in_array($bccs[$_ibcc],$params['to'])) unset($bccs[$_ibcc]);
+            }
+            $params['bcc'] = array_values($bccs);
+            if($params['bcc'])
+                $params['preserve_recipients'] = true;
+        }
+        //endregion
+
         //region EVALUATE attachments
         $attachments = [];
         if(is_array($workflow['attachments']??null)) foreach ($workflow['attachments'] as $_local_i=>$attachment) {
@@ -1712,6 +1740,7 @@ class CFOWorkFlows {
         //region SEND EMAIL
         $linkedObject = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['linkedObject']??$cfo,$data);
         $linkedId = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['linkedId']??$id,$data);
+
         $result = $this->workFlows->sendPlatformEmail($params,'Mandrill',$linkedObject,$linkedId);
         //endregion
 

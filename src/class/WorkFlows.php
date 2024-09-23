@@ -367,7 +367,6 @@ class WorkFlows
      */
     public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='')
     {
-
         if($type!='Mandrill') return $this->addError('sendPlatformEmail(...) has received a worng $type. [Mandrill] is the valid value');
         if(!$this->mandrill->getApiKey()) return $this->addError('sendPlatformEmail(...) has been call without calling previously setMandrillApiKey(...)');
 
@@ -389,8 +388,8 @@ class WorkFlows
                 $from_name = $params['name']??null;
                 $tags = $params['tags']??null;
                 $cc = $params['cc']??null;
-                $reply_to = $params['reply_to']??null;
                 $bcc = $params['bcc']??null;
+                $reply_to = $params['reply_to']??null;
                 $data = $params['data']??[];
                 $important = $params['important']??null;
                 if(!is_array($tags))
@@ -420,6 +419,7 @@ class WorkFlows
                     "From"=>$from,
                     "To"=>$to,
                     "Cc"=>$cc,
+                    "Bcc"=>$bcc,
                     "Subject"=>$subject,
                     "EmailTemplateId"=>$slug,
                     "Tags"=>$tags,
@@ -557,8 +557,9 @@ class WorkFlows
         if($emails_cc && !is_array($emails_cc)) $emails_cc = array_filter(explode(',',$emails_cc));
 
         $email_bcc = $params['bcc']??null;
-        $reply_to = $params['reply_to']??null;
+        if($email_bcc && is_array($email_bcc)) $email_bcc = implode(',',$email_bcc);
 
+        $reply_to = $params['reply_to']??null;
         $email_data= $params['data']??[];
         if(!is_array($email_data)) $email_data=[];
         $tags = $params['tags']??[];
