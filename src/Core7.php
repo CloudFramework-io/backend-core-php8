@@ -6514,11 +6514,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if( !preg_match('/^[^;]+;[^;]+;[^;]+/',$tag))  return $tag;
 
             // PROCESS $tag with {xxx} and return the result with recursive data
+            $pattern = '/\{([^;\{\}]+;[^;]+;[^\}]+)\}/';
             if(strpos($tag,'{')!==false && strpos($tag,'}')!==false) {
-                preg_match("/{([^{}]*)}/", $tag, $found);
+                preg_match($pattern, $tag, $found);
                 while ($found) {
+
                     $tag = str_replace($found[0], $this->getTag($found[1], $lang, $namespace), $tag);
-                    preg_match("/{([^{}]*)}/", $tag, $found);
+                    if($this->core->config->get('debug')) _printe('AAAA: '.$tag,$found);
+                    preg_match($pattern, $tag, $found);
                 }
                 return $tag;
             }
@@ -6540,7 +6543,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //split the tag in $parts
             $parts = explode(';',$tag);
 
-            //if there are <2 $parts retrn $tag
+            //if there are <2 $parts return $tag
             if(count($parts)<2) return $tag;
 
             //if the tag has the structure [{app};{cat};{code};]  (with no subcode), then it is an error
@@ -6564,6 +6567,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 }
                 $this->core->logs->add("[{$locFile}/{$lang}] - {$tag} does no exist",'localization_warning');
             }
+
             return $ret;
         }
 
