@@ -2,7 +2,7 @@
   "name": "company-name/project-name",
   "description": "Your description. More info https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8",
   "require": {
-    "cloudframework-io/backend-core-php8": "^8.3.25"
+    "cloudframework-io/backend-core-php8": "^8.3.26"
   },
   "scripts": {
     "clean": [
