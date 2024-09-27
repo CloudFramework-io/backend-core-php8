@@ -6884,11 +6884,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 return($this->addError($object. 'Does not have data',503));
             //endregion
 
+            //region SWITCH ($this->models[$object]['type']
             switch ($this->models[$object]['type']) {
-                //region PROCESS db OBJECTS
+                //region case db
                 case "db":
-                    list($type,$table) = explode(':',$object,2);
+                    //region SET $table
+                    list($_foo,$table) = explode(':',$object,2);
+                    //endregion
 
+                    //region EVALUATE $this->models[$object]['data']['extends']
                     if(isset($this->models[$object]['data']['extends']) && $this->models[$object]['data']['extends']) {
                         $model_extended = 'db:'.$this->models[$object]['data']['extends'];
                         if(!isset($this->models[$model_extended])) {
@@ -6906,31 +6910,56 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         }
 
                         //Merge variables with the extended object.
-                        if(isset($this->models[$object]['data']['interface']) && $this->models[$object]['data']['interface']) foreach ($this->models[$object]['data']['interface'] as $object_property=>$data) {
-                            $this->models[$model_extended]['data']['interface'][$object_property] = $data;
-                        }
-                        $this->models[$object]['data'] = array_merge(['extended_from'=>$this->models[$object]['data']['extends']],array_merge($this->models[$model_extended]['data'],array_merge($this->models[$object]['data'],$this->models[$model_extended]['data'])));
+                        if(is_array($this->models[$object]['data']['interface']??null))
+                            foreach ($this->models[$object]['data']['interface'] as $object_property=>$object_content) {
+                                //merge objects
+                                if(in_array($object_property,['fields'])) {
+                                    $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$object_content);
+                                }
+                                //replace objects
+                                else {
+                                    $this->models[$model_extended]['data']['interface'][$object_property] = $object_content;
+                                }
+                            }
+
+                        $this->models[$object]['data'] = array_merge(
+                            ['extended_from'=>$this->models[$object]['data']['extends']],
+                            array_merge(
+                                $this->models[$model_extended]['data'],
+                                array_merge(
+                                    $this->models[$object]['data'],
+                                    $this->models[$model_extended]['data']
+                                )
+                            )
+                        );
 
                     }
-                    // rewrite name of the table
-                    $table = $this->models[$object]['data']['entity'];
-                    if(isset($this->models[$object]['data']['interface']['object'])) $table = $this->models[$object]['data']['interface']['object'];
+                    //endregion
 
-                    // Object creation
+                    //region UPDATE $table IF $this->models[$object]['data']['interface']['object'] || $this->models[$object]['data']['entity']
+                    if(isset($this->models[$object]['data']['entity'])) $table = $this->models[$object]['data']['entity'];
+                    if(isset($this->models[$object]['data']['interface']['object'])) $table = $this->models[$object]['data']['interface']['object'];
+                    //endregion
+
+                    //region INIT AND RETURN $object_db as an object of Class DataSQL using [$table,$this->models[$object]['data']]
                     if(!is_object($object_db = $this->core->loadClass('DataSQL',[$table,$this->models[$object]['data']]))) return;
                     return($object_db);
+                    //endregion
                     break;
                 //endregion
 
-                //region PROCESS ds OBJECTS
+                //region case ds
                 case "ds":
 
-                    list($type,$entity) = explode(':',$object,2);
+                    //region SET $table,$namespace
+                    list($_foo,$entity) = explode(':',$object,2);
                     $namespace = (isset($options['namespace']))?$options['namespace']:$this->core->config->get('DataStoreSpaceName');
-                    if(isset($this->models[$object]['data']['interface']['namespace']) && $this->models[$object]['data']['interface']['namespace']) $namespace=$this->models[$object]['data']['interface']['namespace'];
+                    if(isset($this->models[$object]['data']['interface']['namespace']) && $this->models[$object]['data']['interface']['namespace'])
+                        $namespace=$this->models[$object]['data']['interface']['namespace'];
                     if(empty($namespace)) return($this->addError('Missing DataStoreSpaceName config var or $options["namespace"] parameter'));
+                    //endregion
 
-                    //region EVALUATE extends the object from others
+                    //region EVALUATE $this->models[$object]['data']['extends']
                     if(isset($this->models[$object]['data']['extends']) && $this->models[$object]['data']['extends']) {
                         // look for the model
                         $model_extended = 'ds:'.$this->models[$object]['data']['extends'];
@@ -6944,17 +6973,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         }
 
                         //Merge variables with the extended object.
-                        if(isset($this->models[$object]['data']['interface']))
-                            foreach ($this->models[$object]['data']['interface'] as $object_property=>$data) {
+                        if(is_array($this->models[$object]['data']['interface']??null))
+                            foreach ($this->models[$object]['data']['interface'] as $object_property=>$object_content) {
                                 //merge objects
                                 if(in_array($object_property,['fields'])) {
-                                    $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$data);
+                                    $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$object_content);
                                 }
                                 //replace objects
                                 else {
-                                    $this->models[$model_extended]['data']['interface'][$object_property] = $data;
+                                    $this->models[$model_extended]['data']['interface'][$object_property] = $object_content;
                                 }
                             }
+
                         $this->models[$object]['data'] = array_merge(
                                 ['extended_from'=>$this->models[$object]['data']['extends']],
                                 array_merge(
@@ -6970,50 +7000,67 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     }
                     //endregion
 
-                    //region REWRITE entity if $this->models[$object]['data']['entity']
+                    //region UPDATE $entity IF $this->models[$object]['data']['interface']['object'] || $this->models[$object]['data']['entity']
                     if(isset($this->models[$object]['data']['entity'])) $entity = $this->models[$object]['data']['entity'];
+                    if(isset($this->models[$object]['data']['interface']['object'])) $table = $this->models[$object]['data']['interface']['object'];
                     //endregion
 
+                    //region SET $options['projectId'] IF it does not exists
                     if(!isset($options['projectId'])) {
                         $project_id = $this->core->config->get('core.gcp.datastore.project_id') ?? $this->core->gc_project_id;
                         $project_id = $this->models[$object]['data']['interface']['project_id'] ?? $project_id;
                         $options['projectId']=$project_id;
                     }
+                    //endregion
 
+                    //region VERIFY $options['keyFile'], $options['namespace']
                     if(!isset($options['keyFile']) && isset($this->models[$object]['data']['interface']['secret']) && $this->models[$object]['data']['interface']['secret']) {
                         $options['keyFile'] = $this->models[$object]['data']['interface']['secret'];
                         if($options['keyFile']['project_id']??null) $options['projectId'] = $options['keyFile']['project_id'];
                     }
                     if(!isset($options['namespace']) && isset($this->models[$object]['data']['interface']['namespace']) && $this->models[$object]['data']['interface']['namespace']) $options['namespace'] = $this->models[$object]['data']['interface']['namespace'];
-                    if(!is_object($object_ds = $this->core->loadClass('DataStore',[$entity,$namespace,$this->models[$object]['data'],$options]))) return;
+                    //endregion
 
+                    //region INIT AND RETURN $object_ds as an object of Class DataStore using [$entity,$namespace,$this->models[$object]['data'],$options]
+                    if(!is_object($object_ds = $this->core->loadClass('DataStore',[$entity,$namespace,$this->models[$object]['data'],$options]))) return;
                     return($object_ds);
+                    //endregion
                     break;
                 //endregion
-                //region PROCESS bq OBJECTS
-                case "bq":
-                    list($type,$dataset) = explode(':',$object,2);
 
+                //region case bq
+                case "bq":
+
+                    //region SET $dataset
+                    list($_foo,$dataset) = explode(':',$object,2);
                     // rewrite name of the table
                     if(isset($this->models[$object]['data']['interface']['object'])) $dataset = $this->models[$object]['data']['interface']['object'];
+                    //endregion
 
-                    // $options
+                    //region SET $options['projectId'] IF it does not exists
                     if(!isset($options['projectId'])) {
                         $project_id = $this->core->config->get('core.gcp.bigquery.project_id') ?? $this->core->gc_project_id;
                         $project_id = $this->models[$object]['data']['interface']['project_id'] ?? $project_id;
                         $options['projectId']=$project_id;
                     }
+                    //endregion
 
+                    //region VERIFY $options['keyFile']
                     if(!isset($options['keyFile']) && isset($this->models[$object]['data']['interface']['secret']) && $this->models[$object]['data']['interface']['secret']) {
                         $options['keyFile'] = $this->models[$object]['data']['interface']['secret'];
                         if($options['keyFile']['project_id']??null) $options['projectId'] = $options['keyFile']['project_id'];
                     }
-                    // Object creation
+                    //endregion
+
+                    //region INIT AND RETURN $object_bq as an object of Class DataBQ using [$dataset,$this->models[$object]['data'],$options]
                     if(!is_object($object_bq = $this->core->loadClass('DataBQ',[$dataset,$this->models[$object]['data'],$options]))) return;
                     return($object_bq);
+                    //endregion
+
                     break;
                 //endregion
             }
+            //endregion
             return null;
         }
 
