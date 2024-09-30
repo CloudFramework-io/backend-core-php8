@@ -7,7 +7,7 @@
  */
 class CFA
 {
-    var $version = '20240901';
+    var $version = '20240930';
     private $core;
     var $data = ['rows'=>[['label'=>'default_row']],'components'=>[]];
     var $labels=[];
@@ -216,6 +216,18 @@ class CFAComponent
     public function searchInput() {
         if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentSearchInput')
             $this->component = new CFAComponentSearchInput();
+        return($this->component);
+    }
+
+    public function formInput() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentFormInput')
+            $this->component = new CFAComponentFormInput();
+        return($this->component);
+    }
+
+    public function edtiableText() {
+        if(!is_object($this->component) || get_class($this->component)!= 'CFAComponentEditableText')
+            $this->component = new CFAComponentEditableText();
         return($this->component);
     }
 
@@ -430,6 +442,19 @@ class CFAComponentHTML
     public function hr($label='') {$this->data['html'].= "<hr".(($label)?' id="'.$label.'"':'')."/>";return $this;}
     public function pre($data,$label='') {$this->data['html'].= "<pre".(($label)?' id="'.$label.'"':'').">{$data}</pre>";return $this;}
     public function textarea($data,$label='') {if(!is_string($data)) $data = json_encode($data,JSON_PRETTY_PRINT);$this->data['html'].= "<textarea cols='90' rows='10'".(($label)?' id="'.$label.'"':'').">{$data}</textarea>";return $this;}
+    public function faIco(string $ico,string $title='',array $options=[]) {
+
+        $html = "<i class=\"subheader-icon fal fa-{$ico}\"></i>{$title}";
+        $href=$options['href']??'';
+        if($onClick=$options['onClick']??'') {
+            if (!$href) $href = 'javascript:void(0);';
+            $onClick=" onclick=\"{$onClick};return false;\"";
+        }
+        if($href) $html = "<a href=\"{$href}\"{$onClick}>{$html}</a>";
+        $this->data['html'].= $html;
+        return $this;
+
+    }
     public function testComponents($id,$json,$php) {
         $this->data['html'].= "
             <div  class='row'>
@@ -869,6 +894,47 @@ class CFAComponentSearchInput
     public function searchPlaceHolder($data) {$this->data['search_placeholder'] = $data; return $this;}
     public function searchElementsWrapper($data) {$this->data['search_elements_wrapper'] = $data; return $this;}
     public function class($data) {$this->data['class'] = $data; return $this;}
+}
+
+/**
+ * CFAComponentFormInput Class component
+ */
+class CFAComponentFormInput
+{
+    var $type = 'form-input';
+    var $index = 0;
+    var $data = [];
+    public function __construct() { $this->data['id'] = uniqid('search-input');}
+    public function placeHolder($placeholder) {$this->data['form_placeholder'] = $placeholder; return $this;}
+    public function ico($ico) {$this->data['ico'] = $ico; return $this;}
+    public function class($data) {$this->data['class'] = $data; return $this;}
+    public function onEnter($js_data) {
+        $this->data['onkeypress'] = "if(event.keyCode==13) {{$js_data}}";
+        return $this;
+    }
+    public function onClick($js_script) {$this->data['onclick'] = $js_script; return $this;}
+    public function onBlur($js_script) {$this->data['onblur'] = $js_script; return $this;}
+    public function onChange($js_script) {$this->data['onchange'] = $js_script; return $this;}
+    public function value($value) {$this->data['value'] = $value; return $this;}
+    public function label($label) {$this->data['label'] = $label; return $this;}
+    public function title($title) {$this->data['title'] = $title; return $this;}
+
+}
+
+/**
+ * CFAComponentEditableText Class component
+ */
+class CFAComponentEditableText
+{
+    var $type = 'editable-text';
+    var $index = 0;
+    var $data = ['ico'=>'edit'];
+    public function __construct() { $this->data['id'] = uniqid('search-input');}
+    public function content($content) {$this->data['content'] = $content; return $this;}
+    public function onClick($js_script) {$this->data['onclick'] = $js_script; return $this;}
+    public function label($label) {$this->data['label'] = $label; return $this;}
+    public function ico($ico) {$this->data['ico'] = $ico; return $this;}
+
 }
 
 
