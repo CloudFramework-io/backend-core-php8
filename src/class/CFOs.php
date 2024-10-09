@@ -7,9 +7,9 @@
  */
 class CFOs {
 
+    var $version = '202410091';
     /** @var Core7  */
     var $core;
-    var $version = '202408081';
     /** @var string $integrationKey To connect with the ERP */
     var $integrationKey='';
 
@@ -350,6 +350,33 @@ class CFOs {
     }
 
     /**
+     * Execute a Direct query inside a $connection
+     * @param $q
+     * @param null $params
+     * @param string $connection
+     * @return array|false
+     */
+    public function bqQuery ($q,$params=null)
+    {
+        //region INIT $this->bqObjects['internal'] IF it does not exist
+        if(!isset($this->bqObjects['no-dataset'])) {
+            $options = [];
+            if($this->service_account)
+                $options['keyFile'] = $this->service_account;
+            $this->createFooBQObject('no-dataset',$options);
+            if($this->error) return false;
+        }
+        //endregion
+
+        /** @var DataBQ $bq */
+        $bq = &$this->bqObjects['no-dataset'];
+        $result = $bq->dbQuery('Custom Query',$q,$params);
+        if($bq->error) return $this->addError('bq-error',$bq->errorMsg);
+        return($result);
+    }
+
+
+    /**
      * @param string $object
      * @return CloudSQL|bool returns false if error
      */
@@ -478,12 +505,12 @@ class CFOs {
      * Create a Foo BQ Object to be returned in case someone tries to access a non created object
      * @ignore
      */
-    public function createFooBQObject($object) {
+    public function createFooBQObject($object,array $options=[]) {
         if(!isset($this->bqObjects[$object])) {
             $model = json_decode('{
                                     "KeyName": ["string","index|minlength:4"]
                                   }',true);
-            $this->bqObjects[$object] = $this->core->loadClass('DataBQ',['Foo',$model]);
+            $this->bqObjects[$object] = $this->core->loadClass('DataBQ',[$object,$model,$options]);
             if ($this->bqObjects[$object]->error) return($this->addError('bigquery-error',$this->dsObjects[$object]->errorMsg));
         }
     }
