@@ -16,9 +16,9 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
      */
     class DataBQ
     {
+        var $_version = '20241009';
         var $core = null;                   // Core7 reference
         var $project_id = null;             // project_id
-        var $_version = '20230905';
         /** @var BigQueryClient|null  */
         var $client = null;                 // BQ Client
         // table to write Data
@@ -32,6 +32,8 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
         var $error = false;
         var $errorMsg = [];
+        var $errorCode = '';
+
         var $options = [];
         var $entity_schema = null;
         var $fields = [];
@@ -100,7 +102,10 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                     }
                 }
             } catch (Exception $e) {
-                return($this->addError($e->getMessage()));
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return $this->addError('bq-error',$_message['error']??$_message);
             }
             //endregion
 
@@ -119,7 +124,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
             $this->entity_schema = $schema;
             if(isset($this->entity_schema['model'])) foreach ($this->entity_schema['model'] as $field => $item) {
                 if(in_array(strtolower($item[0]),['key','keyid','keyname']) || (isset($item[1]) && stripos($item[1],'isKey')!==false)) {
-                    if($this->key) return($this->addError('There is two keys in the model: '.$this->key.','.$field));
+                    if($this->key) return($this->addError('params-error','There is two keys in the model: '.$this->key.','.$field));
                     $this->key = $field;
                 }
                 $this->fields[$field] = $item[0]??'string';
@@ -149,7 +154,8 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
         /**
          * Return datasets associated to the project
-         * @return array|void
+         *
+         * @return array|false An array of dataset IDs or null if an error occurs
          */
         public function getDataSets() {
             try {
@@ -160,14 +166,18 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 }
                 return $ret;
             } catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                $this->addError(['bigquery'=>$error]);
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return $this->addError('bq-error',$_message['error']??$_message);
             }
         }
 
         /**
-         * Return datasets associated to the project
-         * @return array|void
+         * Return information about the specified dataset.
+         *
+         * @param string|null $dataset_name The name of the dataset (default is null).
+         * @return array|false Returns information about the dataset, including metadata and schema. false if error
          */
         public function getDataSetInfo($dataset_name=null) {
             if(!$dataset_name) $dataset_name = $this->dataset_name;
@@ -181,14 +191,18 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 return $dataset->info();
 
             } catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                $this->addError(['bigquery'=>$error]);
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return $this->addError('bq-error',$_message['error']??$_message);
             }
         }
 
         /**
-         * Return datasets associated to the project
-         * @return array|void
+         * Retrieves the tables in the given dataset or the default dataset.
+         *
+         * @param string|null $dataset_name The name of the dataset to retrieve tables from. Defaults to the default dataset if not provided.
+         * @return array|false An array of table IDs in the dataset. false if error
          */
         public function getDataSetTables($dataset_name=null) {
             if(!$dataset_name) $dataset_name = $this->dataset_name;
@@ -206,14 +220,20 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 }
                 return $ret;
             } catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                $this->addError(['bigquery'=>$error]);
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return $this->addError('bq-error',$_message['error']??$_message);
+
             }
         }
 
         /**
-         * Return datasets associated to the project
-         * @return array|void
+         * Retrieves information about the specified table in the given dataset or the default dataset.
+         *
+         * @param string|null $dataset_name The name of the dataset where the table is located. Defaults to the default dataset if not provided.
+         * @param string|null $table_name The name of the table to retrieve information for. Defaults to the default table if not provided.
+         * @return array|false An array containing table information including table ID, fully qualified table ID, sample query, and table info. Returns false if an error occurs.
          */
         public function getDataSetTableInfo($dataset_name=null,$table_name=null) {
             if(!$dataset_name) $dataset_name = $this->dataset_name;
@@ -235,14 +255,23 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 return ['table'=>$table->id(),'id'=>$this->project_id.':'.$dataset_name.':'.$table->id(),'query'=>'SELECT * FROM `'.$this->project_id.'.'.$dataset_name.'.'.$table->id().'` limit 10','info'=>$table->info()];
 
             } catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                $this->addError(['bigquery'=>$error]);
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return $this->addError('bq-error',$_message['error']??$_message);
+
             }
         }
 
         /**
-         * Return datasets associated to the project
-         * @return array|void
+         * Creates a table in the given dataset with the specified fields.
+         *
+         * @param array $fields The schema of the table to be created.
+         * @param string|null $dataset_name The name of the dataset in which the table should be created. Defaults to the default dataset if not provided.
+         * @param string|null $table_name The name of the table to be created. Defaults to the default table name if not provided.
+         *
+         * @return array An array containing information about the created table in the format of ['table' => 'project_id.dataset_name.table_id', 'info' => $table_info].
+         *               Returns false if an error occurs.
          */
         public function createDataSetTableInfo(array $fields, $dataset_name=null,$table_name=null) {
             if(!$dataset_name) $dataset_name = $this->dataset_name;
@@ -260,8 +289,11 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 return(['table'=>'`'.$this->project_id.'.'.$dataset_name.'.'.$table->id().'`','info'=>$table->info()]);
 
             } catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                $this->addError(['bigquery'=>$error]);
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return($this->addError('bq-error',$_message['error']??$_message));
+
             }
         }
 
@@ -293,21 +325,26 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
 
         /**
-         * Feed a table with $data
-         * @param $table_id
-         * @param $data
-         * @return bool|void
+         * Feeds data into the specified BigQuery table.
+         *
+         * @param string $table_id The ID of the table to feed data into.
+         * @param array $data The data to be fed into the table.
+         *
+         * @return bool Returns true if the data insertion was successful.
+         *                 If an error occurs during data insertion, it will log the errors and returns false
          */
         private function _feed($table_id, &$data) {
-            if(!is_object($this->dataset)) return($this->addError('_feed requires a dataset_name when you instances the class'));
+            if(!is_object($this->dataset)) return($this->addError('params-error','_feed requires a dataset_name when you instances the class'));
 
             try {
                 /** @var \Google\Cloud\BigQuery\Table $table */
                 $table = $this->dataset->table($table_id);
                 $table_id = $table->id();
             }  catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                return($this->addError(['bigquery'=>$error]));
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return($this->addError('bq-error',$_message['error']??$_message));
             }
 
             //region PREPARE $data
@@ -322,23 +359,27 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 if (!$insertResponse->isSuccessful()) {
                     foreach ($insertResponse->failedRows() as $row) {
                         foreach ($row['errors'] as $error) {
-                            $this->addError($error);
+                            $this->addError('bq-error',$error);
                         }
                     }
                     return;
                 }
             }  catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                return($this->addError(['bigquery'=>$error]));
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return($this->addError('bq-error',$_message['error']??$_message));
             }
 
             return true;
         }
 
         /**
-         * Execute a query in BigQuery
-         * @param $q
-         * @return array|void
+         * Executes a query with optional parameters.
+         *
+         * @param string $q The query string with optional placeholders for parameters.
+         * @param array $params An array of parameters to be replaced in the query string (optional).
+         * @return array|false An array of rows with queried data. false if an error occurs.
          */
         private function _query($q,$params=[]) {
             $start_global_time = microtime(true);
@@ -347,7 +388,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
             $n_percentsS = substr_count($q,'%s');
             if($params) {
                 if(!is_array($params) || count($params)!= $n_percentsS) {
-                    return $this->addError("Number of %s ($n_percentsS) doesn't count match with number of arguments (".count($params)."). Query: $q -> ".print_r($params,true));
+                    return $this->addError('params-error',"Number of %s ($n_percentsS) doesn't count match with number of arguments (".count($params)."). Query: $q -> ".print_r($params,true));
                 }
                 foreach ($params as $param) {
                     $q = preg_replace('/%s/',$param??'',$q,1);
@@ -398,7 +439,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                                 $this->_last_query_time = round(microtime(true)-$start_global_time,4);
                                 if($this->debug)
                                     $this->core->logs->add("DataBQ.fetch({$this->_last_query}) [".$this->_last_query_time." secs]",'DataBQ');
-                                return($this->addError($key.' field is of unknown class: '.get_class($value)));
+                                return($this->addError('params-error',$key.' field is of unknown class: '.get_class($value)));
                             }
                         } elseif(is_array($value)) {
                             if(isset($value['fields'])) $row[$key] = $value['fields'];
@@ -414,7 +455,10 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
                 return $ret;
             } catch (Exception $e) {
-                return($this->addError($e->getMessage()));
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return($this->addError('bq-error',$_message['error']??$_message));
             }
 
         }
@@ -500,7 +544,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          */
         function fetchByKeys($keysWhere, $fields=null) {
             if($this->error) return;
-            if(!$this->key) return($this->addError('fetchByKeys($keysWhere, $fields=null) has been called but there is no key in the data model'));
+            if(!$this->key) return($this->addError('params-error','fetchByKeys($keysWhere, $fields=null) has been called but there is no key in the data model'));
 
             // Keys to find
             if(!is_array($keysWhere)) $keysWhere = [$keysWhere];
@@ -524,7 +568,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
             // Query
             $_sql = "SELECT {$sqlFields} FROM {$from} WHERE {$where}";
-            if(!$sqlFields) return($this->addError('No fields to select found: '.json_encode($fields)));
+            if(!$sqlFields) return($this->addError('params-error','No fields to select found: '.json_encode($fields)));
             return $this->_query($_sql,$params);
 
         }
@@ -572,7 +616,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @param Array $keysWhere
          */
         function setQueryWhere($keysWhere) {
-            if(empty($keysWhere) ) return($this->addError('setQueryWhere($keysWhere) $keyWhere can not be empty'));
+            if(empty($keysWhere) ) return($this->addError('params-error','setQueryWhere($keysWhere) $keyWhere can not be empty'));
             $this->queryWhere = $keysWhere;
         }
 
@@ -587,8 +631,8 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @param Array $keysWhere
          */
         function addQueryWhere($keysWhere) {
-            if(empty($keysWhere) ) return($this->addError('setQueryWhere($keysWhere) $keyWhere can not be empty'));
-            if(!is_array($keysWhere)) return($this->addError('setQueryWhere($keysWhere) $keyWhere is not an array'));
+            if(empty($keysWhere) ) return($this->addError('params-error','setQueryWhere($keysWhere) $keyWhere can not be empty'));
+            if(!is_array($keysWhere)) return($this->addError('params-error','setQueryWhere($keysWhere) $keyWhere is not an array'));
             $this->queryWhere = array_merge($this->queryWhere ,$keysWhere);
         }
 
@@ -635,7 +679,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
             elseif(is_string($keysWhere) && !empty($keysWhere)) {
                 $where =$keysWhere;
             } else {
-                return($this->addError('fetch($keysWhere,$fields=null) $keyWhere has a wrong value'));
+                return($this->addError('params-error','fetch($keysWhere,$fields=null) $keyWhere has a wrong value'));
             }
 
             // --- FIELDS
@@ -686,7 +730,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 }
             }
 
-            if(!$sqlFields) return($this->addError('No fields to select found: '.json_encode($fields)));
+            if(!$sqlFields) return($this->addError('params-error','No fields to select found: '.json_encode($fields)));
 
             $ret= $this->_query($SQL,$params);
             if($this->error) return;
@@ -701,17 +745,17 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @return bool|null|void
          */
         public function update($data,$record_readed=[]) {
-            if(!is_array($data) ) return($this->addError('update($data) $data has to be an array with key->value'));
-            if(!isset($this->entity_schema['model'])) return $this->addError('update($data) there is no model defined');
-            if(!$this->key) return $this->addError('update($data) there is no $this->key defined');
-            if(!isset($data[$this->key]) || !$data[$this->key]) return $this->addError('update($data) missing key field in $data: '.$this->key);
-            if(count($data)<2) return $this->addError('update($data) there is no fields to update ');
+            if(!is_array($data) ) return($this->addError('params-error','update($data) $data has to be an array with key->value'));
+            if(!isset($this->entity_schema['model'])) return $this->addError('params-error','update($data) there is no model defined');
+            if(!$this->key) return $this->addError('params-error','update($data) there is no $this->key defined');
+            if(!isset($data[$this->key]) || !$data[$this->key]) return $this->addError('params-error','update($data) missing key field in $data: '.$this->key);
+            if(count($data)<2) return $this->addError('params-error','update($data) there is no fields to update ');
 
             if(!$record_readed) {
                 $record_readed = $this->fetchByKeys($data[$this->key]);
-                if ($this->error) return ($this->addError('update($data) error calling $this->fetchByKeys($data[$this->key])'));
+                if ($this->error) return ($this->addError('params-error','update($data) error calling $this->fetchByKeys($data[$this->key])'));
             }
-            if(!$record_readed) return($this->addError('update($data) contains a key that does not exist in the dataset: '.$this->key.'='.$data[$this->key]));
+            if(!$record_readed) return($this->addError('params-error','update($data) contains a key that does not exist in the dataset: '.$this->key.'='.$data[$this->key]));
 
             foreach ($data as $field=>$value) if(!isset($this->entity_schema['model'][$field])) unset($data[$field]);
             $_sql = "UPDATE `{$this->project_id}.{$this->dataset_name}.{$this->table_name}` SET ";
@@ -719,7 +763,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
             $params = [];
             foreach ($data as $field=>$value) if($field!=$this->key) {
                 if(isset($this->entity_schema['model']) && !isset($this->entity_schema['model'][$field]))
-                    return $this->addError('update($data) has received a field not included in the model: '.$field);
+                    return $this->addError('params-error','update($data) has received a field not included in the model: '.$field);
 
                 if($set) $set.=', ';
                 $set.= " {$field}=";
@@ -764,9 +808,9 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @return bool|null|void
          */
         public function softDelete($key) {
-            if(!$key ) return($this->addError('softDelete($key) $key has to be an array with key->value'));
-            if(!isset($this->entity_schema['model'])) return $this->addError('softDelete($key) there is no model defined');
-            if(!$this->key) return $this->addError('softDelete($key) there is no $this->key defined');
+            if(!$key ) return($this->addError('params-error','softDelete($key) $key has to be an array with key->value'));
+            if(!isset($this->entity_schema['model'])) return $this->addError('params-error','softDelete($key) there is no model defined');
+            if(!$this->key) return $this->addError('params-error','softDelete($key) there is no $this->key defined');
             $_sql = "UPDATE `{$this->project_id}.{$this->dataset_name}.{$this->table_name}` SET _deleted=CURRENT_TIMESTAMP() WHERE {$this->key}=";
             if(isset($this->entity_schema['model'][$this->key][0]) &&  in_array($this->entity_schema['model'][$this->key][0],['integer','float','boolean'])) $_sql.='%s';
             else $_sql.='"%s"';
@@ -791,16 +835,16 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @return bool|null|void
          */
         public function insert($data, $upsert=false) {
-            if(!is_array($data) ) return($this->addError('insert($data) $data has to be an array with key->value'));
-            if(!isset($this->entity_schema['model'])) return $this->addError('insert($data) there is no model defined');
+            if(!is_array($data) ) return($this->addError('params-error','insert($data) $data has to be an array with key->value'));
+            if(!isset($this->entity_schema['model'])) return $this->addError('params-error','insert($data) there is no model defined');
 
             if($this->key) {
-                if(!isset($data[$this->key]) || !$data[$this->key]) return $this->addError('insert($data) missing key field in $data: '.$this->key);
+                if(!isset($data[$this->key]) || !$data[$this->key]) return $this->addError('params-error','insert($data) missing key field in $data: '.$this->key);
                 $record_readed = $this->fetchByKeys($data[$this->key]);
-                if($this->error) return($this->addError('insert($data) error calling $this->fetchByKeys($data[$this->key])'));
+                if($this->error) return($this->addError('params-error','insert($data) error calling $this->fetchByKeys($data[$this->key])'));
                 if($record_readed) {
                     if($upsert) return $this->update($data,$record_readed);
-                    else return($this->addError('insert($data) contains a key that already exist in the dataset: '.$this->key.'='.$data[$this->key]));
+                    else return($this->addError('params-error','insert($data) contains a key that already exist in the dataset: '.$this->key.'='.$data[$this->key]));
                 }
             }
 
@@ -836,15 +880,16 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
         }
 
         /**
-         * Streaming Insert a record in db. It couldn't be deleted or updated before 30' after insertion
-         * @param $data
-         * @return bool|null|void
+         * Inserts data with streaming buffer into the BigQuery table.
+         *
+         * @param array $data The data to be inserted into the BigQuery table. Must be an array with key -> value pairs.
+         * @return array|false Returns the inserted data if successful. false if an error occurs during the insertion process.
          */
-        public function insertWithStreamingBuffer($data) {
-            if(!is_array($data) ) return($this->addError('insert($data) $data has to be an array with key->value'));
-            if(!isset($this->entity_schema['model'])) return $this->addError('insert($data) there is no model defined');
-            if(!$this->table) return $this->addError('insert($data) there is $this->table initiated');
-            if(!$data || !is_array($data)) return($this->addError('insert($data) $data has received an empty or non array value'));
+        public function insertWithStreamingBuffer(array $data) {
+            if(!is_array($data) ) return($this->addError('params-error','insert($data) $data has to be an array with key->value'));
+            if(!isset($this->entity_schema['model'])) return $this->addError('params-error','insert($data) there is no model defined');
+            if(!$this->table) return $this->addError('params-error','insert($data) there is $this->table initiated');
+            if(!$data || !is_array($data)) return($this->addError('params-error','insert($data) $data has received an empty or non array value'));
             if(!isset($data[0])) $data = [$data];
 
             //region PREPARE $bq_data from $data to be inserted and adding _created field
@@ -854,7 +899,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 foreach ($record as $key=>$datum)
                     if(!isset($this->entity_schema['model'][$key])) unset($data[$i][$key]);
 
-                if(!$data[$i]) return($this->addError('insert($data) $data has received fields to be inserted'));
+                if(!$data[$i]) return($this->addError('params-error','insert($data) $data has not received fields to be inserted'));
                 $data[$i]['_updated'] = 'AUTO';
                 $data[$i]['_created'] = 'AUTO';
 
@@ -868,13 +913,15 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 if (!$insertResponse->isSuccessful())  {
                     foreach ($insertResponse->failedRows() as $row) {
                         foreach ($row['errors'] as $error) {
-                            return $this->addError($error);
+                            return $this->addError('bq-error',$error);
                         }
                     }
                 }
             }  catch (Exception $e) {
-                $error = $e->getMessage();
-                return($this->addError(['bigquery'=>$error]));
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return($this->addError('bq-error',$_message['error']??$_message));
             }
             //endregion
 
@@ -887,8 +934,8 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @return bool|null|void
          */
         public function _insertWithStreamingBuffer($data) {
-            if(!$this->table ) return($this->addError('insert($data) called but there is not $this->table assigned'));
-            if(!is_array($data) ) return($this->addError('insert($data) $data has to be an array with key->value'));
+            if(!$this->table ) return($this->addError('params-error','insert($data) called but there is not $this->table assigned'));
+            if(!is_array($data) ) return($this->addError('params-error','insert($data) $data has to be an array with key->value'));
             if(!isset($data[0])) $data = [$data];
 
             //region PREPARE $bq_data from $data to be inserted and adding _created field
@@ -901,7 +948,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 //endregion
                 $bq_data[] = ['data'=>&$data[$i]];
                 if($this->key){
-                    if(!isset($data[$i][$this->key])) return($this->addError('insert($data) missing key field in $data: '.$this->key));
+                    if(!isset($data[$i][$this->key])) return($this->addError('params-error','insert($data) missing key field in $data: '.$this->key));
                     $keys[]= $data[$i][$this->key];
                 }
             }
@@ -910,8 +957,8 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
             //region IF $keys verify the records does not exist in the table
             if($keys) {
                 $data = $this->fetchByKeys($keys,$this->key);
-                if($this->error) return($this->addError(' insert($data) error calling $this->fetchByKeys($keys)'));
-                if($data) return($this->addError(['error'=>'There are records with the same ids','data'=>$data]));
+                if($this->error) return($this->addError('params-error',' insert($data) error calling $this->fetchByKeys($keys)'));
+                if($data) return($this->addError('params-error',['error'=>'There are records with the same ids','data'=>$data]));
             }
             //endregion
 
@@ -921,14 +968,16 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 if (!$insertResponse->isSuccessful()) {
                     foreach ($insertResponse->failedRows() as $row) {
                         foreach ($row['errors'] as $error) {
-                            $this->addError($error);
+                            $this->addError('bq-error',$error);
                         }
                     }
                     return;
                 }
             }  catch (Exception $e) {
-                $error = json_decode($e->getMessage(),true);
-                return($this->addError($error));
+                $_message = $e->getMessage();
+                if(json_validate($_message)) $_message = json_decode($_message,true);
+                else $_message=[$_message];
+                return($this->addError('bq-error',$_message['error']??$_message));
             }
             //endregion
 
@@ -941,16 +990,16 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          * @return bool|null|void
          */
         public function delete($data) {
-            if(!is_array($data) ) return($this->addError('delete($data) $data has to be an array with key->value'));
+            if(!is_array($data) ) return($this->addError('params-error','delete($data) $data has to be an array with key->value'));
             if(!isset($this->entity_schema['model']))
-                return $this->addError('delete(&$data) there is no model defined');
+                return $this->addError('params-error','delete(&$data) there is no model defined');
 
             $_sql = "DELETE FROM `{$this->project_id}.{$this->dataset_name}.{$this->table_name}` WHERE ";
             $where = "";
             $params = [];
             foreach ($data as $field=>$value) {
                 if(isset($this->entity_schema['model']) && !isset($this->entity_schema['model'][$field]))
-                    return $this->addError('delete($data) has received a field not included in the model: '.$field);
+                    return $this->addError('params-error','delete($data) has received a field not included in the model: '.$field);
 
                 if($where) $where.=' and ';
                 $where.= " {$field}=";
@@ -992,7 +1041,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                     if(strlen($this->order)) $this->order.=', ';
                     $this->order.= '`'.$this->table_name.'`.'.$field.((strtoupper(trim($type))=='DESC')?' DESC':' ASC');
                 } else {
-                    $this->addError($field.' does not exist to order by');
+                    $this->addError('params-error',$field.' does not exist to order by');
                 }
             }
 
@@ -1000,7 +1049,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
 
         function getQuerySQLWhereAndParams($keysWhere=[]) {
-            if(!is_array($keysWhere) ) return($this->addError('getQuerySQLWhereAndParams($keysWhere) $keyWhere has to be an array with key->value'));
+            if(!is_array($keysWhere) ) return($this->addError('params-error','getQuerySQLWhereAndParams($keysWhere) $keyWhere has to be an array with key->value'));
 
             // Where condition for the SELECT
             $where = ''; $params = [];
@@ -1031,7 +1080,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                     // Simple where
                     else {
                         // TODO: support >,>=,<,<=
-                        if(!isset($this->fields[$key])) return($this->addError('fetch($keysWhere, $fields=null) $keyWhere contains a wrong field: '.$key));
+                        if(!isset($this->fields[$key])) return($this->addError('params-error','fetch($keysWhere, $fields=null) $keyWhere contains a wrong field: '.$key));
                     }
 
                     if($where) $where.=' AND ';
@@ -1234,7 +1283,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
         }
 
         public function setView($view) {
-            if(!is_string($view) && null !==$view) return($this->addError('setView($view), Wrong value'));
+            if(!is_string($view) && null !==$view) return($this->addError('params-error','setView($view), Wrong value'));
 
             $this->view = $view;
         }
@@ -1275,13 +1324,19 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
 
         /**
-         * Add an error in the class
+         * Adds an error message to the list of error messages.
+         *
+         * @param string $code The error code associated with the error message
+         * @param mixed $value The error message to be added
+         * @return bool Always returns false to facilitate the return of the caller
          */
-        function addError($value)
+        function addError(string $code,$value)
         {
             $this->error = true;
+            $this->errorCode = $code;
             if(!is_array($this->errorMsg)) $this->errorMsg = [$this->errorMsg];
             $this->errorMsg[] = $value;
+            return false;
         }
 
         /**
@@ -1308,7 +1363,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
          */
         function getValidatedArrayFromData(&$data, $all=true, &$dictionaries=[]) {
 
-            if(!is_array($data) || !count($data)) return($this->addError('getCheckedArrayToInsert: empty or not valid data'));
+            if(!is_array($data) || !count($data)) return($this->addError('params-error','getCheckedArrayToInsert: empty or not valid data'));
 
             $schema_to_validate = [];
             foreach ($this->entity_schema['model'] as $field=>$item) {
@@ -1325,12 +1380,12 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                 }
 
             }
-            if(!count($dataValidated)) return($this->addError('getValidatedArrayFromData: We did not found fields to validate into the data'));
+            if(!count($dataValidated)) return($this->addError('params-error','getValidatedArrayFromData: We did not found fields to validate into the data'));
 
             /* @var $dv DataValidation */
             $dv = $this->core->loadClass('DataValidation');
             if(!$dv->validateModel($schema_to_validate,$dataValidated,$dictionaries,$all)) {
-                $this->addError($this->table_name.': error validating Data in Model.: {'.$dv->field.'}. '.$dv->errorMsg);
+                $this->addError('params-error',$this->table_name.': error validating Data in Model.: {'.$dv->field.'}. '.$dv->errorMsg);
             }
 
             return ($dataValidated);
@@ -1375,7 +1430,7 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
 
             $bq_structure = [];
             if(!isset($this->entity_schema['model']))
-                return $this->addError('There is not model [$this->entity_schema]');
+                return $this->addError('params-error','There is not model [$this->entity_schema]');
 
             foreach ($this->entity_schema['model'] as $field_name=>$item) {
                 $field = ["name"=>$field_name];
@@ -1448,8 +1503,10 @@ if (!defined ("_DATABQCLIENT_CLASS_") ) {
                             return $ret;
                         }
                     } catch (Exception $e) {
-                        $error = json_decode($e->getMessage(),true);
-                        $this->addError(['bigquery'=>$error]);
+                        $_message = $e->getMessage();
+                        if(json_validate($_message)) $_message = json_decode($_message,true);
+                        else $_message=[$_message];
+                        $this->addError('bq-error',$_message['error']??$_message);
                         $ret['field_analysis'] ="{$this->dataset_name} DATASET CAN NOT BE CREATED IN PROJECT ".$this->project_id;
                         $ret['dataset'] = ["name"=>$this->dataset_name,'error'=>$this->errorMsg];
                         return $ret;
