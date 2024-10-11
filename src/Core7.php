@@ -7793,12 +7793,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Add an error in the class
          * @param $value
+         * @return false always false to facilitate other calls
          */
         function addError($value)
         {
             $this->error = true;
             $this->core->errors->add($value);
             $this->errorMsg[] = $value;
+            return false;
         }
     }
 
@@ -7863,6 +7865,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             else print_r($info);
             if($info)
                 $this->sendTerminal[] = "[ ".(round(microtime(true)-$this->time,4))." ms] ".((is_string($info))?$info:json_encode($info));
+            return true;
         }
 
         function readCache() {
