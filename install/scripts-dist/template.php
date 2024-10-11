@@ -35,10 +35,8 @@ class Script extends Scripts2020
         $this->sendTerminal("Available methods (use {$this->script}/{method}):");
         $this->sendTerminal(" - {$this->script}/default");
         $this->sendTerminal(" - {$this->script}/hello");
-        $this->sendTerminal("Current url-paramaters: ");
-        $this->sendTerminal($this->params);
-        $this->sendTerminal("Current formParameters: ");
-        $this->sendTerminal($this->formParams);
+        $this->sendTerminal("Current url-paramaters:\n - /".implode('/',$this->params));
+        $this->sendTerminal("Current formParameters:\n - ".json_encode($this->formParams));
     }
 
     /**
