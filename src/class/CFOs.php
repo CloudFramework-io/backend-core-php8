@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '202410091';
+    var $version = '202410161';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -985,7 +985,7 @@ class CFOWorkFlows {
             $this->workflows_report($workflow['id'],'Error [conditional] is not an string in workflow '.$event."[$_i]");
             return false;
         }
-        
+
         $_eval = false;
         try {
             $_eval_expression = '$_eval = ('.str_replace(';','',$this->core->replaceCloudFrameworkTagsAndVariables($workflow['conditional'],$data)).');';
@@ -1650,11 +1650,11 @@ class CFOWorkFlows {
         //If the workflow does not have from, then the template has to have any default from defined
         if($workflow['from']??null)
             $params['from'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['from'],$data);
-       //If the workflow does not have from, then the template has to have any default from defined
+        //If the workflow does not have from, then the template has to have any default from defined
         if($workflow['cc']??null)
             $params['cc'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['cc'],$data);
 
-       //If the workflow does not have from, then the template has to have any default from defined
+        //If the workflow does not have from, then the template has to have any default from defined
         if($workflow['bcc']??null)
             $params['bcc'] = $this->core->replaceCloudFrameworkTagsAndVariables($workflow['bcc'],$data);
 
@@ -2024,6 +2024,27 @@ class CFOApi {
     public function setAPIUrl(string $apiUrl)
     {
         $this->apiUrl = $apiUrl;
+    }
+
+    /**
+     * GET the structure to Display the data for a given CFO and ID
+     *
+     * @param string $cfo The CFO value
+     * @param string|int $id The ID value
+     * @param array $params optional array to send parameters or filters
+     * @return array|false Returns the data for the given CFO and ID
+     */
+    public function view(string $cfo, string $view='default',$filters=[]): bool|array
+    {
+        $url = $this->apiUrl.'/'.urlencode($cfo).'?cfo_view='.urlencode($view);
+        $result = $this->core->request->get_json_decode($url,$filters,$this->headers);
+        if($this->core->request->error) {
+            $this->addError('api-error',$this->core->request->errorMsg);
+            $this->core->request->reset();
+            return false;
+        }
+        return $result['data']??$result;
+
     }
 
     /**
