@@ -562,7 +562,7 @@ class CFOs {
      * If ($use==true and if !$this->service_account) the secrets of Datastore, Bigquery, Database CFOs will be tried to be read. False by default
      * @param bool $avoid
      */
-    function useCFOSecret(bool $use) {
+    function useCFOSecret(bool $use=true) {
         $this->avoid_secrets = !$use;
     }
 
