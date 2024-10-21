@@ -580,7 +580,56 @@ if (!defined("_RESTfull_CLASS_")) {
                 }
         }
 
-        function rewriteReturnResponse($response)
+        /**
+         * Set a message to the return data: $this->returnData['messages']
+         *
+         * @param string $message The message to be added
+         * @param string $type The type of message (default: 'success')
+         * @param string $description The description of the message (default: empty)
+         * @param int $time The time duration for message display (default: 5)
+         * @param string $url The URL associated with the message (default: empty)
+         * @see addMessage
+         * @return bool Always returns true after adding the message to returnData
+         */
+        public function setMessage(string $message,string $type='success',string $description='',int $time=5,string $url=''): bool
+        {
+            $this->returnData['messages'] = [];
+            return $this->addMessage($message,$type,$description,$time,$url);
+        }
+
+        /**
+         * Add a message to the return data: $this->returnData['messages']
+         *
+         * @param string $message The message to be added
+         * @param string $type The type of message (default: 'success'). Other values 'success','error','warning','info','default'
+         * @param string $description The description of the message (default: empty)
+         * @param int $time The time duration for message display (default: 5)
+         * @param string $url The URL associated with the message (default: empty)
+         *
+         * @return bool Always returns true after adding the message to returnData
+         */
+        public function addMessage(string $message, string $type='success', string $description='', int $time=5, string $url=''): bool
+        {
+            if(!isset($this->returnData['messages'])) $this->returnData['messages'] = [];
+            $message = [
+                'title'=>$message,
+                'type'=>$type,
+                'description'=>$description,
+                'time'=>$time,
+                'url'=>$url,
+            ];
+            $this->returnData['messages'][] = $message;
+            return true;
+
+        }
+
+        /**
+         * Rewrite the return response with a new value.
+         *
+         * @param mixed $response The new response to rewrite
+         * @return void
+         */
+        public function rewriteReturnResponse($response)
         {
             $this->rewrite = $response;
         }
@@ -590,7 +639,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param $data
          * @return true
          */
-        function setReturnData($data)
+        public function setReturnData($data)
         {
             $this->returnData['data'] = $data;
             return true;
@@ -601,7 +650,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param $value
          * @return true
          */
-        function addReturnData($value)
+        public function addReturnData($value)
         {
 
             if (!isset($this->returnData['data'])) $this->setReturnData($value);
