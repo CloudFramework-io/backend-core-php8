@@ -6,6 +6,7 @@
  */
 class DataSQL
 {
+    var $version = '202410221';
     /** @var Core7  */
     var $core;
     var $error = false;
