@@ -6,7 +6,7 @@
  */
 class DataSQL
 {
-    var $version = '202410221';
+    var $version = '202410241';
     /** @var Core7  */
     var $core;
     var $error = false;
@@ -155,7 +155,11 @@ class DataSQL
                     if(isset($this->entity_schema['model'][$field][0]) && $this->entity_schema['model'][$field][0]=='json') {
                         $ret.='CAST('.$this->entity_name.'.'.$field.' as CHAR) as '.$field;
                     }elseif(isset($this->entity_schema['model'][$field][0]) || !preg_match('/[^A-Za-z0-9_ ]/',$field)) {
-                        $ret.=$this->entity_name.'.'.$field;
+                        $field = trim($field);
+                        if(stripos($field,'distinct ')===0)
+                            preg_replace('/distinct /i','DISTINCT '.$this->entity_name.'.',$field);
+                        else
+                            $ret.=$this->entity_name.'.'.$field;
                     }else{
                         $ret.=$field;
                     }
@@ -227,8 +231,10 @@ class DataSQL
         $SQL = "SELECT {$sqlFields} FROM {$from} WHERE {$where}";
         if(!$sqlFields) return($this->addError('No fields to select found: '.json_encode($fields)));
 
-        return $this->core->model->dbQuery($this->entity_name.' fetch by querys: '.json_encode($keysWhere),$SQL,$params,$this->entity_schema['model']);
+        $ret = $this->core->model->dbQuery($this->entity_name.' fetch by querys: '.json_encode($keysWhere),$SQL,$params,$this->entity_schema['model']);
+        if($this->core->model->error) $this->addError($this->core->model->errorMsg);
 
+        return $ret;
     }
 
     /**
