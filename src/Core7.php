@@ -3714,8 +3714,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Reset Cache of the module
+         * @deprecated
+         * @see resetCacheForPlatformSecretVars
          */
         public function resetCacheForERPSecretVars() {
+            $this->resetCacheForPlatformSecretVars();
+        }
+
+        /**
+         * Reset Cache of the module
+         */
+        public function resetCacheForPlatformSecretVars() {
             $this->resetCache('ERP.secrets');
         }
 
@@ -8083,7 +8092,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                 $this->sendTerminal('Calling [https://api.cloudframework.io/core/signin/'.$namespace.'/in] with Google access token');
                 //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
-                $ret = $this->core->request->post_json_decode('https://api7.cloudframework.io/core/signin/'.$namespace.'/in',$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
+                $ret = $this->core->request->post_json_decode('https://api.cloudframework.io/core/signin/'.$namespace.'/in',$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
                 if($this->core->request->error) return($this->addError($this->core->request->errorMsg));
                 $user_erp_token = [
                     'time'=>microtime(true),
@@ -8192,7 +8201,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Sent to Terminan
          * @param func_get_args
-         * @return void
+         * @return true to facilitate caller return
          */
         function sendTerminal() {
 
@@ -8201,6 +8210,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if(is_string($info)) echo $info."\n";
                 else print_r($info);
             }
+            return true;
 
             //            if($info)
             //                $this->sendTerminal[] = "[ ".(round(microtime(true)-$this->time,4))." ms] ".((is_string($info))?$info:json_encode($info));
