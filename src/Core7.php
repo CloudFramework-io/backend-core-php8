@@ -133,6 +133,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     //endregion
 
     /**
+     * _print() with an exit
+     */
+    function _printLog()
+    {
+        global $core;
+        if(is_object($core)) {
+            $core->logs->add(json_encode(func_get_args(), JSON_PRETTY_PRINT),'printLog','debug');
+        }
+    }
+    //endregion
+
+    /**
      * $this->core Core7 class is included in your APIs as $this->core and it includes objects
      * of other classes to facilitate your development:
      *
