@@ -762,6 +762,17 @@ class CFOs {
     }
 
     /**
+     * Reset error status and clear error details in the class
+     *
+     * @return void No return value as it resets the error state without returning any specific value
+     */
+    function resetError() {
+        $this->error = true;
+        $this->errorCode = null;
+        $this->errorMsg[] = [];
+    }
+
+    /**
      * Add an error in the class
      * @param string $code Code of error
      * @param mixed $value
