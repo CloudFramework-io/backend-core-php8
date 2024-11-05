@@ -7,7 +7,7 @@
  */
 class CFI
 {
-    private $version = '20240822';
+    private $version = '20241016';
     /** @var Core7 $core */
     var $core;
     private $fields = [];
@@ -77,9 +77,10 @@ class CFI
      * Change title of the App
      * @param $title
      */
-    public function addTab($title,$icon='home') {
+    public function addTab($title,$icon='home',bool|null $active=null) {
         $index = count($this->json_object['tabs']);
-        $this->json_object['tabs'][]=['title'=>$title,'ico'=>$icon,'active'=>($index==0?true:false),'index'=>$index];
+        if($active===null) $active=($index==0?true:false);
+        $this->json_object['tabs'][]=['title'=>$title,'ico'=>$icon,'active'=>$active,'index'=>$index];
     }
 
     /**
@@ -191,7 +192,7 @@ class CFIField {
      * @return CFIField $this
      */
     public function value($value) {
-        $this->cfi->json_object['fields'][$this->field]['value'] = $value; return $this;
+        $this->cfi->json_object['fields'][$this->field]['value'] = $value;
         $this->cfi->json_object['fields'][$this->field]['defaultvalue'] = $value; return $this;
     }
 
@@ -213,6 +214,25 @@ class CFIField {
      * @return CFIField $this
      */
     public function title($title) { $this->cfi->json_object['fields'][$this->field]['name'] = $title; return $this;}
+
+
+    /**
+     * Set a ecn reference to show a help
+     * @param string $route id of the ecm page
+     * @param string $icon optional to indicate what type of icon to show. default: question-circle
+     * @return CFIField $this
+     */
+    public function ecmHelp(string $route,string $icon='question-circle') {
+        $this->cfi->json_object['fields'][$this->field]['ecm'] = $route;
+        if($icon) $this->cfi->json_object['fields'][$this->field]['ecm_icon'] = $icon;
+        return $this;}
+
+    /**
+     * Set a placeholder for the field
+     * @param $title
+     * @return CFIField $this
+     */
+    public function placeHolder($title) { $this->cfi->json_object['fields'][$this->field]['placeholder'] = $title; return $this;}
 
     /**
      * Set a title for the field
@@ -282,11 +302,44 @@ class CFIField {
      * @param string $fields Fields to show
      * @return CFIField $this
      */
-    public function apiValues(string $api,string $fields) {
+    public function apiValues(string $api,string $fields='',int $limit=10,bool $datastore_search=false) {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'api_select_partial';
+        if($fields && !strpos($api,'fields=')) {
+            $api.= ((!strpos($api,'?'))?'?':'&').'fields='.$fields;
+        }
+        if($limit && !strpos($api,'server_limit==')) {
+            $api.= ((!strpos($api,'?'))?'?':'&').'server_limit='.$limit;
+        }
+        if($datastore_search && !strpos($api,'_search=')) {
+            $api.= ((!strpos($api,'?'))?'?':'&').'_search=1';
+        }
         $this->cfi->json_object['fields'][$this->field]['api'] = $api;
         return $this;
     }
+    /**
+     * Set and external_values field
+     * @param string $api Url to send the query..
+     *     'It normally starts with /cfi/<cfo-name>?fields=<fields-to-show-separated-by-comma>
+     * @param string $fields Fields to show
+     * @return CFIField $this
+     */
+    public function CFOExternalValues(string $cfo,string $fields='',int $limit=10,bool $_search=false,string $id_field='',array $vars=[]) {
+        if(strpos($cfo,'/')===false) $cfo = "/core/cfo/cfi/{$cfo}/fields";
+        if(strpos($cfo,'http')===false) $cfo = "https://api.cloudframework.io{$cfo}";
+        //if(strpos($cfo,'http')===false) $cfo = "http://localhost:9999{$cfo}";
+        $cfo.=(strpos($cfo,'?')===false)?'?':'&';
+        if($fields) $cfo.="fields=".urlencode($fields).'&';
+        if($id_field) $cfo.="id_field=".urlencode($id_field).'&';
+        if($limit>0) $cfo.="server_limit=".urlencode($limit).'&';
+        if($_search) $cfo.="_search=1&";
+        if($vars) foreach ($vars as $var_key=>$var_value) {
+            $cfo.="{$var_key}=".urlencode($var_value).'&';
+        }
+        $this->cfi->json_object['fields'][$this->field]['type'] = 'api_select_partial';
+        $this->cfi->json_object['fields'][$this->field]['api'] = $cfo;
+        return $this;
+    }
+
     /**
      * Set if the field has to be represented as an image
      * @param bool $image
@@ -297,14 +350,57 @@ class CFIField {
     public function addExternalAPI($title,$url,$method='POST',$js_condition=null) {
 
         $this->cfi->json_object['fields'][$this->field]['type'] = 'virtual';
-        $this->cfi->json_object['fields'][$this->field]['name'] = 'action';
+        $this->cfi->json_object['fields'][$this->field]['name'] = ' ';
 
         if(!isset($this->cfi->json_object['fields'][$this->field]['external_apis']) || !is_array($this->cfi->json_object['fields'][$this->field]['external_apis'])) $this->cfi->json_object['fields'][$this->field]['external_apis'] = [];
         $external = ['title'=>$title,'url'=>$url,'method'=>$method];
         if($js_condition) $external['js_condition'] = $js_condition;
+        $external['submit_form'] = true;
         $this->cfi->json_object['fields'][$this->field]['external_apis'][] = $external;
 
+
         return $this;
+    }
+
+
+    /**
+     * Set if the field has to be represented as an image
+     * @param bool $image
+     * @param int $image_with_pixels
+     * @param int $image_height_pixels
+     * @return CFIFieldButton $this
+     */
+    public function button($title,$url='',$method='POST',$js_condition=null)
+    {
+        if(!isset($this->cfi->json_object['fields'][$this->field])) $this->cfi->json_object['fields'][$this->field] =[];
+        if(!key_exists('name',$this->cfi->json_object['fields'][$this->field])) $this->cfi->json_object['fields'][$this->field]['name'] = '';
+
+        if(!is_object($this->object) || get_class($this->object) != 'CFIFieldButton') {
+            $this->object = new CFIFieldButton($this->cfi->core, $this->cfi->json_object['fields'][$this->field]);
+        }
+        $this->object->title($title);
+        if($url) $this->object->url($url);
+        return $this->object;
+
+    }
+
+
+    /**
+     * Set if the field has to be represented as an image
+     * @param bool $image
+     * @param int $image_with_pixels
+     * @param int $image_height_pixels
+     * @return CFIFieldButton $this
+     */
+    public function virtualElements($title='')
+    {
+        if(!isset($this->cfi->json_object['fields'][$this->field])) $this->cfi->json_object['fields'][$this->field] =[];
+        if(!is_object($this->object) || get_class($this->object) != 'CFIVirtualElements') {
+            $this->object = new CFIVirtualElements($this->cfi->core, $this->cfi->json_object['fields'][$this->field]);
+        }
+        if($title) $this->object->title($title);
+        return $this->object;
+
     }
 
     /**
@@ -315,6 +411,26 @@ class CFIField {
     public function json($title='') {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'json';
         if($title) $this->cfi->json_object['fields'][$this->field]['name'] = $title;
+        return $this;
+    }
+
+    /**
+     * prepend_icon to be shown in the field
+     * @param string $icon icon with fa- prefix. Example: fa-users
+     * @return CFIField $this
+     */
+    public function leftIcon($icon='') {
+        $this->cfi->json_object['fields'][$this->field]['prepend_icon'] = $icon;
+        return $this;
+    }
+
+    /**
+     * append_icon to be shown in the field
+     * @param string $icon icon with fa- prefix. Example: fa-users
+     * @return CFIField $this
+     */
+    public function rightIcon($icon='') {
+        $this->cfi->json_object['fields'][$this->field]['append_icon'] = $icon;
         return $this;
     }
 
@@ -348,7 +464,24 @@ class CFIField {
     public function boolean($title='') {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'boolean';
         if($title) $this->cfi->json_object['fields'][$this->field]['name'] = $title;
-        return $this;}
+        return $this;
+    }
+
+    /**
+     * Set a checkbox field with values and default value
+     *
+     * @param array $values An array of values for the checkbox
+     * @param array|string $defaultvalue (optional) Default value(s) for the checkbox, defaults to an empty array
+     *
+     * @return CFIField The CFIField instance
+     */
+    public function checkbox(array $values,array|string $value=[]) {
+        $this->cfi->json_object['fields'][$this->field]['type'] = 'checkbox';
+        $this->cfi->json_object['fields'][$this->field]['values'] = $values;
+        if($value)
+            $this->cfi->json_object['fields'][$this->field]['value'] = $value;
+        return $this;
+    }
 
     /**
      * Set if the field to type select
@@ -396,10 +529,11 @@ class CFIField {
      * @param $height integer optinal iframe height: default 400
      * @return CFIField $this
      */
-    public function iframe($height=400,$url='') {
+    public function iframe(int $height=400,string $url='',string $content='') {
         $this->cfi->json_object['fields'][$this->field]['type'] = 'iframe';
         $this->cfi->json_object['fields'][$this->field]['iframe_height'] = $height;
         if($url) $this->cfi->json_object['fields'][$this->field]['iframe_url'] =$url;
+        if($content) $this->cfi->json_object['fields'][$this->field]['iframe_content'] =$content;
         return $this;
     }
 
@@ -497,6 +631,24 @@ class CFIField {
     }
 
     /**
+     * Set if the field to type html
+     * @param string $bucket bucket gs://path as base of public files
+     * @param string $title optional folder to add to $folder. It shouldn't starts with '/'
+     * @return CFIServerDocuments $this->object
+     */
+    public function publicImage(string $bucket='',string $title='') {
+        if(!isset($this->cfi->json_object['fields'][$this->field])) $this->cfi->json_object['fields'][$this->field] =[];
+        if($title) $this->cfi->json_object['fields'][$this->field]['name'] = $title;
+        if(!is_object($this->object) || get_class($this->object) != 'CFIPublicImage')
+            $this->object = new CFIPublicImage($this->cfi->core, $this->cfi->json_object['fields'][$this->field]);
+        if($bucket)
+            $this->object->bucket($bucket);
+        if($title)
+            $this->object->title($title);
+        return $this->object;
+    }
+
+    /**
      * Add onchange property to the field
      * @return CFIField $this
      */
@@ -517,7 +669,7 @@ class CFIField {
 
 /*
  * Class to handle field type server_documents
- * https://cloudframework.io/documentation/public/es/objetos-de-datos-cfos/type/server_documents
+ * https://cloudframework.io/docs/es/development/modelos-de-datos/cfos/05-tipo-de-campos/server_documents/
  * last_update: 20200502
  */
 class CFIServerDocuments
@@ -712,6 +864,352 @@ class CFIServerDocuments
     public function maxFileSize(int $size) {$this->field['max_file_size']=$size;return $this;}
 }
 
+/*
+ * Class to handle field type public_image
+ * https://cloudframework.io/docs/es/development/modelos-de-datos/cfos/05-tipo-de-campos/public_image/?_refresh_cache
+ * last_update: 20200502
+ */
+class CFIFieldButton
+{
+    var $field;
+    /** @var Core7 $core */
+    private $core;
+    private $index=0;
+
+    /**
+     * CFI constructor.
+     * @param array $field
+     */
+    function __construct(Core7 &$core, array &$field)
+    {
+        $this->core = $core;
+        $this->field = &$field;
+        $this->field['type'] = 'virtual';
+        $this->field['external_apis'] = [];
+    }
+
+    public function addButton($title) { $this->index++; $this->field['external_apis'][$this->index]['title']=$title;return $this;}
+    public function title(string $title){ $this->field['external_apis'][$this->index]['title'] = $title;return $this;}
+    public function method(string $method){ $this->field['external_apis'][$this->index]['method'] = $method;return $this;}
+    public function url(string $url){ $this->field['external_apis'][$this->index]['url'] = $url;return $this;}
+    public function color(string $color){ $this->field['external_apis'][$this->index]['color'] = $color;return $this;}
+    public function ico(string $ico){ $this->field['external_apis'][$this->index]['ico'] = $ico;return $this;}
+    public function submitForm(bool $bool=true){ $this->field['external_apis'][$this->index]['submit_form'] = $bool;return $this;}
+    public function jsConfirm(string $msg){ $this->field['external_apis'][$this->index]['js_confirm'] = $msg;return $this;}
+    public function onClick(string $onclick){ $this->field['external_apis'][$this->index]['onclick'] = $onclick;return $this;}
+}
+
+/*
+ * Class to handle field type public_image
+ * https://cloudframework.io/docs/es/development/modelos-de-datos/cfos/05-tipo-de-campos/public_image/?_refresh_cache
+ * last_update: 20200502
+ */
+class CFIVirtualElements
+{
+    var $field;
+    /** @var Core7 $core */
+    private $core;
+    private $index=0;
+
+    /**
+     * CFI constructor.
+     * @param array $field
+     */
+    function __construct(Core7 &$core, array &$field)
+    {
+        $this->core = $core;
+        $this->field = &$field;
+        $this->field['type'] = 'virtual';
+        $this->field['virtual_elements'] = [];
+    }
+
+    /**
+     * Apply a title to the field
+     * @param string $title
+     * @return $this
+     */
+    public function title(string $title): static
+    { $this->field['name'] = $title;return $this;}
+
+    /**
+     * The virtual element will be shown as a button
+     * @param string $color optional color (default will be 'default') of the button: info, success, warning, default, primary, sencondary
+     * @param string $icon optional icon
+     * @return CFIVirtualElements
+     */
+    public function button(string $color='default',string $icon=''): static
+    {
+        $this->field['virtual_elements'][$this->index]['button'] = $color;
+        if($icon) $this->field['virtual_elements'][$this->index]['ico'] = $icon;
+        return $this;
+    }
+
+    /**
+     * Javascript condition to be evaluated in frontend
+     * @param string $js_condition js condition to be evaluated in the frontend
+     * @return CFIVirtualElements
+     */
+    public function jsCondition(string $js_condition): static
+    {
+        $this->field['virtual_elements'][$this->index]['js_condition'] = $js_condition;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=calculate
+     * @param string $field name of the field in the data
+     * @param string $type type of calculation. Allowed values: 'count'
+     * @return CFIVirtualElements
+     */
+    public function addTypeCalculate(string $field,string $type): static
+    {
+        $this->addType('calculate');
+        $this->field['virtual_elements'][$this->index]['calculate'] = $type;
+        $this->field['virtual_elements'][$this->index][$type] = $field;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=value
+     * @param string $value value to apply. The value admits {{variable}} substitute strings
+     * @return CFIVirtualElements
+     */
+    public function addTypeValue(string $value): static
+    {
+        $this->addType('value');
+        $this->field['virtual_elements'][$this->index]['value'] = $value;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=onClick
+     * @param string $onclick js value to be executed onClick
+     * @return CFIVirtualElements
+     */
+    public function addTypeOnClick(string $onclick): static
+    {
+        $this->addType('onClick');
+        $this->field['virtual_elements'][$this->index]['onClick'] = $onclick;
+        return $this;
+    }
+
+    /**
+     * add an attribute onClick on the currect virtual_element
+     * @param string $onclick js value to be executed onClick
+     * @return CFIVirtualElements
+     */
+    public function onClick(string $onclick): static
+    {
+        $this->field['virtual_elements'][$this->index]['onClick'] = $onclick;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=ico
+     * @param string $icon icon the be used (without fal fa- prefix))
+     * @return CFIVirtualElements
+     */
+    public function addTypeCheckbox(string $title,string $value,bool $checked = false,string $onClick=''): static
+    {
+        $this->addType('checkbox');
+        if($value) $this->field['virtual_elements'][$this->index]['checkbox_title'] = $title;
+        if($value) $this->field['virtual_elements'][$this->index]['checkbox_value'] = $value;
+        if($value) $this->field['virtual_elements'][$this->index]['checkbox_checked'] = $checked;
+        if($onClick) $this->field['virtual_elements'][$this->index]['checkbox_onclick'] = $onClick;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=ico
+     * @param string $icon icon the be used (without fal fa- prefix))
+     * @return CFIVirtualElements
+     */
+    public function addTypeIcon(string $icon): static
+    {
+        $this->addType('ico');
+        $this->field['virtual_elements'][$this->index]['ico'] = $icon;
+        return $this;
+    }
+
+    /**
+     * add an attribute ico on the currect virtual_element
+     * @param string $icon to be shown (without fal fa- prefix))
+     * @return CFIVirtualElements
+     */
+    public function icon(string $icon): static
+    {
+        $this->field['virtual_elements'][$this->index]['ico'] = $icon;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=image
+     * @param string $src url of the image
+     * @return CFIVirtualElements
+     */
+    public function addTypeImage(string $src): static
+    {
+        $this->addType('image');
+        $this->field['virtual_elements'][$this->index]['src'] = $src;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=image
+     * @param string $src url of the image
+     * @return CFIVirtualElements
+     */
+    public function addTypeAvatar(string $src): static
+    {
+        $this->addType('avatar');
+        $this->field['virtual_elements'][$this->index]['src'] = $src;
+        return $this;
+    }
+
+    /**
+     * Apply an update type to virtual_elements with CFO information.
+     *
+     * @param string $cfo The CFO information to be added.
+     * @param mixed $id_value The ID value for the update operation.
+     * @param string $fields (Optional) Additional fields to be updated.
+     *
+     * @return CFIVirtualElements
+     */
+    public function addTypeUpdateCFO(string $cfo,mixed $id_value, string $fields=''): static
+    {
+        $this->addType('update');
+        $this->field['virtual_elements'][$this->index]['cfo'] = $cfo;
+        $this->field['virtual_elements'][$this->index]['id_value'] = $id_value;
+        if($fields) $this->field['virtual_elements'][$this->index]['cfo_fields'] = $fields;
+        return $this;
+    }
+
+    /**
+     * Apply an update type to virtual_elements with CFO information.
+     *
+     * @param string $cfo The CFO information to be added.
+     * @param mixed $id_value The ID value for the update operation.
+     * @param string $fields (Optional) Additional fields to be updated.
+     *
+     * @return CFIVirtualElements
+     */
+    public function addTypeDisplayCFO(string $cfo,mixed $id_value, string $fields=''): static
+    {
+        $this->addType('display');
+        $this->field['virtual_elements'][$this->index]['cfo'] = $cfo;
+        $this->field['virtual_elements'][$this->index]['id_value'] = $id_value;
+        if($fields) $this->field['virtual_elements'][$this->index]['cfo_fields'] = $fields;
+        return $this;
+    }
+
+    /**
+     * Add a virtual_elements with type=display
+     * It allow to Display the current CFO
+     * @param string $idField optinal field name to be used as Id of the entity. You can leave ot empty if it is ds:Object
+     * @param string $fields optional fields separated by ',' to be send to the CFO to only represent those fields to be displayed
+     * @return CFIVirtualElements
+     */
+    public function addTypeDisplay(string $idField='',string $fields=''): static
+    {
+        $this->addType('update');
+        if($idField) $this->field['virtual_elements'][$this->index]['id_field'] = $idField;
+        if($fields) $this->field['virtual_elements'][$this->index]['fields'] = '';
+        return $this;
+    }
+
+    /**
+     * Apply a type a virtual_elements
+     * @param string $type type of virtual_element. Allowed values: 'calculate',
+     * @return CFIVirtualElements
+     */
+    public function addType($type): static
+    {
+        if($this->field['virtual_elements'][$this->index]??null) $this->index++;
+        $this->field['virtual_elements'][$this->index] = [];
+        $this->field['virtual_elements'][$this->index]['type'] = $type;
+        return $this;
+    }
+
+}
+/*
+ * Class to handle field type public_image
+ * https://cloudframework.io/docs/es/development/modelos-de-datos/cfos/05-tipo-de-campos/public_image/?_refresh_cache
+ * last_update: 20200502
+ */
+class CFIPublicImage
+{
+    var $field;
+    /** @var Core7 $core */
+    private $core;
+
+    /**
+     * CFI constructor.
+     * @param array $field
+     */
+    function __construct(Core7 &$core,array &$field)
+    {
+        $this->core = $core;
+        $this->field = &$field;
+        $this->field['type']='public_image';
+    }
+
+    /**
+     * Assign the bucket where to store the public files. IT should starts with gs:// ot it will add it to $bucket
+     * @param string $buket
+     * @return CFIPublicImage $this
+     */
+    public function bucket(string $buket) {
+        if(strpos($buket,'gs://')!==0) $buket="gs://{$buket}";
+        $this->field['bucket']=$buket;
+        return $this;
+    }
+
+    /**
+     * Set a title for the field
+     * @param $title
+     * @return CFIPublicImage $this
+     */
+    public function title($title) { $this->field['name'] = $title; return $this;}
+
+
+    /**
+     * Set a title for the field
+     * @param bool $allowed
+     * @return CFIPublicImage $this
+     */
+    public function allowEmpty(bool $allowed=true) { $this->field['allow_empty'] = $allowed; return $this;}
+
+    /**
+     * Set a title for the field
+     * @param $value
+     * @return CFIPublicImage $this
+     */
+    public function value($value) { $this->field['defaultvalue'] = $this->field['value'] = $value; return $this;}
+
+    /**
+     * Set a title for the field
+     * @param bool $active
+     * @return CFIPublicImage $this
+     */
+    public function zoom(bool $active=true) { $this->field['zoom'] = $active; return $this;}
+
+    /**
+     * Show the image instead the URL to the image
+     * @param bool $active
+     * @return CFIPublicImage $this
+     */
+    public function showAsImage(bool $active=true) { $this->field['image'] = $active; return $this;}
+
+    /**
+     * Show the image as an avatar in lists
+     * @param bool $active
+     * @return CFIPublicImage $this
+     */
+    public function showAvatar(bool $active=true) { $this->field['image'] = $active?:$this->field['image']; $this->field['image_type'] = $active?'avatar':null; return $this;}
+
+
+}
+
 
 /*
  * Class to handle buttons in CFI
@@ -748,6 +1246,13 @@ class CFIButton {
      * @return CFIButton $this
      */
     public function color($color) { $this->button['color'] = $color; return $this;}
+
+    /**
+     * Set button ico
+     * @param $ico
+     * @return CFIButton $this
+     */
+    public function ico($ico) { $this->button['ico'] = $ico; return $this;}
 
     /**
      * Set button align
@@ -788,11 +1293,12 @@ class CFIButton {
     /**
      * Assign url to call an external API without avoiding the form sending
      * @param $url
-     * @param string $method optinal var to assign the type of call: GET, POST, PUT, DELETE
+     * @param string $method optional var to assign the type of call: GET, POST, PUT, DELETE
      * @return CFIButton $this
      */
     public function apiUrl($url,$method='GET') {
-        $this->button['method'] = strtoupper($method);$this->button['url'] = $url;
+        $this->button['method'] = strtoupper($method);
+        $this->button['url'] = $url;
         $this->button['type'] = 'api';
         return $this;
     }
