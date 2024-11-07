@@ -754,11 +754,14 @@ class CFOs {
     }
 
     /**
-     * Reset the cache to load the CFOs
-     * @param $namespace
+     * Reset the cache for the specified cache key or clear the entire cache if no key is provided.
+     *
+     * @param string $cfo Cache key to reset the cache for. (Optional, default: '')
+     *
+     * @return void
      */
-    function resetCache() {
-        $this->core->model->resetCache();
+    function resetCache(string $cfo='') {
+        $this->core->model->resetCache($cfo='');
     }
 
     /**

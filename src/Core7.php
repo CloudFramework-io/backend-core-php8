@@ -7340,18 +7340,32 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Reset Cache of the module
+         * Reads the cache and initializes it if necessary
+         *
+         * @return void
          */
-        public function readCache() {
+        public function readCache(): void
+        {
             if($this->cache === null)
                 $this->cache = ($this->core->cache->get('Core7.CoreModel'))?:[];
         }
 
         /**
-         * Reset Cache of the module
+         * Reset the cache for all cfo models or for specific $cfo
+         * @param string $cfo The key of the cache item to reset
+         *                      If provided, will reset the specific cache item identified by this key
+         * @return void  Returns nothing
          */
-        public function resetCache() {
-            $this->cache = [];
+        public function resetCache(string $cfo=''): void
+        {
+            if($cfo) {
+                $this->readCache();
+                if(isset($this->cache[$cfo]))
+                    unset($this->cache[$cfo]);
+            }
+            else {
+                $this->cache = [];
+            }
             $this->core->cache->set('Core7.CoreModel',$this->cache);
         }
 
