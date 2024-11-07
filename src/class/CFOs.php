@@ -896,9 +896,14 @@ class CFOWorkFlows {
 
         //region LOOP $this->cfoWorkFlows[$cfo][$event] to EXECUTE WORKFLOWS
         if(is_array($this->cfoWorkFlows[$cfo][$event]??null))
-            foreach ($this->cfoWorkFlows[$cfo][$event] as $_i=>$workflow) {
+            foreach ($this->cfoWorkFlows[$cfo][$event] as $_i=>$workflow)  {
 
-                //region EVALUATE $workflow['conditional'] and $workflow['active']
+                if(!is_array($workflow) || !isset($workflow['action'])) {
+                    $this->workflows_report("[{$cfo}.{$event}.{$_i}]",'Is not an array with [action] parameter to be evaluated as workflow');
+                    break;
+                }
+
+                //region EVALUATE $workflow['conditional'] and $workflow['active'] and SET $workflow['id'] if it does not exist
                 if(!$this->evaluateCondition($workflow,$data,$event,$_i)) continue;
                 //endregion
 
@@ -930,7 +935,7 @@ class CFOWorkFlows {
         $this->logs['time'] = round(microtime(true)-$_time,4);
         //endregion
 
-        //region RETURN $logs
+        //region RETURN true
         return true;
         //endregion
 
@@ -1030,7 +1035,7 @@ class CFOWorkFlows {
     private function evaluateWorkflow(&$workflow, &$data, $id, $event, $_i, $cfo)
     {
         if ($workflow['action'] == 'setVariables') {
-            $this->setVaraibles($workflow, $data, $_i);
+            $this->setVariables($workflow, $data, $_i);
         }
         elseif ($workflow['action'] == 'readRelations') {
             $this->readRelations($workflow, $data, $_i);
@@ -1064,7 +1069,7 @@ class CFOWorkFlows {
      * @param $hook_type
      * @return true|void|null
      */
-    private function setVaraibles(array &$workflow,array &$data, $_i)
+    private function setVariables(array &$workflow, array &$data, $_i)
     {
 
         //region CHECK $workflow['action'] and $workflow['active']
@@ -1082,6 +1087,10 @@ class CFOWorkFlows {
             }
         }
         $this->workflows_report($workflow['id'], ['variables' => $workflow['variables']]);
+        //endregion
+
+        //region EVALUATE to process $workflow['message']
+        $this->processWorkFlowMessage($workflow,$data);
         //endregion
 
         return true;
@@ -1933,6 +1942,10 @@ class CFOWorkFlows {
             'data'=>$data_to_send,
             'return'=>$trigger_ret
         ]);
+        //endregion
+
+        //region EVALUATE to process $workflow['message']
+        $this->processWorkFlowMessage($workflow,$data);
         //endregion
 
         return true;
