@@ -862,10 +862,10 @@ if (!defined ("_MYSQLI_CLASS_") ) {
 
                     if(is_array($data[$field]??'')) $data[$field] = json_encode($data[$field]);
                     if(strlen($data[$field]??'') && $data[$field] !=='NULL')
-                        $tables[$table]['updateFields'] .= $sep.$field."=".(($fieldTypes[$field]['isNum'])?"%s":"'%s'");
+                        $tables[$table]['updateFields'] .= "{$sep}`{$field}`=".(($fieldTypes[$field]['isNum'])?"%s":"'%s'");
                     else {
                         $data[$field] = 'NULL';
-                        $tables[$table]['updateFields'] .= $sep.$field."=%s";
+                        $tables[$table]['updateFields'] .= "{$sep}`{$field}`=%s";
                     }
 
                     if(!isset($tables[$table]['insertFields'])) $tables[$table]['insertFields']='';
@@ -960,8 +960,8 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                     case 'replace':
                         if($action == 'insertRecord' || $action == 'insert') $act = "insert";
                         else $act = 'replace';
-                        //echo($action." into $key (".$value['insertFields'].") values  (".$value['insertPercents'].")");
-                        return($this->command($act." into $key (".$value['insertFields'].") values  (".$value['insertPercents'].")",$value['values']));
+                        $_fields = '`'.str_replace(',','`,`',$value['insertFields']).'`';
+                        return($this->command($act." into $key (".$_fields.") values  (".$value['insertPercents'].")",$value['values']));
                         break;
                     case 'getRecords':
                     case 'getDistinctRecords':
