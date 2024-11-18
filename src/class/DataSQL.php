@@ -629,7 +629,7 @@ class DataSQL
 
 
             foreach ($data as $key=>$datum) if($datum && in_array(($this->entity_schema['model'][$key][0]??null),['date','datetime','timestamp']) && $datum){
-                if($datum=='now') {
+                if($datum=='now' || $datum=='CURRENT_TIMESTAMP') {
                     if ($this->entity_schema['model'][$key][0] == 'date')
                         $data[$key] = $dt_r->format('Y-m-d');
                     else
