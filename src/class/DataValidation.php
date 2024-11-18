@@ -258,12 +258,13 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
         }
 
         /**
-         * Formats: Length bt. 15 to 17 depending of the year formar (YY or YYYY)
+         * Formats: Length bt. 15 to 17 depending of the year format (YY or YYYY)
          * @param $data
          * @return bool
          */
         public function validateDateTime($data)
         {
+            if($data == 'CURRENT_TIMESTAMP') $data='now';
             if($data =='now' || (strlen($data)>=15)) {
                 try {
                     $value_time = new DateTime($data);
@@ -273,18 +274,19 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
                     $this->errorFields[] = [$e.$this->errorMsg];
                 }
             } else {
-                $this->errorFields[] = 'DateTime field is not "now" o it does not have 15 characters';
+                $this->errorFields[] = 'DateTime field is not "now" or it does not have 15 characters';
             }
             return false;
         }
 
         /**
-         * Formats: Length bt. 23 or 25  depending of the year formar (YY or YYYY)
+         * Formats: Length bt. 23 or 25  depending of the year format (YY or YYYY)
          * @param $data
          * @return bool
          */
         public function validateDateTimeISO($data)
         {
+            if($data == 'CURRENT_TIMESTAMP') $data='now';
             if($data =='now' || (strlen($data)>=23)) {
                 try {
                     $value_time = new DateTime($data);
