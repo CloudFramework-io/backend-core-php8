@@ -615,20 +615,26 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         function fetch($type = 'one', $fields = '*', $where = null, $order = null, $limit = null)
         {
 
+            //region VERIFY $this->error is false and init $time for Performance
             //If the class has any error just return
             if ($this->error) return false;
 
             // Performance microtime
             $time = microtime(true);
+            //endregion
 
-            //region sanetize params: $type , $fields, $where, $order, $limit
+            //region VERIFY and SANETIZE params: $type , $fields, $where, $order, $limit
             if(!is_string($type)) return($this->addError('fetch($type = "one", $fields = "*", $where = null, $order = null, $limit = null) has received $type as not string'));
             if(!is_string($fields)) return($this->addError('fetch($type = "one", $fields = "*", $where = null, $order = null, $limit = null) has received $fields as not string'));
             if(is_array($order))  $order = implode(', ',$order);
             if($limit) $limit = intval($limit);
             //endregion
 
+            //region INIT Performance
             $this->core->__p->add('fetch: '.$this->entity_name, $type . ' fields:' . $fields . ' where:' . $this->core->jsonEncode($where) . ' order:' . $order . ' limit:' . $limit, 'note');
+            //endregion
+
+            //region INIT $_q, ret and UPDATE  $limit, $where, $order
             $ret = [];
             if (!is_string($fields) || !strlen($fields)) $fields = '*';
             if (!strlen($limit??'')) $limit = $this->limit;
@@ -818,6 +824,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 $where = null;
             }
             if (strlen($order??'')) $_q .= " ORDER BY $order";
+            //endregion
 
             //region apply limit. 200 by default
             if (intval($limit)>0) {
@@ -830,23 +837,40 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             }
             //endregion
 
+            //region ADD to $_q $this->cursosr and UPDATE $this->lastQuery
             if ($this->cursor) {
                 $_q .= " OFFSET @offset";
                 $bindings['offset'] = $this->datastore->cursor(base64_decode($this->cursor)); // cursor has had to be previously encoded
             }
             $this->lastQuery = $_q . ' /  bindings=' .  $this->core->jsonEncode($bindings) . ' / taking where=' . ((is_array($where)) ? ' ' . $this->core->jsonEncode($where) : '') ;
+            //endregion
+
+            //region EXECUTE QUERY into $result
             try {
                 $query = $this->datastore->gqlQuery($_q,['allowLiterals'=>true,'bindings'=>$bindings]);
                 $result = $this->datastore->runQuery($query,['namespaceId'=>$this->namespace]);
-                $ret = $this->transformResult($result);
-                if($this->debug)
-                    $this->core->logs->add($this->entity_name.".fetch({$this->lastQuery}) [".(round(microtime(true)-$time,4))." secs]",'DataStore');
-
             } catch (Exception $e) {
-                $this->setError($e->getMessage());
+                $this->setError([__LINE__.':$this->datastore->runQuery',$e->getMessage()]);
                 $this->addError('fetch');
             }
+            //endregion
+
+            //region PROCESS $result into $ret
+            if(!$this->error) {
+                try {
+                    $ret = $this->transformResult($result);
+                    if ($this->debug)
+                        $this->core->logs->add($this->entity_name . ".fetch({$this->lastQuery}) [" . (round(microtime(true) - $time, 4)) . " secs]", 'DataStore');
+                } catch (Exception $e) {
+                    $this->setError([__LINE__ . ':$this->transformResult', $e->getMessage()]);
+                    $this->addError('fetch');
+                }
+            }
+            //endregion
+
+            //region END performance
             $this->core->__p->add('fetch: '.$this->entity_name, '', 'endnote');
+            //endregion
             return $ret;
         }
 
