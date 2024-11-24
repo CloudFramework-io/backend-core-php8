@@ -747,7 +747,20 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     }
                     else {
 
-                        //region IF field is integer transform value into integer
+                        //region IF $value starts with '>=<' use it as $comp
+                        if (preg_match('/[=><]/', $value)) {
+                            if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
+                                $comp = substr($value, 0, 2);
+                                $value=substr($value,2);
+                            }
+                            else {
+                                $comp = substr($value, 0, 1);
+                                $value=substr($value,1);
+                            }
+                        }
+                        //endregion
+
+                        //region IF $value is string but field is integer or float transform value into integer or float
                         if (is_string($value??'')
                             && array_key_exists($key, $this->schema['props'])
                             && in_array($this->schema['props'][$key][1], ['integer','float'])) {
@@ -756,7 +769,11 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                                 if ($i == 0) $_q .= " WHERE $fieldname <= @{$key}";
                                 else $_q .= " AND $fieldname <= @{$key}";
 
-                                $where[$key] = 9223372036854775807;
+                                if($this->schema['props'][$key][1]  == 'integer')
+                                    $where[$key] = 9223372036854775807;
+                                else
+                                    $where[$key] = 9223372036854775807.00;
+
                                 $i++;
                                 $bindings[$key]=$where[$key];
                                 continue;
@@ -1181,9 +1198,9 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 $aggregationQuery = $query->aggregation(Aggregation::count()->alias('total'));
                 /** @var Google\Cloud\Datastore\Query\AggregationQueryResult $res */
                 $res = $this->datastore->runAggregationQuery($aggregationQuery,['namespaceId'=>$this->namespace]);
-                if($this->debug)
-                    $this->core->logs->add($this->entity_name.".count() [".(round(microtime(true)-$time,4))." secs]",'DataStore');
                 $ret=$res->get('total');
+                if($this->debug)
+                    $this->core->logs->add($this->entity_name.".count({$this->lastQuery}) = {$ret} [".(round(microtime(true)-$time,4))." secs]",'DataStore');
                 //endregion
             }
             catch (Exception $e) {
@@ -1206,6 +1223,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 $i = 0;
                 foreach ($where as $key => $value) {
                     $comp = '=';
+
                     if (preg_match('/[=><]/', $key)) {
                         unset($where[$key]);
                         if (strpos($key, '>=') === 0 || strpos($key, '<=') === 0 || strpos($key, '!=') === 0) {
@@ -1282,11 +1300,45 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     }
                     else {
 
-                        //region IF field is integer transform value into integer
-                        if (is_string($value??'') && array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['integer'])) {
-                            $where[$key] = $value = intval($value);
+                        //region IF $value starts with '>=<' use it as $comp
+                        if (preg_match('/[=><]/', $value)) {
+                            if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
+                                $comp = substr($value, 0, 2);
+                                $value=substr($value,2);
+                            }
+                            else {
+                                $comp = substr($value, 0, 1);
+                                $value=substr($value,1);
+                            }
                         }
                         //endregion
+
+                        //region IF $value is string but field is integer or float transform value into integer or float
+                        if (is_string($value??'')
+                            && array_key_exists($key, $this->schema['props'])
+                            && in_array($this->schema['props'][$key][1], ['integer','float'])) {
+
+                            if($value=='__null__' || $value===null) {
+                                $comp='=';
+                                $where[$key] = $value =  null;
+                            }
+                            elseif($value=='__notnull__') {
+                                $comp='<=';
+                                if($this->schema['props'][$key][1]  == 'integer')
+                                    $where[$key] = $value = 9223372036854775807;
+                                else
+                                    $where[$key] = $value = 9223372036854775807.00;
+                            }
+                            else {
+                                if($this->schema['props'][$key][1]  == 'integer')
+                                    $where[$key] = $value = intval($value);
+                                else
+                                    $where[$key] = $value = floatval($value);
+                            }
+
+                        }
+                        //endregion
+
 
                         //region IF SPECIAL SEARCH for values ending in % let's emulate a like string search
                         if(is_string($value) && preg_match('/\%$/',$value) && strlen(trim($value))>1) {
