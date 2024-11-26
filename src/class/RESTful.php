@@ -942,10 +942,11 @@ if (!defined("_RESTfull_CLASS_")) {
          */
         function send($pretty=false, $return=false, $argv=[])
         {
-            // Close potential open connections
+            //region CLOSE potential database open connections
             $this->core->model->dbClose();
+            //endregion
 
-            //region Prepare success,status,code and optionally message return vards
+            //region INIT $ret with: success,status,code and optionally message return vards
             $ret = array();
             $ret['success'] = ($this->error) ? false : true;
             $ret['status'] = $this->getReturnStatus();
@@ -954,11 +955,16 @@ if (!defined("_RESTfull_CLASS_")) {
             if($this->message) $ret['message'] = $this->message;
             //endregion
 
+            //region EVALUATE if we are working from a terminal
             if($this->core->is->terminal())
                 $ret['exec'] = '['.$_SERVER['PWD']. '] php '.implode(' ',$argv);
+            //endregion
 
+            //region MERGE $this->returnData into $ret
             if (is_array($this->returnData)) $ret = array_merge($ret, $this->returnData);
+            //endregion
 
+            //region EVALUATE to add log lines into $ret
             if ($this->core->logs->lines) {
                 $ret['logs'] = $this->core->logs->data;
 
@@ -972,7 +978,9 @@ if (!defined("_RESTfull_CLASS_")) {
                     }
                 }
             }
+            //endregion
 
+            //region EVALUATE to add Error lines
             // If I have been called from a queue or from a Cron the response has to be 200 to avoid recalls
             if ($this->core->security->isCron() || isset($this->formParams['cloudframework_queued'])) {
                 if ($this->core->errors->lines) {
@@ -985,12 +993,15 @@ if (!defined("_RESTfull_CLASS_")) {
                 $ret[$error_var] = $this->core->errors->data;
                 $this->core->errors->sendToSysLog('CloudFramework RESTFul: '. json_encode($this->core->errors->data,JSON_FORCE_OBJECT),'error');
             }
+            //endregion
 
-            // Send response headers
+            //region SEND headers for the response
             $this->sendHeaders();
+            //endregion
 
-            // If response is 204 (no content) just return
+            //region EVALUATE to return empty data if status ==204
             if($ret['status']==204) return;
+            //endregion
 
             // else continue adding extra info.
             $this->core->__p->add("RESTFull: ", '', 'endnote');
@@ -1020,9 +1031,22 @@ if (!defined("_RESTfull_CLASS_")) {
                     // If the API->main does not want to send $ret standard it can send its own data
                     if (count($this->rewrite)) $ret = $this->rewrite;
 
-                    // JSON conversion
+                    //region CONVERT $ret in JSON string format
                     if($pretty) $ret = json_encode($ret,JSON_PRETTY_PRINT);
                     else $ret = json_encode($ret);
+                    //endregion
+
+                    //region CHECK if json_encode has produced an error
+                    if(!$ret && json_last_error()) {
+                        $this->error = true;
+                        $ret = json_encode([
+                            'success'=>false,
+                            'code'=>'json-error',
+                            'json-error-code'=>json_last_error(),
+                            'json-error-message'=>json_last_error_msg()
+                        ]);
+                    }
+                    //endregion
 
                     break;
                 default:
