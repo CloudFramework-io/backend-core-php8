@@ -3989,7 +3989,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Activate cache in Datastore.. It requires Core Class
+         * Activate cache in Datastore. The cache will be stored in ds:CloudFrameworkCache
          * @param Core7 $core Core class to facilitate errors
          * @param string $spacename spacename where to store objecs
          * @return bool
@@ -4382,7 +4382,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $data = $this->ds->fetchOneByKey($path);
             if($this->ds->error) return($this->addError($this->ds->errorMsg));
             if(!$data) return null;
-            else return unserialize(gzuncompress(utf8_decode($data['Serialize'])));
+            else return unserialize(gzuncompress($this->core->utf8Decode($data['Serialize'])));
         }
 
         function addError($value)
