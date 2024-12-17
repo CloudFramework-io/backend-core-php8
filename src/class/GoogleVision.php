@@ -279,7 +279,6 @@ class GoogleVision extends CFGoogle
         try {
             $res = $service->files->annotate($body,$optParams);
         } catch (Exception $e) {
-            _printe($e->getMessage());
             return($this->addError('Excepción capturada: ',  $e->getMessage()));
         }
 
