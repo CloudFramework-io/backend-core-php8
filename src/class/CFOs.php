@@ -1914,7 +1914,7 @@ class CFOWorkFlows {
         //region EXECUTE hook
         $data_to_send = (is_array($workflow['data'] ?? null))?$workflow['data']:$data;
         // add in data _user id
-        $data_to_send['_user'] = $this->dstoken_data['User']['KeyName'];
+        $data_to_send['_user'] = $this->dstoken_data['User']['KeyName'] ?? 'unknown';
         // add in url user id
         $hook['url'].= (strpos($hook['url'],'?')?'&':'?').'_user='.urlencode($this->dstoken_data['User']['KeyName'] ?? '').'&_type='.urlencode($hook_type ?? '');
         if($method=='GET') {
