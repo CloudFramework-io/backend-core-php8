@@ -14,7 +14,7 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
      */
     class GoogleDrive
     {
-        protected $version = '20230913';
+        protected $version = '20241219';
 
         /** @var Core7 $core */
         private $core;
@@ -435,22 +435,38 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
                 //endregion
 
                 //region SEARCH $folders with name=$folder_name. If not found create it
-                $folders = $this->searchDriveFiles(['parent' => $parent, 'name' => $folder_name, 'onlyFolders' => true]);
-                if ($this->error) {
-                    $result[$folder_name]['error'] = $this->errorMsg;
-                    return $result;
-                }
-                if (!$folders) {
-                    if (!$folder = $this->createDriveFolder($folder_name, $parent)) {
+                $folders=[];
+                if(!($properties['_id']??null)) {
+                    $folders = $this->searchDriveFiles(['parent' => $parent, 'name' => $folder_name, 'onlyFolders' => true]);
+                    if ($this->error) {
                         $result[$folder_name]['error'] = $this->errorMsg;
                         return $result;
                     }
-                    $folders = [$folder];
+                    if (!$folders) {
+                        if (!$folder = $this->createDriveFolder($folder_name, $parent)) {
+                            $result[$folder_name]['error'] = $this->errorMsg;
+                            return $result;
+                        }
+                        $folders = [$folder];
+                    }
+                    $folder = $folders[0];
+                } else {
+
+                    if(!$folder = $this->getDriveFile($properties['_id'])) {
+                        $result[$folder_name]['error'] = $this->errorMsg;
+                        return $result;
+                    }
+                    if($folder['kind']!='drive#file') {
+                        $result[$folder_name]['error'] = "[{$folder_name}:{$properties['_id']}] is not a folder";
+                        return $result;
+                    } elseif($folder['parents'][0]!=$parent) {
+                        $result[$folder_name]['error'] = "[{$folder_name}:{$properties['_id']}] does not have the parent [{$parent}], it has as parent [{$folder['parents'][0]}]";
+                        return $result;
+                    }
                 }
                 //endregion
 
                 //region UPDATE $result[$folder_name]['_id'] and ['_permissions']
-                $folder = $folders[0];
                 $result[$folder_name]['_id'] = $folder['id'];
                 if (is_array($properties['_permissions'] ?? null)) {
                     $result[$folder_name]['_permissions'] = [];
@@ -485,8 +501,11 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
 
                 //region SEARCH subfolders and call recursively to recursiveStructure
                 //every $property_name string starting with '_' is ignored
-                foreach ($properties as $property_name => $property_data) if ($property_name[0] != '_') {
-                    $result[$folder_name] += $this->getDriveFolderRecursiveStructure($result[$folder_name]['_id'], [$property_name => $property_data]);
+                foreach ($properties as $property_name => $property_data) {
+                    $property_name = strval($property_name);
+                    if ($property_name[0] != '_') {
+                        $result[$folder_name] += $this->getDriveFolderRecursiveStructure($result[$folder_name]['_id'], [$property_name => $property_data]);
+                    }
                 }
                 //endregion
 
