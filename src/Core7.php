@@ -4440,7 +4440,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         function defaultServiceUrl($path = '')
         {
-            if (strpos($path, 'http') === 0) return $path;
+            if (!$path || strpos($path, 'http') === 0) return $path;
             else {
                 if (!$this->core->config->get("CloudServiceUrl"))
                     $this->core->config->set("CloudServiceUrl", 'https://api7.cloudframework.io');
