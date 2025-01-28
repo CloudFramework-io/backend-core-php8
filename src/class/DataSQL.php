@@ -874,11 +874,12 @@ class DataSQL
                                 if($this->default_time_zone_to_read != $this->default_time_zone_to_write) {
                                     try {
                                         $dt_w = new DateTime($value, $tz_r);
-                                        $dt_w->setTimezone($tz_w);
-                                        if($this->entity_schema['model'][$key][0]=='date')
+                                        if(($this->entity_schema['model'][$key][0] ?? '') == 'date')
                                             $value = $dt_w->format('Y-m-d');
-                                        else
-                                            $value = $dt_w->format('Y-m-d H:i:s');
+                                        else {
+                                            $dt_w->setTimezone($tz_w);
+                                            $value = $dt_w->format('Y-m-d H:i:s');   
+                                        }
                                     } catch (Exception $e) {
                                         $this->addError($e->getMessage());
                                         return false;
