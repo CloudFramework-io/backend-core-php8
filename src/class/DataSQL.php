@@ -233,6 +233,11 @@ class DataSQL
 
         $ret = $this->core->model->dbQuery($this->entity_name.' fetch by querys: '.json_encode($keysWhere),$SQL,$params,$this->entity_schema['model']);
         if($this->core->model->error) $this->addError($this->core->model->errorMsg);
+        //region EVALUATE to change datetime & timestamp to read timezone
+        if($ret && $this->default_time_zone_to_write!=$this->default_time_zone_to_read)
+            foreach ($ret as $i=>$item)
+                $this->convertDateFieldsReadValuesIntoTimeZoneValues($ret[$i]);
+        //endregion
 
         return $ret;
     }
@@ -874,11 +879,12 @@ class DataSQL
                                 if($this->default_time_zone_to_read != $this->default_time_zone_to_write) {
                                     try {
                                         $dt_w = new DateTime($value, $tz_r);
-                                        $dt_w->setTimezone($tz_w);
-                                        if($this->entity_schema['model'][$key][0]=='date')
+                                        if(($this->entity_schema['model'][$key][0] ?? '') == 'date')
                                             $value = $dt_w->format('Y-m-d');
-                                        else
-                                            $value = $dt_w->format('Y-m-d H:i:s');
+                                        else {
+                                            $dt_w->setTimezone($tz_w);
+                                            $value = $dt_w->format('Y-m-d H:i:s');   
+                                        }
                                     } catch (Exception $e) {
                                         $this->addError($e->getMessage());
                                         return false;
