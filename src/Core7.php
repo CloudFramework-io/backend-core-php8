@@ -7442,7 +7442,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function add(string $app, string $action, string $title, string $method, null|string $user, null|string|array $data=null, null|string $slack_url=null, null|array $rewrite_fingerprint=null,null|string $id=null) {
             if(!$this->initDSLogs()) return;
-
             //region SET $rewrite_fingerprint
             $fingerprint = $this->core->system->getRequestFingerPrint();
             if(!isset($fingerprint['ip'])) $fingerprint['ip'] = $this->core->system->ip;
