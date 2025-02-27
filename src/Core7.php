@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.3.39';  // 2025-02-27
+        var $_version = '8.3.40';  // 2025-02-27
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
