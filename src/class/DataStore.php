@@ -20,7 +20,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
      */
     class DataStore
     {
-        protected $_version = '20230927';
+        protected $_version = '20250227';
         /** @var Core7 $core */
         private $core = null;                   // Core7 reference
         /** @var DatastoreClient|null  */
@@ -800,7 +800,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
                         }
                         //endregion
-                        //region IF value is ARRAY and the type is not list convert it into IN ARRAY
+                        //region IF value is __null__ or __notnull__
                         elseif($value!==null && is_string($value) && in_array($value,['__null__','__notnull__'])) {
                             if($value=='__null__') {
                                 if ($i == 0) $_q .= " WHERE $fieldname = @{$key}";
@@ -815,12 +815,28 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         }
                         elseif(is_array($value)){
 
-                            if(array_key_exists($key, $this->schema['props']) && in_array($this->schema['props'][$key][1], ['integer']))
-                            $values = implode(",",$value);
-                            else
-                                $values = "'".implode("','",$value)."'";
-                            if ($i == 0) $_q .= " WHERE $fieldname IN ARRAY({$values})";
-                            else $_q .= " AND $fieldname IN ARRAY ({$values})";
+                            //if type is 'list' apply an 'AND' condition
+                            if(($this->schema['props'][$key][1]??'')=='list') {
+                                if ($i == 0) $_q .= " WHERE ";
+                                else $_q .= " AND ";
+                                foreach ($value as $j=>$_value) {
+                                    if($j>0) $_q.= " AND ";
+                                    if(!in_array(($this->schema['props'][$key][1]??''), ['integer','float']))
+                                        $_value = "'{$_value}'";
+                                    $_q .= "$fieldname = $_value";
+                                }
+                            }
+                            //else apply an 'OR' condition
+                            else {
+                                if(in_array(($this->schema['props'][$key][1]??''), ['integer','float']))
+                                    $values = implode(",",$value);
+                                else
+                                    $values = "'".implode("','",$value)."'";
+
+                                if ($i == 0) $_q .= " WHERE $fieldname IN ARRAY({$values})";
+                                else $_q .= " AND $fieldname IN ARRAY ({$values})";
+                            }
+
                             $i++;
                             continue;
                         }
@@ -1213,7 +1229,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
 
         /**
-         * Process $where conditions
+         * Process $where conditions for count,sum,avg
          * @param array $where
          * @param Query $query
          * @return void
@@ -1350,7 +1366,11 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         //endregion
                         //region IF value is ARRAY and the type is not list convert it into IN ARRAY
                         elseif(is_array($value)){
-                            $query->filter($fieldname,'in',$value);
+                            // Generate and AND condition for list
+                            foreach ($value as $item) {
+                                $query->filter($fieldname,'=',$item);
+                            }
+                            //$query->filter($fieldname,'IN',$value);
                         }
                         //endregion
                         //region ELSE set normal to search
