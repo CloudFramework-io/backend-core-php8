@@ -11,24 +11,36 @@ class API extends RESTful
     var $external_api = 'https://api.cloudframework.io/core/signin';
     var $user_spacename = '';
     var $external_integration_key = '';
+    var $dstoken = null;
     var $dstoken_data = [];
     var $proxy = [];
 
 
     function main()
     {
+        //region SET max memory to 0.5GB and CHEK manadatory method POST
         ini_set('memory_limit', '512M');
         if (!$this->checkMethod('POST')) return;
+        //endregion
+
+        //region CHECK Mandatory formParams 'q'
         if (!$this->checkMandatoryFormParams('q')) return;
+        //endregion
+
+        //region SET $this->proxy CHECK Mandatory URL Param[0] with the name of the proxy and CHECK it exists in config.jon
         if (!$this->checkMandatoryParam(0, 'Mising name of proxy')) return;
         $this->proxy = $this->core->config->get('core.db.proxy');
         if (!$this->proxy || !isset($this->proxy[$this->params[0]])) return ($this->setErrorFromCodelib('params-error', 'core.db.proxy does not have any match proxy'));
         $this->proxy = $this->proxy[$this->params[0]];
+        //endregion
 
 
-
+        //region CHECK X-DS-TOKEN of the user and Security configuration
         if (!$this->checkSecurity()) return;
+        //endregion
+        //region SET dbSettings using $this->proxy
         if (!$this->dbSettings()) return;
+        //endregion
         if (!$this->secureQuery($this->formParams['q'])) return;
 
         $this->db->connect();
@@ -42,10 +54,16 @@ class API extends RESTful
         exit;
     }
 
+    /**
+     * Check the security of the request based on the proxy configuration
+     * @return bool
+     */
     function checkSecurity()
     {
 
+        //region CHECK $this->proxy['security']['type'] =='X-DS-TOKEN' in configuration
         if (!isset($this->proxy['security']['type']) || $this->proxy['security']['type'] != 'X-DS-TOKEN') return ($this->setErrorFromCodelib('system-error', 'proxy does not have security attribute configured correctly'));
+        //endregion
 
         //region Check if X-DS-TOKEN has been sent
         if (!strlen($this->getHeader('X-DS-TOKEN'))) return ($this->setErrorFromCodelib('params-error', 'missing X-DS-TOKEN header'));
@@ -67,13 +85,14 @@ class API extends RESTful
         } else {
 
             //Call for external integration
+            $headers = ['X-WEB-KEY' => 'Production'
+                , 'X-DS-TOKEN' => $this->dstoken
+                ,'X-EXTRA-INFO'=>$this->external_integration_key
+            ];
             $external_api = $this->core->request->post_json_decode(
                 $this->external_api . '/' . $this->user_spacename . '/check?_update&from_dbproxy'
                 , ['Fingerprint' => $this->core->system->getRequestFingerPrint()]
-                , ['X-WEB-KEY' => 'Production'
-                , 'X-DS-TOKEN' => $this->dstoken
-                ,'X-EXTRA-INFO'=>$this->external_integration_key
-            ]);
+                , $headers);
 
             if ($this->core->request->error) {
                 $this->core->session->delete('hashkey');
@@ -192,6 +211,7 @@ class API extends RESTful
         $config_vars = ["dbServer","dbUser", "dbPassword", "dbName", "dbPort", "dbSocket","dbCharset"];
         foreach ($config_vars as $config_var) {
             if(isset($this->proxy[$config_var])) {
+                _printe($this->core->config->data['env_vars']);
                 $value = (isset($this->core->config->data['env_vars'][$this->proxy[$config_var]]))?$this->core->config->data['env_vars'][$this->proxy[$config_var]]:$this->proxy[$config_var];
                 $this->db->setConf($config_var,$value);
             }
