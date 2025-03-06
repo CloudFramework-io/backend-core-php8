@@ -4818,8 +4818,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param bool $raw
          * @return bool|false|string
          */
-        function call($route, $data = null, $verb = 'GET', $extra_headers = null, $raw = false)
+        function call(string $route, $data = null, $verb = 'GET', $extra_headers = null, $raw = false)
         {
+            if(!$route = trim($route)) {
+                $this->addError('Calling function call($route,..) with empty route');
+                return false;
+            }
+
             $_time = microtime(TRUE);
             $this->core->__p->add("Request->{$verb}: ", "$route " . (($data === null) ? '{no params}' : '{with params}'), 'note');
             $route = $this->getServiceUrl($route);
