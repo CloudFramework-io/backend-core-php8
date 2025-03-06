@@ -20,7 +20,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
      */
     class DataStore
     {
-        protected $_version = '20250227';
+        protected $_version = '20250306';
         /** @var Core7 $core */
         private $core = null;                   // Core7 reference
         /** @var DatastoreClient|null  */
@@ -813,18 +813,39 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                                 $where[$key] = ' ';
                             }
                         }
-                        elseif(is_array($value)){
+                        elseif(is_array($value)) {
+
+                            // continue on empty array
+                            if(!$value) continue;
 
                             //if type is 'list' apply an 'AND' condition
                             if(($this->schema['props'][$key][1]??'')=='list') {
-                                if ($i == 0) $_q .= " WHERE ";
-                                else $_q .= " AND ";
-                                foreach ($value as $j=>$_value) {
-                                    if($j>0) $_q.= " AND ";
-                                    if(!in_array(($this->schema['props'][$key][1]??''), ['integer','float']))
-                                        $_value = "'{$_value}'";
-                                    $_q .= "$fieldname = $_value";
+                                $_sub_q='';
+                                foreach ($value as $_value) if(is_string($_value) && ($_value = trim($_value))){
+
+                                    //add AND separator for multiple conditions
+                                    if($_sub_q) $_sub_q.= " AND ";
+
+                                    //evaluate to apply a query with %$ search
+                                    if(preg_match('/\%$/',$_value)) {
+                                        $_value = preg_replace('/\%$/','',$_value);
+                                        $_sub_q .="{$fieldname} >= '{$_value}' AND {$fieldname} <= '{$_value}z'";
+                                    }
+                                    // else apply simple query
+                                    else {
+                                        //apply query condition as an equals of string
+                                        $_sub_q .= "{$fieldname} = '{$_value}'";
+                                    }
+
                                 }
+                                if(!$_sub_q) continue;
+
+                                if($_sub_q) {
+                                    if ($i == 0) $_q .= " WHERE ";
+                                    else $_q .= " AND ";
+                                    $_q.=$_sub_q;
+                                }
+
                             }
                             //else apply an 'OR' condition
                             else {
