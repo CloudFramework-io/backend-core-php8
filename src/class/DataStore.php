@@ -20,7 +20,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
      */
     class DataStore
     {
-        protected $_version = '20250306';
+        protected $_version = '20250307';
         /** @var Core7 $core */
         private $core = null;                   // Core7 reference
         /** @var DatastoreClient|null  */
@@ -646,7 +646,12 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             if (is_array($where)) {
                 $i = 0;
                 foreach ($where as $key => $value) {
+
+                    //region SET $comp,$fieldname and EVALUATE comparators in $key
+                    //assign default comparator
                     $comp = '=';
+
+                    //evaluate if there is any comparator in $key
                     if (is_string($key) && preg_match('/[=><]/', $key)) {
                         unset($where[$key]);
                         if (strpos($key, '>=') === 0 || strpos($key, '<=') === 0 || strpos($key, '!=') === 0) {
@@ -669,8 +674,12 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     else {
                             $idkey = null;
                     }
-                    $fieldname = $key;
 
+                    //assign original $fieldname from $key
+                    $fieldname = $key;
+                    //endregion
+
+                    //region EVALUATE values for type ['date', 'datetime', 'datetimeiso']
                     // In the WHERE Conditions we have to transform date formats into date objects.
                     // SELECT * FROM PremiumContracts WHERE PremiumStartDate >= DATETIME("2020-03-01T00:00:00z") AND PremiumStartDate <= DATETIME("2020-03-01T23:59:59z")
                     if (array_key_exists($key, $this->schema['props'])
@@ -745,6 +754,9 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
                         }
                     }
+                    //endregion
+
+                    //region EVALUATE other field types
                     else {
 
                         //region IF $value starts with '>=<' use it as $comp
@@ -761,9 +773,8 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         //endregion
 
                         //region IF $value is string but field is integer or float transform value into integer or float
-                        if (is_string($value??'')
-                            && array_key_exists($key, $this->schema['props'])
-                            && in_array($this->schema['props'][$key][1], ['integer','float'])) {
+                        if (is_string($value??'') && in_array(($this->schema['props'][$key][1]??''), ['integer','float'])) {
+
                             if($value=='__null__' || $value===null) $where[$key] = null;
                             elseif($value=='__notnull__') {
                                 if ($i == 0) $_q .= " WHERE $fieldname <= @{$key}";
@@ -813,50 +824,50 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                                 $where[$key] = ' ';
                             }
                         }
+                        //endregion
+                        //region IF field is 'list' and there is any ',' in $value use it as a separator of AND values
+                        elseif(is_string($value) && strpos($value,',') && ($this->schema['props'][$key][1]??'')=='list') {
+                            $values = explode(",",$value);
+                            $_sub_q='';
+                            foreach ($values as $_value) if(is_string($_value) && ($_value = trim($_value))){
+
+                                //add AND separator for multiple conditions
+                                if($_sub_q) $_sub_q.= " AND ";
+
+                                //evaluate to apply a query with %$ search
+                                if(preg_match('/\%$/',$_value)) {
+                                    $_value = preg_replace('/\%$/','',$_value);
+                                    $_sub_q .="{$fieldname} >= '{$_value}' AND {$fieldname} <= '{$_value}z'";
+                                }
+                                // else apply simple query
+                                else {
+                                    //apply query condition as an equals of string
+                                    $_sub_q .= "{$fieldname} = '{$_value}'";
+                                }
+
+                            }
+
+                            if($_sub_q) {
+                                if ($i == 0) $_q .= " WHERE ";
+                                else $_q .= " AND ";
+                                $_q.=$_sub_q;
+                                $i++;
+                            }
+                            continue;
+                        }
+                        //endregion
                         elseif(is_array($value)) {
 
                             // continue on empty array
                             if(!$value) continue;
 
-                            //if type is 'list' apply an 'AND' condition
-                            if(($this->schema['props'][$key][1]??'')=='list') {
-                                $_sub_q='';
-                                foreach ($value as $_value) if(is_string($_value) && ($_value = trim($_value))){
+                            if(in_array(($this->schema['props'][$key][1]??''), ['integer','float']))
+                                $values = implode(",",$value);
+                            else
+                                $values = "'".implode("','",$value)."'";
 
-                                    //add AND separator for multiple conditions
-                                    if($_sub_q) $_sub_q.= " AND ";
-
-                                    //evaluate to apply a query with %$ search
-                                    if(preg_match('/\%$/',$_value)) {
-                                        $_value = preg_replace('/\%$/','',$_value);
-                                        $_sub_q .="{$fieldname} >= '{$_value}' AND {$fieldname} <= '{$_value}z'";
-                                    }
-                                    // else apply simple query
-                                    else {
-                                        //apply query condition as an equals of string
-                                        $_sub_q .= "{$fieldname} = '{$_value}'";
-                                    }
-
-                                }
-                                if(!$_sub_q) continue;
-
-                                if($_sub_q) {
-                                    if ($i == 0) $_q .= " WHERE ";
-                                    else $_q .= " AND ";
-                                    $_q.=$_sub_q;
-                                }
-
-                            }
-                            //else apply an 'OR' condition
-                            else {
-                                if(in_array(($this->schema['props'][$key][1]??''), ['integer','float']))
-                                    $values = implode(",",$value);
-                                else
-                                    $values = "'".implode("','",$value)."'";
-
-                                if ($i == 0) $_q .= " WHERE $fieldname IN ARRAY({$values})";
-                                else $_q .= " AND $fieldname IN ARRAY ({$values})";
-                            }
+                            if ($i == 0) $_q .= " WHERE $fieldname IN ARRAY({$values})";
+                            else $_q .= " AND $fieldname IN ARRAY ({$values})";
 
                             $i++;
                             continue;
@@ -870,6 +881,8 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         }
                         //endregion
                     }
+                    //endregion
+
                     $i++;
                     $bindings[$key]=$where[$key];
                 }
