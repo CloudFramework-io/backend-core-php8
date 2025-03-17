@@ -222,7 +222,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Core constructor.
          * @param string $root_path
          */
-        function __construct($root_path = '')
+        function __construct(string $root_path = '')
         {
             //region SET $this->__p,$this->is,$this->system,$this->logs,$this->errors
             $this->__p = new CorePerformance();
@@ -1182,7 +1182,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $ip, $user_agent, $os, $lang, $format, $time_zone;
         var $geo;
 
-        function __construct($root_path = '')
+        /**
+         * Constructs a new instance setting up server variables and URL components based on $_SERVER array.
+         *
+         * @param string $root_path The root path of the application (default is empty string)
+         *
+         * @return void
+         */
+        function __construct(string $root_path = '')
         {
 
             // region  $server_var from $_SERVER
@@ -1258,10 +1265,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Set default timezone and feed with $this->time_zone = array(date_default_timezone_get(), date('Y-m-d H:i:s'), date("P"), time());
-         * @param $timezone
+         * Sets the time zone to be used for date and time functions within the class.
+         *
+         * @param string $timezone The time zone identifier to set
+         *
+         * @return void
          */
-        function setTimeZone($timezone) {
+        public function setTimeZone(string $timezone) {
             date_default_timezone_set($timezone);
             $this->time_zone = array(date_default_timezone_get(), date('Y-m-d H:i:s'), date("P"), time());
         }
@@ -1272,34 +1282,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * https://cloud.google.com/appengine/docs/standard/php7/runtime#https_and_forwarding_proxies
          * @return mixed|string
          */
-        function getClientIP() {
+        public function getClientIP() {
 
             $remote_address = (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER))?$_SERVER['HTTP_X_FORWARDED_FOR']:'localhost';
             return  ($remote_address == '::1') ? 'localhost' : $remote_address;
 
-            // Popular approaches we don't trust.
-            // http://stackoverflow.com/questions/3003145/how-to-get-the-client-ip-address-in-php#comment50230065_3003233
-            // http://stackoverflow.com/questions/15699101/get-the-client-ip-address-using-php
-            /*
-            if (getenv('HTTP_CLIENT_IP'))
-                $ipaddress = getenv('HTTP_CLIENT_IP');
-            else if (getenv('HTTP_X_FORWARDED_FOR'))
-                $ipaddress = getenv('HTTP_X_FORWARDED_FOR');
-            else if (getenv('HTTP_X_FORWARDED'))
-                $ipaddress = getenv('HTTP_X_FORWARDED');
-            else if (getenv('HTTP_FORWARDED_FOR'))
-                $ipaddress = getenv('HTTP_FORWARDED_FOR');
-            else if (getenv('HTTP_FORWARDED'))
-                $ipaddress = getenv('HTTP_FORWARDED');
-            else if (getenv('REMOTE_ADDR'))
-                $ipaddress = getenv('REMOTE_ADDR');
-            else
-                $ipaddress = 'UNKNOWN';
-            return $ipaddress;
-            */
-
         }
 
+        /**
+         * Get the OS platform based on the user agent in the $_SERVER array.
+         * Returns the detected OS platform or the HTTP_USER_AGENT if not found.
+         *
+         * @return string The OS platform detected based on the user agent or HTTP_USER_AGENT if not found
+         */
         public function getOS()
         {
             $os_platform = "Unknown OS Platform";
@@ -1335,10 +1330,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * @param string $url path for destination ($dest is empty) or for source ($dest if not empty)
-         * @param string $dest Optional destination. If empty, destination will be $url
+         * Redirects to a new URL if specified conditions are met.
+         *
+         * @param string $url The URL to redirect to
+         * @param string $dest The destination URL (default is empty string)
+         *
+         * @return void
          */
-        function urlRedirect(string $url, string $dest = '')
+        public function urlRedirect(string $url, string $dest = ''): void
         {
             if (!strlen($dest)) {
                 if ($url != $this->url['url']) {
@@ -1358,8 +1357,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Generate a fingerprint from the Request
-         * @return array
+         * Retrieves the fingerprint data based on various server variables.
+         *
+         * @return array The fingerprint data consisting of user agent, host, software, hash, IP address, city, country, region, latitude and longitude, HTTP referer, timestamp, and URI.
          */
         public function getRequestFingerPrint(): array
         {
@@ -1389,9 +1389,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Get the value of the specified header key from the $_SERVER superglobal
+         * Gets the value of a specific header from the $_SERVER array.
+         *
          * @param string $headerKey The key of the header to retrieve
-         * @return string The value of the header key, or an empty string if it does not exist
+         *
+         * @return string The value of the specified header 'HTTP_'+$headerKey if found, otherwise an empty string
          */
         public function getHeader(string $headerKey): string
         {
@@ -1401,10 +1403,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Return all the header keys sent by the user. In PHP those are $_SERVER['HTTP_{varname}']
-         * @return array
+         * Retrieves and returns HTTP headers from the $_SERVER global variable.
+         *
+         * @return array An associative array containing HTTP headers without the 'HTTP_' prefix in the keys.
          */
-        function getHeaders(): array
+        public function getHeaders(): array
         {
             $ret = array();
             foreach ($_SERVER as $key => $value) if (strpos($key, 'HTTP_') === 0) {
@@ -1439,12 +1442,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->logger= &$logger;
             $this->is_terminal = $is_terminal;
         }
+
         /**
          * Reset the log and add an entry in the log.. if syslog_title is passed, also insert a LOG_DEBUG
          * @param $data
-         * @param string $syslog_title
+         * @param null|string $syslog_title
+         * @param null|string $syslog_type
+         * @return void
          */
-        function set($data,$syslog_title=null, $syslog_type=null)
+        public function set($data,$syslog_title=null, $syslog_type=null): void
         {
             $this->lines = 0;
             $this->data = [];
@@ -1456,8 +1462,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $data
          * @param string $syslog_title
          * @param $syslog_type string|null values: error, info, warning, notice, debug, critical, alert, emergency
+         * @return void
          */
-        function add($data, $syslog_title=null, $syslog_type=null)
+        public function add($data, $syslog_title=null, $syslog_type=null): void
         {
             // Evaluate to write in syslog
             if(null !==  $syslog_title) {
@@ -1481,15 +1488,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * return the current data stored in the log
          * @return array
          */
-        function get() { return $this->data; }
+        public function get(): array
+        { return $this->data; }
 
         /**
-         * store all the data inside a syslog
+         * Store all the data inside a syslog
          *
          * @param $data
          * @param $syslog_type string|null values: error, info, warning, notice, debug, critical, alert, emergency
          */
-        function sendToSysLog($data, $syslog_type=null) {
+        public function sendToSysLog($data, $syslog_type=null) {
             if(!is_string($data)) $data = json_encode($data,JSON_FORCE_OBJECT);
             if(null==$syslog_type) $syslog_type = $this->syslog_type;
             // In development write the logs in a different way
@@ -1553,9 +1561,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Reset the log
+         * Reset the lines count and empty the data stored in the log
+         *
+         * @return void
          */
-        function reset()
+        public function reset()
         {
             $this->lines = 0;
             $this->data = [];
