@@ -298,9 +298,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Router
+         * Dispatch method to handle the request flow, including headers, API endpoints, and logic execution.
+         * Adds headers specified in configuration and loads API endpoints or common logic based on the request path.
+         * It is used from /src/dispatcher.php to process PHP server calls
+         * @return false|string
          */
-        function dispatch()
+        public function dispatch()
         {
 
             // core.dispatch.headers: Evaluate to add headers in the response.
@@ -480,7 +483,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Assign the path to Root of the app
          * @param $dir
          */
-        function setAppPath($dir)
+        public function setAppPath($dir)
         {
             if (is_dir($this->system->root_path . $dir)) {
                 $this->system->app_path = $this->system->root_path . $dir;
@@ -511,12 +514,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Return an object of the Class $class. If this object has been previously called class
-         * @param $class
-         * @param null $params
-         * @return mixed|null
+         * Load a class {$class}.php and instantiate it with given parameters if available.
+         * It will try to load the class from different paths in the following order: the {FrameworkSrcPath}/class, {$this->system->app_path}/class, $this->config->get('core.api.extra_path')/class
+         *
+         * @param string $class The name of the class to load.
+         * @param mixed $params Optional parameters to pass to the class constructor.
+         *
+         * @return object|null An instance of the loaded class if found, or null if the class is not found.
          */
-        function loadClass($class, $params = null)
+        public function loadClass($class, $params = null)
         {
 
             $hash = hash('md5', $class . json_encode($params));
@@ -904,7 +910,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
-        function add($title, $file = '', $type = 'all')
+        /**
+         * Add a performance entry with the given title.
+         *
+         * @param string $title The title of the log entry.
+         * @param string $file Optional. File associated with the log entry.
+         * @param string $type Optional. Type of log entry ('all' by default).
+         *
+         * @return void
+         */
+        public function add($title, $file = '', $type = 'all')
         {
             if(!$this->active) return;
             // Hidding full path (security)
@@ -970,17 +985,36 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
-        function getTotalTime($prec = 3)
+        /**
+         * Calculates and returns the total elapsed time in seconds since the initialization of the class instance.
+         *
+         * @param int $prec (Optional) The precision of the time calculation (default is 3).
+         * @return float The total elapsed time in seconds with the specified precision.
+         */
+        public function getTotalTime($prec = 3)
         {
             return (round(microtime(TRUE) - $this->data['initMicrotime'], $prec));
         }
 
-        function getTotalMemory($prec = 3)
+        /**
+         * Calculates and retrieves the total memory usage in megabytes.
+         *
+         * @param int $prec (Optional) The precision of the returned memory value (default is 3).
+         * @return float The total memory usage in megabytes.
+         */
+        public function getTotalMemory($prec = 3)
         {
             return number_format(round(memory_get_usage() / (1024 * 1024), $prec), $prec);
         }
 
-        function init($spacename, $key)
+        /**
+         * Initializes a new data entry with memory usage, start time, and default status for a given space and key.
+         *
+         * @param string $spacename The name of the space.
+         * @param string $key The key within the space.
+         * @return void
+         */
+        public function init($spacename, $key)
         {
             if(!$this->active) return;
             $this->data['init'][$spacename][$key]['mem'] = memory_get_usage();
@@ -988,7 +1022,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->data['init'][$spacename][$key]['ok'] = TRUE;
         }
 
-        function end($spacename, $key, $ok = TRUE, $msg = FALSE)
+        /**
+         * Updates the data entry with final metrics and status information for a given space and key.
+         *
+         * @param string $spacename The name of the space.
+         * @param string $key The key within the space.
+         * @param bool $ok (Optional) The status flag indicating if the operation was successful (default is TRUE).
+         * @param mixed|bool $msg (Optional) Additional notes or messages related to the entry (default is FALSE).
+         * @return void
+         */
+        public function end($spacename, $key, $ok = TRUE, $msg = FALSE)
         {
             if(!$this->active) return;
             // Verify indexes
@@ -1009,45 +1052,89 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
      */
     class CoreIs
     {
-        function development()
+        /**
+         * Check if the 'GAE_SERVICE' key exists in the $_SERVER superglobal array. It assumes your are on development env if not
+         *
+         * @return bool Returns true if 'GAE_SERVICE' key does not exist in $_SERVER, otherwise returns false.
+         */
+        public function development(): bool
         {
             return (!(array_key_exists('GAE_SERVICE',$_SERVER)));
         }
 
-        function production()
+        /**
+         * Check if the 'GAE_SERVICE' key exists in the $_SERVER superglobal array. It assumes you are on production environment if key exists
+         *
+         * @return bool Returns true if 'GAE_SERVICE' key exists in $_SERVER, indicating production environment. Otherwise, returns false.
+         */
+        public function production(): bool
         {
             return (array_key_exists('GAE_SERVICE',$_SERVER) );
         }
 
-        function localEnvironment()
+        /**
+         * Check if the application is running in a local environment. It is local if GAE_SERVICE does not exists in superglobal $_SERVER array
+         *
+         * @return bool true if running in a local environment, false otherwise.
+         */
+        public function localEnvironment(): bool
         {
             return (!(array_key_exists('GAE_SERVICE',$_SERVER)));
         }
 
-        function GCPEnvironment()
+        /**
+         * Checks if the application is running in a Google Cloud Platform environment.
+         *
+         * @return bool Returns true if the application is running in a Google Cloud Platform environment, false otherwise.
+         */
+        public function GCPEnvironment(): bool
         {
             return (array_key_exists('GAE_SERVICE',$_SERVER) );
         }
 
-        function script()
+        /**
+         * Check if the 'PWD' server variable is set and the 'GAE_SERVICE' server variable is not set.
+         *
+         * @return bool Returns true if 'PWD' is set and 'GAE_SERVICE' is not set, otherwise returns false.
+         */
+        public function script(): bool
         {
             return (isset($_SERVER['PWD']) && !isset($_SERVER['GAE_SERVICE']));
         }
 
-        function dirReadable($dir)
+        /**
+         * Checks if the specified directory is readable.
+         *
+         * @param string $dir The path of the directory to check for readability.
+         *
+         * @return bool Returns true if the specified directory is readable, false otherwise.
+         */
+        public function dirReadable(string $dir): bool
         {
             if (strlen($dir)) return (is_dir($dir));
+            return false;
         }
 
-        function terminal()
+        /**
+         * Checks if the application is running on a terminal environment.
+         *
+         * @return bool Returns true if the application is running on a terminal environment, false otherwise.
+         */
+        public function terminal(): bool
         {
             return !isset($_SERVER['SERVER_PORT']);
         }
 
-        function dirWritable($dir)
+        /**
+         * Checks if the given directory is writable.
+         *
+         * @param string $dir The directory path to be checked for writability.
+         * @return bool Returns true if the directory is writable, false otherwise.
+         */
+        public function dirWritable(string $dir): bool
         {
             if (strlen($dir)) {
-                if (!$this->dirReadble($dir)) return false;
+                if (!$this->dirReadable($dir)) return false;
                 try {
                     if (@mkdir($dir . '/__tmp__')) {
                         rmdir($dir . '/__tmp__');
@@ -1057,21 +1144,35 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     return false;
                 }
             }
+            return false;
         }
 
-        function validEmail($email)
+        /**
+         * Validates if the given email address is a valid format.
+         *
+         * @param string $email The email address to be validated.
+         * @return bool Returns true if the email address is in a valid format, false otherwise.
+         */
+        public function validEmail(string $email): bool
         {
             return (filter_var($email, FILTER_VALIDATE_EMAIL));
         }
 
-        function validURL($url)
+        /**
+         * Checks if the given URL is a valid URL.
+         *
+         * @param string $url The URL to be validated.
+         *
+         * @return bool Returns true if the URL is valid, false otherwise.
+         */
+        public function validURL(string $url): bool
         {
             return (filter_var($url, FILTER_VALIDATE_URL));
         }
     }
 
     /**
-     * $this->core->system Class to interacto with with the System variables
+     * $this->core->system Class to interact with with the System variables
      * @package Core.system
      */
     class CoreSystem
