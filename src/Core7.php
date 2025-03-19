@@ -1625,7 +1625,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Return an array of files readed for config.
          * @return array
          */
-        function getConfigLoaded()
+        public function getConfigLoaded()
         {
             $ret = [];
             foreach ($this->_configPaths as $path => $foo) {
@@ -1638,7 +1638,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Get the current lang
          * @return string
          */
-        function getLang()
+        public function getLang()
         {
             return ($this->lang);
         }
@@ -1648,7 +1648,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $lang
          * @return bool
          */
-        function setLang($lang)
+        public function setLang($lang)
         {
             $lang = preg_replace('/[^a-z]/', '', strtolower($lang));
             // Control Lang
@@ -2138,7 +2138,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $reload boolean false by default. if true, force to read it from gcp.secrets
          * @return boolean
          */
-        function readEnvVarsFromGCPSecrets($gpc_project_id = '',$gpc_secret_id = '', $reload=false) {
+        public function readEnvVarsFromGCPSecrets($gpc_project_id = '',$gpc_secret_id = '', $reload=false) {
 
             //region CHECK $gpc_secret_id
             if(!$gpc_project_id) $gpc_project_id = ($this->get('core.gcp.secrets.project_id'))?:$this->core->gc_project_id;
@@ -2284,7 +2284,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
         }
-
 
         /**
          * Reset Cache of the module
