@@ -969,6 +969,8 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                         $entities_keys[] = $this->datastore->key($this->entity_name, $key,['namespaceId'=>$this->namespace]);
                     }
                 }
+
+                //TODO: verify there is no more than 1000 keys to split the work in different loops
                 $result = $this->datastore->lookupBatch($entities_keys);
 
                 // $result['found'] is an array of entities.
