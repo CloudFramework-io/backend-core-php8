@@ -1,6 +1,6 @@
 <?php
 /**
- * [$cfos = $this->core->loadClass('CFOs');] Class CFOs to handle CFO app for CloudFrameworkInterface
+ * [$workFlows = $this->core->loadClass('WorkFlows',$cfos);] Class to facilitate Email Workflows
  * https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8/03-classes/WorkFlows
  * Mandrill references: https://mailchimp.com/developer/transactional/api/
  * last_update: 20240826
