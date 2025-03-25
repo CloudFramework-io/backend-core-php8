@@ -5602,6 +5602,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'username' => $user,
                 'userpassword' => $password,
                 'ClientId' => $ClientId,
+                'Fingerprint'=>$this->core->system->getRequestFingerPrint()
             ];
             $header = [
                 'X-WEB-KEY' => 'CoreUser',
@@ -5674,6 +5675,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'type' => 'userpassword',
                 'user' => $user,
                 'password' => $password,
+                'Fingerprint'=>$this->core->system->getRequestFingerPrint()
             ];
             $header = [
                 'X-WEB-KEY' => 'CoreUser',
