@@ -788,6 +788,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                             $value = (isset($this->user->data['User'][$found[2]])) ? $this->user->data['User'][$found[2]] : '';
                             if ($rawUrlEncode) $value = urlencode($value);
                             break;
+                        case "UserHasPrivilege":
+                            $value = (trim($found[2]) && $this->user->hasPrivilege(trim($found[2])))?'true':'false';
+                            break;
+                        case "UserHasOrganization":
+                            $value = (trim($found[2]) && $this->user->hasOrganization(trim($found[2])))?'true':'false';
+                            break;
                         case "UserVariables":
                         case "UserVariable":
                             $value = (isset($this->user->data['User']['UserVariables'][$found[2]])) ? $this->user->data['User']['UserVariables'][$found[2]] : '';
@@ -812,7 +818,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     //endregion
 
                     //region REPLACE str_replace($found[0], $value, $text) EVALUATING $default_value
-                    if (!$value && !strlen($value??'') && $default_value) $value = $default_value;
+                    if (!$value && !strlen($value??'') && strlen(trim($default_value))) $value = trim($default_value);
                     $data = str_replace($found[0], $value??'', $data);
                     //endregion
 
@@ -854,7 +860,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     //region SET $value to replace
                     $value = $this->findValueWithDotsInArray($array_of_variables,$found[1]);
                     // isset($array_of_variables[$found[1]]))?$array_of_variables[$found[1]]:'';
-                    if (!$value && $default_value) $value = $default_value;
+                    if (!$value && strlen(trim($default_value))>0) $value = trim($default_value);
                     if(is_array($value)) $value = json_encode($value);
                     if($rawUrlEncode) $value=urlencode($value);
                     //endregion
@@ -6261,7 +6267,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         function setPrivilege($privilege,$active=true)
         {
-            if(!isset($this->data['User']['UserPrivileges'])) $this->data['User']['UserPrivileges'] = [];
+            if(!is_array($this->data['User']['UserPrivileges']??null)) $this->data['User']['UserPrivileges'] = [];
             if(!in_array($privilege,$this->data['User']['UserPrivileges'])) $this->data['User']['UserPrivileges'][] = $privilege;
         }
 
@@ -6272,7 +6278,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         function unsetPrivilege($privilege)
         {
-            if(!isset($this->data['User']['UserPrivileges'])) $this->data['User']['UserPrivileges'] = [];
+            if(!is_array($this->data['User']['UserPrivileges']??null)) $this->data['User']['UserPrivileges'] = [];
             if(($index = array_search($privilege,$this->data['User']['UserPrivileges']))!==false)
                 array_splice($this->data['User']['UserPrivileges'],$index,1);
         }
@@ -6284,8 +6290,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         function hasPrivilege(string $privilege)
         {
-            if(!($this->data['User']['UserPrivileges']??null)) return false;
-            return (isset($this->data['User']['UserPrivileges']) && in_array($privilege,$this->data['User']['UserPrivileges']??[]));
+            if(!is_array($this->data['User']['UserPrivileges']??null)) $this->data['User']['UserPrivileges'] = [];
+            return (in_array($privilege,$this->data['User']['UserPrivileges']));
         }
 
         /**
@@ -6314,51 +6320,200 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Set a license for a user
-         * @param $license
-         * @param bool $active
+         * Get the value of a specific variable from the UserVariables array
+         *
+         * @version ^8.3.44
+         * @param string $variable The name of the variable to retrieve
+         *
+         * @return mixed|null The value of the specified variable if found, otherwise null
          */
-        function setLicense($license, $active=true)
+        function getVariable(string $variable)
         {
-            if(!isset($this->data['User']['UserLicenses'])) $this->data['User']['UserLicenses'] = [];
+            if(!is_array($this->data['User']['UserVariables']??null))
+                $this->data['User']['UserVariables'] = [];
+            return $this->data['User']['UserVariables'][$variable]??null;
+        }
+
+        /**
+         * Get the specified variable from the UserVariables array of the User data.
+         * If the UserVariables array is not an array, initialize it as an empty array.
+         *
+         * @version ^8.3.44
+         * @return array The UserVariables array that contains the specified variable
+         */
+        function getVariables()
+        {
+            if(!is_array($this->data['User']['UserVariables']??null))
+                $this->data['User']['UserVariables'] = [];
+            return $this->data['User']['UserVariables'];
+        }
+
+        /**
+         * Set a variable in the UserVariables array of the User data
+         *
+         * @version ^8.3.44
+         * @param string $variable The name of the variable to set
+         * @param mixed $value The value to assign to the variable
+         *
+         * @return void
+         */
+        function setVariable(string $variable,$value)
+        {
+            if(!is_array($this->data['User']['UserVariables']??null))
+                $this->data['User']['UserVariables'] = [];
+            $this->data['User']['UserVariables'][$variable] = $value;
+        }
+
+        /**
+         * Unset a specific variable from the UserVariables array in the data.
+         *
+         * @version ^8.3.44
+         * @param string $variable The variable to unset from the UserVariables array.
+         *
+         * @return void|null Returns null if the UserVariables array is not an array, else unsets the specified variable if it exists.
+         */
+        function unsetVariable(string $variable)
+        {
+            if(!is_array($this->data['User']['UserVariables']??null))
+                $this->data['User']['UserVariables'] = [];
+            if(isset($this->data['User']['UserVariables'][$variable]))
+                unset($this->data['User']['UserVariables'][$variable]);
+        }
+
+        /**
+         * Set the organization for the user and add it to the list of UserOrganizations if not already present.
+         *
+         * @version ^8.3.44
+         * @param string $organization The organization to be set for the user.
+         * @param bool $active Whether the organization should be active or not. Default is true.
+         *
+         * @return void
+         */
+        function setOrganization(string $organization)
+        {
+            if(!is_array($this->data['User']['UserOrganizations']??null)) $this->data['User']['UserOrganizations'] = [];
+            if(!in_array($organization,$this->data['User']['UserOrganizations'])) $this->data['User']['UserOrganizations'][] = $organization;
+        }
+
+        /**
+         * Removes the specified organization from the User's list of organizations.
+         *
+         * @version ^8.3.44
+         * @param string $organization The organization to be removed.
+         *
+         * @return void
+         */
+        function unsetOrganization(string $organization)
+        {
+            if(!is_array($this->data['User']['UserOrganizations']??null)) $this->data['User']['UserOrganizations'] = [];
+            if(($index = array_search($organization,$this->data['User']['UserOrganizations']))!==false)
+                array_splice($this->data['User']['UserOrganizations'],$index,1);
+        }
+
+        /**
+         * Check if the user belongs to a specific organization.
+         *
+         * @version ^8.3.44
+         * @param string $organization The organization to check for.
+         *
+         * @return bool Returns true if the user belongs to the specified organization, false otherwise.
+         */
+        function hasOrganization(string $organization)
+        {
+            if(!is_array($this->data['User']['UserOrganizations']??null)) $this->data['User']['UserOrganizations'] = [];
+            return (in_array($organization,$this->data['User']['UserOrganizations']??[]));
+        }
+
+        /**
+         * Check if the user has any of the given organizations.
+         *
+         * @version ^8.3.44
+         * @@param string|array $organizations The organization(s) to check. If a string is provided, it will be split by comma (,).
+         *
+         * @return bool Whether the user has any of the specified organizations.
+         */
+        function hasAnyOrganization(string|array $organizations): bool
+        {
+            if(!is_array($organizations)) $organizations = explode(',',$organizations);
+            $found = false;
+            foreach ($organizations as $organization) if(is_string($organization)){
+                if($this->hasOrganization($organization)) return true;
+            }
+            return false;
+        }
+
+        /**
+         * Retrieves the organizations associated with the user.
+         *
+         * @version ^8.3.44
+         * @return array    The user's organizations, or an empty array if no organizations are found.
+         */
+        function getOrganizations()
+        {
+            if(!is_array($this->data['User']['UserOrganizations']??null)) $this->data['User']['UserOrganizations'] = [];
+            return $this->data['User']['UserOrganizations']??[];
+        }
+
+
+        /**
+         * Set a license for the user and mark it as active if specified
+         *
+         * @param string $license The license to set for the user
+         * @param bool $active (Optional) Whether the license should be marked as active. Defaults to true.
+         *
+         * @return void
+         */
+        function setLicense(string $license, $active=true)
+        {
+            if(!is_array($this->data['User']['UserLicenses']??null)) $this->data['User']['UserLicenses'] = [];
             if(!in_array($license,$this->data['User']['UserLicenses'])) $this->data['User']['UserLicenses'][] = $license;
         }
 
         /**
-         * Tell if the user has specific license
-         * @param string $license
-         * @return bool
+         * Check if the user has a specific license.
+         *
+         * @param string $license The license to check for.
+         *
+         * @return bool Returns true if the user has the specified license, false otherwise.
          */
         function hasLicense(string $license)
         {
-            return (isset($this->data['User']['UserLicenses']) && in_array($license,$this->data['User']['UserLicenses']));
+            if(!is_array($this->data['User']['UserLicenses']??null)) $this->data['User']['UserLicenses'] = [];
+            return (in_array($license,$this->data['User']['UserLicenses']));
         }
 
         /**
-         * Unset a license for a user
-         * @param $license
-         * @param bool $active
+         * Unset a license from the User's UserLicenses array.
+         *
+         * @param string $license The license to be removed from the User's UserLicenses array.
+         *
+         * @return void
          */
-        function unsetLicense($license)
+        function unsetLicense(string $license)
         {
-            if(!isset($this->data['User']['UserLicenses'])) $this->data['User']['UserLicenses'] = [];
+            if(!is_array($this->data['User']['UserLicenses']??null)) $this->data['User']['UserLicenses'] = [];
             if(($index = array_search($license,$this->data['User']['UserLicenses']))!==false)
                 array_splice($this->data['User']['UserLicenses'],$index,1);
         }
 
         /**
-         * Set a privilege for a user
-         * @param string $privilege
-         * @return bool
+         * Get the licenses associated with the user
+         *
+         * This method retrieves the licenses associated with the user. If the user does not have any licenses, an empty array will be returned.
+         *
+         * @return array An array of user licenses, or an empty array if no licenses are found
          */
         function getLicenses()
         {
+            if(!is_array($this->data['User']['UserLicenses']??null)) $this->data['User']['UserLicenses'] = [];
             return $this->data['User']['UserLicenses']??[];
         }
 
         /**
-         * Get a user lang. 'en' default
-         * @return string
+         * Get the language of the current user from the data.
+         * If the user's language is not found in the data, 'en' (English) is returned as a default.
+         *
+         * @return string The language code of the current user, or 'en' if not found
          */
         function getLang()
         {
@@ -6366,10 +6521,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Tell if the user is a PORTAL-USER
-         * @return bool
+         * Check if the current user is a portal user based on certain conditions
+         *
+         * @return bool Returns true if the user is a portal user, otherwise returns false
          */
-        function isPortalUser()
+        function isPortalUser(): bool
         {
             return ($this->data['User']['PortalUser']??null)
                 && ($this->data['User']['KeyId']??false)
@@ -6378,10 +6534,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Tell if the user is a PORTAL-USER
-         * @return bool
+         * Check if the user is a platform user by verifying certain conditions
+         *
+         * @return bool Returns true if the user is a platform user based on specific data conditions, otherwise returns false.
          */
-        function isPlatformUser()
+        function isPlatformUser(): bool
         {
             return !($this->data['User']['PortalUser']??false)
                 && ($this->data['User']['KeyName']??false)
@@ -6393,14 +6550,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Get de TimeZone of the user. UTC by default
          * @return string
          */
-        function getTimeZone()
+        function getTimeZone(): string
         {
-            return $this->data['User']['UserTimeZone']??'UTC';
+            return ($this->data['User']['UserTimeZone']??'UTC')?:'';
         }
 
         /**
-         * Get datetime Y-m-d H:i:s converted to User TimeZone
-         * @return string
+         * Get the formatted date and time based on the specified time zone and date time
+         *
+         * @param string $time_zone The time zone to use for formatting the date and time
+         * @param string $date_time The date and time string to convert (optional)
+         *
+         * @return string Returns the formatted date and time string ('Y-m-d H:i:s') in the user's time zone,
+         * or an error return an error message if there was an issue converting the date and time
          */
         function getDateTime(string $time_zone='',string $date_time='')
         {
