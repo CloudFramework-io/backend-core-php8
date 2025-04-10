@@ -304,24 +304,26 @@ if (!defined("_RESTfull_CLASS_")) {
         /**
          * Check if it is received mandatory params
          * @param array $keys with format: [key1,kye2,..] or [[key1,msg,[allowed,values],min_length],[]]
-         * @return bool|void
+         * @return array|false if ok returns the array with $keys values else returns false
          */
-        function checkMandatoryFormParams($keys)
+        function checkMandatoryFormParams($keys): bool|array
         {
-            if(!$keys) return;
+            if(!$keys) return [];
 
             if (!is_array($keys) && strlen($keys)) $keys = array($keys);
             foreach ($keys as $i=>$item) if(!is_array($item)) $keys[$i] = array($item);
 
+            $ret = [];
             foreach ($keys as $key)if(is_string($key[0])) {
                 $fkey = $key[0];
                 $fmsg = (isset($key[1]))?$key[1]:'';
                 $fvalues = (array_key_exists(2,$key) && is_array($key[2]))?$key[2]:[];
                 $fmin = (isset($key[3]))?$key[3]:1;
                 $fcode = (isset($key[4]))?$key[4]:null;
-                $this->checkMandatoryFormParam($fkey,$fmsg,$fvalues,$fmin,$fcode);
+                if(!$ret[$fkey] = $this->checkMandatoryFormParam($fkey,$fmsg,$fvalues,$fmin,$fcode))
+                    return false;
             }
-            return ($this->error === 0);
+            return $ret;
         }
 
         /**
