@@ -14,7 +14,7 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
      */
     class GoogleDrive
     {
-        protected $version = '20241219';
+        protected $version = '20250406';
 
         /** @var Core7 $core */
         private $core;
@@ -1154,17 +1154,39 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
         }
 
         /**
-         * Read data from  SpreadSheet
+         * @deprecated Use:readSpreadSheetRangeValues
          * The error codes can be: 404 = not found, 403 = insufficient permissions
          * @param string $fileId
          * @param string $range Where to start the update
          * @return array|void
          */
-        public function readSpreadSheet($fileId, $range = 'A1')
+        public function readSpreadSheet($fileId, $range = 'A1'){return $this->readSpreadSheetRangeValues($fileId,$range);}
+
+
+        /**
+         * Read data values  from  SpreadSheet
+         * The error codes can be: 404 = not found, 403 = insufficient permissions
+         * @param string $fileId
+         * @param string $range Where to start the update
+         * @param array $options Optional parameters.
+         *
+         * @opt_param string dateTimeRenderOption How dates, times, and durations should
+         * be represented in the output. This is ignored if value_render_option is
+         * FORMATTED_VALUE and other options are: UNFORMATTED_VALUE, FORMULA. The default dateTime render option is SERIAL_NUMBER.
+         * @opt_param string majorDimension The major dimension that results should use.
+         * For example, if the spreadsheet data in Sheet1 is: `A1=1,B1=2,A2=3,B2=4`,
+         * then requesting `range=Sheet1!A1:B2?majorDimension=ROWS` returns
+         * `[[1,2],[3,4]]`, whereas requesting
+         * `range=Sheet1!A1:B2?majorDimension=COLUMNS` returns `[[1,3],[2,4]]`.
+         * @opt_param string valueRenderOption How values should be represented in the
+         * output. The default render option is FORMATTED_VALUE and other options are: UNFORMATTED_VALUE, FORMULA
+         * @return array|void
+         */
+        public function readSpreadSheetRangeValues($fileId, $range = 'A1',array $options=[])
         {
 
             try {
-                $result = $this->spreedsheet->spreadsheets_values->get($fileId, $range);
+                $result = $this->spreedsheet->spreadsheets_values->get($fileId, $range,$options);
                 $ret = [];
                 foreach ($result as $item) {
                     $ret[] = $item;
@@ -1175,6 +1197,58 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
                 return false;
             }
         }
+
+        /**
+         * Reads data from a specified range in a Google Spreadsheet
+         *
+         * @param string $fileId The ID of the Google Spreadsheet file
+         * @param string $range The range of cells to read, defaults to 'A1'
+         * @param array $options Additional options for fetching data from the spreadsheet
+         *   - 'ranges' : Array of ranges to fetch data from
+         *   - 'fields' : Fields to include in the response with dot notation, e.g. sheets(data(rowData(values(hyperlink,formattedValue))))
+         * @return array|false An array containing the formatted data from the spreadsheet cells
+         *   or false if an error occurs during the data retrieval process
+         *   - 'formatedValue' : formatted value
+         *   - 'value' : raw value of the cell
+         *   - 'link' : Hyperlink of the cell if it exists
+         *   - 'row' : int value of the cell row 1..n
+         *   - 'col' : int value of the cell col 1..n
+         */
+        public function readSpreadSheetRangeData($fileId, $range = 'A1', array $options=[])
+        {
+            try {
+                $options =  [
+                    'ranges'=>[$range],
+                    'fields'=>"sheets(data(rowData(values(hyperlink,formattedValue))))"
+                ];
+                $res = $this->spreedsheet->spreadsheets->get($fileId,$options);
+                $data = $res->getSheets()[0]->getData();
+
+                $result = [];
+                foreach ($data as $datum) {
+                    $rowData = $datum->getRowData();
+                    /** @var Google\Service\Sheets\RowData $row */
+                    foreach ($rowData as $i => $row) {
+                        /** @var Google\Service\Sheets\CellData $col */
+                        foreach ($row as $j => $col) {
+                            $cell = [
+                                'formatedValue' => $col->getFormattedValue(),
+                                'value' => $col->getEffectiveValue()?:$col->getFormattedValue(),
+                                'link' => $col->getHyperlink(),
+                                'row' => $i + 1,
+                                'col' => $i + 1,
+                            ];
+                            $result[$i][$j] = $cell;
+                        }
+                    }
+                }
+                return $result;
+            } catch (Exception $e) {
+                $this->addError($e->getCode(), $e->getMessage());
+                return false;
+            }
+        }
+
 
         /**
          * Create a Spreadsheet file
