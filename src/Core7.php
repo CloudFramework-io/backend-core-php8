@@ -4541,6 +4541,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     class CoreRequest
     {
         /** @ignore */
+        protected $version = '20250410';
+        /** @ignore */
         protected $core;
         /** @ignore */
         protected $http;
@@ -4573,14 +4575,49 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->core = $core;
             if (!$this->core->config->get("CloudServiceUrl"))
                 $this->core->config->set("CloudServiceUrl", 'https://api7.cloudframework.io');
+        }
+
+
+        /**
+         * Add an SSL parameter to the default options array for SSL configuration in de request calls
+         * It only will allow to add in $this->>default_options the parameters defined in
+         * https://www.php.net/manual/en/context.ssl.php
+         *
+         * @param string $parameter The name of the SSL parameter to add
+         * @param mixed $value The value of the SSL parameter
+         * @return boolean True if the SSL parameter was successfully added, otherwise false
+         */
+        public function addSSLParameter(string $parameter, $value): ?bool
+        {
+            if (!in_array($parameter, ['peer_name',
+                'verify_peer',
+                'verify_peer_name',
+                'allow_self_signed',
+                'cafile',
+                'capath',
+                'local_cert',
+                'local_pk',
+                'passphrase',
+                'verify_depth',
+                'ciphers',
+                'capture_peer_cert',
+                'capture_peer_cert_chain',
+                'SNI_enabled',
+                'disable_compression',
+                'peer_fingerprint',
+                'security_level'])) return $this->addError("parameter [{$parameter}] is not supported in ssl");
+
+            $this->default_options['ssl'][$parameter] = $value;
+            return true;
 
         }
 
         /**
-         * @param string $path Path to complete URL. if it does no start with http.. $path will be aggregated to: $this->core->config->get("CloudServiceUrl")
-         * @return string
+         * Get the default service URL by either returning the provided path directly or appending it to the base URL.
+         * @param string $path The path to be appended to the base URL. If path is empty or already contains 'http', it will be returned as is.
+         * @return string The complete URL composed of the base URL and the provided path.
          */
-        function defaultServiceUrl($path = '')
+        public function defaultServiceUrl($path = '')
         {
             if (!$path || strpos($path, 'http') === 0) return $path;
             else {
@@ -4594,13 +4631,27 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 return ($this->http . $path);
             }
         }
+
+        /**
+         * Get the service URL using the default service URL
+         *
+         * @param string $path The path to append to the service URL
+         * @return string The complete service URL
+         */
         function getServiceUrl($path = '') {return $this->defaultServiceUrl($path);}
 
 
         /**
-         * Call External Cloud Service Caching the result
+         * Get cache data for a specific route with optional parameters.
+         *
+         * @param string $route The route for which cache data is requested.
+         * @param mixed $data Additional data to be used in generating cache key.
+         * @param string $verb The HTTP verb used to request the route (default: 'GET').
+         * @param array|null $extraheaders Additional headers to be included in the request.
+         * @param bool $raw Flag to indicate if raw response should be returned (default: false).
+         * @return mixed|null The cached data for the given route, or null if cache miss or refresh is forced.
          */
-        function getCache($route, $data = null, $verb = 'GET', $extraheaders = null, $raw = false)
+        public function getCache(string $route, $data = null, $verb = 'GET', $extraheaders = null, $raw = false)
         {
             $_qHash = hash('md5', $route . json_encode($data) . $verb);
             $ret = $this->core->cache->get($_qHash);
@@ -4615,16 +4666,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * CURL METHOD
-         * @param $route
-         * @param null $data
-         * @param string $verb
-         * @param null $extra_headers
-         * @param false $raw
-         * @return false|string
-         * @throws Exception
+         * Generate a cURL request to a specified route with optional data using specified HTTP verb and additional headers
+         *
+         * @param string $route The URL to send the cURL request to
+         * @param mixed|null $data The data to be sent with the request (default: null)
+         * @param string $verb The HTTP verb to use for the request (default: 'GET')
+         * @param array|null $extra_headers Additional headers to include in the request (default: null)
+         * @param bool $raw Flag indicating if data should be sent as raw input (default: false)
+         * @return string|false The response from the cURL request or false on failure
          */
-        function getCurl($route, $data = null, $verb = 'GET', $extra_headers = null, $raw = false)
+        public function getCurl(string $route, $data = null, $verb = 'GET', $extra_headers = null, $raw = false): bool|string
         {
 
             $_time = microtime(TRUE);
@@ -4738,23 +4789,22 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $this->core->__p->add('Request->getCurl: ', '', 'endnote');
             return $ret;
-
-
         }
 
-
         /**
-         * GET CALL expecting a json response
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool[]|mixed|string[]
+         * Decodes a JSON response from a specified route
+         *
+         * @param string $route The route to fetch JSON data from
+         * @param mixed $data Optional data to send along with the request
+         * @param array|null $extra_headers Additional headers to include in the request
+         * @param bool $send_in_json Flag to specify if data should be sent as JSON
+         *
+         * @return mixed|null The decoded JSON response or an error array on failure
          */
-        function get_json_decode($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function get_json_decode(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             $this->rawResult = $this->get($route, $data, $extra_headers, $send_in_json);
-            $ret = json_decode($this->rawResult, true);
+            $ret = $this->core->jsonDecode($this->rawResult);
             if (JSON_ERROR_NONE === json_last_error()) $this->rawResult = '';
             else {
                 $ret = ['error'=>$this->rawResult];
@@ -4763,17 +4813,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * POST CALL expecting a json response
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool[]|mixed|string[]
+         * Decode JSON response from a POST request and return as an array
+         *
+         * @param string $route The route for the POST request
+         * @param mixed $data Optional. The data to be sent in the POST request
+         * @param array|null $extra_headers Optional. Extra headers to be included in the POST request
+         * @param bool $send_in_json Optional. Whether to send the data in JSON format
+         * @return array|null The decoded JSON response or an array with an error key if decoding fails
          */
-        function post_json_decode($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function post_json_decode(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             $this->rawResult = $this->post($route, $data, $extra_headers, $send_in_json);
-            $ret = json_decode($this->rawResult, true);
+            $ret = $this->core->jsonDecode($this->rawResult);
             if (JSON_ERROR_NONE === json_last_error()) $this->rawResult = '';
             else {
                 $ret = ['error'=>$this->rawResult];
@@ -4782,17 +4833,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * PUT CALL expecting a json response
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool[]|mixed|string[]
+         * Decode JSON response after sending data in PUT request
+         * @param string $route The route for the PUT request
+         * @param mixed $data The data to be sent in the PUT request (optional, default is null)
+         * @param array $extra_headers Extra headers to be included in the PUT request (optional, default is null)
+         * @param bool $send_in_json Flag to specify if data should be sent in JSON format (optional, default is false)
+         * @return mixed Returns the decoded JSON response as an associative array
          */
-        function put_json_decode($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function put_json_decode(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             $this->rawResult = $this->put($route, $data, $extra_headers, $send_in_json);
-            $ret = json_decode($this->rawResult, true);
+            $ret = $this->core->jsonDecode($this->rawResult);
             if (JSON_ERROR_NONE === json_last_error()) $this->rawResult = '';
             else {
                 $ret = ['error'=>$this->rawResult];
@@ -4802,17 +4853,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
-         * PATCH
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool[]|mixed|string[]
+         * Parse JSON response data from a PATCH request.
+         *
+         * @param string $route The API route to send the PATCH request to.
+         * @param mixed $data The data to be sent in the PATCH request.
+         * @param array|null $extra_headers Extra headers to be included in the PATCH request.
+         * @param bool $send_in_json Whether to send the data in JSON format.
+         *
+         * @return array|null The decoded JSON response as an associative array if successful, null if JSON is empty, or an error array if decoding fails.
          */
-        function patch_json_decode($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function patch_json_decode(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             $this->rawResult = $this->patch($route, $data, $extra_headers, $send_in_json);
-            $ret = json_decode($this->rawResult, true);
+            $ret = $this->core->jsonDecode($this->rawResult);
             if (JSON_ERROR_NONE === json_last_error()) $this->rawResult = '';
             else {
                 $ret = ['error'=>$this->rawResult];
@@ -4821,17 +4874,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * DELETE
-         * @param $route
-         * @param null $extra_headers
-         * @param null $data
-         * @param false $send_in_json
-         * @return bool[]|mixed|string[]
+         * Delete data at a specific route and decode the JSON response.
+         *
+         * @param string $route The route where the data should be deleted
+         * @param array|null $extra_headers Additional headers to be included in the request
+         * @param mixed $data Data to be sent along with the request
+         * @param bool $send_in_json Flag indicating if the data should be sent as JSON
+         *
+         * @return array|null An associative array representing the JSON response if decoding is successful, null otherwise
          */
-        function delete_json_decode($route, $extra_headers = null, $data = null, $send_in_json = false)
+        public function delete_json_decode(string $route, $extra_headers = null, $data = null, $send_in_json = false)
         {
             $this->rawResult = $this->delete($route, $extra_headers, $data, $send_in_json);
-            $ret = json_decode($this->rawResult, true);
+            $ret = $this->core->jsonDecode($this->rawResult);
             if (JSON_ERROR_NONE === json_last_error()) $this->rawResult = '';
             else {
                 $ret = ['error'=>$this->rawResult];
@@ -4840,65 +4895,73 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * GET
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool|string
+         * Retrieve data from a specified route using a GET request.
+         *
+         * @param string $route The route to retrieve data from
+         * @param mixed $data Additional data to send with the request (default is null)
+         * @param array|null $extra_headers Extra headers to include in the request (default is null)
+         * @param bool $send_in_json Whether to send data in JSON format (default is false)
+         * @return mixed The response from the specified route
          */
-        function get($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function get(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             return $this->call($route, $data, 'GET', $extra_headers, $send_in_json);
         }
 
         /**
-         * POST
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool|string
+         * Perform a POST request using the specified route and data
+         *
+         * @param string $route The route for the POST request
+         * @param mixed $data (Optional) The data to be sent in the request body
+         * @param array $extra_headers (Optional) Extra headers to be included in the request
+         * @param bool $send_in_json (Optional) Indicates whether the data should be sent in JSON format
+         *
+         * @return mixed The response from the POST request
          */
-        function post($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function post(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             return $this->call($route, $data, 'POST', $extra_headers, $send_in_json);
         }
 
         /**
-         * PUT
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool|string
+         * Executes a PUT request to the specified route.
+         *
+         * @param string $route The endpoint route where the PUT request will be sent.
+         * @param mixed $data The data to be sent along with the PUT request. Defaults to null.
+         * @param array|null $extra_headers Additional headers to be included in the request. Defaults to null.
+         * @param bool $send_in_json Indicates whether the data should be sent in JSON format. Defaults to false.
+         *
+         * @return mixed The response from the PUT request.
          */
-        function put($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function put(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             return $this->call($route, $data, 'PUT', $extra_headers, $send_in_json);
         }
 
         /**
-         * @param $route
-         * @param null $data
-         * @param null $extra_headers
-         * @param false $send_in_json
-         * @return bool|string
+         * Patch method to make a PATCH HTTP request to a specified route with optional data and headers.
+         *
+         * @param string $route The route to which the PATCH request will be made
+         * @param mixed $data (Optional) The data to be sent in the PATCH request (default is null)
+         * @param array $extra_headers (Optional) Additional headers to include in the PATCH request (default is null)
+         * @param bool $send_in_json (Optional) Indicates whether data should be sent in JSON format (default is false)
          */
-        function patch($route, $data = null, $extra_headers = null, $send_in_json = false)
+        public function patch(string $route, $data = null, $extra_headers = null, $send_in_json = false)
         {
             return $this->call($route, $data, 'PATCH', $extra_headers, $send_in_json);
         }
 
         /**
-         * DELETE
-         * @param $route
-         * @param null $extra_headers
-         * @param null $data
-         * @param false $send_in_json
-         * @return bool|string
+         * Deletes a resource on the server using the DELETE HTTP method.
+         *
+         * @param string $route The endpoint route to send the DELETE request to.
+         * @param mixed $extra_headers Additional headers to include in the request. Default is null.
+         * @param mixed $data The data to send in the request body. Default is null.
+         * @param bool $send_in_json Whether to send the data in JSON format. Default is false.
+         * @return string|null The response from the DELETE request or null if no response.
+         * @throws Exception If an error occurs during the request.
          */
-        function delete($route, $extra_headers = null, $data = null, $send_in_json = false)
+        public function delete(string $route, $extra_headers = null, $data = null, $send_in_json = false)
         {
             return $this->call($route, $data, 'DELETE', $extra_headers, $send_in_json);
         }
@@ -4921,20 +4984,26 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          *          ,'file_type'=>'{file type}'           // Content-Type of the file. Example: application/pdf
          *          ,'file_var'=>'{name_of_var}'          // Optional var name to be used sending the file. You can use {name_of_var}[] for multiple files in the same var. default = file
          *
+         * Sending SSL data:
+         *     $data has to include $data['ssl'][ssl-parameter] = value
+         *     to send a client certificate:
+         *     $data['ssl']['local_cert'] = path-to-pem-file
+         *     $data['ssl']['passphrase'] = password of the pem file
+         *
          * Sending JSON data:
-         *     Put $raw = true;
+         *     send $send_json = true;
          *
          *
          * Extra info: https://stackoverflow.com/questions/4003989/upload-a-file-using-file-get-contents
          * For extra headers you can get further information in: https://www.php.net/manual/de/context.http.php
-         * @param $route
+         * @param string $route
          * @param null $data
          * @param string $verb
          * @param null $extra_headers
-         * @param bool $raw
+         * @param bool $send_json
          * @return bool|false|string
          */
-        function call(string $route, $data = null, $verb = 'GET', $extra_headers = null, $raw = false)
+        public function call(string $route, $data = null, $verb = 'GET', $extra_headers = null, $send_json = false)
         {
             if(!$route = trim($route)) {
                 $this->addError('Calling function call($route,..) with empty route');
@@ -4950,13 +5019,25 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->core->logs->add("request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'),'CoreRequest');
             //syslog(LOG_INFO,"request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'));
 
-            // Performance for connections
+            //region EVALUATE $extra_headers['ssl'] special headers
+            if(is_array($extra_headers['ssl']??null)) {
+                foreach ($extra_headers['ssl'] as $key => $value) {
+                    if(!$this->addSSLParameter($key,$value)) return false;
+                }
+                unset($extra_headers['ssl']);
+            }
             $options = $this->default_options;
+            //endregion
+
+            //region EVALUATE to add in $options['http']['header'] Connection and Accept
+            // Connection parameter increase the performance of the connection
             $options['http']['header'] = 'Connection: close' . "\r\n";
             if(!is_array($extra_headers) || !isset($extra_headers['Accept']))
                 $options['http']['header'] = 'Accept: */*' . "\r\n";
+            //endregion
 
 
+            //region EVALUATE to add X-SERVER-KEY, X-DS-TOKEN, X-EXTRA-INFO, X-CLOUDFRAMEWORK-SECURITY if $this->automaticHeaders
             if($this->automaticHeaders) {
                 // Automatic send header for X-CLOUDFRAMEWORK-SECURITY if it is defined in config
                 if (strlen($this->core->config->get("CloudServiceId")) && strlen($this->core->config->get("CloudServiceSecret")))
@@ -4973,13 +5054,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if (strlen($this->core->config->get("X-EXTRA-INFO")))
                     $options['http']['header'] .= 'X-EXTRA-INFO: ' . $this->core->config->get("X-EXTRA-INFO") . "\r\n";
             }
+            //endregion
+
+            //region EVALUATE to add https extra headers from $headers
             // Extra Headers
             if ($extra_headers !== null && is_array($extra_headers)) {
                 foreach ($extra_headers as $key => $value) {
-                    $options['http']['header'] .= $key . ': ' . $value . "\r\n";
+                    if(!is_array($value) && $value!='ssl')
+                        $options['http']['header'] .= $key . ': ' . $value . "\r\n";
                 }
             }
-
+            //endregion
 
             // Method
             $options['http']['method'] = $verb;
@@ -4988,7 +5073,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $MULTIPART_BOUNDARY= '--------------------------'.microtime(true);
             if ($verb != 'GET') {
                 if (stripos($options['http']['header'], 'Content-type') === false) {
-                    if ($raw) {
+                    if ($send_json) {
                         $options['http']['header'] .= 'Content-type: application/json' . "\r\n";
                     }elseif(($verb == 'POST' || $verb == 'PUT' || $verb == 'PATCH') && is_array($data) && key_exists('__files', $data) && $data['__files']){
                         $options['http']['header'] .= 'Content-Type: multipart/form-data; boundary='.$MULTIPART_BOUNDARY;
@@ -5013,9 +5098,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         }
                     }
                 } else {
-                    if ($raw) {
+                    if ($send_json) {
                         if (stripos($options['http']['header'], 'application/json') !== false) {
-                            $build_data = json_encode($data);
+                            $build_data = $this->core->jsonEncode($data);
                         } else
                             $build_data = $data;
                     } else {
@@ -5073,8 +5158,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             // Take data as a valid JSON
             elseif(is_string($data)) {
-                if(is_array(json_decode($data,true))) $options['http']['content'] = $data;
+                if(strpos($options['http']['header'],'json')) {
+                    if (is_array($this->core->jsonDecode($data))) $options['http']['content'] = $data;
+                }
+                else {
+                    $options['http']['content'] = $data;
+                }
             }
+
 
             // Save in the class the last options sent
             $this->options = ['route'=>$route,'options'=>$options];
@@ -5082,8 +5173,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $context = stream_context_create($options);
 
             try {
-                $ret = @file_get_contents($route, false, $context);
-
+                $ret = file_get_contents($route, false, $context);
                 // Return response headers
                 if(isset($http_response_header)) $this->responseHeaders = $http_response_header;
                 else $this->responseHeaders = ['$http_response_header'=>'undefined'];
@@ -5135,11 +5225,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
         }
 
-
-        /*
-         * Returns the status number of the last call
+        /**
+         * Gets the last response code from the response headers.
+         *
+         * Parses the first response header to extract the response code,
+         * which is typically found after the HTTP status line.
+         *
+         * @return int|null The last response code if available, null otherwise.
          */
-        function getLastResponseCode()
+        public function getLastResponseCode()
         {
             $code = null;
             if (isset($this->responseHeaders[0])) {
@@ -5158,7 +5252,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @return string|null
          * @throws Exception
          */
-        function generateCloudFrameWorkSecurityString($id, $time = '', $secret = '')
+        public function generateCloudFrameWorkSecurityString($id, $time = '', $secret = '')
         {
             $ret = null;
             if (!strlen($secret)) {
@@ -5178,12 +5272,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * @param string $url
-         * @param int $format
-         * @desc Fetches all the headers
-         * @return array
+         * Fetches the headers of a given URL and returns them as an array.
+         *
+         * @param string $url The URL for which headers need to be retrieved.
+         *
+         * @return array|bool Returns an array containing the headers of the URL if successful, or false if an error occurs while fetching the headers.
          */
-        function getUrlHeaders($url)
+        public function getUrlHeaders(string $url): bool|array|null
         {
             if(!$this->core->is->validURL($url)) return($this->core->errors->add('invalid url: '.$url));
             if(!($headers = @get_headers($url))) {
@@ -5197,7 +5292,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $header key name of the header to get.. If not passed return all the array
          * @return string|array
          */
-        function getUrlHeader($url, $header=null) {
+        public function getUrlHeader($url, $header=null) {
             $ret = 'error';
             $response = $this->getUrlHeaders($url);
             $headers = [];
@@ -5212,12 +5307,29 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             else return $headers;
         }
 
-        function addError($value)
+        /**
+         * Adds an error message in the class and in the parent $this->>core object
+         * and sets error flag to true.
+         *
+         * @param mixed $value The error message to be added.
+         *
+         * @return bool Returns false after adding the error message.
+         */
+        private function addError($value): bool
         {
             $this->error = true;
             $this->core->errors->add($value);
             $this->errorMsg[] = $value;
+            return false;
         }
+
+        /**
+         * Retrieves the content of a specific response header identified by the given key from the responseHeaders array.
+         *
+         * @param string $key The key of the response header to retrieve.
+         *
+         * @return string|null The content of the response header corresponding to the provided key if found, otherwise returns null.
+         */
         public function getResponseHeader($key) {
 
             if(is_array($this->responseHeaders))
@@ -5230,7 +5342,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return null;
         }
 
-        function sendLog($type, $cat, $subcat, $title, $text = '', $email = '', $app = '', $interactive = false)
+        /**
+         * Sends log data to a cloud service or local log path.
+         *
+         * @param string $type The type of log being sent.
+         * @param string $cat The category of the log.
+         * @param string $subcat The subcategory of the log.
+         * @param string $title The title of the log.
+         * @param string $text The main text content of the log.
+         * @param string $email The email to which the log report should be sent.
+         * @param string $app The application associated with the log (defaults to current host).
+         * @param bool $interactive Whether the log is interactive. default is false
+         *
+         * @return mixed Returns the result of sending the log data.
+         */
+        public function sendLog($type, $cat, $subcat, $title, $text = '', $email = '', $app = '', $interactive = false)
         {
 
             if (!strlen($app)) $app = $this->core->system->url['host'];
@@ -5272,12 +5398,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Send Cors headers to allow AJAX calls
-         * @param string $methods
-         * @param string $origin
-         * @param string $extra_headers
+         * Sends Cross-Origin Resource Sharing (CORS) headers to allow cross-domain AJAX requests.
+         * if the method is OPTIONS it performs an exit to avoid ENDPOINT execution
+         *
+         * @param string $methods (optional) Allowed HTTP methods. Default is 'GET,POST,PUT'.
+         * @param string $origin (optional) Allowed origin. If not provided, it will be obtained from the HTTP_ORIGIN header.
+         * @param string $extra_headers (optional) Additional headers to allow in the CORS request.
+         *
+         * @return void
          */
-        function sendCorsHeaders($methods = 'GET,POST,PUT', $origin = '',$extra_headers='')
+        public function sendCorsHeaders(string $methods = 'GET,POST,PUT', string $origin = '', string $extra_headers='')
         {
 
             if($extra_headers) $extra_headers = ','.$extra_headers;
@@ -5302,11 +5432,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
-         * Check if the URL passed exists
-         * @param string $url
-         * @return boolean
+         * Checks if a URL exists by sending a HEAD request and analyzing the response headers.
+         *
+         * @param string $url The URL to check for existence.
+         *
+         * @return bool Returns true if the URL exists (returns a non-404 response code), false otherwise.
          */
-        function urlExists(string $url)
+        public function urlExists(string $url): bool
         {
             $exists = true;
             if(strpos($url,'http')!==0) $exists = false;
@@ -5321,11 +5453,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
-         * Returns a specific Header received in a API call
-         * @param $str
-         * @return mixed|string
+         * Converts the given string to uppercase, replaces hyphens with underscores,
+         * and retrieves the value from the HTTP header provided within the $_SERVER superglobal.
+         *
+         * @param string $str The HTTP header string to be retrieved.
+         *
+         * @return string Returns the value of the HTTP header if it exists in $_SERVER, empty string otherwise.
          */
-        function getHeader($str)
+        public function getHeader(string $str)
         {
             $str = strtoupper($str);
             $str = str_replace('-', '_', $str);
@@ -5333,10 +5468,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Return all headers received in a API call
-         * @return array
+         * Retrieves and returns the HTTP headers from the $_SERVER superglobal array.
+         *
+         * This method loops through the $_SERVER array and extracts HTTP headers by checking for keys starting
+         * with 'HTTP_'. It then removes the 'HTTP_' prefix from the key and adds the header to the result array.
+         *
+         * @return array An associative array containing HTTP headers where the keys are the header names without the 'HTTP_' prefix
+         * and the values are the corresponding header values.
          */
-        function getHeaders()
+        public function getHeaders(): array
         {
             $ret = array();
             foreach ($_SERVER as $key => $value) if (strpos($key, 'HTTP_') === 0) {
@@ -5346,9 +5486,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Reset $this->errorMsg and $this->error vars
+         * Resets the error message array ($this->errorMsg) and sets error flag ($this->error) to false.
+         *
+         * @return void
          */
-        function reset() {
+        public function reset() {
             $this->errorMsg = [];
             $this->error = false;
         }
@@ -8026,7 +8168,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         public $errorMsg = [];
 
 
-
         /**
          * CoreLogic constructor.
          * @param Core7 $core
@@ -8078,7 +8219,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Try to render a template
+         * Try to render a twig template
          * @param string $template Path to the template
          */
         function render($template)
@@ -8111,7 +8252,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
-        /*
+        /**
          * Return the Value from $this->formParams
          * @params $var string var for $this->formParams
          * @return mixed|null returns $this->formParams[$var]
@@ -8120,7 +8261,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return (isset($this->formParams[$var]))?$this->formParams[$var]:null;
         }
 
-        /*
+        /**
          * Return the Value from $this->params
          * @params $index string var for $this->params
          * @return mixed|null returns $this->params[$index]
@@ -8134,7 +8275,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $value
          * @return false always false to facilitate other calls
          */
-        function addError($value)
+        function addError($value): bool
         {
             $this->error = true;
             $this->core->errors->add($value);
@@ -8191,15 +8332,36 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
-        function hasOption($option) {
-            return(in_array('--'.$option, $this->argv));
+        /**
+         * Check if a specific option is present in the argument list.
+         *
+         * @param string $option The option to check for.
+         *
+         * @return bool Returns true if the option is found in the argument list, false otherwise.
+         */
+        function hasOption(string $option): bool
+        {
+            return in_array('--'.$option, $this->argv);
         }
 
-        function getOptionVar($option) {
+        /**
+         * Retrieves the value of a specified option variable.
+         *
+         * @param string $option The name of the option variable to retrieve.
+         *
+         * @return mixed|null The value of the specified option variable, or null if the option variable does not exist.
+         */
+        public function getOptionVar($option) {
             return((isset($this->vars['--'.$option]))?$this->vars['--'.$option]:null);
         }
 
-        function sendTerminal($info='') {
+        /**
+         * Send output to the terminal.
+         * @param string|array $info Optional. The information to be displayed in the terminal. Default is an empty string.
+         * @return bool Always returns true.
+         */
+        public function sendTerminal($info=''): bool
+        {
             if(is_string($info)) echo $info."\n";
             else print_r($info);
             if($info)
@@ -8207,36 +8369,65 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return true;
         }
 
-        function readCache() {
-            // Read cache into $this->cache_data if not cache default value [];
+        /**
+         * Reads cache data from cache storage.
+         *
+         * Retrieves the cache data from the cache storage using specified parameters.
+         * If cache data is not found or an error occurs, an empty array is returned.
+         *
+         * @return void
+         */
+        private function readCache() {
             $this->cache_data = ($this->cache->get('Core7_Scripts2020_cache',-1,'',$this->cache_secret_key,$this->cache_secret_iv))?:[];
         }
 
-        function cleanCache() {
-            // Read cache into $this->cache_data if not cache default value [];
+        /**
+         * Clears the cache data by resetting it to an empty array.
+         *
+         * @return void
+         */
+        private function cleanCache(): void
+        {
             $this->cache_data = [];
             $this->cache->set('Core7_Scripts2020_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
         }
 
-        function getCacheVar($var) {
+        /**
+         * Get the value of a cache variable by name.
+         *
+         * @param string $var The name of the cache variable to retrieve.
+         * @return mixed|null The value of the cache variable if found, or null if the variable does not exist.
+         */
+        public function getCacheVar($var) {
             if($this->cache_data === null) $this->readCache();
             return((isset($this->cache_data[$var]))?$this->cache_data[$var]:null);
         }
 
-        function setCacheVar($var,$value) {
+        /**
+         * Sets a cache variable with the specified key and value.
+         *
+         * @param string $var The key of the cache variable to set.
+         * @param mixed $value The value to set for the cache variable.
+         *
+         * @return void
+         */
+        public function setCacheVar($var, $value): void
+        {
             if($this->cache_data === null) $this->readCache();
             $this->cache_data[$var] = $value;
             $this->cache->set('Core7_Scripts2020_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
         }
 
         /**
-         * Execute a user Prompt
-         * @param $title
-         * @param null $default
-         * @param null $cache_var
-         * @return false|string|null
+         * Prompts the user with a title and optional default value, and allows caching of the user input.
+         *
+         * @param string $title The title of the prompt message.
+         * @param mixed $default Optional. The default value to be used if user input is not provided.
+         * @param string|null $cache_var Optional. The key for caching the user input.
+         *
+         * @return string The user input obtained from the prompt.
          */
-        function prompt($title,$default=null,$cache_var=null) {
+        public function prompt($title,$default=null,$cache_var=null) {
 
             // Check Cache var
             if($cache_var) {
@@ -8257,18 +8448,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Execute a user Prompt user for a specific var
-         *  $options['title'] = titlte to be shown
-         *  $options['default'] = default value
-         *  $options['values'] = [array of valid values]
-         *  $options['cache_var'] = 'name to cache the result. If result is cached it rewrites default'
-         *  $options['type'] = password | number | float
-         *  $options['allowed_values'] = allowed values
+         * Prompt the user for a variable based on the specified options.
          *
-         * @param $options array array of options
-         * @return false|string|null
+         * @param array $options An array of options for prompting the user:
+         *     - 'title': The title or prompt message for the variable.
+         *     - 'default': The default value for the variable (optional).
+         *     - 'cache_var': The key to store the prompted value in the cache (optional).
+         *     - 'type': The type of input (e.g., 'password') (optional).
+         *     - 'allowed_values': An array of allowed values for the input (optional).
+         *
+         * @return mixed The user input based on the specified options.
          */
-        function promptVar($options) {
+        public function promptVar($options) {
 
             $title = (isset($options['title']) && $options['title'])?$options['title']:'missing title in prompt';
             $default = (isset($options['default']) && $options['default'])?$options['default']:null;
@@ -8310,12 +8501,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
-         * Add an error in the script. This method exist to be compatible with RESTFull class
-         * @param $code
-         * @param $msg
-         * @return false to facilitate the return of other functions
+         * Sets an error with the specified code and message to be handled by the code library.
+         * This method has been created to facilitate the migration from APIs code
+         *
+         * @param int $code The error code to be set.
+         * @param string $msg The error message associated with the code.
+         *
+         * @return bool Returns false to indicate that an error was set from the code library.
          */
-        function setErrorFromCodelib($code,$msg) {
+        public function setErrorFromCodelib($code,$msg): bool
+        {
             $this->sendTerminal('ERROR: '.$code);
             $this->sendTerminal([$code=>$msg]);
             $this->addError([$code=>$msg]);
@@ -8323,11 +8518,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Execute a method if $method is defined.
-         * @param string $method name of the method
-         * @return bool
+         * Calls the specified method if it exists.
+         *
+         * @param string $method The name of the method to call.
+         *
+         * @return bool Returns true if the method exists and is called successfully, otherwise returns false.
          */
-        function useFunction($method) {
+        public function useFunction(string $method): bool
+        {
             if(method_exists($this,$method)) {
                 $this->$method();
                 return true;
@@ -8337,11 +8535,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Retrieves the Google access token for a specific user.
          *
-         * @param string $user optional is the Google user email. If empty it will prompt it
-         * @return array|mixed|void
+         * @param string $user The user for whom to retrieve the access token. If not provided, it will be fetched from the cache or prompted.
+         *
+         * @return array|false The access token details, including token, email, information, and time it was obtained. False if error
          */
-        function getUserGoogleAccessToken(string $user='')
+        public function getUserGoogleAccessToken(string $user=''): bool|array
         {
             //region VERIFY $user or prompt it
             if(!$user) {
@@ -8384,9 +8584,25 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Return the ERP for the user using a Google Access token for specific namespace
          * @param string $namespace
          * @param string $user
-         * @return mixed|void
+         * @uses getPlatformTokenWithGoogleAccessToken
+         * @deprecated
+         * @return string|false The platform token retrieved or false on error
          */
-        function getERPTokenWithGoogleAccessToken($namespace='',$user='') {
+        public function getERPTokenWithGoogleAccessToken($namespace='',$user=''): bool|string
+        {
+            return $this->getPlatformTokenWithGoogleAccessToken($namespace,$user);
+        }
+
+        /**
+         * Retrieves the platform token (used in X-DS-TOKEN header) using a Google access token.
+         *
+         * @param string $namespace The namespace for the platform token.
+         * @param string $user The user associated with the platform token.
+         *
+         * @return string|false The platform token retrieved or false on error
+         */
+        public function getPlatformTokenWithGoogleAccessToken($namespace='',$user=''): bool|string
+        {
 
             //region VERIFY $namespace
             if(!$namespace && !( $namespace = $this->core->config->get('core.erp.platform_id')))
@@ -8407,7 +8623,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                 //region GET $access_token from Google
                 // https://app.cloudframework.app/app.html#https://core20.web.app/ajax/ecm.html?page=/scripts/auth/erp-login-with-google-credentials
-                if(!($access_token = $this->getUserGoogleAccessToken($user))) return;
+                if(!($access_token = $this->getUserGoogleAccessToken($user))) return false;
                 $token = $access_token['token'];
                 //endregion
 
