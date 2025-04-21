@@ -11,6 +11,7 @@ if (!defined("_RESTfull_CLASS_")) {
      */
     class RESTful
     {
+        protected $version='v250421';
         var $apiName ='';
         var $formParams = array();
         var $rawData = array();
@@ -320,8 +321,8 @@ if (!defined("_RESTfull_CLASS_")) {
                 $fvalues = (array_key_exists(2,$key) && is_array($key[2]))?$key[2]:[];
                 $fmin = (isset($key[3]))?$key[3]:1;
                 $fcode = (isset($key[4]))?$key[4]:null;
-                if(!$ret[$fkey] = $this->checkMandatoryFormParam($fkey,$fmsg,$fvalues,$fmin,$fcode))
-                    return false;
+                $ret[$fkey] = $this->checkMandatoryFormParam($fkey,$fmsg,$fvalues,$fmin,$fcode);
+                if($this->error) return false;
             }
             return $ret;
         }
@@ -914,10 +915,11 @@ if (!defined("_RESTfull_CLASS_")) {
         /**
          * Return the value of  $this->params[$var]. Return null if $var does not exist
          * @param integer $var
+         * @param mixed $default optional parameter to return its value in case the parameter does not exist
          * @retun null|mixed
          */
-        public function getUrlPathParamater($var) {
-            if(!isset($this->params[$var])) return null;
+        public function getUrlPathParamater($var,$default=null) {
+            if(!isset($this->params[$var])) return $default;
             return $this->params[$var];
         }
 
