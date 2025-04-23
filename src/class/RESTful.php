@@ -455,7 +455,11 @@ if (!defined("_RESTfull_CLASS_")) {
             }
 
             // Validation by array values
-            if (!$error &&  (is_array($validation) && count($validation) && !in_array($this->params[$pos], $validation)) )  $error = true;
+            if (!$error &&  (is_array($validation) && count($validation)
+                    && !in_array($this->params[$pos], $validation)) )  {
+                if(!$msg) $msg =  'path parameter ' . $pos . ' is not valid. Allowed values are defined as: ' . $this->core->jsonEncode($validation);
+                $error = true;
+            }
 
             // Validation by string of validation
             if(!$error &&  is_string($validation) && strlen($validation)) {
@@ -467,11 +471,12 @@ if (!defined("_RESTfull_CLASS_")) {
                     $msg .= '. Validation error: '.$dv->errorMsg.' ['.$validation.']';
                     $error = true;
                 }
+                _printe('aa');
             }
             // Generate Error
             if($error) {
                 if(empty($code)) $code='params-error';
-                $this->setErrorFromCodelib($code,($msg == '') ? 'param ' . $pos . ' is mandatory' : $msg);
+                $this->setErrorFromCodelib($code,($msg == '') ? 'path parameter ' . $pos . ' is mandatory' : $msg);
             }
 
             // Return
