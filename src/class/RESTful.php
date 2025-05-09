@@ -174,7 +174,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $allow_origins '*' by default. Set domains separated by ',' to allow specific origins. It can start with http for specific urls
          * @param string $allow_extra_headers Access-Control-Allow-Headers extra headers. The framework allows: Content-Type,Authorization,X-Requested-With,cache-control,X-CloudFrameWork-AuthToken,X-CLOUDFRAMEWORK-SECURITY,X-DS-TOKEN,X-REST-TOKEN,X-EXTRA-INFO,X-WEB-KEY,X-SERVER-KEY,X-REST-USERNAME,X-REST-PASSWORD,X-APP-KEY,X-DATA-ENV
          */
-        function sendCorsHeaders($methods = 'GET,POST,PUT', $allow_origins = '',$allow_extra_headers='')
+        public function sendCorsHeaders($methods = 'GET,POST,PUT', $allow_origins = '',$allow_extra_headers='')
         {
 
             //region CALCULATE $origin taking $allow_origins
@@ -237,7 +237,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string|arrat $error_msg error message in case it is not allowed
          * @return bool
          */
-        function checkMethod(string $methods, $error_msg = '')
+        public function checkMethod(string $methods, $error_msg = '')
         {
             if (strpos(strtoupper($methods), $this->method) === false) {
                 if (!strlen($error_msg)) $error_msg = 'Method ' . $this->method . ' is not supported';
@@ -255,7 +255,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param null|string $code error code to be returned. 'form-params-error' will be the default value
          * @return false|mixed|string
          */
-        function checkMandatoryFormParam(string $key, $error_msg = '', $values=[], $min_length = 1, $code=null)
+        public function checkMandatoryFormParam(string $key, $error_msg = '', $values=[], $min_length = 1, $code=null)
         {
             if (isset($this->formParams[$key]) && is_string($this->formParams[$key]))
                 $this->formParams[$key] = trim($this->formParams[$key]);
@@ -281,7 +281,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $validation
          * @param string $msg_error
          */
-        function validateValue($field, $value, $type, $validation = '', $msg_error='')
+        public function validateValue($field, $value, $type, $validation = '', $msg_error='')
         {
             if(!is_object($this->dv)) $this->dv = $this->core->loadClass('DataValidation');
             $data = [$field=>$value];
@@ -307,7 +307,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param array $keys with format: [key1,kye2,..] or [[key1,msg,[allowed,values],min_length],[]]
          * @return array|false if ok returns the array with $keys values else returns false
          */
-        function checkMandatoryFormParams($keys): bool|array
+        public function checkMandatoryFormParams($keys): bool|array
         {
             if(!$keys) return [];
 
@@ -334,7 +334,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param null $data
          * @return bool
          */
-        function validatePostData($model,$codelibbase='error-form-params',&$data=null,&$dictionaries=[]) {
+        public function validatePostData($model,$codelibbase='error-form-params',&$data=null,&$dictionaries=[]) {
 
             if(null===$data) $data = &$this->formParams;
             if(!($ret = $this->checkFormParamsFromModel($model,true,$codelibbase,$data,$dictionaries))) return;
@@ -356,7 +356,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param array $dictionaries
          * @return bool|void
          */
-        function validatePutData($model,$codelibbase='error-form-params',&$data=null,&$dictionaries=[]) {
+        public function validatePutData($model,$codelibbase='error-form-params',&$data=null,&$dictionaries=[]) {
             if(null===$data) $data = &$this->formParams;
             if(!($ret = $this->checkFormParamsFromModel($model,false,$codelibbase,$data,$dictionaries))) return;
 
@@ -378,7 +378,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param array $dictionaries
          * @return bool|void
          */
-        function checkFormParamsFromModel(&$model, $all=true, $codelibbase='', &$data=null, &$dictionaries=[])
+        public function checkFormParamsFromModel(&$model, $all=true, $codelibbase='', &$data=null, &$dictionaries=[])
         {
             if(!is_array($model)) {
                 $this->core->logs->add('Passed a non array model in checkFormParamsFromModel(array $model,...)');
@@ -445,7 +445,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param null $code
          * @return bool
          */
-        function checkMandatoryParam($pos, $msg = '', $validation = [], $code=null)
+        public function checkMandatoryParam($pos, $msg = '', $validation = [], $code=null)
         {
             if(!isset($this->params[$pos])) {
                 $error=true;
@@ -490,7 +490,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param mixed $returnCode optional returnCode
          * @param string $message
          */
-        function setError($error, int $returnStatus = 400, $returnCode=null, $message='')
+        public function setError($error, int $returnStatus = 400, $returnCode=null, $message='')
         {
             $this->error = (intval($returnStatus)<=100)?400:intval($returnStatus);
             $this->errorMsg = $error;
@@ -499,12 +499,24 @@ if (!defined("_RESTfull_CLASS_")) {
             $this->message = ($message)?:(is_string($error)?$error:$this->code);
         }
 
-        function addHeader($key, $value)
+        /**
+         * Add a header to the list of extra headers
+         * @param string $key The name of the header
+         * @param string $value The value of the header
+         * @return void
+         */
+        public function addHeader($key, $value)
         {
             $this->extra_headers[] = "$key: $value";
         }
 
-        function setReturnFormat($method)
+        /**
+         * Sets the return format for the response.
+         *
+         * @param string $method The desired return format. Supported formats include 'JSON', 'TEXT', or 'HTML'. Defaults to 'JSON' for unsupported formats.
+         * @return void
+         */
+        public function setReturnFormat($method)
         {
             switch (strtoupper($method)) {
                 case 'JSON':
@@ -519,23 +531,35 @@ if (!defined("_RESTfull_CLASS_")) {
         }
 
         /**
-         * Returns the info of the header Authorization if it exists, otherwise null
-         * @return null|string
+         * Retrieves the authorization header from the server variables.
+         * It looks for the header HTTP_AUTHORIZATION.
+         *
+         * @return string|null The authorization header if present, otherwise null.
          */
-        function getHeaderAuthorization()
+        public function getHeaderAuthorization()
         {
             $str = 'AUTHORIZATION';
             return ((isset($_SERVER['HTTP_' . $str])) ? $_SERVER['HTTP_' . $str] : null);
         }
 
-        function getRequestHeader($str)
+        /**
+         * Retrieve the value of a specific HTTP request header.
+         * @param string $str The name of the header to retrieve.
+         * @return string The value of the requested HTTP header, or an empty string if the header is not set.
+         */
+        public function getRequestHeader($str)
         {
             $str = strtoupper($str);
             $str = str_replace('-', '_', $str);
             return ((isset($_SERVER['HTTP_' . $str])) ? $_SERVER['HTTP_' . $str] : '');
         }
 
-        function getResponseHeaders()
+        /**
+         * Retrieve HTTP response headers from the server environment
+         *
+         * @return array An associative array of response headers with their respective values
+         */
+        public function getResponseHeaders()
         {
             $ret = array();
             foreach ($_SERVER as $key => $value) if (strpos($key, 'HTTP_') === 0) {
@@ -545,7 +569,14 @@ if (!defined("_RESTfull_CLASS_")) {
         }
 
 
-        function sendHeaders()
+        /**
+         * Sends response headers based on the specified content type and additional headers.
+         * This method handles the construction and dispatch of HTTP headers, including
+         * content type determination and any extra headers provided.
+         *
+         * @return void
+         */
+        public function sendHeaders()
         {
             if($this->core->is->terminal()) return;
 
@@ -575,12 +606,22 @@ if (!defined("_RESTfull_CLASS_")) {
 
         }
 
-        function setReturnResponse($response)
+        /**
+         * Set the return response
+         * @param mixed $response The response data to set
+         * @return void
+         */
+        public function setReturnResponse($response): void
         {
             $this->returnData = $response;
         }
 
-        function updateReturnResponse($response)
+        /**
+         * Updates the return response by assigning key-value pairs from the given response array.
+         * @param array $response The response data to be updated in the return data.
+         * @return void
+         */
+        public function updateReturnResponse($response)
         {
             if (is_array($response))
                 foreach ($response as $key => $value) {
@@ -709,7 +750,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param $code
          * @return mixed
          */
-        function getCodeLib($code) {
+        public function getCodeLib($code) {
             return (isset($this->codeLib[$code]))?$this->codeLib[$code]:$code;
         }
 
@@ -718,7 +759,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param $code
          * @return int|mixed
          */
-        function getCodeLibError($code) {
+        public function getCodeLibError($code) {
             return (isset($this->codeLibError[$code]))?$this->codeLibError[$code]:400;
         }
 
@@ -728,7 +769,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $extramsg
          * @return false
          */
-        function setErrorFromCodelib(string $code,$extramsg='') {
+        public function setErrorFromCodelib(string $code,$extramsg='') {
             $formatted_message =$extramsg;
             if(is_array($formatted_message)) $formatted_message = json_encode($formatted_message,JSON_PRETTY_PRINT);
             if(strlen($formatted_message??'')) $formatted_message = " [{$formatted_message}]";
@@ -747,7 +788,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * Return the code applied with setError and defined in __codes
          * @return int|string
          */
-        function getReturnCode()
+        public function getReturnCode()
         {
             // if there is no code and status == 200 then 'ok'
             if(null === $this->code &&  $this->getReturnStatus()==200) $this->code='ok';
@@ -760,17 +801,27 @@ if (!defined("_RESTfull_CLASS_")) {
          * Assign a code
          * @param $code
          */
-        function setReturnCode($code)
+        public function setReturnCode($code)
         {
             $this->code = $code;
         }
 
-        function getReturnStatus()
+        /**
+         * Retrieve the return status
+         * @return mixed The error value if present, otherwise the ok value
+         */
+        public function getReturnStatus()
         {
             return (($this->error) ? $this->error : $this->ok);
         }
 
-        function setReturnStatus($status)
+        /**
+         * Assign a return status
+         *
+         * @param mixed $status The status to set
+         * @return void
+         */
+        public function setReturnStatus($status)
         {
             $this->ok = $status;
         }
@@ -779,7 +830,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * Translate Error codes into headers.
          * Useful info: https://restfulapi.net/http-status-codes/
          */
-        function getResponseHeader()
+        public function getResponseHeader()
         {
             switch ($this->getReturnStatus()) {
                 case 201:
@@ -820,7 +871,14 @@ if (!defined("_RESTfull_CLASS_")) {
             return ($ret);
         }
 
-        function checkCloudFrameWorkSecurity($time = 0, $id = '')
+        /**
+         * Validates the security token using CloudFrameWork Security.
+         *
+         * @param int $time Optional. The time parameter to validate the token expiration. Defaults to 0.
+         * @param string $id Optional. The unique identifier to validate against the CloudFrameWork Security configuration. Defaults to an empty string.
+         * @return bool Returns true if the security token is valid and the information is correctly retrieved; otherwise, returns false.
+         */
+        public function checkCloudFrameWorkSecurity($time = 0, $id = '')
         {
             $ret = false;
             $info = $this->core->security->checkCloudFrameWorkSecurity($time,$id); // Max. 10 min for the Security Token and return $this->getConf('CLOUDFRAMEWORK-ID-'.$id);
@@ -835,7 +893,11 @@ if (!defined("_RESTfull_CLASS_")) {
             return $ret;
         }
 
-        function existBasicAuth()
+        /**
+         * Check if basic authentication exists and is properly configured
+         * @return bool
+         */
+        public function existBasicAuth()
         {
             return ($this->core->security->existBasicAuth() && $this->core->security->existBasicAuthConfig());
         }
@@ -845,7 +907,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $id
          * @return bool
          */
-        function checkBasicAuthSecurity($id='')
+        public function checkBasicAuthSecurity($id='')
         {
             $ret = false;
             if (false === ($basic_info = $this->core->security->checkBasicAuthWithConfig())) {
@@ -863,7 +925,12 @@ if (!defined("_RESTfull_CLASS_")) {
             return $ret;
         }
 
-        function getCloudFrameWorkSecurityInfo()
+        /**
+         * Retrieve Cloud Framework security information based on the SECURITY-ID.
+         *
+         * @return array|string Returns the security information if SECURITY-ID is set, otherwise returns an empty array.
+         */
+        public function getCloudFrameWorkSecurityInfo()
         {
             if (isset($this->returnData['SECURITY-ID'])) {
                 return $this->core->config->get('CLOUDFRAMEWORK-ID-' . $this->returnData['SECURITY-ID']);
@@ -876,7 +943,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $headerKey The name of the header. Vars like X-VAR or X_VAR are treated like the same
          * @return string If the key does not exist return empty string
          */
-        function getHeader(string $headerKey): string
+        public function getHeader(string $headerKey): string
         {
             return $this->core->system->getHeader($headerKey);
         }
@@ -885,12 +952,21 @@ if (!defined("_RESTfull_CLASS_")) {
          * Return all the header keys sent by the user. In PHP those are $_SERVER['HTTP_{varname}']
          * @return array
          */
-        function getHeaders(): array
+        public function getHeaders(): array
         {
             return $this->core->system->getHeaders();
         }
 
-        function getHeadersToResend($extra_headers=null)
+        /**
+         * Retrieves specific HTTP headers to re-send based on certain prefixes
+         * or additional headers specified.
+         *
+         * @param string|null $extra_headers A comma-separated string of additional headers
+         *                                    to include in the resulting array. Defaults to null.
+         * @return array An associative array of headers where the key is the header name
+         *               (with underscores replaced by dashes) and the value is its content.
+         */
+        public function getHeadersToResend($extra_headers=null)
         {
             $ret = array();
             foreach ($_SERVER as $key => $value) if (strpos($key, 'HTTP_X_') === 0) {
@@ -908,11 +984,12 @@ if (!defined("_RESTfull_CLASS_")) {
         }
 
         /**
-         * Return the value of  $this->formParams[$var]. Return null if $var does not exist
-         * @param string $var
-         * @retun null|mixed
+         * Retrieve a form parameter by its key.
+         * @param string $var The key of the form parameter to retrieve.
+         * @return mixed|null Returns the value of the form parameter if it exists, or null if it does not.
          */
-        public function getFormParamater($var) {
+        public function getFormParamater($var): mixed
+        {
             if(!isset($this->formParams[$var])) return null;
             return $this->formParams[$var];
         }
@@ -933,7 +1010,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param string $method name of the method
          * @return bool
          */
-        function useFunction($method) {
+        public function useFunction($method) {
             if(method_exists($this,$method)) {
                 $this->$method();
                 return true;
@@ -949,7 +1026,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param array $argv if we are running from a terminal it will receive the command line args.
          * @return mixed
          */
-        function send($pretty=false, $return=false, $argv=[])
+        public function send($pretty=false, $return=false, $argv=[])
         {
             //region CLOSE potential database open connections
             $this->core->model->dbClose();
