@@ -1,7 +1,7 @@
 # PHP8.X BACKEND FRAMEWORK.
 CLOUDRAMEWORK PHP8 CORE FRAMEWORK TO DEVELOP BACKEND APIs and BACKEND SCRIPTs optimized for GOOGLE APPENGINE, COMPUTE ENGINE, CLOUD FUNCTIONS, KUBERNETS and other server technologies.
 
-It Assumes you have installed in your server ^PHP8.1 and ^Python3.X
+It Assumes you have installed in your server ^PHP8.3 and ^Python3.X
 
 ## Github project and Package can be found 
 * [https://github.com/CloudFramework-io/backend-core-php8](https://github.com/CloudFramework-io/backend-core-php8/tree/main)
