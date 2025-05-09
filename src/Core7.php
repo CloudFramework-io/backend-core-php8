@@ -2739,9 +2739,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function getPlatformSecretVar($var, string $erp_secret_id='', string $erp_platform_id='', string $erp_user='')
         {
+
             // Read only when it is necessary
-            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id))
-                if(!$this->readPlatformSecretVars($erp_secret_id,$erp_platform_id,$erp_user)) return;
+            if(!$erp_platform_id) {
+                $erp_platform_id = $this->core->config->get('core.erp.platform_id');
+                if(!$erp_platform_id) return($this->addError('readERPSecretVars(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
+            }
+            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id || ($this->secret_vars['platform']??null)!=$erp_platform_id)) {
+                if (!$this->readPlatformSecretVars($erp_secret_id, $erp_platform_id, $erp_user)) return false;
+            }
+
             return $this->secret_vars['secrets'][$var]??null;
         }
 
@@ -2805,6 +2812,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region READ $user_secrets from cache and RETURN it if it exist
             $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
             $user_secrets = $this->getCache($key,'ERP.secrets');
+
+
             //verify $user_secrets['id'] match with $erp_user
             //fix bug when in production the $erp_user is returning default
             if($erp_user=='default' && isset($user_secrets['id'])) $erp_user = $user_secrets['id'];
@@ -2812,7 +2821,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //check the
             if($erp_user && isset($user_secrets['id']) && $user_secrets['id']!=$erp_user) $user_secrets=[];
             if($user_secrets){
-                $this->secret_vars = ['id'=>$user_secrets['id'],'secret-id'=>$user_secrets['secret-id'],'secrets'=>$user_secrets['secrets']];
+                $this->secret_vars = [
+                    'id'=>$user_secrets['id'],
+                    'secret-id'=>$user_secrets['secret-id'],
+                    'platform'=>$user_secrets['platform'],
+                    'secrets'=>$user_secrets['secrets']
+                ];
                 return true;
             }
             //endregion
@@ -2907,12 +2921,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if(!$auth_list) return($this->addError("'{$gcloud_auth_list}' has produced an error. Install gcloud or check gcloud auth login"));
                 $lines = explode("\n",$auth_list);
                 array_shift($lines);
-                if(!isset($lines[0]) || strpos($lines[0],'ACTIVE')===false) return($this->addError("'{$gcloud_auth_list}' has no active account. Execute gcloud auth login"));
+                if(!isset($lines[0]) || strpos($auth_list,'ACTIVE')===false) return($this->addError("'{$gcloud_auth_list}' has no active account. Execute gcloud auth login"));
                 array_shift($lines);
                 $user='';
                 do {
                     if(strpos($lines[0],'*')===0) {
                         $user = preg_replace('/[\* ]/','',trim($lines[0]));
+                    } elseif(strpos($lines[0],'ACCOUNT: ')===0) {
+                        $user = str_replace('ACCOUNT: ','',trim($lines[0]));
                     }
                     array_shift($lines);
                 } while($lines && !$user);
