@@ -138,6 +138,49 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
 
         /**
+         * Update the connection settings for the Datastore client.
+         *
+         * @param array $options An associative array containing service account for Datastore connetion
+         *                       Possible options include:
+         *                       - 'namespace': The namespace to use.
+         *                       - 'project_id': The project ID to connect to.
+         *                       - 'private_key': The key file information for authentication.
+         *
+         * @return bool If an error occurs during the update, it will add an error message and return null.
+         */
+        public function updateServiceAccount(array $serviceAccount)
+        {
+
+            //region VERIFY $serviceAccount private_key && project_id
+            if (!($serviceAccount['private_key']??null) ||
+                !($serviceAccount['project_id']??null)
+            ) {
+                return $this->addError(__FUNCTION__, ': Missing [private_key or project_id] en $serviceAccount');
+            }
+            //endregion
+
+            //region INIT $options and UPDATE $this->namespace, $this->project_id, $this->service_account
+            $options = [];
+            $options['keyFile'] = $serviceAccount;
+            $options['projectId'] = $serviceAccount['project_id'];
+            $options['namespace'] = $serviceAccount['namespace']??$this->namespace;
+            $this->namespace = $options['namespace'];
+            $this->project_id = $options['projectId'];
+            $this->service_account = $options['keyFile']['client_email']??null;
+            //endregion
+
+            //region CREATE $this->datastore with credentials
+            try {
+                $this->datastore = new DatastoreClient($options);
+            } catch (Exception $e) {
+                return($this->addError($e->getMessage()));
+            }
+            //endregion
+
+            return true;
+        }
+
+        /**
          * Set $this->useCache to true or false
          * @param boolean $activate
          * @param string $secretKey optionally you can pass a secretKey for Encryption
@@ -364,9 +407,8 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     } else {
                         $res = $this->datastore->upsertBatch($entities);
                     }
-
                 } catch (Exception $e) {
-                    return($this->addError($e->getMessage()));
+                    return($this->addError(['$this->datastore->upsertBatch',$e->getMessage()]));
                 }
 
                 // Gather Keys
@@ -375,9 +417,16 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     $keys[] = $entity->key();
                 }
                 try {
-                    $entities = $this->datastore->lookupBatch($keys);
+                    $entities = ['found'=>[]];
+                    $chunk_keys = array_chunk($keys,1000);
+                    foreach ($chunk_keys as $chunk_key) {
+                        $search = $this->datastore->lookupBatch($chunk_key);
+                        if($search['found']??null)
+                            $entities['found'] = array_merge($entities['found'],$search['found']);
+                        unset($search);
+                    }
                 } catch (Exception $e) {
-                    return($this->addError($e->getMessage()));
+                    return($this->addError(['$this->datastore->lookupBatch',$e->getMessage()]));
                 }
                 $ret = [];
                 if($entities['found']) $ret = $this->transformResult($entities['found']);
@@ -1583,24 +1632,30 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
 
         /**
-         * Reset and set an error in the class
-         * @param $value
+         * Set an error message and add it to the error messages array
+         *
+         * @param mixed $value The error message to be added.
+         *
+         * @return boolean Always returns false to facilitate return value of the caller
          */
-        function setError($value)
+        function setError($value): bool
         {
             $this->errorMsg = [];
-            $this->addError($value);
+            return $this->addError($value);
         }
 
         /**
-         * Add an error in the class
-         * @param $value
+         * Add an error message to the class instance and set error flag to true.
+         *
+         * @param mixed $value The error message to be added.
+         * @return boolean Always returns false to facilitate return value of the caller
          */
-        function addError($value)
+        function addError($value): bool
         {
             $this->error = true;
             $this->errorMsg[] = $value;
             $this->core->errors->add(['DataStore' => $value]);
+            return false;
         }
     }
 }
