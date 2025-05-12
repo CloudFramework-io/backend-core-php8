@@ -164,6 +164,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             $options['keyFile'] = $serviceAccount;
             $options['projectId'] = $serviceAccount['project_id'];
             $options['namespace'] = $serviceAccount['namespace']??$this->namespace;
+            $options['transport'] = ($this->core->config->get('core.datastore.transport')=='grpc')?'grpc':'rest';
             $this->namespace = $options['namespace'];
             $this->project_id = $options['projectId'];
             $this->service_account = $options['keyFile']['client_email']??null;
@@ -1098,10 +1099,16 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             $ret = [];
             $i=0;
             set_error_handler("__warning_handler_datastore", E_WARNING);
-
+            //            if(is_object($result) && class_basename($result)=='EntityIterator') {
+            //                /** @var EntityIterator $result */
+            //                $entty =$result->current();
+            //                _printe(class_basename($result),$entty);
+            //
+            //            }
             // Security control to avoid more than 10K entities
             if($this->limit>10000) $this->limit=10000;
             try {
+
                 /** @var Google\Cloud\Datastore\Entity $entity */
                 foreach ($result as $entity) {
 
