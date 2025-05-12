@@ -2805,7 +2805,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
-
             if(!$this->readERPDeveloperEncryptedSubKeys($erp_platform_id,$erp_user))
                 return($this->addError('Called from readERPSecretVars(..)'));
 
@@ -2813,10 +2812,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
             $user_secrets = $this->getCache($key,'ERP.secrets');
 
-
             //verify $user_secrets['id'] match with $erp_user
             //fix bug when in production the $erp_user is returning default
             if($erp_user=='default' && isset($user_secrets['id'])) $erp_user = $user_secrets['id'];
+
 
             //check the
             if($erp_user && isset($user_secrets['id']) && $user_secrets['id']!=$erp_user) $user_secrets=[];
@@ -7004,7 +7003,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 while ($found) {
 
                     $tag = str_replace($found[0], $this->getTag($found[1], $lang, $namespace), $tag);
-                    if($this->core->config->get('debug')) _printe('AAAA: '.$tag,$found);
                     preg_match($pattern, $tag, $found);
                 }
                 return $tag;
