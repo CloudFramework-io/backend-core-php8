@@ -2486,7 +2486,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         private $core;
         /* @var $dsToken DataStore */
         var $dsToken = null;
-
+        var $platform = null;
         var $error = false;
         var $errorMsg = [];
         var $cache = null;
@@ -2501,6 +2501,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->core = $core;
             $this->cache_key = ($this->core->config->get('core.gcp.secrets.cache_encrypt_key'))?:'T8K1Ogtl5E9R9CDbWIdV6Vs4yBY4';
             $this->cache_iv = ($this->core->config->get('core.gcp.secrets.cache_encrypt_iv'))?:'iveTFs7++f9niowHcuafMzTeKLG4X';
+            $this->platform = $this->core->config->get('core.erp.platform_id')?:null;
         }
 
         /**
@@ -2636,9 +2637,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             //region CHECK $erp_platform_id value
             if(!$erp_platform_id || !is_string($erp_platform_id)) {
-                $erp_platform_id = $this->core->config->get('core.erp.platform_id');
+                $erp_platform_id = $this->platform;
                 if(!$erp_platform_id) return($this->addError('readERPDeveloperEncryptedSubKeys(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
+            $this->platform = $erp_platform_id;
             //endregion
 
             //region CHECK $erp_user value
@@ -2700,9 +2702,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             //region CHECK $erp_platform_id value
             if(!$erp_platform_id || !is_string($erp_platform_id)) {
-                $erp_platform_id = $this->core->config->get('core.erp.platform_id');
+                $erp_platform_id = $this->platform;
                 if(!$erp_platform_id) return($this->addError('readERPSecretVars(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
+            $this->platform = $erp_platform_id;
             //endregion
 
             //region CHECK $erp_user value
@@ -2742,13 +2745,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             // Read only when it is necessary
             if(!$erp_platform_id) {
-                $erp_platform_id = $this->core->config->get('core.erp.platform_id');
-                if(!$erp_platform_id) return($this->addError('readERPSecretVars(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
+                $erp_platform_id = $this->platform;
+                if(!$erp_platform_id) return($this->addError('getPlatformSecretVar(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
-            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id || ($this->secret_vars['platform']??null)!=$erp_platform_id)) {
+            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id) || ($this->secret_vars['platform']??null)!=$erp_platform_id) {
                 if (!$this->readPlatformSecretVars($erp_secret_id, $erp_platform_id, $erp_user)) return false;
             }
-
             return $this->secret_vars['secrets'][$var]??null;
         }
 
@@ -2780,14 +2782,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region CHECK $erp_platform_id value
             if(!$erp_secret_id || !is_string($erp_secret_id)) {
                 $erp_secret_id = $this->core->config->get('core.erp.secrets.secret_id');
-                if(!$erp_secret_id) return($this->addError('readERPSecretVars(..) missing function-var($erp_secret_id) or config-var(core.erp.secrets.secret_id)'));
+                if(!$erp_secret_id) return($this->addError('readPlatformSecretVars(..) missing function-var($erp_secret_id) or config-var(core.erp.secrets.secret_id)'));
             }
             //endregion
 
             //region CHECK $erp_platform_id value
             if(!$erp_platform_id || !is_string($erp_platform_id)) {
                 $erp_platform_id = $this->core->config->get('core.erp.platform_id');
-                if(!$erp_platform_id) return($this->addError('readERPSecretVars(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
+                if(!$erp_platform_id) return($this->addError('readPlatformSecretVars(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
             //endregion
             //region CHECK $erp_user value
@@ -2801,12 +2803,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         $this->updateCache($key_erp_user,$erp_user,'ERP.users');
                     }
                 }
-                if(!$erp_user) return($this->addError('readERPSecretVars(..) missing function readERPSecretVars(..,$erp_user) or config-var(core.erp.user_id.{platform_id})'));
+                if(!$erp_user) return($this->addError('readPlatformSecretVars(..) missing function readERPSecretVars(..,$erp_user) or config-var(core.erp.user_id.{platform_id})'));
             }
             //endregion
 
             if(!$this->readERPDeveloperEncryptedSubKeys($erp_platform_id,$erp_user))
-                return($this->addError('Called from readERPSecretVars(..)'));
+                return($this->addError('Called from readPlatformSecretVars(..)'));
 
             //region READ $user_secrets from cache and RETURN it if it exist
             $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
@@ -2830,13 +2832,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
+
             //region IF $user_secrets is empty feed it with basic structure
             $user_secrets = ['access_token'=>null,'id'=>'','platform'=>$erp_platform_id,'secrets'=>''];
             //endregion
 
             //region SET $token from User or GCP Engine Instance Token
             $token = $this->getGoogleIdentityToken($erp_user);
-            if(!$token) return($this->addError('CoreSecurity.readERPSecretVars() has returned an error calling $this->getGoogleIdentityToken($erp_user)'));
+            if(!$token) return($this->addError('CoreSecurity.readPlatformSecretVars() has returned an error calling $this->getGoogleIdentityToken($erp_user)'));
             //endregion
 
             //region VERIFY $token and SET $user_secrets['id'] and $user_secrets['token']
@@ -2867,6 +2870,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             $user_secrets['secret-id'] = ($erp_secret_id)?:$user_secrets['id'];
+            $user_secrets['platform'] = $erp_platform_id;
             $user_secrets['secrets'] = $secrets['data']['secrets'];
             //endregion
 
@@ -2875,7 +2879,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region RETURN $user_secrets
-            $this->secret_vars = ['id'=>$user_secrets['id'],'secret-id'=>$user_secrets['secret-id'],'secrets'=>$user_secrets['secrets']];
+            $this->secret_vars = [
+                'id'=>$user_secrets['id'],
+                'secret-id'=>$user_secrets['secret-id'],
+                'platform'=>$user_secrets['platform'],
+                'secrets'=>$user_secrets['secrets']];
             return true;
             //endregion
 
