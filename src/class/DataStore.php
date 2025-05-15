@@ -196,10 +196,26 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
         function deactivateCache($activate=true) { $this->activateCache(false);}
 
+
         /**
-         * Creating  entities based in the schema
-         * @param $data
-         * @return array|bool
+         * Creates a new entity in the datastore.
+         *
+         * @param array $data The data required to create the entity.
+         * @param bool $transaction Indicates whether the creation should be part of a transaction. Defaults to false.
+         * @return mixed The created entity. If an error occurs, it may return false or null.
+         */
+        function createEntity($data,$transaction=false)
+        {
+            $ret =  $this->createEntities([$data],$transaction);
+            return $ret?$ret[0]:$ret;
+        }
+
+        /**
+         * Creates one or multiple entities in the datastore using the provided data.
+         *
+         * @param array $data The data to create entities, must be an array or multidimensional array containing the entity data.
+         * @param bool $transaction Optional. Indicates whether the operation should be executed within a transaction. Defaults to false.
+         * @return array|false An array of created entities or false if an error occurs.
          */
         function createEntities($data,$transaction=false)
         {
