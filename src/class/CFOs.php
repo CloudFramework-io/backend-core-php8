@@ -1020,18 +1020,20 @@ class CFOWorkFlows {
         }
         if(!$_eval) {
             $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [false] in workflow.'.$workflow['action'].' '.$event."[$_i]"]);
-            $this->workflows_report($workflow['id'],['condition'=>$workflow['conditional'],'condition_evaluation'=>$_eval_expression]);
+            $this->workflows_report($workflow['id'],['conditional'=>$workflow['conditional'],'condition_evaluation'=>$_eval_expression]);
+            $this->workflows_report($workflow['id'],['conditional_values'=>$_eval_expression]);
         }
         else {
             $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [true] in workflow.'.$workflow['action'].' '.$event."[$_i]"]);
-            $this->workflows_report($workflow['id'],['condition'=>$workflow['conditional']]);
+            $this->workflows_report($workflow['id'],['conditional'=>$workflow['conditional']]);
+            $this->workflows_report($workflow['id'],['conditional_values'=>$_eval_expression]);
         }
 
         return $_eval;
     }
 
     /**
-     * Evaluate the workflow action and perform the corresponding action
+     * Evaluate the workflow action and perform the corresponding operations
      *
      * @param array $workflow The workflow data
      * @param mixed $data The data to be processed
