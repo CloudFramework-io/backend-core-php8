@@ -7898,19 +7898,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Add a LOG entry in CloudFrameWorkLogs
-         * @param string $app
-         * @param string $action string 'ok', 'error', 'check'..
-         * @param string $title
-         * @param string $method
-         * @param null|string $user
-         * @param null|array $data
-         * @param null|string $slack_url
-         * @param null|array $rewrite_fingerprint if you want to rewrite the default fingerprint send it here
-         * @param null|string $id
+         * Logs an action to the system's logging mechanism with optional Slack notification.
+         *
+         * @param string $app The application name or identifier where the action occurred.
+         * @param string $action A description of the action performed (e.g., 'created', 'updated', 'deleted').
+         * @param string $title The title or description of the action being logged.
+         * @param string $method The HTTP method associated with the action (e.g., 'GET', 'POST').
+         * @param null|string $user The identifier of the user who performed the action (if available).
+         * @param null|string|array $data Additional data or context about the action to log.
+         * @param null|string $slack_url Optional Slack webhook URL to send a notification about the action.
+         * @param null|array $rewrite_fingerprint Optional fingerprint data to override the default request fingerprint.
+         * @param null|string $id Optional identifier for the logged action.
+         * @return bool Returns true if the log entry was successfully created; otherwise, false.
          */
         public function add(string $app, string $action, string $title, string $method, null|string $user, null|string|array $data=null, null|string $slack_url=null, null|array $rewrite_fingerprint=null,null|string $id=null) {
-            if(!$this->initDSLogs()) return;
+            if(!$this->initDSLogs()) return false;
             //region SET $rewrite_fingerprint
             $fingerprint = $this->core->system->getRequestFingerPrint();
             if(!isset($fingerprint['ip'])) $fingerprint['ip'] = $this->core->system->ip;
@@ -7959,7 +7961,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->dsLogs->createEntities($entity);
             if ($this->dsLogs->error) {
                 $this->addError($this->dsLogs->errorMsg);
-                return($this->core->logs->add(['data'=>$entity,'error'=>$this->dsLogs->errorMsg],'CFILog_add_error'));
+                $this->core->logs->add(['data'=>$entity,'error'=>$this->dsLogs->errorMsg],'CFILog_add_error');
+                return false;
             } else {
                 $this->core->logs->add('CFILog_add_ok');
                 return true;
@@ -7968,9 +7971,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Init $this->dsLog
+         * Initializes data store logging models for CloudFrameWork logs and bitacora.
+         * This method resets potential error states within the core model,
+         * defines the necessary JSON schemas for logs and bitacora models,
+         * processes those models, and assigns them to class properties.
+         *
+         * @return bool Returns true on successful initialization of the data store logging models.
          */
-        private function initDSLogs() {
+        private function initDSLogs(): bool
+        {
+
+            //reset Potential previous errors in core model
+            $this->core->model->error = false;
+            $this->core->model->errorMsg = null;
+            $this->core->model->errorCode = null;
+
 
             if(is_object($this->dsLogs)) return true;
             $model = json_decode('{
@@ -7996,11 +8011,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     "Ip": ["string","index"],
                     "JSON": ["json","allownull"]
                   }',true);
+
             $this->core->model->processModels(['DataStoreEntities'=>['CloudFrameWorkLogs'=>['model'=>$model],'CloudFrameWorkBitacora'=>['model'=>$model_bitacora]]]);
             if($this->core->model->error) return($this->addError($this->core->model->errorMsg));
 
             $this->dsLogs = $this->core->model->getModelObject('CloudFrameWorkLogs');
+            if($this->core->model->error) return($this->addError($this->core->model->errorMsg));
+
             $this->dsBitacora = $this->core->model->getModelObject('CloudFrameWorkBitacora');
+            if($this->core->model->error) return($this->addError($this->core->model->errorMsg));
+
             return true;
         }
 
@@ -8151,12 +8171,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
         }
 
-        /*
-         *  Add an error in the class
+        /**
+         * Logs an error message and updates the error state.
+         *
+         * @param string $msg The error message to be added.
+         * @return bool Always returns false.
          */
         private function addError($msg) {
             $this->error = true;
             $this->errorMsg[] = $msg;
+            return false;
         }
 
     }
