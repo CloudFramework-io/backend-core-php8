@@ -32,6 +32,9 @@ class WorkFlows
     {
         $this->core = $core;
         $this->cfos = $cfos;
+        if(!class_exists( 'MailchimpTransactional\ApiClient' ) ) {
+            return $this->addError('Missing MailchimpTransactional\ApiClient. use composer require mailchimp/transactional');
+        }
         $this->mandrill = new MailchimpTransactional\ApiClient();
     }
 
@@ -48,35 +51,41 @@ class WorkFlows
     }
 
     /**
-     * SET API for mandrill interation and SETUP $this->mandrill
-     * @param $label
-     * @return array|void if there is no error it returns the array of templates in the server
+     * Retrieve a list of Mandrill templates with their details.
+     * Based on https://mailchimp.com/developer/marketing/api/templates/list-templates/
+     *
+     * @param array $options Optional parameters to filter the list of templates.
+     * * slug
+     * * name
+     * * code
+     * * publish_code
+     * * published_at
+     * * created_at
+     * * updated_at
+     * * draft_updated_at
+     * * publish_name
+     * * labels
+     * * text
+     * * publish_text
+     * * subject
+     * * publish_subject
+     * * from_email
+     * * publish_from_email
+     * * from_name
+     * * publish_from_name
+     * * is_broken_template
+     * @return array|false An array of templates with their properties if successful, false if an error occurs. Each template is an array with the following keys:
+     *
      */
-    public function getMandrillTemplates($label=null) {
+    public function getMandrillTemplates(array $options=[]) {
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
-            $templates = $this->mandrill->templates->getList($label);
-            /**
-            [0] => slug
-            [1] => name
-            [2] => code
-            [3] => publish_code
-            [4] => published_at
-            [5] => created_at
-            [6] => updated_at
-            [7] => draft_updated_at
-            [8] => publish_name
-            [9] => labels
-            [10] => text
-            [11] => publish_text
-            [12] => subject
-            [13] => publish_subject
-            [14] => from_email
-            [15] => publish_from_email
-            [16] => from_name
-            [17] => publish_from_name
-             */
-            return $templates;
+            $templates = $this->mandrill->templates->list($options);
+            $ret=[];
+            foreach ($templates as $template) {
+                $ret[] = get_object_vars($template);
+            }
+            return $ret;
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
