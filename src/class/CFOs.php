@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20250616';
+    var $version = '20250616_2';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -21,6 +21,7 @@ class CFOs {
     var $project_id = null;
     var $service_account = null;
     var $last_cfo = '';
+    var $cfoObjects = [];
 
     var $db_connection = null;
     var $keyId = null;
