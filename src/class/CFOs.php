@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '202410161';
+    var $version = '20250616';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -51,6 +51,41 @@ class CFOs {
         $this->workFlows = new CFOWorkFlows($core,$this);
         $this->api = new CFOApi($core);
         //region Create a
+    }
+
+
+    /**
+     * Retrieve or create a CFO object of the class CFO\{$cfo} created as code in cfo folder
+     *
+     * @param string $cfo The identifier or name of the CFO object to retrieve or create.
+     * @return mixed Returns the CFO object if successfully retrieved or created, or a failure response if an error occurs.
+     */
+    function getCFOCodeObject($cfo)
+    {
+
+        //if object has been previously created return it
+        if (key_exists($cfo, $this->cfoObjects)) return $this->cfoObjects[$cfo];
+
+        //if the class has not been previously loaded try to load it
+        if(!class_exists("CFO\\{$cfo}\ClassObject")) {
+            if (is_file($this->core->system->app_path . "/cfos/" . $cfo . ".php"))
+                include_once($this->core->system->app_path . "/cfos/" . $cfo . ".php");
+            else {
+                $bucket_path = $this->core->config->get('core.api.extra_path');
+                if ($bucket_path)
+                    @include_once($bucket_path . "/cfos/" . $cfo . ".php");
+            }
+        }
+
+        //if the class already does not exist RETURN error
+        if(!class_exists("CFO\\{$cfo}\ClassObject"))
+            return $this->addError('params-error',"cfos/{$cfo}.php does not exist");
+
+        //set the object
+        $this->cfoObjects[$cfo] = new ('CFO\\'.$cfo.'\ClassObject')($this->core, $this);
+
+        //return the object
+        return $this->cfoObjects[$cfo];
     }
 
     /**
@@ -565,8 +600,9 @@ class CFOs {
     }
 
     /**
-     * If ($use==true and if !$this->service_account) the secrets of Datastore, Bigquery, Database CFOs will be tried to be read. False by default
-     * @param bool $avoid
+     * Toggle the usage of CFO secret
+     * @param bool $use Whether to enable the use of CFO secret (default: true)
+     * @return void
      */
     function useCFOSecret(bool $use=true) {
         $this->avoid_secrets = !$use;
@@ -800,7 +836,8 @@ class CFOs {
 }
 
 /**
- * Class to support CFO workflows
+ * Represents a class responsible for managing CFO workflows, ensuring appropriate
+ * execution of defined workflows linked with CFOs during specific events.
  */
 class CFOWorkFlows {
 
@@ -2006,9 +2043,9 @@ class CFOWorkFlows {
 
 }
 
-
 /**
- * Class to support CFO API call
+ * Represents a class responsible for interacting with the CFO API.
+ * It allows for performing API calls to retrieve, update, display, or read data related to CFO entities.
  */
 class CFOApi {
     /** @var Core7  */
@@ -2218,5 +2255,570 @@ class CFOApi {
         $this->errorMsg[] = $value;
 
         return false;
+    }
+}
+
+/**
+ * Class CFOClassObjects
+ * Provides functionality for managing CFO objects and interacting with the data layer
+ * while supporting error handling and data validation.
+ */
+class CFOClassObjects {
+
+    protected \Core7 $core;
+    protected \CFOs $cfos;
+    protected $fields;
+    protected string $object = '';
+    protected string $type = '';
+
+    // ---- Error Variables ----
+    var bool $error = false;
+    var $errorCode = null;
+    var $errorMsg = [];
+
+    /**
+     * Constructor of the class
+     *
+     * @param \Core7 $core Instance of Core7 object
+     * @param \CFOs $cfos Instance of CFOs object
+     */
+    function __construct(\Core7 &$core, \CFOs &$cfos, &$fields)
+    {
+        $this->core = $core;
+        $this->cfos = $cfos;
+        $this->fields = $fields;
+        if(!$this->object = ($this->fields->cfoInfo['object'] ?? ''))
+            $this->addError('programming-conflict','Missing [object] property in CFO\\{object}\\Fields class');
+
+        if(!$this->type = ($this->fields->cfoInfo['type'] ?? ''))
+            $this->addError('programming-conflict','Missing [type] property in CFO\\{object}\\Fields class');
+
+    }
+
+
+
+
+    /**
+     * Toggle the usage of CFO secret
+     * @param bool $use Whether to enable the use of CFO secret (default: true)
+     * @return void
+     */
+    function useCFOSecret(bool $use=true) {
+        $this->cfos->useCFOSecret($use);
+    }
+
+
+    /**
+     * Searches for records in the data source based on the specified criteria and options.
+     *
+     * @param array $where An associative array defining the search criteria. The keys should
+     *                     correspond to valid field names, and the values are the filter values.
+     * @param array $options Optional settings for the search. Supported keys include:
+     *                       - 'fields': The specific fields to include in the result (default: '*').
+     *                       - 'limit': The maximum number of results to retrieve (default: 0, no limit).
+     *                       - 'page': The page number for paginated results (default: 0).
+     *                       - 'cursor': A numeric cursor for result navigation (default: 0).
+     * @return mixed The search result if successful, or false if an error occurred. Errors can
+     *               include invalid fields in the criteria, unsupported field operations, or
+     *               issues with the data source.
+     */
+    public function search(array $where, array $options=[]): mixed
+    {
+        // return false if any previous erro
+        if($this->error) return false;
+
+        // verify search fields are part of the fields
+        foreach ($where as $key => $value) {
+            if(!$field = $this->fields->cfoInfo['fields'][$key]??null) return $this->addError('params-error','Unknown field: '.$key);
+            if(key_exists('allow_search',$field) && !$field['allow_search']) return $this->addError('params-error','This field is not allowed on search: '.$key);
+        }
+
+        $fields = $options['fields'] ?? '*';
+        $limit = (is_numeric($options['limit']??null))?intval($options['limit']):0;
+        $page = (is_numeric($options['page']??null))?intval($options['page']):0;
+        $cursor = (is_numeric($options['cursor']??null))?intval($options['cursor']):0;
+
+        // execute the search
+        switch ($this->type) {
+            case 'db':
+                $this->cfos->db($this->object)->setLimit($limit>0?:0);
+                $this->cfos->db($this->object)->setPage($page>0?:0);
+
+                $ret = $this->cfos->db($this->object)->fetch($where,$fields);
+                if($this->cfos->db($this->object)->error)
+                    return $this->addError('database-error',$this->cfos->db($this->object)->error);
+                break;
+
+            default:
+                return $this->addError('programming-conflict','Not supported type: '.$this->type);
+        }
+        return $ret;
+    }
+
+    /**
+     * Inserts a new record into the database based on the provided data.
+     *
+     * @param array $data An associative array of data to be inserted. If not provided, previously loaded data will be inserted
+     * @return array|false The inserted record as an associative array if successful. Returns false if an error occurs or the verification fails.
+     */
+    public function insertEntity(array $data=[])
+    {
+
+        if($data) $this->fields->set($data);
+        if(!$data_to_insert = $this->verifyDataToInsert()) return false;
+
+        switch ($this->type) {
+            case 'db':
+                $id = $this->cfos->db($this->object)->insert($data_to_insert);
+                if($this->cfos->db($this->object)->error)
+                    return $this->addError('database-error',$this->cfos->db($this->object)->error);
+                if(!$record = $this->readEntity($id)) return false;
+            default:
+                return $this->addError('programming-conflict','Not supported type: '.$this->type);
+        }
+
+        return $record;
+    }
+
+    /**
+     * Retrieves a single record by its primary key.
+     *
+     * @param string|int $id The unique identifier of the record to retrieve.
+     * @param string $fields optional paramater to define what fields retrieve
+     * @return array|false The data of the record if found and successfully retrieved. Returns false if an error occurs or the record is not found.
+     */
+    public function readEntity(string|int $id, string $fields='')
+    {
+        switch ($this->type) {
+            case 'db':
+                $data = $this->cfos->db($this->object)->fetchOneByKey($id,$fields);
+                if($this->cfos->db($this->object)->error)
+                    return $this->addError('database-error',$this->cfos->db($this->object)->error);
+                if(!$data) {
+                    return $this->addError('not-found','Entity not found: '.$id);
+                }
+                $this->fields->set($data);
+                break;
+            default:
+                return $this->addError('programming-conflict','Not supported type: '.$this->type);
+        }
+        return $this->fields->getData();
+    }
+
+    /**
+     * Reloads the current entity based on its unique identifier.
+     *
+     * @return mixed The reloaded entity object if successful, or false if an error occurs. Errors may include
+     *               a missing key field in the class definition or a missing value for the key field.
+     */
+    public function reload()
+    {
+        if(!$idField = $this->fields->key())
+            return $this->addError('conflict', 'Missing key field in CFO class definition');
+        if(!$id_read_value = $this->fields->getData($idField))
+            return $this->addError('params-error', 'Missing key value in CFO class definition');
+
+        return $this->readEntity($id_read_value);
+    }
+
+    /**
+     * Updates an entity with the given data if the data is valid.
+     *
+     * @param array $data An associative array of the data to be updated. The keys correspond
+     *                    to the entity's fields, and the values are the new values for those fields.
+     * @return mixed Returns the result of the update operation if the data is valid; otherwise,
+     *               returns false if the data cannot be verified or an error occurs.
+     */
+    public function updateEntity(array $data=[])
+    {
+        if(!$data_to_update = $this->verifyDataToUpdate($data)) return false;
+
+        switch ($this->type) {
+            case 'db':
+                $this->cfos->db($this->object)->update($data_to_update);
+                if($this->cfos->db($this->object)->error)
+                    return $this->addError('database-error',$this->cfos->db($this->object)->error);
+
+                break;
+            default:
+                return $this->addError('programming-conflict','Not supported type: '.$this->type);
+        }
+        return $this->reload();
+    }
+
+    public function deleteEntity(int|string $id='')
+    {
+
+        //region READ $id if not empty
+        if(!$idField = $this->fields->key()) return $this->addError('params-error', 'Missing key field in CFO class definition to delete it');
+        $id_read_value = $this->fields->getData($idField);
+        if($id) {
+            if(!$this->readEntity($id)) return false;
+            $id_read_value = $id;
+        }
+        if(!$id && !$id_read_value) return $this->addError('params-error', 'Missing id value to delete.');
+        //endregion
+
+        $data_to_delete = [
+            $idField=>  $id_read_value
+        ];
+        switch ($this->type) {
+            case 'db':
+                $this->cfos->db($this->object)->delete($data_to_delete);
+                if($this->cfos->db($this->object)->error)
+                    return $this->addError('database-error',$this->cfos->db($this->object)->error);
+                break;
+            default:
+                return $this->addError('programming-conflict','Not supported type: '.$this->type);
+        }
+
+        return $this->fields->getData();
+    }
+
+    /**
+     * Verifies the data to be inserted by checking mandatory fields and ensuring all fields comply with insertion rules.
+     *
+     * @return array|false The validated data to insert if successful. Returns false if an error occurs during validation.
+     */
+    public function verifyDataToUpdate(array $data)
+    {
+
+        //region SET $id_read_value,$id_data_value VERIFYING that $this->fields have any key and the id value from read entity and $data
+        if(!$idField = $this->fields->key()) return $this->addError('params-error', 'Missing key field in CFO class definition');
+        if(!$data) return $this->addError('params-error','Missing data to update');
+        $id_read_value = $this->fields->getData($idField);
+        $id_data_value = ($data[$idField]??null);
+        //endregion
+
+        //region CHECK if $id_read_value and $id_data_value are empty to RETURN an error
+        if(!$id_read_value && !$id_data_value)
+            return $this->addError('params-error',"missing field [{$idField}]  with id value to apply an update");
+        //endregion
+
+        //region IF !$id_read_value && $id_data_value THEN $this->readEntity($id_data_value)
+        if(!$id_read_value && $id_data_value) {
+            if (!$this->readEntity($id_data_value)) return false;
+            $id_read_value = $id_data_value;
+        }
+        //endregion
+
+        //region CHECK if $id_read_value!=$id_data_value when both have a value to RETURN an error
+        if($id_read_value && $id_data_value && $id_data_value!=$id_read_value)
+            return $this->addError('params-error','data contains different value for key field ['.$idField.'] than value previously read');
+        //endregion
+
+        //region CHECK if we have received mandatory fields on update
+        $mandatoryFields = $this->getMandatoryFieldsOnUpdate();
+        foreach ($mandatoryFields as $field) {
+            if(!key_exists($field,$data)) {
+                return $this->addError('params-error', 'Missing mandatory field: ' . $field);
+            }
+        }
+        //endregion
+
+        //region FEED and RETURN $data_to_update VERIFYING $data
+
+        //init array to update
+        $data_to_update = [
+            $idField => $id_read_value
+        ];
+
+        //loop $data to verify its information.
+        foreach ($data as $field => $value) {
+
+            //if the field is not part of the fields return an error
+            if(!$fieldDefinition = $this->fields->cfoInfo['fields'][$field]??null) {
+                return $this->addError('params-error', 'Unknown field: ' . $field);
+            }
+
+            // do not allow to update fields with property allow_on_update===false
+            if(key_exists('allow_on_update',$fieldDefinition) && !$fieldDefinition['allow_on_update']) {
+                // if we have received it but the value is the same the avoid error.
+                //if($value == $this->fields->getData($field)) continue;
+                //else return an error. You are trying to change the value
+                return $this->addError('params-error', "The field [{$field}] is not allowed on update.");
+            }
+            $data_to_update[$field] = $value;
+        }
+
+        //return error oif there is not data to update
+        if(count($data_to_update) == 1) return $this->addError('params-error','No data to update');
+
+        //return the final array to update
+        return $data_to_update;
+        //endregion
+
+    }
+
+    /**
+     * Verifies the data to be inserted by checking mandatory fields and ensuring all fields comply with insertion rules.
+     *
+     * @return array|false The validated data to insert if successful. Returns false if an error occurs during validation.
+     */
+    public function verifyDataToInsert()
+    {
+
+        if(!$this->fields->key()) return $this->addError('params-error', 'Missing key field in CFO class definition');
+
+
+        $mandatoryFields = $this->getMandatoryFieldsOnInsert();
+        foreach ($mandatoryFields as $field) {
+            if($this->fields->getData($field)===null) {
+                return $this->addError('params-error', 'Missing mandatory field: ' . $field);
+            }
+        }
+
+        $data = $this->fields->getData();
+        foreach ($data as $key => $value) {
+
+            if(!$field = $this->fields->cfoInfo['fields'][$key]??null) {
+                return $this->addError('params-error', 'Unknown field: ' . $key);
+            }
+            if(key_exists('allow_on_insert',$field) && !$field['allow_on_insert']) {
+                return $this->addError('params-error', 'This field is not allowed on insert: ' . $key);
+            }
+        }
+
+        return $data;
+
+    }
+
+
+
+    /**
+     * Retrieves a list of mandatory field names that are required during the insert operation.
+     *
+     * @return array List of mandatory field keys required on insert
+     */
+    public function getMandatoryFieldsOnInsert(): array
+    {
+        $ret = [];
+        foreach ($this->fields->cfoInfo['fields'] as $key => $value) {
+            if($value['mandatory_on_insert']??null) $ret[] = $key;
+        }
+        return $ret;
+    }
+
+    /**
+     * Retrieves a list of mandatory field names that are required during the insert operation.
+     *
+     * @return array List of mandatory field keys required on insert
+     */
+    public function getMandatoryFieldsOnUpdate(): array
+    {
+        $ret = [];
+        foreach ($this->fields->cfoInfo['fields'] as $key => $value) {
+            if($value['mandatory_on_update']??null) $ret[] = $key;
+        }
+        return $ret;
+    }
+
+    /**
+     * Retrieves a list of allowed fields names on update a record
+     *
+     * @return array List of mandatory field keys required on insert
+     */
+    public function getAllowedFieldsOnUpdate(): array
+    {
+        $ret = [];
+        foreach ($this->fields->cfoInfo['fields'] as $key => $value) {
+            if(!key_exists('allow_on_update',$value) || $value['allow_on_update']) $ret[] = $key;
+        }
+        return $ret;
+    }
+
+    /**
+     * Retrieves a list of allowed fields names on insert a record
+     *
+     * @return array List of mandatory field keys required on insert
+     */
+    public function getAllowedFieldsOnInsert(): array
+    {
+        $ret = [];
+        foreach ($this->fields->cfoInfo['fields'] as $key => $value) {
+            if(!key_exists('allow_on_insert',$value) || $value['allow_on_insert']) $ret[] = $key;
+        }
+        return $ret;
+    }
+
+    /**
+     * Add an error in the class
+     * @param string $code
+     * @param $message
+     * @return false to facilitate the return of other functions
+     */
+    private function addError(string $code,$message): bool
+    {
+        $this->error=true;
+        $this->errorCode=$code;
+        $this->errorMsg[]=$message;
+        return false;
+    }
+
+}
+
+/**
+ * Represents a class responsible for managing CFO-related fields and their data.
+ * This class provides methods to manipulate and retrieve data while adhering to field definitions.
+ */
+class CFOClassFields
+{
+    var $cfoInfo = [];
+
+    /**
+     * Sets the value of a specified field if it exists within the defined fields.
+     *
+     * @param string $field The name of the field to set the value for.
+     * @param mixed $value The value to be assigned to the specified field.
+     * @return self Returns the current instance for method chaining after setting the field value.
+     */
+    protected function setFieldValue(string $field, $value)
+    {
+        if(key_exists($field,$this->cfoInfo['fields']??[])) {
+            $this->data[$field]=$value;
+            $this->{$field}=$value;
+        }
+        return $this;
+    }
+
+
+    /**
+     * Retrieves the value associated with the 'key' in the cfoInfo array.
+     * Returns null if the 'key' is not set.
+     *
+     * @return mixed|null The value of the 'key' or null if not set.
+     */
+    public function key() {
+        return $this->cfoInfo['key']??null;
+    }
+
+    /**
+     * Retrieves the value associated with the 'object' in the cfoInfo array.
+     * Returns null if the 'object' is not set.
+     *
+     * @return mixed|null The value of the 'key' or null if not set.
+     */
+    public function object() {
+        return $this->cfoInfo['object']??null;
+    }
+
+
+    /**
+     * Populates the data array with values from the input array based on defined fields.
+     *
+     * @param array $data An associative array containing the input data to be processed.
+     * @return array The resulting array with populated field values.
+     */
+    public function set(array $data): array
+    {
+        $this->reset();
+        return $this->update($data);
+    }
+
+    /**
+     * Resets the data array by clearing all its contents.
+     *
+     * @return self Returns the current instance for method chaining after resetting the data.
+     */
+    public function reset()
+    {
+        $this->data = [];
+        foreach ($this->cfoInfo['fields'] as $field => $info) {
+            $this->{$field} = null;
+        }
+        return $this;
+    }
+
+    /**
+     * Updates the data array with values from the input array for matching fields.
+     *
+     * @param array $data An associative array containing the input data to be updated.
+     * @return array The updated data array with values from the input array for valid fields.
+     */
+    public function update(array $data): array
+    {
+        foreach ($data as $field => $info) {
+            if(!key_exists($field,$this->cfoInfo['fields'])) continue;
+            $this->data[$field] = $info;
+            $this->{$field} = $info;
+        }
+        return $this->data;
+    }
+
+    /**
+     * Checks if a specific field exists within the `fields` array of the `cfoInfo` property.
+     *
+     * @param string $field The key to check for existence in the `fields` array.
+     * @return bool Returns true if the specified key exists in the `fields` array, otherwise false.
+     */
+    public function exists(string $field) {
+        return key_exists($field,$this->cfoInfo['fields']??[]);
+    }
+
+    /**
+     * Retrieves data stored within the object's `data` property.
+     *
+     * @param string $field The specific key to retrieve from the `data` array. If not provided, the entire `data` property is returned.
+     * @return mixed Returns the value associated with the specified key, or the entire `data` property if no key is provided. If the key does not exist, returns null.
+     */
+    public function getData(string $field='') {
+        if(!$field) return $this->data;
+        else return $this->data[$field]??null;
+    }
+
+    /**
+     * Retrieves the field names of the CFO object
+     *
+     * @return array Returns an array of strings
+     */
+    public function getFieldsNames() {
+        return array_keys($this->cfoInfo['fields']);
+    }
+
+    /**
+     * Reduces the given array based on the allowed fields.
+     * @param array $data The input array to be filtered.
+     * @return array The filtered array containing only the defined fields.
+     */
+    public function getArrayReducedWithFieldsData(array $data)
+    {
+        foreach ($data as $field => $value) {
+            if(!is_array($this->cfoInfo['fields'][$field]??null)) unset($data[$field]);;
+        }
+        return $data;
+    }
+
+    /**
+     * Reduces the given array based on the allowed fields.
+     * @param array $data The input array to be filtered.
+     * @return array The filtered array containing only the defined fields.
+     */
+    public function getArrayReducedWithFieldsDataOnUpdate(array $data)
+    {
+        $data = $this->getArrayReducedWithFieldsData($data);
+
+        foreach ($data as $field => $value) {
+            if(key_exists('allow_on_update',$this->cfoInfo['fields'][$field])
+                && !$this->cfoInfo['fields'][$field]['allow_on_update'])
+                unset($data[$field]);
+        }
+        return $data;
+    }
+
+    /**
+     * Reduces the given array based on the allowed fields.
+     * @param array $data The input array to be filtered.
+     * @return array The filtered array containing only the defined fields.
+     */
+    public function getArrayReducedWithFieldsDataOnInsert(array $data)
+    {
+        $data = $this->getArrayReducedWithFieldsData($data);
+
+        foreach ($data as $field => $value) {
+            if(key_exists('allow_on_insert',$this->cfoInfo['fields'][$field])
+                && !$this->cfoInfo['fields'][$field]['allow_on_insert'])
+                unset($data[$field]);
+        }
+        return $data;
     }
 }
