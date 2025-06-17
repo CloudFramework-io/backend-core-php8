@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20250616_2';
+    var $version = '20250617_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -1945,8 +1945,8 @@ class CFOWorkFlows {
         if(!in_array($method,['GET','POST','POST','PUT','DELETE'])) $method='POST';
         // Default Headers
         $hook_headers = [
-            'X-WEB-KEY'=> $this->web_key,
-            'X-DS-TOKEN' => $this->dstoken
+            'X-WEB-KEY'=> $this->core->system->getHeader('X-WEB-KEY'),
+            'X-DS-TOKEN' => $this->core->system->getHeader('X-DS-TOKEN')
         ];
         // Search for Special Tags in the headers
         if(isset($hook['headers'])) {
