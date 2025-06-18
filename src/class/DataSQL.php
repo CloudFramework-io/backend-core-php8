@@ -1054,7 +1054,8 @@ class DataSQL
 
         $dataValidated = [];
         foreach ($schema_to_validate as $field=>$value) {
-            if((isset($data[$field]) || $all) && isset($value['validation']) && stripos($value['validation'],'internal')===false) {
+            if((isset($data[$field]) || $all) && isset($value['validation'])
+                && !preg_match('/(^|\|)internal($|\|)/',$value['validation'])) {
                 if(isset($data[$field]))
                     $dataValidated[$field] = $data[$field];
                 else
