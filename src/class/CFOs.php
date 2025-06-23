@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20250617_1';
+    var $version = '20250623_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -16,6 +16,9 @@ class CFOs {
     var $error = false;                 // When error true
     var $errorCode = null;                   // Code of error
     var $errorMsg = [];                 // When error array of messages
+
+    /** @var CoreCache $globalCache */
+    var $globalCache;                 // When error array of messages
 
     var $namespace = 'default';
     var $project_id = null;
@@ -51,9 +54,9 @@ class CFOs {
         $this->project_id = $this->core->gc_project_id;
         $this->workFlows = new CFOWorkFlows($core,$this);
         $this->api = new CFOApi($core);
+        $this->globalCache = new CoreCache($core,'global_cache');
         //region Create a
     }
-
 
     /**
      * Retrieve or create a CFO object of the class CFO\{$cfo} created as code in cfo folder
@@ -2641,6 +2644,7 @@ class CFOClassObjects {
         }
         return $ret;
     }
+
 
     /**
      * Add an error in the class
