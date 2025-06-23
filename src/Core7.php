@@ -283,7 +283,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->__p->add('Loaded $this->__p,$this->system,$this->logs,$this->errors,$this->is,$this->config,$this->session,$this->security,$this->cache,$this->request,$this->localization,$this->model,$this->cfiLog with __session[started=' . (($this->session->start) ? 'true' : 'false') . ']: ,', __METHOD__);
 
             // Config objects based in config
-            $this->cache->setSpaceName($this->config->get('cacheSpacename')?:'cloudframework');
+            $this->cache->setNameSpace($this->config->get('cacheSpacename')?:'cloudframework');
 
             // If the $this->system->app_path ends in / delete the char.
             $this->system->app_path = preg_replace('/\/$/','',$this->system->app_path);
@@ -4093,7 +4093,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             // Initialize $this->spacename
             if (!strlen(trim($spacename))) $spacename = (isset($_SERVER['HTTP_HOST'])) ? $_SERVER['HTTP_HOST'] : $_SERVER['PWD'];
-            $this->setSpaceName($spacename);
+            $this->setNameSpace($spacename);
 
             // Activate debug based on $debug or if I am in development (local environgmnet)
             if(null !== $debug)
