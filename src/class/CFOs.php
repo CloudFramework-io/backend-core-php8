@@ -2269,6 +2269,7 @@ class CFOApi {
  */
 class CFOClassObjects {
 
+    var $version = '20250624_1';
     protected \Core7 $core;
     protected \CFOs $cfos;
     protected $fields;
@@ -2377,6 +2378,7 @@ class CFOClassObjects {
                 if($this->cfos->db($this->object)->error)
                     return $this->addError('database-error',$this->cfos->db($this->object)->error);
                 if(!$record = $this->readEntity($id)) return false;
+                break;
             default:
                 return $this->addError('programming-conflict','Not supported type: '.$this->type);
         }
