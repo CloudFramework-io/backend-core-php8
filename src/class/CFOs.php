@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20250623_1';
+    var $version = '20250702_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -294,7 +294,7 @@ class CFOs {
      * @param array $db_credentials optional credentials for the connection
      * @return bool
      */
-    public function dbInit (string $cfoId, $connection='default', array $db_credentials = [])
+    public function dbInit (string $cfoId, $connection='', array $db_credentials = [])
     {
 
         //region EVALUATE IF $this->dbObjects[$object]) exist to create it
@@ -355,8 +355,10 @@ class CFOs {
         //endregion
 
         //region ASSURE the object is created
-        $this->core->model->dbInit($connection,$db_credentials);
-        $this->lastDBObject = &$this->core->model->dbConnections[$connection];
+        if(!$this->core->model->dbInit($connection,$db_credentials))
+            return $this->addError('database-error',$this->core->model->errorMsg);
+
+        $this->lastDBObject = &$this->core->model->dbConnections[$this->core->model->dbConnection];
         //endregion
 
         return true;
@@ -368,7 +370,7 @@ class CFOs {
      * @param string $connection The name of the connection to use (default: 'default')
      * @return DataSQL Returns the DataSQL object associated with the CFO ID
      */
-    public function db (string $cfoId, $connection='default'): DataSQL
+    public function db (string $cfoId, $connection=''): DataSQL
     {
         if(!isset($this->dbObjects[$cfoId]))
             $this->dbInit($cfoId,$connection);
@@ -382,12 +384,13 @@ class CFOs {
      * @param $q
      * @param null $params
      * @param string $connection
-     * @return array|void
+     * @return array|false
      */
-    public function dbQuery ($q,$params=null,$connection='default')
+    public function dbQuery ($q,$params=null,$connection='')
     {
-        $this->core->model->dbInit($connection);
-        $this->lastDBObject = &$this->core->model->dbConnections[$connection];
+        if(!$this->core->model->dbInit($connection))
+            return $this->addError('database-error',$this->core->model->errorMsg);
+        $this->lastDBObject = &$this->core->model->dbConnections[$this->core->model->dbConnection];
 
         $ret= $this->core->model->dbQuery('CFO Direct Query for connection  '.$connection,$q,$params);
         if($this->core->model->error) $this->addError('database-error',$this->core->model->errorMsg);
@@ -425,9 +428,8 @@ class CFOs {
      * @param string $object
      * @return CloudSQL|bool returns false if error
      */
-    public function dbConnection (string $connection='default'): CloudSQL|bool
+    public function dbConnection (string $connection=''): CloudSQL|bool
     {
-        if(!$connection) $connection='default';
         if(!$this->core->model->dbInit($connection))
             return $this->addError('database-error',$this->core->model->errorMsg);
         return($this->core->model->db);
@@ -458,7 +460,7 @@ class CFOs {
      * @param string $connection Optional name of the connection. If empty it will be default
      * @return boolean
      */
-    public function setDBCredentials (array $credentials,string $connection='default')
+    public function setDBCredentials (array $credentials,string $connection='')
     {
         $this->core->config->set("dbServer",$credentials['dbServer']??null);
         $this->core->config->set("dbUser",$credentials['dbUser']??null);
@@ -475,16 +477,22 @@ class CFOs {
         if($this->core->is->localEnvironment() && $this->core->config->get("dbSocket") && $this->core->config->get("dbServer"))
             $this->core->config->set("dbSocket",null);
 
+        //set name of connection to use if it is passed
+        if($connection) $this->core->model->dbConnection = $connection;
+
         return true;
     }
 
     /**
-     * Try to read from CLOUD-PLATFORM $secret
-     * @param string $platform_secret_variable name of the secret with se format: {secret-id}.{variable}
-     * @param string $platform_id optional platform id. If is not passed it will take $this->namespace
-     * @return bool
+     * Sets the database credentials based on the platform's secret.
+     * The method retrieves and validates the secret, then uses it to configure the database connection.
+     *
+     * @param string $platform_secret_variable The platform secret variable in the format {secret_id}.{varname}.
+     * @param string $platform_id Optional platform ID. If not provided, the namespace is used by default.
+     * @param string $connection Optional connection name to identify the database connection.
+     * @return bool Returns true if the database credentials are successfully set; otherwise, returns false on error.
      */
-    public function setDBCredentialsFromPlatformSecret(string $platform_secret_variable,string $platform_id='') {
+    public function setDBCredentialsFromPlatformSecret(string $platform_secret_variable,string $platform_id='',$connection='') {
 
         if(!$platform_id) $platform = $this->namespace;
         if(!strpos($platform_secret_variable,'.')) return $this->addError('function-conflict','setDBCredentialsFromPlatformSecret($platform_secret_variable) has received a value with wrong format. Use {secret_id}.{varname}')??false;
@@ -496,7 +504,7 @@ class CFOs {
             }
             $secret['dbSocket'] = null;
         }
-        $this->setDBCredentials($secret);
+        $this->setDBCredentials($secret,$connection);
         return true;
     }
 
