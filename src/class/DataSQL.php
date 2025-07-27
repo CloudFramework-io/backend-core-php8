@@ -920,6 +920,13 @@ class DataSQL
         return [$where,$params];
     }
 
+    /**
+     * Prepares and returns the SQL fields for a query, including fields from joined entities.
+     *
+     * @param array|string|null $fields The fields to include in the SQL query. Can be an array or a comma-separated string.
+     *                                  If null, the default query fields will be used.
+     * @return string The SQL fields formatted for the query.
+     */
     function getQuerySQLFields($fields=null) {
         if(!$fields) $fields=$this->queryFields;
         if($fields && is_string($fields)) $fields = explode(',',$fields);
@@ -932,18 +939,37 @@ class DataSQL
             /** @var DataSQL $object */
             $object = $join[1];
             $ret.=','.str_replace($object->entity_name.'.',"_j{$i}.",$object->getQuerySQLFields());
-
         }
 
         return $ret;
     }
 
+    /**
+     * Constructs and retrieves the full SQL FROM clause for a query, including
+     * joins and table aliases, based on the current entity and its defined relationships.
+     *
+     * @return string Returns the SQL FROM clause as a string, including any joined tables.
+     */
     function getQuerySQLFroms() {
         $from = $this->entity_name;
+        $table_alias = [];
         foreach ($this->joins as $i=>$join) {
+
             /** @var DataSQL $object */
             $object = $join[1];
-            $from.=" {$join[0]}  JOIN {$object->entity_name} _j{$i} ON ({$this->entity_name}.{$join[2]} = _j{$i}.{$join[3]})";
+            $table_alias[$object->entity_name]="_j{$i}";
+
+            //by default the left join is with main table
+            if(!strpos($join[2],'.'))
+                $left_join = "{$this->entity_name}.{$join[2]}";
+            //but if user has specify another table let's process it
+            else {
+                $left_join = "{$join[2]}";
+                foreach ($table_alias as $source_table=>$alias) {
+                    $left_join = str_replace($source_table,$alias,$left_join);
+                }
+            }
+            $from.=" {$join[0]}  JOIN {$object->entity_name} _j{$i} ON ({$left_join} = _j{$i}.{$join[3]})";
         }
 
 
