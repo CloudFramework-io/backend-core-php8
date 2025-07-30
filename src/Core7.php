@@ -7909,7 +7909,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param null|string $slack_url Optional Slack webhook URL to send a notification about the action.
          * @param null|array $rewrite_fingerprint Optional fingerprint data to override the default request fingerprint.
          * @param null|string $id Optional identifier for the logged action.
-         * @return bool Returns true if the log entry was successfully created; otherwise, false.
+         * @return array|false Returns the array entity if the log entry was successfully created; otherwise, false.
          */
         public function add(string $app, string $action, string $title, string $method, null|string $user, null|string|array $data=null, null|string $slack_url=null, null|array $rewrite_fingerprint=null,null|string $id=null) {
             if(!$this->initDSLogs()) return false;
@@ -7965,7 +7965,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 return false;
             } else {
                 $this->core->logs->add('CFILog_add_ok');
-                return true;
+                return $entity;
             }
             //endregion
         }
