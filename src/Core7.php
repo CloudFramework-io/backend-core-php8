@@ -4649,7 +4649,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                 $this->http = $this->core->config->get("CloudServiceUrl");
 
-                if (strlen($path) && $path[0] != '/')
+                if (strlen($path ?? '') && ($path[0] ?? '') != '/')
                     $path = '/' . $path;
                 return ($this->http . $path);
             }
