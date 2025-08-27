@@ -688,7 +688,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param $data
          * @return true
          */
-        public function setReturnData($data)
+        public function setReturnData($data): true
         {
             $this->returnData['data'] = $data;
             return true;
@@ -699,7 +699,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param $value
          * @return true
          */
-        public function addReturnData($value)
+        public function addReturnData($value): true
         {
 
             if (!isset($this->returnData['data'])) $this->setReturnData($value);
