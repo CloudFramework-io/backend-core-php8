@@ -8150,8 +8150,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $entity["Ip"]=$fingerprint['ip'];
             $entity["Title"]=$title;
             $entity["JSON"]=[
-                'url'=>(array_key_exists('REQUEST_URI',$_SERVER))?$_SERVER['REQUEST_URI']:''
-                ,'http_referer'=> $fingerprint['http_referer']
+                'host'=>$this->core->system->url['host'],
+                'url'=>(array_key_exists('REQUEST_URI',$_SERVER))?$_SERVER['REQUEST_URI']:'',
+                'http_referer'=> $fingerprint['http_referer']
 
             ];
             if($data) {
