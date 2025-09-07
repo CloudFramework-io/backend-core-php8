@@ -1169,8 +1169,9 @@ class CFOWorkFlows {
     {
 
         //region CHECK $workflow['action'] and $workflow['active']
-        if (!($workflow['active'] ?? false)) return;
+        if (!($workflow['active'] ?? false)) return false;
         if (($workflow['action'] ?? '') != 'readRelations') return $this->workflows_report($workflow['id'],'readRelations() has receive a wrong [action]');
+        if (!is_array($workflow['relations'] ?? '') || !$workflow['relations']) return $this->workflows_report($workflow['id'],'readRelations() has not relations defined: relations[{..}]');
         //endregion
 
         //region READ $workflow['relations']
@@ -1204,7 +1205,7 @@ class CFOWorkFlows {
                 $_output_variable = ($relation['output_variable']??null)?:$relation['cfo'];
                 //endregion
 
-                //region IF $relation has 'key' and 'value' lets read record by key
+                //region READ entity by key IF $relation has 'key' and 'value' lets
                 if( ($relation['key'] ?? null) && ($relation['value'] ?? null)) {
                     if ($value = $this->core->replaceCloudFrameworkTagsAndVariables($relation['value'], $data))
                     {
@@ -1224,6 +1225,7 @@ class CFOWorkFlows {
                             //endregion
 
                         }
+                        //check datastore model
                         elseif ($models['DataStoreEntities']??null) {
 
                             //region EVALUATE to apply namespace
@@ -1244,7 +1246,9 @@ class CFOWorkFlows {
                                 if($workflow['error_message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['error_message'],$data)]);
 
                             } else {
-                                if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
+                                if(!$record) {
+                                    $this->workflows_report($workflow['id'],'readRelations() not found or condition does not return data.');
+                                } else if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
                             }
                             //endregion
 
@@ -1258,7 +1262,8 @@ class CFOWorkFlows {
                                 }
                             }
                             //endregion
-                        } else {
+                        }
+                        else {
                             $this->workflows_report($workflow['id'], '$model is not DataBaseTables nor DataStoreEntities');
                             $workflow['active'] = false;
                         }
