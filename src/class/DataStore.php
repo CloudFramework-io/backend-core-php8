@@ -247,11 +247,12 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
 
                     if($value && preg_match('/(\||^)unique(\||$)/', $this->schema['props'][$_key][2]??'')) {
                         $_search = $this->fetchAll('__key__',[$_key=>$value]);
-                        if($this->error) return;
+                        if($this->error) return false;
                         if($_search) {
 
                             $_id = $row['KeyId']??($row['KeyName']??null);
                             $_key_name =  $_id?(($row['KeyId']??'')?'KeyId':'KeyName'):'';
+
                             if(!$_id) {
                                 $this->errorCode = 400;
                                 return $this->addError("The value of the unique field [$_key] already exist [".count($_search)."] entities");
