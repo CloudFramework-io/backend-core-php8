@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20250702_1';
+    var $version = '20250909_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -1237,7 +1237,7 @@ class CFOWorkFlows {
                             if(in_array($relation['key'],['KeyId','KeyName']))
                                 $record = $this->cfos->ds($relation['cfo'])->fetchOneByKey($value);
                             else
-                                $record = $this->cfos->ds($relation['cfo'])->fetchOne('*',[$relation['key'] => $value]);
+                                $record = $this->cfos->ds($relation['cfo'])->fetchOne('*',[$relation['key'] => $value])[0]??null;
 
                             if ($this->cfos->ds($relation['cfo'])->error) {
                                 $this->cfos->ds($relation['cfo'])->errorMsg[] = "Error in workflows[{$_i}].relation";
