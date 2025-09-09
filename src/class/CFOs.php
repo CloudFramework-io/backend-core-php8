@@ -1247,7 +1247,9 @@ class CFOWorkFlows {
 
                             } else {
                                 if(!$record) {
-                                    $this->workflows_report($workflow['id'],'readRelations() not found or condition does not return data.');
+                                    $this->workflows_report($workflow['id']
+                                        ,['not-found'=>'readRelations('.$relation['cfo'].') not found or condition does not return data.',$relation['key'] => $value]);
+                                    $workflow['active'] = false;
                                 } else if($workflow['message']??null) $this->workflows_report($workflow['id'],['message'=>$this->core->replaceCloudFrameworkTagsAndVariables($workflow['message'],$data)]);
                             }
                             //endregion
@@ -1263,6 +1265,7 @@ class CFOWorkFlows {
                             }
                             //endregion
                         }
+                        //else error
                         else {
                             $this->workflows_report($workflow['id'], '$model is not DataBaseTables nor DataStoreEntities');
                             $workflow['active'] = false;
