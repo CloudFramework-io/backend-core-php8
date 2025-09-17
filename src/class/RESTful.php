@@ -11,7 +11,7 @@ if (!defined("_RESTfull_CLASS_")) {
      */
     class RESTful
     {
-        protected $version='v250421';
+        protected $version='v250917';
         var $apiName ='';
         var $formParams = array();
         var $rawData = array();
@@ -471,7 +471,6 @@ if (!defined("_RESTfull_CLASS_")) {
                     $msg .= '. Validation error: '.$dv->errorMsg.' ['.$validation.']';
                     $error = true;
                 }
-                _printe('aa');
             }
             // Generate Error
             if($error) {
