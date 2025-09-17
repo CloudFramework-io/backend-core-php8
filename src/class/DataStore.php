@@ -928,6 +928,9 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                             // continue on empty array
                             if(!$value) continue;
 
+                            if(count($value)>30)
+                                return $this->addError("[{$key}] has received an array with more than 30 elements. This is not allowed in datastore.");;
+
                             if(in_array(($this->schema['props'][$key][1]??''), ['integer','float']))
                                 $values = implode(",",$value);
                             else
