@@ -6,7 +6,7 @@
  */
 class DataSQL
 {
-    var $version = '202410241';
+    var $version = '202510801';
     /** @var Core7  */
     var $core;
     var $error = false;
@@ -428,7 +428,7 @@ class DataSQL
      * @param array|string $keysWhere where condition can be a string or array [key=>value, key=>value]
      * @param null|string $fields fields to be returned. By default $this->queryFields
      * @param array $params optional params to apply query substitutions if $keysWhere is string
-     * @return array|void
+     * @return array|false
      */
     function fetch($keysWhere=[], $fields=null, $params=[]) {
 
@@ -945,10 +945,12 @@ class DataSQL
     }
 
     /**
-     * Constructs and retrieves the full SQL FROM clause for a query, including
-     * joins and table aliases, based on the current entity and its defined relationships.
+     * Builds and returns the SQL FROM clauses for a query, including handling joins.
      *
-     * @return string Returns the SQL FROM clause as a string, including any joined tables.
+     * This method constructs the SQL FROM statement by iterating through the defined joins and preparing
+     * the necessary SQL statements to include table relationships with appropriate conditions.
+     *
+     * @return string The SQL FROM clause ready to be used in a full SQL query, including any necessary joins.
      */
     function getQuerySQLFroms() {
         $from = $this->entity_name;
@@ -969,7 +971,15 @@ class DataSQL
                     $left_join = str_replace($source_table,$alias,$left_join);
                 }
             }
-            $from.=" {$join[0]}  JOIN {$object->entity_name} _j{$i} ON ({$left_join} = _j{$i}.{$join[3]})";
+
+            $comparator = '=';
+            $right_join = "_j{$i}.{$join[3]}";
+
+            if(strpos($join[3],'%')!==false) $comparator = 'LIKE';
+            if(strpos($join[3],'%')!==false || strpos($join[3],'(')!==false) {
+                $right_join = "{$join[3]}";
+            }
+            $from.=" {$join[0]}  JOIN {$object->entity_name} _j{$i} ON ({$left_join} {$comparator} {$right_join})";
         }
 
 
