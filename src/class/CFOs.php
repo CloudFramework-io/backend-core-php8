@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20250909_1';
+    var $version = '20251001_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -1550,8 +1550,8 @@ class CFOWorkFlows {
         //endregion
 
         //region APPLY replaceCloudFrameworkTagsAndVariables over $workflow['data']
-        foreach ($workflow['data'] as $key=>$datum) if($datum && !is_array($datum)) {
-            $workflow['data'][$key] = $this->core->replaceCloudFrameworkTagsAndVariables($datum,$data);
+        foreach ($workflow['data'] as $key=>$datum) {
+            $workflow['data'][$key] = $datum?$this->core->replaceCloudFrameworkTagsAndVariables($datum,$data):$datum;
         }
         //endregion
 
@@ -1627,6 +1627,7 @@ class CFOWorkFlows {
             if (isset($workflow['data']['KeyId'])) unset($workflow['data']['KeyId']);
             if(is_array($workflow['data']))
                 $entity = array_merge($entity, $workflow['data']);
+
             $this->cfos->ds($workflow['cfo'])->createEntities($entity);
             if ($this->cfos->ds($workflow['cfo'])->error) {
                 $this->workflows_report($workflow['id'], ['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg]);
