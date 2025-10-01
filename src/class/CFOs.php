@@ -1531,12 +1531,12 @@ class CFOWorkFlows {
     }
 
     /**
-     * Process $workflow to update a record in a CFO
-     * @param array $workflow
-     * @param array $data
-     * @param $_i
-     * @param $hook_type
-     * @return bool|void|null
+     * Updates CFO (CLOUD FRAMEWORK OBJECT) data based on the provided workflow and data arrays.
+     *
+     * @param array $workflow The workflow array containing information such as `action`, `cfo`, `key`, `value`, `data`, and other parameters.
+     * @param array $data An array of data used to replace tags and variables in the workflow's data.
+     * @param int $_i The index of the current workflow being processed, used for logging purposes.
+     * @return bool Returns true on successful completion, or false if an error occurs during the update process.
      */
     private function updateCFOData(array &$workflow,array &$data, $_i)
     {
