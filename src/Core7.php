@@ -840,6 +840,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
+            //region EVALUATE if the info is a valid json to decode
+            if(is_string($data) && $data && json_validate($data)) {
+                $data = $this->jsonDecode($data);
+            }
+            //endregion
+
             return $data;
 
         }
