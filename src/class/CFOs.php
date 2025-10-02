@@ -7,7 +7,7 @@
  */
 class CFOs {
 
-    var $version = '20251001_1';
+    var $version = '20251002_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -1630,10 +1630,22 @@ class CFOWorkFlows {
 
             $this->cfos->ds($workflow['cfo'])->createEntities($entity);
             if ($this->cfos->ds($workflow['cfo'])->error) {
-                $this->workflows_report($workflow['id'], ['error'=>$this->cfos->ds($workflow['cfo'])->errorMsg]);
+                $this->workflows_report($workflow['id'], [
+                    'CFO'=>$workflow['cfo'],
+                    'key' => $workflow['key'],
+                    'value' => $value,
+                    'data'=>$workflow['data'],
+                    'error'=>$this->cfos->ds($workflow['cfo'])->errorMsg]
+                );
                 return false;
             }
-            $this->workflows_report($workflow['id'],[$_output_variable=>['CFO'=>$workflow['cfo'],'key' => $workflow['key'], 'value' => $value,'data'=>$entity,'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace,'time'=>round(microtime(true)-$_time,4)]]);
+            $this->workflows_report($workflow['id'],[$_output_variable=>[
+                'CFO'=>$workflow['cfo'],
+                'key' => $workflow['key'],
+                'value' => $value,
+                'data'=>$workflow['data'],
+                'namespace'=>$this->cfos->ds($workflow['cfo'])->namespace,
+                'time'=>round(microtime(true)-$_time,4)]]);
 
         }
         //endregion
