@@ -133,7 +133,6 @@ class WorkFlows
                 'template_content'=>[],
                 'merge_vars'=>$vars]);
             $template = $this->core->jsonDecode($this->core->jsonEncode($template),true);
-
         } catch (Mandrill_Error $e) {
             return $this->addError($e->getMessage());
         }
@@ -288,9 +287,12 @@ class WorkFlows
     }
 
     /**
-     * Retrieve an email template from the ERP
-     * @param string $slug
-     * @param string $type
+     * Retrieves an ERP email template based on the provided slug and type. If the specified type is 'Mandrill',
+     * it ensures the template is up-to-date by synchronizing with the Mandrill service if necessary.
+     *
+     * @param string $slug The unique identifier for the email template.
+     * @param string $type The type of email template to retrieve. Default is 'Mandrill'.
+     * @return array|false The email template data if found and valid. Returns false if an error occurs.
      */
     public function getERPEmailTemplate(string $slug,string $type='Mandrill') {
         if(!$this->mandrill->getApiKey()) return $this->addError('getERPEmailTemplate(...) has been call without calling previously setMandrillApiKey(...)');
@@ -300,7 +302,7 @@ class WorkFlows
         if($type=='Mandrill') {
             //if the template does no exist in CloudFrameWorkEmailTemplates or the DateUpdating is older than 24h reload from mandrill
             if(!$dsTemplate || date('Y-m-d', strtotime($dsTemplate['DateUpdating']. ' + 1 days')) < date('Y-m-d')) {
-                if (!$mandrillTemplate = $this->getMandrillTemplate($slug)) return;
+                if (!$mandrillTemplate = $this->getMandrillTemplate($slug)) return false;
                 $entity = $this->getEntityTransformedWithMandrillTemplateData($dsTemplate, $mandrillTemplate);
                 $dsTemplate = $this->cfos->ds('CloudFrameWorkEmailTemplates')->createEntities($entity)[0] ?? null;
                 if ($this->cfos->ds('CloudFrameWorkEmailTemplates')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmailTemplates')->errorMsg);
@@ -350,6 +352,7 @@ class WorkFlows
      * Send an email using CLOUDFRAMEWORK CLOUD-CHANNELS/EMAIL
      * @param array $params {
      *    Parameters by reference to send an email.
+     *      - _test bool If it true it returns the data to be submitted but it does not execute de the emailing
      *      - slug string Template Id to send
      *      - html string optionally to slug you can send this variable with the HTML to send
      *      - from string email from sender. [optional] if the Mandrill Template has DefaultFromEmail
@@ -372,7 +375,7 @@ class WorkFlows
      * @param string $type [optional] has to value: Mandrill
      * @param string $linked_object [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedObject
      * @param string $linked_id [optional] add this value to the ds:CloudFrameWorkEmailsSubmissions.LinkedId
-     * @return bool|void
+     * @return array|false array with
      */
     public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='')
     {
@@ -412,15 +415,15 @@ class WorkFlows
                 //endregion
 
                 //region IF $slug READ $template and rewrite $html
+
                 $template=null;
                 if($slug) {
-                    if (!$template = $this->getERPEmailTemplate($slug)) return;
+                    if (!$template = $this->getERPEmailTemplate($slug)) return false;
                     $html = $this->renderMandrillTemplate($slug,$data);
                 } else {
                     $html = $this->core->replaceCloudFrameworkTagsAndVariables($html,$data);
                 }
                 //endregion
-
                 //region INIT $submission[] with previous INITIATED variables
                 $submission = [
                     "Cat"=>$cat,
@@ -449,6 +452,13 @@ class WorkFlows
                 ];
                 if(is_array($params['attachments']??null)) {
                     $submission['JSONProcessing']['attachments'] = array_column($params['attachments'],'name');
+                }
+                //endregion
+
+                //region EVALUATE to return $submision if _test has been sent
+                if(($data['_test']??null)===true) {
+                    $submission['html'] = $html;
+                    return $submission;
                 }
                 //endregion
 
