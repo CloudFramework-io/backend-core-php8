@@ -885,13 +885,29 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $var
          * @return mixed|string
          */
-        private function findValueWithDotsInArray(&$array, $var) {
+        public function findValueWithDotsInArray(&$array, $var) {
             if(!strpos($var,'.')) return $array[$var]??'';
             else {
                 $parts = explode('.',$var,2);
                 if(isset($array[$parts[0]])) return $this->findValueWithDotsInArray($array[$parts[0]],$parts[1]);
                 else return '';
             }
+        }
+
+        /**
+         * Deletes a specified column from a multidimensional array.
+         * The operation modifies the input array directly.
+         *
+         * @param array $array The input array from which the column will be removed, passed by reference.
+         * @param string $columns The keys of the column to be removed from each element of the array separated by ','
+         * @return void
+         */
+        public function deleteColumnsFromArray(&$array, string $columns) {
+            $columns = explode(',',$columns);
+            foreach ($columns as $column)
+                array_walk($array, function (&$v) use ($column) {
+                    if(isset($v[$column])) unset($v[$column]);
+                });
         }
 
 
