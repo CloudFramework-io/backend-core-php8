@@ -779,6 +779,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                                 case "datetime":
                                     $value = date('Y-m-d H:i:s');
                                     break;
+                                case "uuid":
+                                    $value = $this->uuid();
+                                    break;
                                 default:
                                     $value = $this->platform[$found[2]] ?? null;
                                     break;
