@@ -748,6 +748,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     //endregion
 
                     //region SWITH $found[1]
+                    if(isset($this->platform[0])) $platform = &$this->platform[0];
+                    else $platform = &$this->platform;
                     switch ($found[1]) {
                         case "Platform":
                             switch (trim($found[2])) {
@@ -782,8 +784,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                                 case "uuid":
                                     $value = $this->uuid();
                                     break;
+                                case "random_key":
+                                    $value = password_hash(uniqid(), PASSWORD_DEFAULT);
+                                    break;
                                 default:
-                                    $value = $this->platform[$found[2]] ?? null;
+                                    $value = (is_array($platform['JSON']['PlatformVariables']??null) && key_exists($found[2],$platform['JSON']['PlatformVariables']))?$platform['JSON']['PlatformVariables'][$found[2]]:$default_value;
                                     break;
                             }
                             break;
@@ -799,22 +804,22 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                             break;
                         case "UserVariables":
                         case "UserVariable":
-                            $value = (isset($this->user->data['User']['UserVariables'][$found[2]])) ? $this->user->data['User']['UserVariables'][$found[2]] : '';
+                            $value = (isset($this->user->data['User']['UserVariables'][$found[2]])) ? $this->user->data['User']['UserVariables'][$found[2]] : $default_value;
                             if ($rawUrlEncode) $value = urlencode($value);
                             break;
                         case "GETVariables":
                         case "GETVariable":
-                            $value = (isset($_GET[$found[2]])) ? $_GET[$found[2]] : '';
+                            $value = (isset($_GET[$found[2]])) ? $_GET[$found[2]] : $default_value;
                             if ($rawUrlEncode) $value = urlencode($value);
                             break;
                         case "POSTVariables":
                         case "POSTVariable":
-                            $value = (isset($_POST[$found[2]])) ? $_POST[$found[2]] : '';
+                            $value = (isset($_POST[$found[2]])) ? $_POST[$found[2]] : $default_value;
                             if ($rawUrlEncode) $value = urlencode($value);
                             break;
                         case "FORMVariables":
                         case "FORMVariable":
-                            $value = (isset($_REQUEST[$found[2]])) ? $_REQUEST[$found[2]] : '';
+                            $value = (isset($_REQUEST[$found[2]])) ? $_REQUEST[$found[2]] : $default_value;
                             if ($rawUrlEncode) $value = urlencode($value);
                             break;
                     }
