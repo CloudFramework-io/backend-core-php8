@@ -8099,7 +8099,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param null|mixed $data values to add in bitacora if it is necessary
          * @return bool|void
          */
-        public function sendToCFBitacora(string $user, string $action,string $solution, string $app, string $app_id=null, string $title=null, $data=null) {
+        public function sendToCFBitacora(string $user, string $action,string $solution, string $app, ?string $app_id=null, ?string $title=null, $data=null) {
             $platform_id = $this->core->config->get('core.erp.platform_id');
             $token = $this->core->config->get('core.erp.integrations.token');
             $key = $this->core->config->get('core.erp.integrations.key');
@@ -8155,7 +8155,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param null|mixed $data  values to add in bitacora if it is necessary
          * @return integer|void It returns the KeyId of the Datastore
          */
-        public function bitacora(string $user, string $action, string $solution, string $app, string $app_id=null, string $title=null, $data=null)
+        public function bitacora(string $user, string $action, string $solution, string $app, ?string $app_id=null, ?string $title=null, $data=null)
         {
             if(!$this->initDSLogs()) return;
 
