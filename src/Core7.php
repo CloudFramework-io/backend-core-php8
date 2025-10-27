@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.3.64';  // 2025-10-06 1
+        var $_version = '8.4.1';  // 2025-10-27 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -7377,7 +7377,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          *    string $namespace says what namespace to use for datastore objects
          *    string $projectId says what project_id to use for datastore/bq objects
          *    string $cf_models_api_key is the API-KEY to use for CloudFrameworkDataModels and read the structure remotelly
-         * @return DataStore|DataSQL|void
+         * @return DataStore|DataSQL|false
          */
         public function getModelObject(string $object,$options=[]) {
 
