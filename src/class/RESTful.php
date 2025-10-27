@@ -718,7 +718,7 @@ if (!defined("_RESTfull_CLASS_")) {
          * @param int $error
          * @param null $model
          */
-        public function addCodeLib($code, $msg, $error=400, array $model=null) {
+        public function addCodeLib($code, $msg, $error=400, ?array $model=null) {
             $this->codeLib[$code] = $msg;
             $this->codeLibError[$code] = $error;
             if(is_array($model))
