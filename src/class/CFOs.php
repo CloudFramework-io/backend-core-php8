@@ -1,13 +1,13 @@
 <?php
 /**
  * [$cfos = $this->core->loadClass('CFOs',$integrationKey);] Class CFOs to handle CFO app for CloudFrameworkInterface
- * https://www.notion.so/cloudframework/CFI-PHP-Class-c26b2a1dd2254ddd9e663f2f8febe038
- * last_update: 20240725
+ * https://cloudframework.io/documentation/frameworks/backend-core-php8/classes/CFOs.html
+ * last_update: 20251027
  * @package CoreClasses
  */
 class CFOs {
 
-    var $version = '20251002_1';
+    var $version = '20251027_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -148,13 +148,19 @@ class CFOs {
         }
         //endregion
 
+        //region TRANSFORM $service_account of type: 'service_account_to_impersonate'
+        if($service_account && $service_account['type']=='service_account_to_impersonate') {
+            $service_account = $this->getImpersonateCredentials($service_account);
+        }
+        //endregion
+
         //region SET $options[cf_models_api_key,namespace,projectId,projectId]
         $options = ['cf_models_api_key'=>$this->integrationKey];
         if($namespace) $options['namespace'] = $namespace;
         if($project_id) $options['projectId'] = $project_id;
         elseif($this->project_id) $options['projectId'] = $this->project_id;
         if($service_account){
-            if (!($service_account['private_key']??null) || !($service_account['project_id']??null)) {
+            if ((!($service_account['private_key']??null) && !($service_account['source_credentials']??null)) || !($service_account['project_id']??null)) {
                 $this->createFooDatastoreObject($cfoId);
                 $this->dsObjects[$cfoId]->error = true;
                 $this->dsObjects[$cfoId]->errorMsg = "In CFO[{$cfoId}] there service_account configured does not have private_key or project_id";
@@ -244,12 +250,18 @@ class CFOs {
         }
         //endregion
 
+        //region TRANSFORM $service_account of type: 'service_account_to_impersonate'
+        if($service_account && $service_account['type']=='service_account_to_impersonate') {
+            $service_account = $this->getImpersonateCredentials($service_account);
+        }
+        //endregion
+
         //region SET $options[cf_models_api_key,namespace,projectId,projectId]
         $options = ['cf_models_api_key'=>$this->integrationKey];
         if($project_id) $options['projectId'] = $project_id;
         elseif($this->project_id) $options['projectId'] = $this->project_id;
         if($service_account){
-            if (!($service_account['private_key']??null) || !($service_account['project_id']??null)) {
+            if ((!($service_account['private_key']??null) && !($service_account['source_credentials']??null)) || !($service_account['project_id']??null)) {
                 $this->createFooBQObject($cfoId);
                 $this->bqObjects[$cfoId]->error = true;
                 $this->bqObjects[$cfoId]->errorMsg = "In CFO[{$cfoId}] there service_account configured does not have private_key or project_id";
@@ -654,9 +666,60 @@ class CFOs {
     }
 
     /**
-     * Execute a Manual Query
-     * @param string $txt
-     * @return array|void
+     * Generates credentials for impersonating a service account.
+     *
+     * @param array $data An associative array containing the necessary keys:
+     *                    - 'type': must be 'service_account_to_impersonate'.
+     *                    - 'project_id': the ID of the project as a string.
+     *                    - 'service_account': the email of the service account to impersonate.
+     * @return array|bool Returns an array with the generated credentials, or false if an error occurs.
+     */
+    public function getImpersonateCredentials(array $data) {
+
+        //region VERIFY $data parameters
+        if(( $data['type']??'')!= 'service_account_to_impersonate')
+            return $this->addError('params-error',__FUNCTION__.'($data) has received $data with wrong [type] value. It has to be [service_account_impersonation]');
+
+        if(!($data['project_id']??null) || !is_string($data['project_id']))
+            return $this->addError('params-error',__FUNCTION__.'($data) has received $data with wrong/missing [project_id] parameter');
+
+        if(!($data['service_account']??null) || !is_string($data['service_account']))
+            return $this->addError('params-error',__FUNCTION__.'($data) has received $data with wrong/missing [project_id] parameter');
+        //TODO: Validate format of $data['service_account']
+        //endregion
+
+        //region SET $credentials with the structure to impersonate
+        $credentials = [
+            'type'=>'impersonated_service_account',
+            'project_id'=>$data['project_id'],
+            'service_account_impersonation_url'=>"https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/{$data['service_account']}:generateAccessToken",
+            'universe_domain'=>"googleapis.com",
+            'delegates'=>[]
+        ];
+        //endregion
+
+        //region ADD $credentials["source_credentials"] with Application credentials RETURN $credentials
+        try {
+            /** @var Google\Auth\Credentials\UserRefreshCredentials $sourceCredentials */
+            $applicationCredentials = Google\Auth\ApplicationDefaultCredentials::getCredentials();
+            $credentials["source_credentials"]=$applicationCredentials;
+        } catch (Exception $e) {
+            return $this->addError('system-error',__FUNCTION__.'($data) has produced an error calling [Google\Auth\ApplicationDefaultCredentials]:  '.$e->getMessage());
+        }
+        return $credentials;
+        //endregion
+    }
+
+    /**
+     * Transforms a text representation of a datastore model into a structured array format.
+     *
+     * The method parses the given text to extract entity groups, keys, types, and additional information
+     * to create a datastore model structure. It performs validations to ensure the text conforms to
+     * expected requirements, such as mandatory fields and entity name alignment.
+     *
+     * @param string $txt The text representation of the datastore model, with fields separated by commas and lines separated by newlines.
+     * @param string $cfo The entity name to validate against the first line of the text input.
+     * @return array|null Returns a structured array with 'group' and 'model' keys if successful, or null if an error occurs.
      */
     public function transformTXTInDatastoreModel(string $txt, string $cfo)
     {
