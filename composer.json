@@ -15,7 +15,9 @@
     "google/cloud-bigquery": "^1.28",
     "google/cloud-secret-manager": "^1.12",
     "zbateson/mail-mime-parser": "^2.4",
-    "google/cloud-pubsub": "^1.48"
+    "google/cloud-pubsub": "^1.48",
+    "google/cloud-kms": "^1.21",
+    "google/cloud-iam": "^0.5.1"
   },
   "authors": [
     { "name": "Héctor López", "email": "hl@cloudframework.io"},
