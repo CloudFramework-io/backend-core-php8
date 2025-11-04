@@ -115,7 +115,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 try {
                     $this->datastore = new DatastoreClient($options);
                     $this->project_id = $options['projectId'];
-                    if(isset($options['keyFile'])) $this->service_account = $options['keyFile']['client_email']??null;
+                    if(isset($options['keyFile'])) $this->service_account = $options['keyFile']['client_email']??($options['keyFile']['service_account_impersonation_url']??null);
                 } catch (Exception $e) {
                     return($this->addError($e->getMessage()));
                 }
