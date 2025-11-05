@@ -6,7 +6,7 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "require": {
-    "google/cloud-datastore": "^1.26",
+    "google/cloud-datastore": "^2.0@RC",
     "google/cloud-storage": "^1.36",
     "google/cloud-logging": "^1.28",
     "google/cloud-translate": "^1.17",
@@ -17,10 +17,13 @@
     "zbateson/mail-mime-parser": "^2.4",
     "google/cloud-pubsub": "^1.48",
     "google/cloud-kms": "^1.21",
-    "google/cloud-iam": "^0.5.1"
+    "google/cloud-iam": "^1.0",
+    "google/cloud-core": "^1.66",
+    "google/auth": "^1.41",
+    "guzzlehttp/guzzle": "^7.10",
+    "guzzlehttp/promises": "^2.3"
   },
   "authors": [
-    { "name": "Héctor López", "email": "hl@cloudframework.io"},
     { "name": "Fran Herrera", "email": "fran@cloudframework.io"},
     { "name": "Adrian Martínez", "email": "am@cloudframework.io"}
   ]
