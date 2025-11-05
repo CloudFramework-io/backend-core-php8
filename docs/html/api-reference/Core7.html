@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core7 Class - CloudFramework Backend Core PHP8</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CloudFramework</h2>
+                <p>Backend Core PHP8</p>
+            </div>
+            <nav>
+                <a href="../index.html">Home</a>
+                <h3>Core Classes</h3>
+                <a href="Core7.html" class="active">Core7</a>
+                <a href="RESTful.html">RESTful</a>
+                <a href="Scripts2020.html">Scripts2020</a>
+                <h3>Configuration & Security</h3>
+                <a href="CoreConfig.html">CoreConfig</a>
+                <a href="CoreCache.html">CoreCache</a>
+                <a href="CoreSession.html">CoreSession</a>
+                <a href="CoreSecurity.html">CoreSecurity</a>
+                <h3>Data Storage</h3>
+                <a href="DataStore.html">DataStore</a>
+                <a href="Buckets.html">Buckets</a>
+                <a href="DataBQ.html">DataBQ</a>
+                <a href="CloudSQL.html">CloudSQL</a>
+                <a href="DataSQL.html">DataSQL</a>
+                <a href="DataMongoDB.html">DataMongoDB</a>
+                <h3>Utilities</h3>
+                <a href="Email.html">Email</a>
+                <a href="DataValidation.html">DataValidation</a>
+                <a href="WorkFlows.html">WorkFlows</a>
+                <h3>GCP Integration</h3>
+                <a href="GoogleSecrets.html">GoogleSecrets</a>
+                <a href="PubSub.html">PubSub</a>
+            </nav>
+        </aside>
+        <main class="content">
+<h1>Core7 Class</h1>
+
+<h2>Overview</h2>
+
+<p>The <code>Core7</code> class is the main framework class that provides access to all core functionality and services. It is automatically available in your APIs and scripts through <code>$this->core</code> and includes multiple sub-classes for different purposes.</p>
+
+<h2>Accessing Core7</h2>
+
+<p>In your APIs and scripts, Core7 is available as <code>$this->core</code>:</p>
+
+<pre><code class="language-php">// In your API
+<p>class API extends RESTful { function main() { // Access Core7 and its sub-classes $this->core->logs->add('API called'); $config = $this->core->config->get('my_setting'); $cached = $this->core->cache->get('my_key');</p>
+
+<p>// Load external classes $ds = $this->core->loadClass('DataStore', ['Users']); } }</p>
+</code></pre>
+
+<h2>Core7 Sub-Classes</h2>
+
+<p>Core7 initializes and provides access to multiple sub-classes:</p>
+
+<p>| Property | Class | Purpose | |----------|-------|---------| | <code>$this->core->__p</code> | <a href="#coreperformance">CorePerformance</a> | Performance monitoring | | <code>$this->core->is</code> | <a href="#coreis">CoreIs</a> | Environment detection | | <code>$this->core->system</code> | <a href="#coresystem">CoreSystem</a> | System information | | <code>$this->core->logs</code> | <a href="#corelog">CoreLog</a> | Logging system | | <code>$this->core->errors</code> | <a href="#corelog">CoreLog</a> | Error logging | | <code>$this->core->config</code> | <a href="#coreconfig">CoreConfig</a> | Configuration management | | <code>$this->core->session</code> | <a href="#coresession">CoreSession</a> | Session management | | <code>$this->core->security</code> | <a href="#coresecurity">CoreSecurity</a> | Security features | | <code>$this->core->cache</code> | <a href="#corecache">CoreCache</a> | Caching system | | <code>$this->core->request</code> | <a href="#corerequest">CoreRequest</a> | HTTP request handling | | <code>$this->core->user</code> | <a href="#coreuser">CoreUser</a> | User management | | <code>$this->core->localization</code> | <a href="#corelocalization">CoreLocalization</a> | Localization/i18n | | <code>$this->core->model</code> | <a href="#coremodel">CoreModel</a> | Data models |</p>
+
+<p>---</p>
+
+<h2>Main Methods</h2>
+
+<h3>loadClass()</h3>
+
+<pre><code class="language-php">public function loadClass($class, $params = null): object|null
+</code></pre>
+
+<p>Loads and instantiates a CloudFramework class.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$class</code> (string): Class name</li>
+<li><code>$params</code> (mixed): Parameters to pass to the class constructor</li>
+</ul>
+
+<strong>Returns:</strong> Instance of the class, or <code>null</code> if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Load DataStore
+<p>$ds = $this->core->loadClass('DataStore', ['Users']);</p>
+
+<p>// Load Buckets $buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);</p>
+
+<p>// Load DataBQ $bq = $this->core->loadClass('DataBQ', ['my_dataset']);</p>
+
+<p>// Load CloudSQL $sql = $this->core->loadClass('CloudSQL', [ 'host', 'user', 'password', 'database' ]);</p>
+
+<p>// Load Email $email = $this->core->loadClass('Email');</p>
+
+<p>// Load custom class from /class directory $myClass = $this->core->loadClass('MyCustomClass', ['param1', 'param2']);</p>
+</code></pre>
+
+<strong>Class Loading Paths:</strong>
+<p>1. <code>vendor/cloudframework-io/backend-core-php8/src/class/{Class}.php</code> 2. <code>./class/{Class}.php</code> (your project) 3. Custom path from <code>core.api.extra_path</code> config</p>
+
+<p>---</p>
+
+<h3>jsonEncode()</h3>
+
+<pre><code class="language-php">public function jsonEncode($input, $options = null): string|false
+</code></pre>
+
+<p>Encodes data to JSON with UTF-8 support.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$input</code> (mixed): Data to encode</li>
+<li><code>$options</code> (int): JSON encode options</li>
+</ul>
+
+<strong>Returns:</strong> JSON string, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$json = $this->core->jsonEncode(['name' => 'John', 'age' => 30]);
+<p>// Returns: {"name":"John","age":30}</p>
+
+<p>// With custom options $json = $this->core->jsonEncode($data, JSON_PRETTY_PRINT);</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>jsonDecode()</h3>
+
+<pre><code class="language-php">public function jsonDecode($input): mixed
+</code></pre>
+
+<p>Decodes JSON string to PHP array/object.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$input</code> (string): JSON string</li>
+</ul>
+
+<strong>Returns:</strong> Decoded data
+
+<strong>Example:</strong>
+<pre><code class="language-php">$data = $this->core->jsonDecode('{"name":"John","age":30}');
+<p>// Returns: ['name' => 'John', 'age' => 30]</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>getCloudFrameworkAPIBaseURL()</h3>
+
+<pre><code class="language-php">public function getCloudFrameworkAPIBaseURL(): string
+</code></pre>
+
+<p>Gets the base URL for CloudFramework API services.</p>
+
+<strong>Returns:</strong> Current CloudFramework API base URL
+
+<strong>Example:</strong>
+<pre><code class="language-php">$apiUrl = $this->core->getCloudFrameworkAPIBaseURL();
+<p>// Returns: 'https://api.cloudframework.io' (default)</p>
+
+<p>// Use in API calls $url = $this->core->getCloudFrameworkAPIBaseURL() . '/core/secrets/my-platform';</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>setCloudFrameworkAPIBaseURL()</h3>
+
+<pre><code class="language-php">public function setCloudFrameworkAPIBaseURL(string $url): string
+</code></pre>
+
+<p>Sets the base URL for CloudFramework API services.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$url</code> (string): New base URL (must be a valid URL starting with 'http')</li>
+</ul>
+
+<strong>Returns:</strong> The current CloudFramework API base URL
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Set custom API URL (e.g., for testing or private instance)
+<p>$this->core->setCloudFrameworkAPIBaseURL('https://custom-api.mycompany.com');</p>
+
+<p>// Invalid URL won't change the setting $this->core->setCloudFrameworkAPIBaseURL('invalid-url'); // Returns original URL, doesn't change it</p>
+
+<p>// Use case: Override for development if($this->core->is->development()) { $this->core->setCloudFrameworkAPIBaseURL('http://localhost:8080/api'); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>verifyModelStructureForObject()</h3>
+
+<pre><code class="language-php">public function verifyModelStructureForObject(string $object, ?array $options = []): false|string
+</code></pre>
+
+<p>Verifies and returns the model structure for a given object, supporting extended CloudFramework Objects (CFOs).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$object</code> (string): Object name to verify</li>
+<li><code>$options</code> (array): Optional configuration options</li>
+</ul>
+
+<strong>Returns:</strong> Model structure as string, or <code>false</code> if verification fails
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Verify model structure exists
+<p>$modelStructure = $this->core->verifyModelStructureForObject('Users'); if($modelStructure) { // Model is valid, use it $ds = $this->core->loadClass('DataStore', [$modelStructure]); } else { // Model not found or invalid $this->core->errors->add('Invalid model structure for Users'); }</p>
+
+<p>// With options for extended CFOs $modelStructure = $this->core->verifyModelStructureForObject('CustomObject', [ 'allow_extended' => true, 'merge_cfo' => true ]);</p>
+</code></pre>
+
+<strong>Use Case:</strong>
+<p>This method is particularly useful when working with CloudFramework Objects that may have extensions or when you need to validate model structure before loading DataStore or other model-dependent classes.</p>
+
+<p>---</p>
+
+<h2>CorePerformance</h2>
+
+<strong>Access:</strong> <code>$this->core->__p</code>
+
+<p>Monitors performance and execution time.</p>
+
+<h3>add()</h3>
+
+<pre><code class="language-php">$this->core->__p->add($title, $data = '', $type = '');
+</code></pre>
+
+<p>Adds a performance marker.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->core->__p->add('Start processing', '', 'note');
+<p>// ... your code ... $this->core->__p->add('End processing', '', 'endnote');</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreIs</h2>
+
+<strong>Access:</strong> <code>$this->core->is</code>
+
+<p>Detects environment and execution context.</p>
+
+<h3>Methods</h3>
+
+<pre><code class="language-php">// Check environment
+<p>if($this->core->is->development()) { echo "Running in development mode"; }</p>
+
+<p>if($this->core->is->production()) { echo "Running in production"; }</p>
+
+<p>// Check execution context if($this->core->is->terminal()) { echo "Running from terminal"; }</p>
+
+<p>// Check server if($this->core->is->localEnvironment()) { echo "Running on localhost"; }</p>
+
+<p>// Check GCP environment if($this->core->is->gae()) { echo "Running on Google App Engine"; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreSystem</h2>
+
+<strong>Access:</strong> <code>$this->core->system</code>
+
+<p>Provides system and environment information.</p>
+
+<h3>Properties</h3>
+
+<pre><code class="language-php">// Root path
+<p>echo $this->core->system->root_path; // /var/www/html</p>
+
+<p>// App path echo $this->core->system->app_path; // /var/www/html/app</p>
+
+<p>// URL information echo $this->core->system->url['host']; echo $this->core->system->url['protocol']; echo $this->core->system->url['url']; echo $this->core->system->url['uri'];</p>
+
+<p>// Server information echo $this->core->system->os; echo $this->core->system->ip;</p>
+
+<p>// Time zone echo $this->core->system->time_zone[0]; // UTC</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreLog</h2>
+
+<strong>Access:</strong> <code>$this->core->logs</code> and <code>$this->core->errors</code>
+
+<p>Logging system for application messages and errors.</p>
+
+<h3>add()</h3>
+
+<pre><code class="language-php">$this->core->logs->add($message, $category = '', $type = 'info');
+</code></pre>
+
+<p>Adds a log entry.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$message</code> (string|array): Log message</li>
+<li><code>$category</code> (string): Log category</li>
+<li><code>$type</code> (string): Log type (info, warning, error)</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Simple log
+<p>$this->core->logs->add('User logged in');</p>
+
+<p>// Log with category $this->core->logs->add('Payment processed', 'payments');</p>
+
+<p>// Log with type $this->core->logs->add('Database connection failed', 'database', 'error');</p>
+
+<p>// Error logging $this->core->errors->add('Critical error occurred', 'system', 'error');</p>
+
+<p>// Log arrays $this->core->logs->add(['user_id' => 123, 'action' => 'login'], 'auth');</p>
+</code></pre>
+
+<h3>get()</h3>
+
+<pre><code class="language-php">$logs = $this->core->logs->get();
+</code></pre>
+
+<p>Gets all log entries.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$logs = $this->core->logs->get();
+<p>foreach($logs as $log) { echo $log . "\n"; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreConfig</h2>
+
+<strong>Access:</strong> <code>$this->core->config</code>
+
+<p>Configuration management system.</p>
+
+<h3>get()</h3>
+
+<pre><code class="language-php">$value = $this->core->config->get($key, $default = null);
+</code></pre>
+
+<p>Gets a configuration value.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Simple config
+<p>$projectId = $this->core->config->get('core.gcp.project_id');</p>
+
+<p>// With default $timeout = $this->core->config->get('api.timeout', 30);</p>
+
+<p>// Nested config $dbHost = $this->core->config->get('database.host'); $cacheEnabled = $this->core->config->get('cache.enabled');</p>
+</code></pre>
+
+<h3>set()</h3>
+
+<pre><code class="language-php">$this->core->config->set($key, $value);
+</code></pre>
+
+<p>Sets a configuration value.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->core->config->set('api.timeout', 60);
+<p>$this->core->config->set('custom.setting', 'value');</p>
+</code></pre>
+
+<h3>readConfigJSONFile()</h3>
+
+<pre><code class="language-php">$this->core->config->readConfigJSONFile($file_path);
+</code></pre>
+
+<p>Loads configuration from a JSON file.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Load custom config
+<p>$this->core->config->readConfigJSONFile('/path/to/config.json');</p>
+
+<p>// Automatically loaded files: // - config.json (main) // - local_config.json (development) // - local_script.json (scripts in development)</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreSession</h2>
+
+<strong>Access:</strong> <code>$this->core->session</code>
+
+<p>Session management system.</p>
+
+<h3>init()</h3>
+
+<pre><code class="language-php">$this->core->session->init($id = 'CloudFramework');
+</code></pre>
+
+<p>Initializes a session.</p>
+
+<h3>set()</h3>
+
+<pre><code class="language-php">$this->core->session->set($key, $value);
+</code></pre>
+
+<p>Sets a session value.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->core->session->set('user_id', 123);
+<p>$this->core->session->set('cart', $cartData);</p>
+</code></pre>
+
+<h3>get()</h3>
+
+<pre><code class="language-php">$value = $this->core->session->get($key, $default = null);
+</code></pre>
+
+<p>Gets a session value.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$userId = $this->core->session->get('user_id');
+<p>$cart = $this->core->session->get('cart', []);</p>
+</code></pre>
+
+<h3>delete()</h3>
+
+<pre><code class="language-php">$this->core->session->delete($key);
+</code></pre>
+
+<p>Deletes a session value.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->core->session->delete('cart');
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreSecurity</h2>
+
+<strong>Access:</strong> <code>$this->core->security</code>
+
+<p>Security and authentication features.</p>
+
+<h3>checkUserIP()</h3>
+
+<pre><code class="language-php">$allowed = $this->core->security->checkUserIP($ips);
+</code></pre>
+
+<p>Checks if user IP is in allowed list.</p>
+
+<h3>existBasicAuth()</h3>
+
+<pre><code class="language-php">if($this->core->security->existBasicAuth()) {
+<p>$user = $_SERVER['PHP_AUTH_USER']; $pass = $_SERVER['PHP_AUTH_PW']; }</p>
+</code></pre>
+
+<p>Checks if HTTP Basic Auth credentials exist.</p>
+
+<h3>encrypt()</h3>
+
+<pre><code class="language-php">$encrypted = $this->core->security->encrypt($data, $key);
+</code></pre>
+
+<p>Encrypts data.</p>
+
+<h3>decrypt()</h3>
+
+<pre><code class="language-php">$decrypted = $this->core->security->decrypt($encrypted, $key);
+</code></pre>
+
+<p>Decrypts data.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Encrypt sensitive data
+<p>$encrypted = $this->core->security->encrypt('secret data', 'encryption-key');</p>
+
+<p>// Decrypt $decrypted = $this->core->security->decrypt($encrypted, 'encryption-key');</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreCache</h2>
+
+<strong>Access:</strong> <code>$this->core->cache</code>
+
+<p>Caching system (supports file cache, memory, and Datastore).</p>
+
+<h3>set()</h3>
+
+<pre><code class="language-php">$this->core->cache->set($key, $value, $ttl = 0);
+</code></pre>
+
+<p>Sets a cache value.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$key</code> (string): Cache key</li>
+<li><code>$value</code> (mixed): Value to cache</li>
+<li><code>$ttl</code> (int): Time to live in seconds (0 = no expiration)</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Cache for 1 hour
+<p>$this->core->cache->set('users_list', $users, 3600);</p>
+
+<p>// Cache indefinitely $this->core->cache->set('config', $config);</p>
+
+<p>// Cache complex data $this->core->cache->set('api_response', ['data' => $data, 'timestamp' => time()], 300);</p>
+</code></pre>
+
+<h3>get()</h3>
+
+<pre><code class="language-php">$value = $this->core->cache->get($key);
+</code></pre>
+
+<p>Gets a cache value.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$users = $this->core->cache->get('users_list');
+
+<p>if($users === null) { // Cache miss - fetch from database $users = $this->fetchUsersFromDB(); $this->core->cache->set('users_list', $users, 3600); }</p>
+</code></pre>
+
+<h3>delete()</h3>
+
+<pre><code class="language-php">$this->core->cache->delete($key);
+</code></pre>
+
+<p>Deletes a cache entry.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->core->cache->delete('users_list');
+</code></pre>
+
+<h3>flush()</h3>
+
+<pre><code class="language-php">$this->core->cache->flush();
+</code></pre>
+
+<p>Clears all cache entries.</p>
+
+<p>---</p>
+
+<h2>CoreRequest</h2>
+
+<strong>Access:</strong> <code>$this->core->request</code>
+
+<p>HTTP request utilities.</p>
+
+<h3>get()</h3>
+
+<pre><code class="language-php">$data = $this->core->request->get($url, $options = []);
+</code></pre>
+
+<p>Performs a GET request.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$response = $this->core->request->get('https://api.example.com/data');
+<p>$json = json_decode($response, true);</p>
+
+<p>// With headers $response = $this->core->request->get('https://api.example.com/data', [ 'headers' => ['Authorization' => 'Bearer token123'] ]);</p>
+</code></pre>
+
+<h3>post()</h3>
+
+<pre><code class="language-php">$data = $this->core->request->post($url, $data, $options = []);
+</code></pre>
+
+<p>Performs a POST request.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$response = $this->core->request->post('https://api.example.com/users', [
+<p>'name' => 'John Doe', 'email' => 'john@example.com' ]);</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreUser</h2>
+
+<strong>Access:</strong> <code>$this->core->user</code>
+
+<p>User management and authentication.</p>
+
+<h3>setUser()</h3>
+
+<pre><code class="language-php">$this->core->user->setUser($userData);
+</code></pre>
+
+<p>Sets current user data.</p>
+
+<h3>getUser()</h3>
+
+<pre><code class="language-php">$user = $this->core->user->getUser();
+</code></pre>
+
+<p>Gets current user data.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Set user after login
+<p>$this->core->user->setUser([ 'id' => 123, 'name' => 'John Doe', 'email' => 'john@example.com', 'role' => 'admin' ]);</p>
+
+<p>// Get user in another endpoint $user = $this->core->user->getUser(); if($user && $user['role'] === 'admin') { // Admin access }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>CoreLocalization</h2>
+
+<strong>Access:</strong> <code>$this->core->localization</code>
+
+<p>Localization and internationalization.</p>
+
+<h3>setLang()</h3>
+
+<pre><code class="language-php">$this->core->localization->setLang($lang);
+</code></pre>
+
+<p>Sets the current language.</p>
+
+<h3>getLang()</h3>
+
+<pre><code class="language-php">$lang = $this->core->localization->getLang();
+</code></pre>
+
+<p>Gets the current language.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Set language
+<p>$this->core->localization->setLang('es');</p>
+
+<p>// Get translated string $message = $this->core->localization->get('welcome_message');</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Complete Example</h2>
+
+<pre><code class="language-php"><?php
+<p>class API extends RESTful { function main() { // Log API call $this->core->logs->add('API endpoint accessed', 'api');</p>
+
+<p>// Check environment if($this->core->is->development()) { $this->core->logs->add('Running in development mode'); }</p>
+
+<p>// Get configuration $timeout = $this->core->config->get('api.timeout', 30); $projectId = $this->core->config->get('core.gcp.project_id');</p>
+
+<p>// Check cache $cacheKey = 'users_' . $this->formParams['filter'] ?? 'all'; $users = $this->core->cache->get($cacheKey);</p>
+
+<p>if($users === null) { // Cache miss - fetch from database $ds = $this->core->loadClass('DataStore', ['Users']); $users = $ds->fetchAll();</p>
+
+<p>// Cache for 5 minutes $this->core->cache->set($cacheKey, $users, 300); }</p>
+
+<p>// Check user session $userId = $this->core->session->get('user_id'); if(!$userId) { return $this->setErrorFromCodelib('security-error'); }</p>
+
+<p>// Log performance $this->core->__p->add('Data fetched', count($users), 'note');</p>
+
+<p>// Return data $this->addReturnData([ 'users' => $users, 'cached' => $users !== null, 'environment' => $this->core->is->development() ? 'dev' : 'prod' ]); } }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/getting-started.html">Getting Started Guide</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+<li><a href="RESTful.html">RESTful Class</a></li>
+<li><a href="../guides/configuration.html">Configuration Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+    <script src="../js/main.js"></script>
+</body>
+</html>

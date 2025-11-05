@@ -1,0 +1,1424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Testing - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Test your APIs and scripts">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link active">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Testing Guide</h1>
+
+<h2>Overview</h2>
+
+<p>Testing is essential for building reliable applications. This guide covers testing strategies and best practices for CloudFramework applications, including:</p>
+
+<ul>
+<li>Unit testing</li>
+<li>Integration testing</li>
+<li>API testing</li>
+<li>Database testing</li>
+<li>GCP service testing</li>
+<li>Load testing</li>
+<li>Continuous integration</li>
+</ul>
+
+<p>---</p>
+
+<h2>Table of Contents</h2>
+
+<ol>
+<li><a href="#testing-setup">Testing Setup</a></li>
+<li><a href="#unit-testing">Unit Testing</a></li>
+<li><a href="#integration-testing">Integration Testing</a></li>
+<li><a href="#api-testing">API Testing</a></li>
+<li><a href="#database-testing">Database Testing</a></li>
+<li><a href="#gcp-services-testing">GCP Services Testing</a></li>
+<li><a href="#mocking-and-test-doubles">Mocking and Test Doubles</a></li>
+<li><a href="#test-automation">Test Automation</a></li>
+<li><a href="#load-testing">Load Testing</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ol>
+
+<p>---</p>
+
+<h2>Testing Setup</h2>
+
+<h3>Install PHPUnit</h3>
+
+<strong>composer.json:</strong>
+
+<pre><code>{
+<p>  "require-dev": {</p>
+<p>    "phpunit/phpunit": "^10.0",</p>
+<p>    "mockery/mockery": "^1.5"</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Install:</strong>
+<pre><code>composer require --dev phpunit/phpunit mockery/mockery</code></pre>
+
+<h3>Project Structure</h3>
+
+<pre><code>project/
+<p>├── app/</p>
+<p>│   ├── api/</p>
+<p>│   └── scripts/</p>
+<p>├── tests/</p>
+<p>│   ├── Unit/</p>
+<p>│   │   ├── UserTest.php</p>
+<p>│   │   └── HelperTest.php</p>
+<p>│   ├── Integration/</p>
+<p>│   │   ├── DataStoreTest.php</p>
+<p>│   │   └── CloudSQLTest.php</p>
+<p>│   └── Feature/</p>
+<p>│       ├── UserAPITest.php</p>
+<p>│       └── AuthTest.php</p>
+<p>├── phpunit.xml</p>
+<p>└── composer.json</code></pre></p>
+
+<h3>phpunit.xml Configuration</h3>
+
+<pre><code><?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<p>         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"</p>
+<p>         bootstrap="vendor/autoload.php"</p>
+<p>         colors="true"</p>
+<p>         stopOnFailure="false"></p>
+<p>    <testsuites></p>
+<p>        <testsuite name="Unit"></p>
+<p>            <directory>tests/Unit</directory></p>
+<p>        </testsuite></p>
+<p>        <testsuite name="Integration"></p>
+<p>            <directory>tests/Integration</directory></p>
+<p>        </testsuite></p>
+<p>        <testsuite name="Feature"></p>
+<p>            <directory>tests/Feature</directory></p>
+<p>        </testsuite></p>
+<p>    </testsuites></p>
+<p>    <php></p>
+<p>        <env name="APP_ENV" value="testing"/></p>
+<p>        <env name="GCP_PROJECT_ID" value="test-project"/></p>
+<p>        <env name="DB_DATABASE" value="test_database"/></p>
+<p>    </php></p>
+<p>    <coverage includeUncoveredFiles="true"></p>
+<p>        <include></p>
+<p>            <directory suffix=".php">app</directory></p>
+<p>        </include></p>
+<p>        <exclude></p>
+<p>            <directory>vendor</directory></p>
+<p>            <directory>tests</directory></p>
+<p>        </exclude></p>
+<p>    </coverage></p>
+</phpunit></code></pre>
+
+<h3>Run Tests</h3>
+
+<pre><code><h1>Run all tests</h1>
+<p>./vendor/bin/phpunit</p>
+
+<h1>Run specific test suite</h1>
+<p>./vendor/bin/phpunit --testsuite Unit</p>
+
+<h1>Run single test file</h1>
+<p>./vendor/bin/phpunit tests/Unit/UserTest.php</p>
+
+<h1>Run with coverage</h1>
+<p>./vendor/bin/phpunit --coverage-html coverage/</p>
+
+<h1>Run specific test method</h1>
+<p>./vendor/bin/phpunit --filter testUserCreation</code></pre></p>
+
+<p>---</p>
+
+<h2>Unit Testing</h2>
+
+<h3>Basic Unit Test</h3>
+
+<strong>tests/Unit/HelperTest.php:</strong>
+
+<pre><code><?php
+<p>namespace Tests\Unit;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+
+<p>class HelperTest extends TestCase</p>
+<p>{</p>
+<p>    public function testValidateEmail()</p>
+<p>    {</p>
+<p>        $this->assertTrue($this->isValidEmail('user@example.com'));</p>
+<p>        $this->assertFalse($this->isValidEmail('invalid-email'));</p>
+<p>        $this->assertFalse($this->isValidEmail(''));</p>
+<p>    }</p>
+
+<p>    public function testSanitizeString()</p>
+<p>    {</p>
+<p>        $input = '<script>alert("xss")</script>Hello';</p>
+<p>        $expected = 'Hello';</p>
+
+<p>        $result = $this->sanitizeString($input);</p>
+
+<p>        $this->assertEquals($expected, $result);</p>
+<p>    }</p>
+
+<p>    public function testCalculateAge()</p>
+<p>    {</p>
+<p>        $birthdate = '1990-01-01';</p>
+<p>        $age = $this->calculateAge($birthdate);</p>
+
+<p>        $this->assertGreaterThanOrEqual(34, $age);</p>
+<p>        $this->assertIsInt($age);</p>
+<p>    }</p>
+
+<p>    // Helper methods (these would be in your actual application)</p>
+<p>    private function isValidEmail(string $email): bool</p>
+<p>    {</p>
+<p>        return filter_var($email, FILTER_VALIDATE_EMAIL) !== false;</p>
+<p>    }</p>
+
+<p>    private function sanitizeString(string $input): string</p>
+<p>    {</p>
+<p>        return strip_tags($input);</p>
+<p>    }</p>
+
+<p>    private function calculateAge(string $birthdate): int</p>
+<p>    {</p>
+<p>        $birth = new \DateTime($birthdate);</p>
+<p>        $now = new \DateTime();</p>
+<p>        return $birth->diff($now)->y;</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Testing Custom Classes</h3>
+
+<strong>app/class/UserValidator.php:</strong>
+
+<pre><code><?php
+<p>class UserValidator</p>
+<p>{</p>
+<p>    public function validate(array $userData): array</p>
+<p>    {</p>
+<p>        $errors = [];</p>
+
+<p>        if(empty($userData['name'])) {</p>
+<p>            $errors[] = 'Name is required';</p>
+<p>        } elseif(strlen($userData['name']) < 2) {</p>
+<p>            $errors[] = 'Name must be at least 2 characters';</p>
+<p>        }</p>
+
+<p>        if(empty($userData['email'])) {</p>
+<p>            $errors[] = 'Email is required';</p>
+<p>        } elseif(!filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {</p>
+<p>            $errors[] = 'Invalid email format';</p>
+<p>        }</p>
+
+<p>        if(isset($userData['age']) && ($userData['age'] < 18 || $userData['age'] > 120)) {</p>
+<p>            $errors[] = 'Age must be between 18 and 120';</p>
+<p>        }</p>
+
+<p>        return $errors;</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<strong>tests/Unit/UserValidatorTest.php:</strong>
+
+<pre><code><?php
+<p>namespace Tests\Unit;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+
+<p>require_once __DIR__ . '/../../app/class/UserValidator.php';</p>
+
+<p>class UserValidatorTest extends TestCase</p>
+<p>{</p>
+<p>    private $validator;</p>
+
+<p>    protected function setUp(): void</p>
+<p>    {</p>
+<p>        $this->validator = new \UserValidator();</p>
+<p>    }</p>
+
+<p>    public function testValidUserData()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com',</p>
+<p>            'age' => 30</p>
+<p>        ];</p>
+
+<p>        $errors = $this->validator->validate($userData);</p>
+
+<p>        $this->assertEmpty($errors);</p>
+<p>    }</p>
+
+<p>    public function testMissingName()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'email' => 'john@example.com'</p>
+<p>        ];</p>
+
+<p>        $errors = $this->validator->validate($userData);</p>
+
+<p>        $this->assertContains('Name is required', $errors);</p>
+<p>    }</p>
+
+<p>    public function testInvalidEmail()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'invalid-email'</p>
+<p>        ];</p>
+
+<p>        $errors = $this->validator->validate($userData);</p>
+
+<p>        $this->assertContains('Invalid email format', $errors);</p>
+<p>    }</p>
+
+<p>    public function testInvalidAge()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com',</p>
+<p>            'age' => 15</p>
+<p>        ];</p>
+
+<p>        $errors = $this->validator->validate($userData);</p>
+
+<p>        $this->assertContains('Age must be between 18 and 120', $errors);</p>
+<p>    }</p>
+
+<p>    public function testMultipleErrors()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'name' => 'J',</p>
+<p>            'email' => 'invalid',</p>
+<p>            'age' => 200</p>
+<p>        ];</p>
+
+<p>        $errors = $this->validator->validate($userData);</p>
+
+<p>        $this->assertCount(3, $errors);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Integration Testing</h2>
+
+<h3>Testing with Database</h3>
+
+<strong>tests/Integration/UserRepositoryTest.php:</strong>
+
+<pre><code><?php
+<p>namespace Tests\Integration;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+<p>use CloudFramework\Core;</p>
+
+<p>class UserRepositoryTest extends TestCase</p>
+<p>{</p>
+<p>    private $core;</p>
+<p>    private $sql;</p>
+
+<p>    protected function setUp(): void</p>
+<p>    {</p>
+<p>        $this->core = new Core();</p>
+<p>        $this->sql = $this->core->loadClass('CloudSQL', [</p>
+<p>            '127.0.0.1',</p>
+<p>            'root',</p>
+<p>            'password',</p>
+<p>            'test_database'</p>
+<p>        ]);</p>
+
+<p>        // Create test table</p>
+<p>        $this->sql->command("</p>
+<p>            CREATE TABLE IF NOT EXISTS users (</p>
+<p>                id INT AUTO_INCREMENT PRIMARY KEY,</p>
+<p>                name VARCHAR(100),</p>
+<p>                email VARCHAR(100) UNIQUE,</p>
+<p>                age INT,</p>
+<p>                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP</p>
+<p>            )</p>
+<p>        ");</p>
+
+<p>        // Clean table</p>
+<p>        $this->sql->command("TRUNCATE TABLE users");</p>
+<p>    }</p>
+
+<p>    protected function tearDown(): void</p>
+<p>    {</p>
+<p>        // Clean up after each test</p>
+<p>        $this->sql->command("TRUNCATE TABLE users");</p>
+<p>        $this->sql->close();</p>
+<p>    }</p>
+
+<p>    public function testCreateUser()</p>
+<p>    {</p>
+<p>        $result = $this->sql->command(</p>
+<p>            "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",</p>
+<p>            ['John Doe', 'john@example.com', 30]</p>
+<p>        );</p>
+
+<p>        $this->assertNotFalse($result);</p>
+
+<p>        $userId = $this->sql->getInsertId();</p>
+<p>        $this->assertGreaterThan(0, $userId);</p>
+
+<p>        // Verify user was created</p>
+<p>        $users = $this->sql->command("SELECT * FROM users WHERE id = ?", [$userId]);</p>
+<p>        $this->assertCount(1, $users);</p>
+<p>        $this->assertEquals('John Doe', $users[0]['name']);</p>
+<p>    }</p>
+
+<p>    public function testDuplicateEmail()</p>
+<p>    {</p>
+<p>        // Insert first user</p>
+<p>        $this->sql->command(</p>
+<p>            "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",</p>
+<p>            ['John Doe', 'john@example.com', 30]</p>
+<p>        );</p>
+
+<p>        // Try to insert duplicate email</p>
+<p>        $this->sql->command(</p>
+<p>            "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",</p>
+<p>            ['Jane Doe', 'john@example.com', 25]</p>
+<p>        );</p>
+
+<p>        // Should have error</p>
+<p>        $this->assertTrue($this->sql->error());</p>
+<p>    }</p>
+
+<p>    public function testUpdateUser()</p>
+<p>    {</p>
+<p>        // Create user</p>
+<p>        $this->sql->command(</p>
+<p>            "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",</p>
+<p>            ['John Doe', 'john@example.com', 30]</p>
+<p>        );</p>
+<p>        $userId = $this->sql->getInsertId();</p>
+
+<p>        // Update user</p>
+<p>        $this->sql->command(</p>
+<p>            "UPDATE users SET name = ?, age = ? WHERE id = ?",</p>
+<p>            ['John Smith', 31, $userId]</p>
+<p>        );</p>
+
+<p>        // Verify update</p>
+<p>        $users = $this->sql->command("SELECT * FROM users WHERE id = ?", [$userId]);</p>
+<p>        $this->assertEquals('John Smith', $users[0]['name']);</p>
+<p>        $this->assertEquals(31, $users[0]['age']);</p>
+<p>    }</p>
+
+<p>    public function testDeleteUser()</p>
+<p>    {</p>
+<p>        // Create user</p>
+<p>        $this->sql->command(</p>
+<p>            "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",</p>
+<p>            ['John Doe', 'john@example.com', 30]</p>
+<p>        );</p>
+<p>        $userId = $this->sql->getInsertId();</p>
+
+<p>        // Delete user</p>
+<p>        $this->sql->command("DELETE FROM users WHERE id = ?", [$userId]);</p>
+
+<p>        // Verify deletion</p>
+<p>        $users = $this->sql->command("SELECT * FROM users WHERE id = ?", [$userId]);</p>
+<p>        $this->assertEmpty($users);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>API Testing</h2>
+
+<h3>Testing API Endpoints</h3>
+
+<strong>tests/Feature/UserAPITest.php:</strong>
+
+<pre><code><?php
+<p>namespace Tests\Feature;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+
+<p>class UserAPITest extends TestCase</p>
+<p>{</p>
+<p>    private $baseUrl = 'http://localhost:8080';</p>
+<p>    private $apiKey = 'test-api-key';</p>
+
+<p>    public function testListUsers()</p>
+<p>    {</p>
+<p>        $response = $this->get('/api/users');</p>
+
+<p>        $this->assertEquals(200, $response['status']);</p>
+<p>        $this->assertArrayHasKey('data', $response);</p>
+<p>        $this->assertIsArray($response['data']);</p>
+<p>    }</p>
+
+<p>    public function testCreateUser()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com',</p>
+<p>            'age' => 30</p>
+<p>        ];</p>
+
+<p>        $response = $this->post('/api/users/create', $userData);</p>
+
+<p>        $this->assertEquals(201, $response['status']);</p>
+<p>        $this->assertArrayHasKey('data', $response);</p>
+<p>        $this->assertArrayHasKey('KeyId', $response['data']);</p>
+<p>    }</p>
+
+<p>    public function testCreateUserValidation()</p>
+<p>    {</p>
+<p>        $userData = [</p>
+<p>            'name' => 'J', // Too short</p>
+<p>            'email' => 'invalid-email',</p>
+<p>            'age' => 15 // Too young</p>
+<p>        ];</p>
+
+<p>        $response = $this->post('/api/users/create', $userData);</p>
+
+<p>        $this->assertEquals(400, $response['status']);</p>
+<p>        $this->assertArrayHasKey('error', $response);</p>
+<p>    }</p>
+
+<p>    public function testGetUser()</p>
+<p>    {</p>
+<p>        // First create a user</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com',</p>
+<p>            'age' => 30</p>
+<p>        ];</p>
+
+<p>        $createResponse = $this->post('/api/users/create', $userData);</p>
+<p>        $userId = $createResponse['data']['KeyId'];</p>
+
+<p>        // Then fetch it</p>
+<p>        $response = $this->get("/api/users/{$userId}");</p>
+
+<p>        $this->assertEquals(200, $response['status']);</p>
+<p>        $this->assertEquals('John Doe', $response['data']['name']);</p>
+<p>    }</p>
+
+<p>    public function testUpdateUser()</p>
+<p>    {</p>
+<p>        // Create user</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com',</p>
+<p>            'age' => 30</p>
+<p>        ];</p>
+
+<p>        $createResponse = $this->post('/api/users/create', $userData);</p>
+<p>        $userId = $createResponse['data']['KeyId'];</p>
+
+<p>        // Update user</p>
+<p>        $updateData = [</p>
+<p>            'name' => 'John Smith',</p>
+<p>            'age' => 31</p>
+<p>        ];</p>
+
+<p>        $response = $this->put("/api/users/update/{$userId}", $updateData);</p>
+
+<p>        $this->assertEquals(200, $response['status']);</p>
+<p>        $this->assertEquals('John Smith', $response['data']['name']);</p>
+<p>    }</p>
+
+<p>    public function testDeleteUser()</p>
+<p>    {</p>
+<p>        // Create user</p>
+<p>        $userData = [</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com',</p>
+<p>            'age' => 30</p>
+<p>        ];</p>
+
+<p>        $createResponse = $this->post('/api/users/create', $userData);</p>
+<p>        $userId = $createResponse['data']['KeyId'];</p>
+
+<p>        // Delete user</p>
+<p>        $response = $this->delete("/api/users/delete/{$userId}");</p>
+
+<p>        $this->assertEquals(204, $response['status']);</p>
+
+<p>        // Verify user is deleted</p>
+<p>        $getResponse = $this->get("/api/users/{$userId}");</p>
+<p>        $this->assertEquals(404, $getResponse['status']);</p>
+<p>    }</p>
+
+<p>    public function testUnauthorizedAccess()</p>
+<p>    {</p>
+<p>        $response = $this->getWithoutAuth('/api/users');</p>
+
+<p>        $this->assertEquals(401, $response['status']);</p>
+<p>    }</p>
+
+<p>    // Helper methods</p>
+<p>    private function get(string $path): array</p>
+<p>    {</p>
+<p>        return $this->request('GET', $path);</p>
+<p>    }</p>
+
+<p>    private function post(string $path, array $data): array</p>
+<p>    {</p>
+<p>        return $this->request('POST', $path, $data);</p>
+<p>    }</p>
+
+<p>    private function put(string $path, array $data): array</p>
+<p>    {</p>
+<p>        return $this->request('PUT', $path, $data);</p>
+<p>    }</p>
+
+<p>    private function delete(string $path): array</p>
+<p>    {</p>
+<p>        return $this->request('DELETE', $path);</p>
+<p>    }</p>
+
+<p>    private function request(string $method, string $path, array $data = []): array</p>
+<p>    {</p>
+<p>        $url = $this->baseUrl . $path;</p>
+
+<p>        $ch = curl_init($url);</p>
+<p>        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);</p>
+<p>        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);</p>
+<p>        curl_setopt($ch, CURLOPT_HTTPHEADER, [</p>
+<p>            'Content-Type: application/json',</p>
+<p>            'X-API-Key: ' . $this->apiKey</p>
+<p>        ]);</p>
+
+<p>        if(!empty($data)) {</p>
+<p>            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));</p>
+<p>        }</p>
+
+<p>        $response = curl_exec($ch);</p>
+<p>        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);</p>
+<p>        curl_close($ch);</p>
+
+<p>        return [</p>
+<p>            'status' => $statusCode,</p>
+<p>            ...(json_decode($response, true) ?? [])</p>
+<p>        ];</p>
+<p>    }</p>
+
+<p>    private function getWithoutAuth(string $path): array</p>
+<p>    {</p>
+<p>        $url = $this->baseUrl . $path;</p>
+
+<p>        $ch = curl_init($url);</p>
+<p>        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);</p>
+
+<p>        $response = curl_exec($ch);</p>
+<p>        $statusCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);</p>
+<p>        curl_close($ch);</p>
+
+<p>        return [</p>
+<p>            'status' => $statusCode,</p>
+<p>            ...(json_decode($response, true) ?? [])</p>
+<p>        ];</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Testing with cURL</h3>
+
+<pre><code><h1>Test GET endpoint</h1>
+<p>curl -X GET http://localhost:8080/api/users \</p>
+<p>  -H "X-API-Key: your-api-key"</p>
+
+<h1>Test POST endpoint</h1>
+<p>curl -X POST http://localhost:8080/api/users/create \</p>
+<p>  -H "Content-Type: application/json" \</p>
+<p>  -H "X-API-Key: your-api-key" \</p>
+<p>  -d '{</p>
+<p>    "name": "John Doe",</p>
+<p>    "email": "john@example.com",</p>
+<p>    "age": 30</p>
+<p>  }'</p>
+
+<h1>Test PUT endpoint</h1>
+<p>curl -X PUT http://localhost:8080/api/users/update/12345 \</p>
+<p>  -H "Content-Type: application/json" \</p>
+<p>  -H "X-API-Key: your-api-key" \</p>
+<p>  -d '{</p>
+<p>    "name": "John Smith",</p>
+<p>    "age": 31</p>
+<p>  }'</p>
+
+<h1>Test DELETE endpoint</h1>
+<p>curl -X DELETE http://localhost:8080/api/users/delete/12345 \</p>
+<p>  -H "X-API-Key: your-api-key"</p>
+
+<h1>Test with JWT token</h1>
+<p>curl -X GET http://localhost:8080/api/users \</p>
+<p>  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."</p>
+
+<h1>Save response to file</h1>
+<p>curl -X GET http://localhost:8080/api/users \</p>
+<p>  -H "X-API-Key: your-api-key" \</p>
+<p>  -o response.json</p>
+
+<h1>Show response headers</h1>
+<p>curl -X GET http://localhost:8080/api/users \</p>
+<p>  -H "X-API-Key: your-api-key" \</p>
+<p>  -i</code></pre></p>
+
+<p>---</p>
+
+<h2>Database Testing</h2>
+
+<h3>DataStore Testing</h3>
+
+<strong>tests/Integration/DataStoreTest.php:</strong>
+
+<pre><code><?php
+<p>namespace Tests\Integration;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+<p>use CloudFramework\Core;</p>
+
+<p>class DataStoreTest extends TestCase</p>
+<p>{</p>
+<p>    private $core;</p>
+<p>    private $ds;</p>
+<p>    private $testEntityIds = [];</p>
+
+<p>    protected function setUp(): void</p>
+<p>    {</p>
+<p>        $this->core = new Core();</p>
+<p>        $this->ds = $this->core->loadClass('DataStore', ['TestUsers']);</p>
+<p>    }</p>
+
+<p>    protected function tearDown(): void</p>
+<p>    {</p>
+<p>        // Clean up test entities</p>
+<p>        foreach($this->testEntityIds as $id) {</p>
+<p>            $this->ds->delete($id);</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    public function testCreateEntity()</p>
+<p>    {</p>
+<p>        $entityData = [</p>
+<p>            'name' => 'Test User',</p>
+<p>            'email' => 'test@example.com',</p>
+<p>            'age' => 30</p>
+<p>        ];</p>
+
+<p>        $entityId = $this->ds->createEntity($entityData);</p>
+<p>        $this->testEntityIds[] = $entityId;</p>
+
+<p>        $this->assertNotEmpty($entityId);</p>
+<p>        $this->assertIsString($entityId);</p>
+<p>    }</p>
+
+<p>    public function testFetchOne()</p>
+<p>    {</p>
+<p>        // Create entity</p>
+<p>        $entityData = [</p>
+<p>            'name' => 'Test User',</p>
+<p>            'email' => 'test@example.com'</p>
+<p>        ];</p>
+
+<p>        $entityId = $this->ds->createEntity($entityData);</p>
+<p>        $this->testEntityIds[] = $entityId;</p>
+
+<p>        // Fetch entity</p>
+<p>        $entity = $this->ds->fetchOne($entityId);</p>
+
+<p>        $this->assertNotNull($entity);</p>
+<p>        $this->assertEquals('Test User', $entity['name']);</p>
+<p>        $this->assertEquals($entityId, $entity['KeyId']);</p>
+<p>    }</p>
+
+<p>    public function testFetchAll()</p>
+<p>    {</p>
+<p>        // Create multiple entities</p>
+<p>        for($i = 0; $i < 5; $i++) {</p>
+<p>            $id = $this->ds->createEntity([</p>
+<p>                'name' => "User {$i}",</p>
+<p>                'age' => 20 + $i</p>
+<p>            ]);</p>
+<p>            $this->testEntityIds[] = $id;</p>
+<p>        }</p>
+
+<p>        // Fetch all</p>
+<p>        $entities = $this->ds->fetchAll();</p>
+
+<p>        $this->assertGreaterThanOrEqual(5, count($entities));</p>
+<p>    }</p>
+
+<p>    public function testFetchAllWithFilter()</p>
+<p>    {</p>
+<p>        // Create entities with different ages</p>
+<p>        $id1 = $this->ds->createEntity(['name' => 'Young User', 'age' => 20]);</p>
+<p>        $id2 = $this->ds->createEntity(['name' => 'Old User', 'age' => 50]);</p>
+
+<p>        $this->testEntityIds[] = $id1;</p>
+<p>        $this->testEntityIds[] = $id2;</p>
+
+<p>        // Fetch with filter</p>
+<p>        $entities = $this->ds->fetchAll([['age', '>', 30]]);</p>
+
+<p>        $filtered = array_filter($entities, fn($e) => $e['KeyId'] === $id2);</p>
+<p>        $this->assertNotEmpty($filtered);</p>
+<p>    }</p>
+
+<p>    public function testUpdateEntity()</p>
+<p>    {</p>
+<p>        // Create entity</p>
+<p>        $entityId = $this->ds->createEntity([</p>
+<p>            'name' => 'Original Name',</p>
+<p>            'age' => 30</p>
+<p>        ]);</p>
+<p>        $this->testEntityIds[] = $entityId;</p>
+
+<p>        // Update entity</p>
+<p>        $this->ds->updateEntity($entityId, [</p>
+<p>            'name' => 'Updated Name',</p>
+<p>            'age' => 31</p>
+<p>        ]);</p>
+
+<p>        // Fetch and verify</p>
+<p>        $entity = $this->ds->fetchOne($entityId);</p>
+
+<p>        $this->assertEquals('Updated Name', $entity['name']);</p>
+<p>        $this->assertEquals(31, $entity['age']);</p>
+<p>    }</p>
+
+<p>    public function testDeleteEntity()</p>
+<p>    {</p>
+<p>        // Create entity</p>
+<p>        $entityId = $this->ds->createEntity([</p>
+<p>            'name' => 'To Delete',</p>
+<p>            'age' => 30</p>
+<p>        ]);</p>
+
+<p>        // Delete entity</p>
+<p>        $result = $this->ds->delete($entityId);</p>
+
+<p>        $this->assertTrue($result);</p>
+
+<p>        // Verify deletion</p>
+<p>        $entity = $this->ds->fetchOne($entityId);</p>
+<p>        $this->assertNull($entity);</p>
+<p>    }</p>
+
+<p>    public function testCount()</p>
+<p>    {</p>
+<p>        // Create entities</p>
+<p>        for($i = 0; $i < 3; $i++) {</p>
+<p>            $id = $this->ds->createEntity(['name' => "User {$i}"]);</p>
+<p>            $this->testEntityIds[] = $id;</p>
+<p>        }</p>
+
+<p>        // Count all</p>
+<p>        $count = $this->ds->count();</p>
+
+<p>        $this->assertGreaterThanOrEqual(3, $count);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>GCP Services Testing</h2>
+
+<h3>Cloud Storage Testing</h3>
+
+<strong>tests/Integration/BucketsTest.php:</strong>
+
+<pre><code><?php
+<p>namespace Tests\Integration;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+<p>use CloudFramework\Core;</p>
+
+<p>class BucketsTest extends TestCase</p>
+<p>{</p>
+<p>    private $core;</p>
+<p>    private $buckets;</p>
+<p>    private $testFiles = [];</p>
+
+<p>    protected function setUp(): void</p>
+<p>    {</p>
+<p>        $this->core = new Core();</p>
+<p>        $this->buckets = $this->core->loadClass('Buckets', ['gs://test-bucket']);</p>
+<p>    }</p>
+
+<p>    protected function tearDown(): void</p>
+<p>    {</p>
+<p>        // Clean up test files</p>
+<p>        foreach($this->testFiles as $file) {</p>
+<p>            $this->buckets->delete($file);</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    public function testUploadFile()</p>
+<p>    {</p>
+<p>        $testContent = 'Test file content';</p>
+<p>        $testFile = 'test/test-file.txt';</p>
+
+<p>        $result = $this->buckets->uploadContents($testContent, $testFile);</p>
+<p>        $this->testFiles[] = $testFile;</p>
+
+<p>        $this->assertTrue($result);</p>
+<p>    }</p>
+
+<p>    public function testGetContents()</p>
+<p>    {</p>
+<p>        $testContent = 'Test file content';</p>
+<p>        $testFile = 'test/test-file.txt';</p>
+
+<p>        $this->buckets->uploadContents($testContent, $testFile);</p>
+<p>        $this->testFiles[] = $testFile;</p>
+
+<p>        $contents = $this->buckets->getContents($testFile);</p>
+
+<p>        $this->assertEquals($testContent, $contents);</p>
+<p>    }</p>
+
+<p>    public function testFileExists()</p>
+<p>    {</p>
+<p>        $testFile = 'test/test-file.txt';</p>
+
+<p>        $this->buckets->uploadContents('content', $testFile);</p>
+<p>        $this->testFiles[] = $testFile;</p>
+
+<p>        $exists = $this->buckets->fileExists($testFile);</p>
+
+<p>        $this->assertTrue($exists);</p>
+<p>    }</p>
+
+<p>    public function testDeleteFile()</p>
+<p>    {</p>
+<p>        $testFile = 'test/test-file.txt';</p>
+
+<p>        $this->buckets->uploadContents('content', $testFile);</p>
+
+<p>        $result = $this->buckets->delete($testFile);</p>
+
+<p>        $this->assertTrue($result);</p>
+<p>        $this->assertFalse($this->buckets->fileExists($testFile));</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Mocking and Test Doubles</h2>
+
+<h3>Mocking DataStore</h3>
+
+<pre><code><?php
+<p>namespace Tests\Unit;</p>
+
+<p>use PHPUnit\Framework\TestCase;</p>
+<p>use Mockery;</p>
+
+<p>class UserServiceTest extends TestCase</p>
+<p>{</p>
+<p>    protected function tearDown(): void</p>
+<p>    {</p>
+<p>        Mockery::close();</p>
+<p>    }</p>
+
+<p>    public function testGetUserById()</p>
+<p>    {</p>
+<p>        // Mock DataStore</p>
+<p>        $mockDataStore = Mockery::mock('DataStore');</p>
+<p>        $mockDataStore->shouldReceive('fetchOne')</p>
+<p>            ->once()</p>
+<p>            ->with('user123')</p>
+<p>            ->andReturn([</p>
+<p>                'KeyId' => 'user123',</p>
+<p>                'name' => 'John Doe',</p>
+<p>                'email' => 'john@example.com'</p>
+<p>            ]);</p>
+
+<p>        // Test service with mock</p>
+<p>        $user = $mockDataStore->fetchOne('user123');</p>
+
+<p>        $this->assertEquals('user123', $user['KeyId']);</p>
+<p>        $this->assertEquals('John Doe', $user['name']);</p>
+<p>    }</p>
+
+<p>    public function testGetUserNotFound()</p>
+<p>    {</p>
+<p>        // Mock DataStore returning null</p>
+<p>        $mockDataStore = Mockery::mock('DataStore');</p>
+<p>        $mockDataStore->shouldReceive('fetchOne')</p>
+<p>            ->once()</p>
+<p>            ->with('nonexistent')</p>
+<p>            ->andReturn(null);</p>
+
+<p>        $user = $mockDataStore->fetchOne('nonexistent');</p>
+
+<p>        $this->assertNull($user);</p>
+<p>    }</p>
+
+<p>    public function testCreateUser()</p>
+<p>    {</p>
+<p>        // Mock DataStore</p>
+<p>        $mockDataStore = Mockery::mock('DataStore');</p>
+<p>        $mockDataStore->shouldReceive('createEntity')</p>
+<p>            ->once()</p>
+<p>            ->with(['name' => 'John Doe', 'email' => 'john@example.com'])</p>
+<p>            ->andReturn('new-user-id');</p>
+
+<p>        $userId = $mockDataStore->createEntity([</p>
+<p>            'name' => 'John Doe',</p>
+<p>            'email' => 'john@example.com'</p>
+<p>        ]);</p>
+
+<p>        $this->assertEquals('new-user-id', $userId);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Test Automation</h2>
+
+<h3>GitHub Actions CI</h3>
+
+<strong>.github/workflows/tests.yml:</strong>
+
+<pre><code>name: Tests
+
+<p>on:</p>
+<p>  push:</p>
+<p>    branches: [ main, develop ]</p>
+<p>  pull_request:</p>
+<p>    branches: [ main, develop ]</p>
+
+<p>jobs:</p>
+<p>  test:</p>
+<p>    runs-on: ubuntu-latest</p>
+
+<p>    services:</p>
+<p>      mysql:</p>
+<p>        image: mysql:8.0</p>
+<p>        env:</p>
+<p>          MYSQL_ROOT_PASSWORD: password</p>
+<p>          MYSQL_DATABASE: test_database</p>
+<p>        ports:</p>
+<ul>
+<li>3306:3306</li>
+</ul>
+<p>        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3</p>
+
+<p>    steps:</p>
+<ul>
+<li>uses: actions/checkout@v3</li>
+</ul>
+
+<ul>
+<li>name: Setup PHP</li>
+</ul>
+<p>        uses: shivammathur/setup-php@v2</p>
+<p>        with:</p>
+<p>          php-version: '8.3'</p>
+<p>          extensions: pdo, pdo_mysql, mbstring</p>
+
+<ul>
+<li>name: Install dependencies</li>
+</ul>
+<p>        run: composer install --prefer-dist --no-progress</p>
+
+<ul>
+<li>name: Run Unit Tests</li>
+</ul>
+<p>        run: ./vendor/bin/phpunit --testsuite Unit</p>
+
+<ul>
+<li>name: Run Integration Tests</li>
+</ul>
+<p>        run: ./vendor/bin/phpunit --testsuite Integration</p>
+<p>        env:</p>
+<p>          DB_HOST: 127.0.0.1</p>
+<p>          DB_PASSWORD: password</p>
+<p>          DB_DATABASE: test_database</p>
+
+<ul>
+<li>name: Generate Coverage Report</li>
+</ul>
+<p>        run: ./vendor/bin/phpunit --coverage-clover coverage.xml</p>
+
+<ul>
+<li>name: Upload Coverage</li>
+</ul>
+<p>        uses: codecov/codecov-action@v3</p>
+<p>        with:</p>
+<p>          files: ./coverage.xml</code></pre></p>
+
+<h3>Pre-commit Hook</h3>
+
+<strong>.git/hooks/pre-commit:</strong>
+
+<pre><code>#!/bin/bash
+
+<p>echo "Running tests before commit..."</p>
+
+<h1>Run PHPUnit tests</h1>
+<p>./vendor/bin/phpunit --testsuite Unit</p>
+
+<p>if [ $? -ne 0 ]; then</p>
+<p>    echo "Tests failed. Commit aborted."</p>
+<p>    exit 1</p>
+<p>fi</p>
+
+<p>echo "All tests passed!"</p>
+<p>exit 0</code></pre></p>
+
+<p>Make executable:</p>
+<pre><code>chmod +x .git/hooks/pre-commit</code></pre>
+
+<p>---</p>
+
+<h2>Load Testing</h2>
+
+<h3>Apache Bench</h3>
+
+<pre><code><h1>Simple load test</h1>
+<p>ab -n 1000 -c 10 http://localhost:8080/api/users</p>
+
+<h1>With authentication</h1>
+<p>ab -n 1000 -c 10 -H "X-API-Key: test-key" http://localhost:8080/api/users</p>
+
+<h1>POST request</h1>
+<p>ab -n 100 -c 10 -p data.json -T application/json \</p>
+<p>  -H "X-API-Key: test-key" \</p>
+<p>  http://localhost:8080/api/users/create</code></pre></p>
+
+<strong>data.json:</strong>
+<pre><code>{
+<p>  "name": "Test User",</p>
+<p>  "email": "test@example.com",</p>
+<p>  "age": 30</p>
+<p>}</code></pre></p>
+
+<h3>Using Apache JMeter</h3>
+
+<ol>
+<li>Download JMeter: https://jmeter.apache.org/</li>
+<li>Create test plan with HTTP Request samplers</li>
+<li>Configure thread groups for concurrent users</li>
+<li>Add listeners for results</li>
+</ol>
+
+<h3>Load Testing with K6</h3>
+
+<strong>load-test.js:</strong>
+
+<pre><code>import http from 'k6/http';
+<p>import { check, sleep } from 'k6';</p>
+
+<p>export let options = {</p>
+<p>  stages: [</p>
+<p>    { duration: '30s', target: 20 },  // Ramp up to 20 users</p>
+<p>    { duration: '1m', target: 20 },   // Stay at 20 users</p>
+<p>    { duration: '30s', target: 0 },   // Ramp down to 0 users</p>
+<p>  ],</p>
+<p>};</p>
+
+<p>export default function () {</p>
+<p>  let response = http.get('http://localhost:8080/api/users', {</p>
+<p>    headers: { 'X-API-Key': 'test-key' },</p>
+<p>  });</p>
+
+<p>  check(response, {</p>
+<p>    'status is 200': (r) => r.status === 200,</p>
+<p>    'response time < 500ms': (r) => r.timings.duration < 500,</p>
+<p>  });</p>
+
+<p>  sleep(1);</p>
+<p>}</code></pre></p>
+
+<strong>Run:</strong>
+<pre><code>k6 run load-test.js</code></pre>
+
+<p>---</p>
+
+<h2>Best Practices</h2>
+
+<h3>1. Write Testable Code</h3>
+
+<strong>Bad:</strong>
+<pre><code>public function ENDPOINT_users()
+<p>{</p>
+<p>    $sql = new CloudSQL('host', 'user', 'pass', 'db');</p>
+<p>    $users = $sql->command("SELECT * FROM users");</p>
+<p>    $this->addReturnData($users);</p>
+<p>}</code></pre></p>
+
+<strong>Good:</strong>
+<pre><code>public function ENDPOINT_users()
+<p>{</p>
+<p>    $users = $this->getUsersFromDatabase();</p>
+<p>    $this->addReturnData($users);</p>
+<p>}</p>
+
+<p>protected function getUsersFromDatabase(): array</p>
+<p>{</p>
+<p>    $sql = $this->core->loadClass('CloudSQL');</p>
+<p>    return $sql->command("SELECT * FROM users");</p>
+<p>}</code></pre></p>
+
+<h3>2. Use Test Data Builders</h3>
+
+<pre><code>class UserBuilder
+<p>{</p>
+<p>    private $data = [</p>
+<p>        'name' => 'Test User',</p>
+<p>        'email' => 'test@example.com',</p>
+<p>        'age' => 30</p>
+<p>    ];</p>
+
+<p>    public function withName(string $name): self</p>
+<p>    {</p>
+<p>        $this->data['name'] = $name;</p>
+<p>        return $this;</p>
+<p>    }</p>
+
+<p>    public function withEmail(string $email): self</p>
+<p>    {</p>
+<p>        $this->data['email'] = $email;</p>
+<p>        return $this;</p>
+<p>    }</p>
+
+<p>    public function withAge(int $age): self</p>
+<p>    {</p>
+<p>        $this->data['age'] = $age;</p>
+<p>        return $this;</p>
+<p>    }</p>
+
+<p>    public function build(): array</p>
+<p>    {</p>
+<p>        return $this->data;</p>
+<p>    }</p>
+<p>}</p>
+
+<p>// Usage in tests</p>
+<p>$user = (new UserBuilder())</p>
+<p>    ->withName('John Doe')</p>
+<p>    ->withAge(25)</p>
+<p>    ->build();</code></pre></p>
+
+<h3>3. Separate Test Data</h3>
+
+<p>Create a fixtures directory:</p>
+
+<strong>tests/fixtures/users.json:</strong>
+<pre><code>[
+<p>  {</p>
+<p>    "name": "John Doe",</p>
+<p>    "email": "john@example.com",</p>
+<p>    "age": 30</p>
+<p>  },</p>
+<p>  {</p>
+<p>    "name": "Jane Smith",</p>
+<p>    "email": "jane@example.com",</p>
+<p>    "age": 25</p>
+<p>  }</p>
+<p>]</code></pre></p>
+
+<strong>Load in tests:</strong>
+<pre><code>protected function loadFixture(string $name): array
+<p>{</p>
+<p>    $file = __DIR__ . "/../fixtures/{$name}.json";</p>
+<p>    return json_decode(file_get_contents($file), true);</p>
+<p>}</code></pre></p>
+
+<h3>4. Test Edge Cases</h3>
+
+<pre><code>public function testEmptyInput()
+<p>{</p>
+<p>    // Test with empty data</p>
+<p>}</p>
+
+<p>public function testNullInput()</p>
+<p>{</p>
+<p>    // Test with null values</p>
+<p>}</p>
+
+<p>public function testVeryLargeInput()</p>
+<p>{</p>
+<p>    // Test with large data sets</p>
+<p>}</p>
+
+<p>public function testSpecialCharacters()</p>
+<p>{</p>
+<p>    // Test with special characters</p>
+<p>}</p>
+
+<p>public function testBoundaryValues()</p>
+<p>{</p>
+<p>    // Test min/max values</p>
+<p>}</code></pre></p>
+
+<h3>5. Use Descriptive Test Names</h3>
+
+<pre><code>// Good
+<p>public function testUserCannotRegisterWithInvalidEmail() {}</p>
+<p>public function testAdminCanDeleteAnyUser() {}</p>
+<p>public function testRegularUserCanOnlyDeleteOwnAccount() {}</p>
+
+<p>// Bad</p>
+<p>public function testUser1() {}</p>
+<p>public function testDelete() {}</code></pre></p>
+
+<h3>6. One Assert Per Test (when possible)</h3>
+
+<pre><code>// Good - focused test
+<p>public function testUserNameIsRequired()</p>
+<p>{</p>
+<p>    $errors = $this->validator->validate(['email' => 'test@example.com']);</p>
+<p>    $this->assertContains('Name is required', $errors);</p>
+<p>}</p>
+
+<p>// Also good - related asserts</p>
+<p>public function testUserCreation()</p>
+<p>{</p>
+<p>    $user = $this->createUser(['name' => 'John']);</p>
+<p>    $this->assertNotNull($user['id']);</p>
+<p>    $this->assertEquals('John', $user['name']);</p>
+<p>}</code></pre></p>
+
+<h3>7. Clean Up After Tests</h3>
+
+<pre><code>protected function tearDown(): void
+<p>{</p>
+<p>    // Clean database</p>
+<p>    // Remove test files</p>
+<p>    // Clear cache</p>
+<p>    // Close connections</p>
+
+<p>    parent::tearDown();</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="api-development.html">API Development Guide</a></li>
+<li><a href="security.html">Security Guide</a></li>
+<li><a href="configuration.html">Configuration Guide</a></li>
+<li><a href="deployment.html">Deployment Guide</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

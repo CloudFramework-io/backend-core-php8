@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Class - CloudFramework Backend Core PHP8</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CloudFramework</h2>
+                <p>Backend Core PHP8</p>
+            </div>
+            <nav>
+                <a href="../index.html">Home</a>
+                <h3>Core Classes</h3>
+                <a href="Core7.html">Core7</a>
+                <a href="RESTful.html">RESTful</a>
+                <a href="Scripts2020.html">Scripts2020</a>
+                <h3>Configuration & Security</h3>
+                <a href="CoreConfig.html">CoreConfig</a>
+                <a href="CoreCache.html">CoreCache</a>
+                <a href="CoreSession.html">CoreSession</a>
+                <a href="CoreSecurity.html">CoreSecurity</a>
+                <h3>Data Storage</h3>
+                <a href="DataStore.html">DataStore</a>
+                <a href="Buckets.html">Buckets</a>
+                <a href="DataBQ.html">DataBQ</a>
+                <a href="CloudSQL.html">CloudSQL</a>
+                <a href="DataSQL.html">DataSQL</a>
+                <a href="DataMongoDB.html">DataMongoDB</a>
+                <h3>Utilities</h3>
+                <a href="Email.html" class="active">Email</a>
+                <a href="DataValidation.html">DataValidation</a>
+                <a href="WorkFlows.html">WorkFlows</a>
+                <h3>GCP Integration</h3>
+                <a href="GoogleSecrets.html">GoogleSecrets</a>
+                <a href="PubSub.html">PubSub</a>
+            </nav>
+        </aside>
+        <main class="content">
+<h1>Email Class</h1>
+
+<h2>Overview</h2>
+
+<p>The <code>Email</code> class provides email sending functionality with support for SendGrid integration. It offers a fluent API for building and sending emails with attachments, templates, and multiple recipients.</p>
+
+<h2>Loading the Class</h2>
+
+<pre><code class="language-php">$email = $this->core->loadClass('Email');
+</code></pre>
+
+<h2>Main Methods</h2>
+
+<h3>setTo()</h3>
+
+<pre><code class="language-php">public function setTo($email): self
+</code></pre>
+
+<p>Sets the primary recipient email address.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email = $this->core->loadClass('Email');
+<p>$email->setTo('user@example.com');</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>addTo()</h3>
+
+<pre><code class="language-php">public function addTo($email, $name = null): self
+</code></pre>
+
+<p>Adds a recipient (supports multiple recipients).</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email->addTo('user@example.com', 'John Doe');
+<p>$email->addTo('another@example.com');</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>setFrom()</h3>
+
+<pre><code class="language-php">public function setFrom($email): self
+</code></pre>
+
+<p>Sets the sender email address.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email->setFrom('noreply@myapp.com');
+</code></pre>
+
+<p>---</p>
+
+<h3>setFromName()</h3>
+
+<pre><code class="language-php">public function setFromName($name): self
+</code></pre>
+
+<p>Sets the sender name.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email->setFromName('My Application');
+</code></pre>
+
+<p>---</p>
+
+<h3>setReplyTo()</h3>
+
+<pre><code class="language-php">public function setReplyTo($email): self
+</code></pre>
+
+<p>Sets the reply-to email address.</p>
+
+<p>---</p>
+
+<h3>setSubject()</h3>
+
+<pre><code class="language-php">public function setSubject($subject): self
+</code></pre>
+
+<p>Sets the email subject.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email->setSubject('Welcome to My App');
+</code></pre>
+
+<p>---</p>
+
+<h3>setHtml()</h3>
+
+<pre><code class="language-php">public function setHtml($html): self
+</code></pre>
+
+<p>Sets the HTML body of the email.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$html = '<h1>Welcome!</h1><p>Thanks for joining our platform.</p>';
+<p>$email->setHtml($html);</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>setText()</h3>
+
+<pre><code class="language-php">public function setText($text): self
+</code></pre>
+
+<p>Sets the plain text body.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email->setText('Welcome! Thanks for joining our platform.');
+</code></pre>
+
+<p>---</p>
+
+<h3>addCc()</h3>
+
+<pre><code class="language-php">public function addCc($email): self
+</code></pre>
+
+<p>Adds a CC recipient.</p>
+
+<p>---</p>
+
+<h3>addBcc()</h3>
+
+<pre><code class="language-php">public function addBcc($email): self
+</code></pre>
+
+<p>Adds a BCC recipient.</p>
+
+<p>---</p>
+
+<h3>addAttachment()</h3>
+
+<pre><code class="language-php">public function addAttachment($path, $name = null): self
+</code></pre>
+
+<p>Attaches a file to the email.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): File path</li>
+<li><code>$name</code> (string|null): Optional file name</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$email->addAttachment('/path/to/document.pdf', 'invoice.pdf');
+</code></pre>
+
+<p>---</p>
+
+<h3>send()</h3>
+
+<pre><code class="language-php">public function send(): bool
+</code></pre>
+
+<p>Sends the email.</p>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($email->send()) {
+<p>// Email sent successfully } else { // Handle error }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>Simple Email</h3>
+
+<pre><code class="language-php">$email = $this->core->loadClass('Email');
+<p>$email->setFrom('noreply@myapp.com') ->setFromName('My Application') ->setTo('user@example.com') ->setSubject('Welcome!') ->setHtml('<h1>Welcome!</h1><p>Thanks for joining.</p>') ->send();</p>
+</code></pre>
+
+<h3>Email with Multiple Recipients</h3>
+
+<pre><code class="language-php">$email = $this->core->loadClass('Email');
+<p>$email->setFrom('noreply@myapp.com') ->setSubject('Team Announcement') ->addTo('user1@example.com', 'User One') ->addTo('user2@example.com', 'User Two') ->addCc('manager@example.com') ->setHtml('<p>Important team update...</p>') ->send();</p>
+</code></pre>
+
+<h3>Email with Attachment</h3>
+
+<pre><code class="language-php">$email = $this->core->loadClass('Email');
+<p>$email->setFrom('billing@myapp.com') ->setTo($user['email']) ->setSubject('Your Invoice') ->setHtml('<p>Please find your invoice attached.</p>') ->addAttachment('/tmp/invoice-' . $invoiceId . '.pdf', 'invoice.pdf') ->send();</p>
+</code></pre>
+
+<h3>Template-Based Email</h3>
+
+<pre><code class="language-php">$email = $this->core->loadClass('Email');
+
+<p>// Load template $template = file_get_contents($this->core->system->app_path . '/templates/welcome-email.html');</p>
+
+<p>// Replace placeholders $html = str_replace([ '{{name}}', '{{email}}', '{{activation_link}}' ], [ $user['name'], $user['email'], 'https://myapp.com/activate?token=' . $token ], $template);</p>
+
+<p>$email->setFrom('noreply@myapp.com') ->setTo($user['email']) ->setSubject('Activate Your Account') ->setHtml($html) ->send();</p>
+</code></pre>
+
+<h3>Transactional Emails</h3>
+
+<pre><code class="language-php">// Order confirmation
+<p>public function sendOrderConfirmation($orderId, $userEmail) { $order = $this->getOrder($orderId);</p>
+
+<p>$email = $this->core->loadClass('Email'); $email->setFrom('orders@myapp.com') ->setFromName('My Shop') ->setTo($userEmail) ->setSubject('Order Confirmation #' . $orderId) ->setHtml($this->buildOrderEmailHtml($order)) ->send(); }</p>
+
+<p>// Password reset public function sendPasswordReset($userEmail, $resetToken) { $resetLink = 'https://myapp.com/reset-password?token=' . $resetToken;</p>
+
+<p>$email = $this->core->loadClass('Email'); $email->setFrom('noreply@myapp.com') ->setTo($userEmail) ->setSubject('Reset Your Password') ->setHtml("</p>
+              <h2>Reset Your Password</h2>
+              <p>Click the link below to reset your password:</p>
+              <p><a href='{$resetLink}'>Reset Password</a></p>
+              <p>This link expires in 1 hour.</p>
+<p>") ->send(); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Configuration</h2>
+
+<p>Configure email settings in <code>config.json</code>:</p>
+
+<pre><code class="language-json">{
+<p>"email.from": "noreply@myapp.com", "email.from_name": "My Application", "sendgrid.api_key": "SG.your-api-key-here" }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+<li><a href="../examples/api-examples.html">API Examples</a></li>
+</ul>
+
+        </main>
+    </div>
+    <script src="../js/main.js"></script>
+</body>
+</html>

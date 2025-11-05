@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudFramework Backend Core PHP8 - Documentation</title>
+    <meta name="description" content="Comprehensive documentation for CloudFramework Backend Core PHP8 - A powerful framework for building scalable backend APIs with Google Cloud Platform integration">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>CloudFramework Backend Core PHP8 - Documentation</h1>
+
+            <p>Welcome to the CloudFramework Backend Core PHP8 documentation. This comprehensive guide will help you build scalable backend APIs and scripts with Google Cloud Platform integration.</p>
+
+            <div class="alert alert-info">
+                <strong>New to CloudFramework?</strong> Start with the <a href="guides/getting-started.html">Getting Started Guide</a> to install and create your first project.
+            </div>
+
+            <h2>Getting Started</h2>
+
+            <div class="card-grid">
+                <div class="card">
+                    <div class="card-title">📦 Installation & Setup</div>
+                    <p>Install the framework and create your first project</p>
+                    <a href="guides/getting-started.html">Read guide →</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">🚀 Your First API</div>
+                    <p>Build a simple RESTful API in minutes</p>
+                    <a href="guides/getting-started.html#your-first-api">Get started →</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-title">⚙️ Configuration</div>
+                    <p>Configure your project and GCP integration</p>
+                    <a href="guides/configuration.html">Learn more →</a>
+                </div>
+            </div>
+
+            <h3>Prerequisites</h3>
+            <ul>
+                <li>PHP 8.3+</li>
+                <li>Composer</li>
+                <li>Basic understanding of REST APIs</li>
+                <li>Google Cloud account (optional, for GCP features)</li>
+            </ul>
+
+            <h2>Development Guides</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Guide</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="guides/getting-started.html"><strong>Getting Started</strong></a></td>
+                        <td>Complete setup and first steps</td>
+                    </tr>
+                    <tr>
+                        <td><a href="guides/api-development.html"><strong>API Development</strong></a></td>
+                        <td>Building robust RESTful APIs</td>
+                    </tr>
+                    <tr>
+                        <td><a href="guides/script-development.html"><strong>Script Development</strong></a></td>
+                        <td>Creating background scripts and CLI tools</td>
+                    </tr>
+                    <tr>
+                        <td><a href="guides/configuration.html"><strong>Configuration</strong></a></td>
+                        <td>Framework configuration options</td>
+                    </tr>
+                    <tr>
+                        <td><a href="guides/deployment.html"><strong>Deployment</strong></a></td>
+                        <td>Deploy to App Engine, Cloud Run, etc.</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Integration Guides</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Guide</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="guides/gcp-integration.html"><strong>GCP Integration</strong></a></td>
+                        <td>Working with Google Cloud services</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Best Practices</h2>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Guide</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="guides/security.html"><strong>Security Best Practices</strong></a></td>
+                        <td>Secure your APIs and data</td>
+                    </tr>
+                    <tr>
+                        <td><a href="guides/testing.html"><strong>Testing</strong></a></td>
+                        <td>Test your APIs and scripts</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>API Reference</h2>
+
+            <p>Detailed documentation for all classes and methods:</p>
+
+            <h3>Core Classes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="api-reference/Core7.html"><strong>Core7</strong></a></td>
+                        <td>Main framework class</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/RESTful.html"><strong>RESTful</strong></a></td>
+                        <td>Base class for all APIs</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/Scripts2020.html"><strong>Scripts2020</strong></a></td>
+                        <td>Base class for scripts</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Configuration Classes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="api-reference/CoreConfig.html"><strong>CoreConfig</strong></a></td>
+                        <td>Configuration management</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/CoreCache.html"><strong>CoreCache</strong></a></td>
+                        <td>Caching system</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/CoreSession.html"><strong>CoreSession</strong></a></td>
+                        <td>Session management</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/CoreSecurity.html"><strong>CoreSecurity</strong></a></td>
+                        <td>Security features</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Data Access Classes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="api-reference/DataStore.html"><strong>DataStore</strong></a></td>
+                        <td>Google Cloud Datastore access</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/Buckets.html"><strong>Buckets</strong></a></td>
+                        <td>Google Cloud Storage access</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/DataBQ.html"><strong>DataBQ</strong></a></td>
+                        <td>BigQuery integration</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/CloudSQL.html"><strong>CloudSQL</strong></a></td>
+                        <td>Cloud SQL access</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/DataSQL.html"><strong>DataSQL</strong></a></td>
+                        <td>Generic SQL database access</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/DataMongoDB.html"><strong>DataMongoDB</strong></a></td>
+                        <td>MongoDB integration</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3>Utility Classes</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Class</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><a href="api-reference/Email.html"><strong>Email</strong></a></td>
+                        <td>Email sending functionality</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/DataValidation.html"><strong>DataValidation</strong></a></td>
+                        <td>Data validation utilities</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/WorkFlows.html"><strong>WorkFlows</strong></a></td>
+                        <td>Workflow management</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/GoogleSecrets.html"><strong>GoogleSecrets</strong></a></td>
+                        <td>Secret Manager access</td>
+                    </tr>
+                    <tr>
+                        <td><a href="api-reference/PubSub.html"><strong>PubSub</strong></a></td>
+                        <td>Pub/Sub messaging</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>Examples</h2>
+
+            <p>Practical examples for common use cases:</p>
+
+            <h3>API Examples</h3>
+            <ul>
+                <li><a href="examples/api-examples.html#basic-crud"><strong>Basic CRUD API</strong></a> - Create, Read, Update, Delete operations</li>
+                <li><a href="examples/api-examples.html#authentication"><strong>Authentication API</strong></a> - User authentication and authorization</li>
+                <li><a href="examples/api-examples.html#file-upload"><strong>File Upload API</strong></a> - Handle file uploads to Cloud Storage</li>
+                <li><a href="examples/api-examples.html#search"><strong>Search API</strong></a> - Search and filter data</li>
+                <li><a href="examples/api-examples.html#pagination"><strong>Pagination API</strong></a> - Paginated results</li>
+            </ul>
+
+            <h3>Script Examples</h3>
+            <ul>
+                <li><a href="examples/script-examples.html#data-migration"><strong>Data Migration</strong></a> - Migrate data between databases</li>
+                <li><a href="examples/script-examples.html#batch-processing"><strong>Batch Processing</strong></a> - Process large datasets</li>
+                <li><a href="examples/script-examples.html#scheduled-tasks"><strong>Scheduled Tasks</strong></a> - Cron-like scheduled tasks</li>
+                <li><a href="examples/script-examples.html#data-export"><strong>Data Export</strong></a> - Export data to various formats</li>
+            </ul>
+
+            <h2>Quick Reference</h2>
+
+            <h3>Create a Simple API</h3>
+            <pre><code>&lt;?php
+class API extends RESTful {
+    function main() {
+        $this-&gt;addReturnData('Hello World');
+    }
+}</code></pre>
+
+            <h3>Create an API with Validation</h3>
+            <pre><code>&lt;?php
+class API extends RESTful {
+    function main() {
+        if(!$this-&gt;checkMethod('POST')) return;
+
+        $email = $this-&gt;checkMandatoryFormParam('email', 'Email required');
+        if(!$email) return;
+
+        if(!$this-&gt;validateValue('email', $email, 'email')) return;
+
+        $this-&gt;addReturnData(['email' =&gt; $email]);
+    }
+}</code></pre>
+
+            <h3>Create a Script</h3>
+            <pre><code>&lt;?php
+class Script extends Scripts2020 {
+    function main() {
+        $this-&gt;sendTerminal("Hello from script!");
+    }
+}</code></pre>
+
+            <h3>Use Datastore</h3>
+            <pre><code>$ds = $this-&gt;core-&gt;loadClass('DataStore');
+$entity = $ds-&gt;createEntity('Users', [
+    'name' =&gt; 'John Doe',
+    'email' =&gt; 'john@example.com'
+]);</code></pre>
+
+            <h3>Use Cloud Storage</h3>
+            <pre><code>$buckets = $this-&gt;core-&gt;loadClass('Buckets');
+$buckets-&gt;upload('/path/to/file.pdf', 'gs://my-bucket/file.pdf');</code></pre>
+
+            <h2>Learning Path</h2>
+
+            <h3>Beginner</h3>
+            <ol>
+                <li>Read <a href="guides/getting-started.html">Getting Started Guide</a></li>
+                <li>Create your <a href="guides/getting-started.html#your-first-api">First API</a></li>
+                <li>Learn about <a href="guides/api-development.html#request-handling">Request Handling</a></li>
+                <li>Understand <a href="guides/api-development.html#response-formatting">Response Formatting</a></li>
+            </ol>
+
+            <h3>Intermediate</h3>
+            <ol>
+                <li>Master <a href="guides/api-development.html#validation">Validation</a></li>
+                <li>Implement <a href="guides/api-development.html#authentication">Authentication</a></li>
+                <li>Learn <a href="guides/api-development.html#error-handling">Error Handling</a></li>
+                <li>Create <a href="guides/script-development.html">Background Scripts</a></li>
+            </ol>
+
+            <h3>Advanced</h3>
+            <ol>
+                <li>Integrate <a href="guides/gcp-integration.html">Google Cloud Services</a></li>
+                <li>Implement Datastore Access</li>
+                <li>Use Cloud Storage</li>
+                <li>Deploy to <a href="guides/deployment.html">App Engine/Cloud Run</a></li>
+            </ol>
+
+            <h2>Support</h2>
+
+            <div class="card">
+                <h3>Getting Help</h3>
+                <ul>
+                    <li><strong>Documentation</strong>: You're reading it!</li>
+                    <li><strong>GitHub Issues</strong>: <a href="https://github.com/CloudFramework-io/backend-core-php8/issues" target="_blank">Report bugs or request features</a></li>
+                    <li><strong>Examples</strong>: Check <code>api/training/</code> and <code>scripts/training/</code> directories</li>
+                    <li><strong>Website</strong>: <a href="https://cloudframework.io" target="_blank">cloudframework.io</a></li>
+                </ul>
+            </div>
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
