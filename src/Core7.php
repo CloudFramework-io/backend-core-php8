@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.2';  // 2025-11-04 1
+        var $_version = '8.4.3';  // 2025-11-05 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -7606,13 +7606,23 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $source_object = $object;
 
-            //region EVALUATE TO $this->readModelsFromCloudFramework if !$this->models[$object]
-            if(strpos($object,':') && !isset($this->models[$object]) && isset($options['cf_models_api_key']) && $options['cf_models_api_key'] ) {
-                if(!$this->readModelsFromCloudFramework(preg_replace('/.*:/','',$object),$options['cf_models_api_key'])) return false;
+            //region VERIFY $object has [type:name] string structure
+            if(!strpos($object,':')) {
+                if(isset($this->models['db:'.$object])) $object = 'db:'.$object;
+                elseif(isset($this->models['ds:'.$object])) $object = 'ds:'.$object;
+                elseif(isset($this->models['bq:'.$object])) $object = 'bq:'.$object;
+                elseif(isset($this->models['api:'.$object])) $object = 'api:'.$object;
             }
             //endregion
 
-            //region VERIFY $object has [type:name] string structure
+            //region EVALUATE TO $this->readModelsFromCloudFramework if !$this->models[$object]
+            if((!strpos($object,':') || !isset($this->models[$object])) && $options['cf_models_api_key']??null ) {
+                if(!$this->readModelsFromCloudFramework(preg_replace('/.*:/','',$object),$options['cf_models_api_key']))
+                    return false;
+            }
+            //endregion
+
+            //region VERIFY again $object has [type:name] string structure
             if(!strpos($object,':')) {
                 if(isset($this->models['db:'.$object])) $object = 'db:'.$object;
                 elseif(isset($this->models['ds:'.$object])) $object = 'ds:'.$object;
