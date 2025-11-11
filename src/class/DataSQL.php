@@ -6,7 +6,7 @@
  */
 class DataSQL
 {
-    var $version = '202510801';
+    var $version = '202511111';
     /** @var Core7  */
     var $core;
     var $error = false;
@@ -438,7 +438,7 @@ class DataSQL
         // Array with key=>value or empty
         if(is_array($keysWhere) ) {
             list($where, $_params) = $this->getQuerySQLWhereAndParams($keysWhere);
-            if($this->error) return;
+            if($this->error) return false;
             $params = array_merge($params,$_params);
         }
 
@@ -709,11 +709,17 @@ class DataSQL
 
 
     /**
-     * Build a query taking $keysWhere and applying rules depending of each field type
-     * @param array $keysWhere
-     * @return array|void
+     * Constructs a SQL WHERE clause and its associated parameters based on the provided conditions.
+     * This method handles complex filtering logic, including mapping keys to fields, handling comparators,
+     * and processing specific formats like date and time zones. It also recursively evaluates joins and merges their conditions.
+     *
+     * @param array $keysWhere Associative array of conditions where keys represent fields and values are the matching values or arrays of values.
+     *                         Special keys can include SQL syntax (e.g., "field >= ?", "(a > ?)", "field IN (?)").
+     * @return array|false False if error or Returns an array with two elements:
+     *               - The first element is the constructed SQL WHERE clause string.
+     *               - The second element is an array of parameters to bind to the WHERE clause.
      */
-    function getQuerySQLWhereAndParams($keysWhere=[]) {
+    public function getQuerySQLWhereAndParams($keysWhere=[]) {
         if(!is_array($keysWhere) ) return($this->addError('getQuerySQLWhereAndParams($keysWhere) $keyWhere has to be an array with key->value'));
 
         // Where condition for the SELECT
@@ -904,18 +910,20 @@ class DataSQL
         }
 
         // Search into Joins queries
-        foreach ($this->joins as $join) {
+        foreach ($this->joins as $_j=>$join) {
             /** @var DataSQL $object */
             $object = $join[1];
             list($joinWhere,$joinParams) = $object->getQuerySQLWhereAndParams();
+
             if($joinWhere) {
-
+                // connect join conditions with AND connector
                 if($where) $where.=' AND ';
-                $where.=$joinWhere;
-
+                // add join where conditions replacing join table for alias
+                $where.=str_replace("{$object->entity_name}.","_j{$_j}.",$joinWhere);
+                // merge $joinParams to main where $params
                 $params=array_merge($params,$joinParams);
-
             }
+
         }
         return [$where,$params];
     }
@@ -1036,14 +1044,17 @@ class DataSQL
 
 
     /**
-     * Add an error in the class
+     * Adds an error to the class error message array and to $this->core->errors object
+     * @param mixed $msg The error value to be added.
+     * @return bool Always returns false to facilite caller return
      */
-    function addError($value)
+    function addError($msg): bool
     {
         $this->error = true;
         if(!is_array($this->errorMsg)) $this->errorMsg = [$this->errorMsg];
-        $this->errorMsg[] = $value;
-        $this->core->errors->add(['DataSQL'=>$value]);
+        $this->errorMsg[] = $msg;
+        $this->core->errors->add(['DataSQL'=>$msg]);
+        return false;
     }
 
     /**
