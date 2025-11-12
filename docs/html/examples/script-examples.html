@@ -1,0 +1,2913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Examples - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Comprehensive documentation for CloudFramework Backend Core PHP8 - A powerful framework for building scalable backend APIs with Google Cloud Platform integration">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="examples/script-examples.html" class="sidebar-nav-link active">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>Script Examples</h1>
+
+<h2>Overview</h2>
+
+<p>This document provides complete, production-ready examples of CloudFramework CLI scripts for common automation tasks. Each example includes:</p>
+<ul>
+<li>Complete source code</li>
+<li>Interactive prompts</li>
+<li>Data processing</li>
+<li>Error handling</li>
+<li>Progress indicators</li>
+</ul>
+
+<hr>
+
+<h2>Table of Contents</h2>
+
+<p>1. <a href="#database-migration-script">Database Migration Script</a></p>
+<p>2. <a href="#data-import-script">Data Import Script</a></p>
+<p>3. <a href="#backup-script">Backup Script</a></p>
+<p>4. <a href="#user-management-script">User Management Script</a></p>
+<p>5. <a href="#email-campaign-script">Email Campaign Script</a></p>
+<p>6. <a href="#data-sync-script">Data Sync Script</a></p>
+<p>7. <a href="#report-generation-script">Report Generation Script</a></p>
+<p>8. <a href="#cleanup-script">Cleanup Script</a></p>
+
+<hr>
+
+<h2>Database Migration Script</h2>
+
+<p>Migrate data between CloudSQL databases with progress tracking and rollback support.</p>
+
+<p><strong>File:</strong> <code>app/scripts/migrate-database.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Database Migration Script
+ *
+ * Usage:
+ * php index.php script=migrate-database method=run
+ * php index.php script=migrate-database method=rollback
+ * php index.php script=migrate-database method=status
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $sourceSQL;
+    private $targetSQL;
+    private $migrations = [];
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Database Migration Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Initialize databases
+        if(!$this-&gt;initializeDatabases()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to initialize databases&#x27;, &#x27;red&#x27;);
+        }
+
+        // Load migrations
+        $this-&gt;loadMigrations();
+
+        // Route to method
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;) ?? $this-&gt;promptOptions(
+            &#x27;Select action:&#x27;,
+            [&#x27;run&#x27; =&gt; &#x27;Run migrations&#x27;, &#x27;rollback&#x27; =&gt; &#x27;Rollback last migration&#x27;, &#x27;status&#x27; =&gt; &#x27;Check status&#x27;]
+        );
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Run pending migrations
+     */
+    public function METHOD_run()
+    {
+        $this-&gt;sendTerminal(&#x27;Checking for pending migrations...&#x27;, &#x27;yellow&#x27;);
+
+        // Get completed migrations
+        $completed = $this-&gt;getCompletedMigrations();
+
+        // Find pending migrations
+        $pending = array_filter($this-&gt;migrations, function($migration) use ($completed) {
+            return !in_array($migration[&#x27;id&#x27;], $completed);
+        });
+
+        if(empty($pending)) {
+            return $this-&gt;sendTerminal(&#x27;No pending migrations&#x27;, &#x27;green&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($pending) . &#x27; pending migration(s)&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Confirm
+        if(!$this-&gt;promptConfirm(&#x27;Do you want to run these migrations?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Migration cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Run migrations
+        foreach($pending as $migration) {
+            $this-&gt;sendTerminal(&#x27;Running: &#x27; . $migration[&#x27;name&#x27;], &#x27;blue&#x27;);
+
+            $startTime = microtime(true);
+
+            try {
+                // Start transaction
+                $this-&gt;targetSQL-&gt;command(&#x27;START TRANSACTION&#x27;);
+
+                // Run migration
+                foreach($migration[&#x27;queries&#x27;] as $query) {
+                    $this-&gt;targetSQL-&gt;command($query);
+
+                    if($this-&gt;targetSQL-&gt;error()) {
+                        throw new Exception(&#x27;Query failed: &#x27; . implode(&#x27;, &#x27;, $this-&gt;targetSQL-&gt;getError()));
+                    }
+                }
+
+                // Mark as completed
+                $this-&gt;markMigrationCompleted($migration[&#x27;id&#x27;], $migration[&#x27;name&#x27;]);
+
+                // Commit transaction
+                $this-&gt;targetSQL-&gt;command(&#x27;COMMIT&#x27;);
+
+                $duration = round(microtime(true) - $startTime, 2);
+                $this-&gt;sendTerminal(&#x27;✓ Completed in &#x27; . $duration . &#x27;s&#x27;, &#x27;green&#x27;);
+
+            } catch(Exception $e) {
+                // Rollback transaction
+                $this-&gt;targetSQL-&gt;command(&#x27;ROLLBACK&#x27;);
+
+                $this-&gt;sendTerminal(&#x27;✗ Failed: &#x27; . $e-&gt;getMessage(), &#x27;red&#x27;);
+                break;
+            }
+
+            $this-&gt;sendTerminal(&#x27;&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Migration process completed&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Rollback last migration
+     */
+    public function METHOD_rollback()
+    {
+        $this-&gt;sendTerminal(&#x27;Rolling back last migration...&#x27;, &#x27;yellow&#x27;);
+
+        $completed = $this-&gt;getCompletedMigrations();
+
+        if(empty($completed)) {
+            return $this-&gt;sendTerminal(&#x27;No migrations to rollback&#x27;, &#x27;yellow&#x27;);
+        }
+
+        $lastMigration = end($completed);
+
+        // Find migration definition
+        $migration = null;
+        foreach($this-&gt;migrations as $m) {
+            if($m[&#x27;id&#x27;] === $lastMigration) {
+                $migration = $m;
+                break;
+            }
+        }
+
+        if(!$migration) {
+            return $this-&gt;sendTerminal(&#x27;Migration not found&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Rolling back: &#x27; . $migration[&#x27;name&#x27;], &#x27;blue&#x27;);
+
+        if(!$this-&gt;promptConfirm(&#x27;Are you sure?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Rollback cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        try {
+            $this-&gt;targetSQL-&gt;command(&#x27;START TRANSACTION&#x27;);
+
+            // Run rollback queries
+            if(isset($migration[&#x27;rollback&#x27;])) {
+                foreach($migration[&#x27;rollback&#x27;] as $query) {
+                    $this-&gt;targetSQL-&gt;command($query);
+
+                    if($this-&gt;targetSQL-&gt;error()) {
+                        throw new Exception(&#x27;Rollback query failed&#x27;);
+                    }
+                }
+            }
+
+            // Remove from completed
+            $this-&gt;removeCompletedMigration($lastMigration);
+
+            $this-&gt;targetSQL-&gt;command(&#x27;COMMIT&#x27;);
+
+            $this-&gt;sendTerminal(&#x27;✓ Rollback completed&#x27;, &#x27;green&#x27;);
+
+        } catch(Exception $e) {
+            $this-&gt;targetSQL-&gt;command(&#x27;ROLLBACK&#x27;);
+            $this-&gt;sendTerminal(&#x27;✗ Rollback failed: &#x27; . $e-&gt;getMessage(), &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Show migration status
+     */
+    public function METHOD_status()
+    {
+        $completed = $this-&gt;getCompletedMigrations();
+
+        $this-&gt;sendTerminal(&#x27;Migration Status:&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        foreach($this-&gt;migrations as $migration) {
+            $status = in_array($migration[&#x27;id&#x27;], $completed) ? &#x27;✓&#x27; : &#x27;○&#x27;;
+            $color = in_array($migration[&#x27;id&#x27;], $completed) ? &#x27;green&#x27; : &#x27;yellow&#x27;;
+
+            $this-&gt;sendTerminal($status . &#x27; &#x27; . $migration[&#x27;name&#x27;], $color);
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total: &#x27; . count($this-&gt;migrations), &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Completed: &#x27; . count($completed), &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Pending: &#x27; . (count($this-&gt;migrations) - count($completed)), &#x27;yellow&#x27;);
+    }
+
+    // Helper methods
+
+    private function initializeDatabases(): bool
+    {
+        try {
+            // Source database (read-only)
+            $this-&gt;sourceSQL = $this-&gt;core-&gt;loadClass(&#x27;CloudSQL&#x27;, [
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.source.host&#x27;),
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.source.user&#x27;),
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.source.password&#x27;),
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.source.database&#x27;)
+            ]);
+
+            // Target database (write)
+            $this-&gt;targetSQL = $this-&gt;core-&gt;loadClass(&#x27;CloudSQL&#x27;, [
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.target.host&#x27;),
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.target.user&#x27;),
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.target.password&#x27;),
+                $this-&gt;core-&gt;config-&gt;get(&#x27;migration.target.database&#x27;)
+            ]);
+
+            if($this-&gt;sourceSQL-&gt;error() || $this-&gt;targetSQL-&gt;error()) {
+                return false;
+            }
+
+            // Create migrations table if not exists
+            $this-&gt;targetSQL-&gt;command(&quot;
+                CREATE TABLE IF NOT EXISTS migrations (
+                    id VARCHAR(255) PRIMARY KEY,
+                    name VARCHAR(255),
+                    executed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            &quot;);
+
+            return true;
+
+        } catch(Exception $e) {
+            $this-&gt;sendTerminal(&#x27;Database connection failed: &#x27; . $e-&gt;getMessage(), &#x27;red&#x27;);
+            return false;
+        }
+    }
+
+    private function loadMigrations()
+    {
+        $this-&gt;migrations = [
+            [
+                &#x27;id&#x27; =&gt; &#x27;001_create_users_table&#x27;,
+                &#x27;name&#x27; =&gt; &#x27;Create users table&#x27;,
+                &#x27;queries&#x27; =&gt; [
+                    &quot;CREATE TABLE IF NOT EXISTS users (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(100),
+                        email VARCHAR(100) UNIQUE,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )&quot;
+                ],
+                &#x27;rollback&#x27; =&gt; [&quot;DROP TABLE IF EXISTS users&quot;]
+            ],
+            [
+                &#x27;id&#x27; =&gt; &#x27;002_add_user_status&#x27;,
+                &#x27;name&#x27; =&gt; &#x27;Add status column to users&#x27;,
+                &#x27;queries&#x27; =&gt; [
+                    &quot;ALTER TABLE users ADD COLUMN status VARCHAR(20) DEFAULT &#x27;active&#x27;&quot;
+                ],
+                &#x27;rollback&#x27; =&gt; [&quot;ALTER TABLE users DROP COLUMN status&quot;]
+            ],
+            [
+                &#x27;id&#x27; =&gt; &#x27;003_create_products_table&#x27;,
+                &#x27;name&#x27; =&gt; &#x27;Create products table&#x27;,
+                &#x27;queries&#x27; =&gt; [
+                    &quot;CREATE TABLE IF NOT EXISTS products (
+                        id INT AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(200),
+                        price DECIMAL(10,2),
+                        stock INT DEFAULT 0,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )&quot;
+                ],
+                &#x27;rollback&#x27; =&gt; [&quot;DROP TABLE IF EXISTS products&quot;]
+            ]
+        ];
+    }
+
+    private function getCompletedMigrations(): array
+    {
+        $result = $this-&gt;targetSQL-&gt;command(&quot;SELECT id FROM migrations ORDER BY executed_at&quot;);
+
+        if($this-&gt;targetSQL-&gt;error() || empty($result)) {
+            return [];
+        }
+
+        return array_column($result, &#x27;id&#x27;);
+    }
+
+    private function markMigrationCompleted(string $id, string $name)
+    {
+        $this-&gt;targetSQL-&gt;command(
+            &quot;INSERT INTO migrations (id, name) VALUES (?, ?)&quot;,
+            [$id, $name]
+        );
+    }
+
+    private function removeCompletedMigration(string $id)
+    {
+        $this-&gt;targetSQL-&gt;command(&quot;DELETE FROM migrations WHERE id = ?&quot;, [$id]);
+    }
+
+    private function promptConfirm(string $message): bool
+    {
+        $response = $this-&gt;prompt($message . &#x27; (yes/no): &#x27;);
+        return strtolower(trim($response)) === &#x27;yes&#x27;;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Data Import Script</h2>
+
+<p>Import data from CSV/JSON files into Datastore with validation and error handling.</p>
+
+<p><strong>File:</strong> <code>app/scripts/import-data.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Data Import Script
+ *
+ * Usage:
+ * php index.php script=import-data method=import file=/path/to/data.csv kind=Users
+ * php index.php script=import-data method=validate file=/path/to/data.csv
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $ds;
+    private $errors = [];
+    private $imported = 0;
+    private $skipped = 0;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Data Import Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;import&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Import data from file
+     */
+    public function METHOD_import()
+    {
+        // Get parameters
+        $file = $this-&gt;getOptionVar(&#x27;file&#x27;);
+        $kind = $this-&gt;getOptionVar(&#x27;kind&#x27;);
+
+        if(!$file) {
+            $file = $this-&gt;prompt(&#x27;Enter file path: &#x27;);
+        }
+
+        if(!file_exists($file)) {
+            return $this-&gt;sendTerminal(&#x27;File not found: &#x27; . $file, &#x27;red&#x27;);
+        }
+
+        if(!$kind) {
+            $kind = $this-&gt;prompt(&#x27;Enter Datastore kind: &#x27;);
+        }
+
+        // Initialize Datastore
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [$kind]);
+
+        $this-&gt;sendTerminal(&#x27;File: &#x27; . $file, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Kind: &#x27; . $kind, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Detect file type
+        $extension = pathinfo($file, PATHINFO_EXTENSION);
+
+        if($extension === &#x27;csv&#x27;) {
+            $data = $this-&gt;readCSV($file);
+        } elseif($extension === &#x27;json&#x27;) {
+            $data = $this-&gt;readJSON($file);
+        } else {
+            return $this-&gt;sendTerminal(&#x27;Unsupported file type: &#x27; . $extension, &#x27;red&#x27;);
+        }
+
+        if(empty($data)) {
+            return $this-&gt;sendTerminal(&#x27;No data found in file&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($data) . &#x27; records&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Preview first record
+        $this-&gt;sendTerminal(&#x27;Preview first record:&#x27;, &#x27;yellow&#x27;);
+        foreach($data[0] as $key =&gt; $value) {
+            $this-&gt;sendTerminal(&quot;  {$key}: {$value}&quot;, &#x27;white&#x27;);
+        }
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Confirm import
+        if(!$this-&gt;promptConfirm(&#x27;Start import?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Import cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Import data
+        $total = count($data);
+        $startTime = microtime(true);
+
+        foreach($data as $index =&gt; $record) {
+            $recordNum = $index + 1;
+
+            // Validate record
+            if(!$this-&gt;validateRecord($record)) {
+                $this-&gt;sendTerminal(&quot;[{$recordNum}/{$total}] Skipped: Invalid data&quot;, &#x27;yellow&#x27;);
+                $this-&gt;skipped++;
+                continue;
+            }
+
+            // Import record
+            try {
+                // Check if exists (by email or unique field)
+                if(isset($record[&#x27;email&#x27;])) {
+                    $existing = $this-&gt;ds-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $record[&#x27;email&#x27;]]], null, 1);
+
+                    if(!empty($existing)) {
+                        $this-&gt;sendTerminal(&quot;[{$recordNum}/{$total}] Skipped: Already exists&quot;, &#x27;yellow&#x27;);
+                        $this-&gt;skipped++;
+                        continue;
+                    }
+                }
+
+                // Create entity
+                $entityId = $this-&gt;ds-&gt;createEntity($record);
+
+                if($this-&gt;ds-&gt;error()) {
+                    throw new Exception(implode(&#x27;, &#x27;, $this-&gt;ds-&gt;getError()));
+                }
+
+                $this-&gt;imported++;
+                $this-&gt;sendTerminal(&quot;[{$recordNum}/{$total}] Imported: {$entityId}&quot;, &#x27;green&#x27;);
+
+            } catch(Exception $e) {
+                $this-&gt;errors[] = [
+                    &#x27;record&#x27; =&gt; $recordNum,
+                    &#x27;data&#x27; =&gt; $record,
+                    &#x27;error&#x27; =&gt; $e-&gt;getMessage()
+                ];
+                $this-&gt;sendTerminal(&quot;[{$recordNum}/{$total}] Error: &quot; . $e-&gt;getMessage(), &#x27;red&#x27;);
+            }
+
+            // Progress indicator every 10 records
+            if($recordNum % 10 === 0) {
+                $percent = round(($recordNum / $total) * 100);
+                $this-&gt;sendTerminal(&quot;Progress: {$percent}%&quot;, &#x27;blue&#x27;);
+            }
+        }
+
+        $duration = round(microtime(true) - $startTime, 2);
+
+        // Summary
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;=== Import Summary ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total records: &#x27; . $total, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Imported: &#x27; . $this-&gt;imported, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Skipped: &#x27; . $this-&gt;skipped, &#x27;yellow&#x27;);
+        $this-&gt;sendTerminal(&#x27;Errors: &#x27; . count($this-&gt;errors), &#x27;red&#x27;);
+        $this-&gt;sendTerminal(&#x27;Duration: &#x27; . $duration . &#x27;s&#x27;, &#x27;blue&#x27;);
+
+        // Save error log
+        if(!empty($this-&gt;errors)) {
+            $errorFile = &#x27;import_errors_&#x27; . date(&#x27;Y-m-d_H-i-s&#x27;) . &#x27;.json&#x27;;
+            file_put_contents($errorFile, json_encode($this-&gt;errors, JSON_PRETTY_PRINT));
+            $this-&gt;sendTerminal(&#x27;Error log saved: &#x27; . $errorFile, &#x27;yellow&#x27;);
+        }
+    }
+
+    /**
+     * Validate file without importing
+     */
+    public function METHOD_validate()
+    {
+        $file = $this-&gt;getOptionVar(&#x27;file&#x27;);
+
+        if(!$file) {
+            $file = $this-&gt;prompt(&#x27;Enter file path: &#x27;);
+        }
+
+        if(!file_exists($file)) {
+            return $this-&gt;sendTerminal(&#x27;File not found: &#x27; . $file, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Validating file: &#x27; . $file, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Read data
+        $extension = pathinfo($file, PATHINFO_EXTENSION);
+
+        if($extension === &#x27;csv&#x27;) {
+            $data = $this-&gt;readCSV($file);
+        } elseif($extension === &#x27;json&#x27;) {
+            $data = $this-&gt;readJSON($file);
+        } else {
+            return $this-&gt;sendTerminal(&#x27;Unsupported file type&#x27;, &#x27;red&#x27;);
+        }
+
+        if(empty($data)) {
+            return $this-&gt;sendTerminal(&#x27;No data found&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($data) . &#x27; records&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Validate each record
+        $valid = 0;
+        $invalid = 0;
+
+        foreach($data as $index =&gt; $record) {
+            if($this-&gt;validateRecord($record)) {
+                $valid++;
+            } else {
+                $invalid++;
+                $this-&gt;sendTerminal(&#x27;Record &#x27; . ($index + 1) . &#x27;: Invalid&#x27;, &#x27;red&#x27;);
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Valid records: &#x27; . $valid, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Invalid records: &#x27; . $invalid, &#x27;red&#x27;);
+    }
+
+    // Helper methods
+
+    private function readCSV(string $file): array
+    {
+        $data = [];
+        $handle = fopen($file, &#x27;r&#x27;);
+
+        if(!$handle) {
+            return $data;
+        }
+
+        // Read header
+        $header = fgetcsv($handle);
+
+        // Read data
+        while(($row = fgetcsv($handle)) !== false) {
+            if(count($row) === count($header)) {
+                $data[] = array_combine($header, $row);
+            }
+        }
+
+        fclose($handle);
+
+        return $data;
+    }
+
+    private function readJSON(string $file): array
+    {
+        $content = file_get_contents($file);
+        $data = json_decode($content, true);
+
+        return is_array($data) ? $data : [];
+    }
+
+    private function validateRecord(array $record): bool
+    {
+        // Check required fields
+        $required = [&#x27;name&#x27;, &#x27;email&#x27;];
+
+        foreach($required as $field) {
+            if(empty($record[$field])) {
+                return false;
+            }
+        }
+
+        // Validate email
+        if(!filter_var($record[&#x27;email&#x27;], FILTER_VALIDATE_EMAIL)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function promptConfirm(string $message): bool
+    {
+        $response = $this-&gt;prompt($message . &#x27; (yes/no): &#x27;);
+        return strtolower(trim($response)) === &#x27;yes&#x27;;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Backup Script</h2>
+
+<p>Automated backup of Datastore entities and Cloud SQL databases.</p>
+
+<p><strong>File:</strong> <code>app/scripts/backup.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Backup Script
+ *
+ * Usage:
+ * php index.php script=backup method=datastore kind=Users
+ * php index.php script=backup method=cloudsql database=mydb
+ * php index.php script=backup method=all
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $buckets;
+    private $backupPath = &#x27;backups/&#x27;;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Backup Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Initialize Cloud Storage
+        $this-&gt;buckets = $this-&gt;core-&gt;loadClass(&#x27;Buckets&#x27;, [&#x27;gs://my-backups-bucket&#x27;]);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;all&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Backup Datastore entities
+     */
+    public function METHOD_datastore()
+    {
+        $kind = $this-&gt;getOptionVar(&#x27;kind&#x27;);
+
+        if(!$kind) {
+            $kind = $this-&gt;prompt(&#x27;Enter Datastore kind: &#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Backing up Datastore kind: &#x27; . $kind, &#x27;blue&#x27;);
+
+        $ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [$kind]);
+
+        // Fetch all entities
+        $entities = $ds-&gt;fetchAll();
+
+        if($ds-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to fetch entities&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($entities) . &#x27; entities&#x27;, &#x27;green&#x27;);
+
+        // Prepare backup data
+        $backup = [
+            &#x27;kind&#x27; =&gt; $kind,
+            &#x27;count&#x27; =&gt; count($entities),
+            &#x27;timestamp&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;entities&#x27; =&gt; $entities
+        ];
+
+        // Save to file
+        $filename = $kind . &#x27;_&#x27; . date(&#x27;Y-m-d_H-i-s&#x27;) . &#x27;.json&#x27;;
+        $localFile = &#x27;/tmp/&#x27; . $filename;
+        file_put_contents($localFile, json_encode($backup, JSON_PRETTY_PRINT));
+
+        // Upload to Cloud Storage
+        $remotePath = $this-&gt;backupPath . date(&#x27;Y/m/d/&#x27;) . $filename;
+        $this-&gt;buckets-&gt;uploadFile($localFile, $remotePath);
+
+        if($this-&gt;buckets-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to upload backup&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Backup saved: &#x27; . $remotePath, &#x27;green&#x27;);
+
+        // Cleanup local file
+        unlink($localFile);
+
+        // Cache backup info
+        $this-&gt;setCacheVar(&#x27;last_backup_&#x27; . $kind, [
+            &#x27;file&#x27; =&gt; $remotePath,
+            &#x27;timestamp&#x27; =&gt; time(),
+            &#x27;count&#x27; =&gt; count($entities)
+        ]);
+    }
+
+    /**
+     * Backup CloudSQL database
+     */
+    public function METHOD_cloudsql()
+    {
+        $database = $this-&gt;getOptionVar(&#x27;database&#x27;);
+
+        if(!$database) {
+            $database = $this-&gt;prompt(&#x27;Enter database name: &#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Backing up CloudSQL database: &#x27; . $database, &#x27;blue&#x27;);
+
+        $sql = $this-&gt;core-&gt;loadClass(&#x27;CloudSQL&#x27;);
+
+        // Get all tables
+        $tables = $sql-&gt;command(&quot;SHOW TABLES&quot;);
+
+        if($sql-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to get tables&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($tables) . &#x27; tables&#x27;, &#x27;green&#x27;);
+
+        $backup = [
+            &#x27;database&#x27; =&gt; $database,
+            &#x27;timestamp&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;tables&#x27; =&gt; []
+        ];
+
+        // Export each table
+        foreach($tables as $table) {
+            $tableName = array_values($table)[0];
+            $this-&gt;sendTerminal(&#x27;Exporting: &#x27; . $tableName, &#x27;yellow&#x27;);
+
+            // Get table data
+            $data = $sql-&gt;command(&quot;SELECT * FROM `{$tableName}`&quot;);
+
+            if(!$sql-&gt;error()) {
+                $backup[&#x27;tables&#x27;][$tableName] = $data;
+                $this-&gt;sendTerminal(&#x27;  ✓ &#x27; . count($data) . &#x27; rows&#x27;, &#x27;green&#x27;);
+            } else {
+                $this-&gt;sendTerminal(&#x27;  ✗ Failed&#x27;, &#x27;red&#x27;);
+            }
+        }
+
+        // Save backup
+        $filename = $database . &#x27;_&#x27; . date(&#x27;Y-m-d_H-i-s&#x27;) . &#x27;.json&#x27;;
+        $localFile = &#x27;/tmp/&#x27; . $filename;
+        file_put_contents($localFile, json_encode($backup, JSON_PRETTY_PRINT));
+
+        // Upload to Cloud Storage
+        $remotePath = $this-&gt;backupPath . &#x27;sql/&#x27; . date(&#x27;Y/m/d/&#x27;) . $filename;
+        $this-&gt;buckets-&gt;uploadFile($localFile, $remotePath);
+
+        if($this-&gt;buckets-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to upload backup&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Backup saved: &#x27; . $remotePath, &#x27;green&#x27;);
+
+        unlink($localFile);
+    }
+
+    /**
+     * Backup all data
+     */
+    public function METHOD_all()
+    {
+        $this-&gt;sendTerminal(&#x27;Starting full backup...&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Backup Datastore kinds
+        $datastoreKinds = [&#x27;Users&#x27;, &#x27;Products&#x27;, &#x27;Orders&#x27;];
+
+        foreach($datastoreKinds as $kind) {
+            $this-&gt;sendTerminal(&#x27;Backing up &#x27; . $kind . &#x27;...&#x27;, &#x27;yellow&#x27;);
+            $this-&gt;METHOD_datastore_internal($kind);
+            $this-&gt;sendTerminal(&#x27;&#x27;);
+        }
+
+        // Backup CloudSQL
+        $databases = $this-&gt;core-&gt;config-&gt;get(&#x27;backup.databases&#x27;, [&#x27;mydb&#x27;]);
+
+        foreach($databases as $database) {
+            $this-&gt;sendTerminal(&#x27;Backing up database &#x27; . $database . &#x27;...&#x27;, &#x27;yellow&#x27;);
+            $this-&gt;METHOD_cloudsql_internal($database);
+            $this-&gt;sendTerminal(&#x27;&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Full backup completed&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * List available backups
+     */
+    public function METHOD_list()
+    {
+        $this-&gt;sendTerminal(&#x27;Available backups:&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $files = $this-&gt;buckets-&gt;scan($this-&gt;backupPath);
+
+        if($this-&gt;buckets-&gt;error() || empty($files)) {
+            return $this-&gt;sendTerminal(&#x27;No backups found&#x27;, &#x27;yellow&#x27;);
+        }
+
+        foreach($files as $file) {
+            $info = $this-&gt;buckets-&gt;getFileInfo($file);
+            $size = isset($info[&#x27;size&#x27;]) ? round($info[&#x27;size&#x27;] / 1024, 2) . &#x27; KB&#x27; : &#x27;unknown&#x27;;
+
+            $this-&gt;sendTerminal(basename($file) . &#x27; (&#x27; . $size . &#x27;)&#x27;, &#x27;white&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total backups: &#x27; . count($files), &#x27;green&#x27;);
+    }
+
+    // Internal methods (used by METHOD_all)
+
+    private function METHOD_datastore_internal(string $kind)
+    {
+        $ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [$kind]);
+        $entities = $ds-&gt;fetchAll();
+
+        if(!$ds-&gt;error() &amp;&amp; !empty($entities)) {
+            $backup = [
+                &#x27;kind&#x27; =&gt; $kind,
+                &#x27;count&#x27; =&gt; count($entities),
+                &#x27;timestamp&#x27; =&gt; date(&#x27;c&#x27;),
+                &#x27;entities&#x27; =&gt; $entities
+            ];
+
+            $filename = $kind . &#x27;_&#x27; . date(&#x27;Y-m-d_H-i-s&#x27;) . &#x27;.json&#x27;;
+            $localFile = &#x27;/tmp/&#x27; . $filename;
+            file_put_contents($localFile, json_encode($backup, JSON_PRETTY_PRINT));
+
+            $remotePath = $this-&gt;backupPath . date(&#x27;Y/m/d/&#x27;) . $filename;
+            $this-&gt;buckets-&gt;uploadFile($localFile, $remotePath);
+
+            unlink($localFile);
+
+            $this-&gt;sendTerminal(&#x27;  ✓ &#x27; . count($entities) . &#x27; entities backed up&#x27;, &#x27;green&#x27;);
+        }
+    }
+
+    private function METHOD_cloudsql_internal(string $database)
+    {
+        // Similar to METHOD_cloudsql but without terminal output
+        // Implementation here...
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Report Generation Script</h2>
+
+<p>Generate and email reports from BigQuery data.</p>
+
+<p><strong>File:</strong> <code>app/scripts/generate-reports.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Report Generation Script
+ *
+ * Usage:
+ * php index.php script=generate-reports method=daily
+ * php index.php script=generate-reports method=weekly
+ * php index.php script=generate-reports method=custom start=2024-01-01 end=2024-01-31
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $bq;
+    private $buckets;
+    private $email;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Report Generation Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        // Initialize services
+        $this-&gt;bq = $this-&gt;core-&gt;loadClass(&#x27;DataBQ&#x27;, [&#x27;analytics&#x27;]);
+        $this-&gt;buckets = $this-&gt;core-&gt;loadClass(&#x27;Buckets&#x27;, [&#x27;gs://my-reports-bucket&#x27;]);
+        $this-&gt;email = $this-&gt;core-&gt;loadClass(&#x27;Email&#x27;);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;daily&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Generate daily report
+     */
+    public function METHOD_daily()
+    {
+        $date = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-1 day&#x27;));
+
+        $this-&gt;sendTerminal(&#x27;Generating daily report for: &#x27; . $date, &#x27;blue&#x27;);
+
+        $report = $this-&gt;generateReport($date, $date);
+        $this-&gt;saveAndSendReport($report, &#x27;daily&#x27;, $date);
+    }
+
+    /**
+     * Generate weekly report
+     */
+    public function METHOD_weekly()
+    {
+        $endDate = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-1 day&#x27;));
+        $startDate = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-7 days&#x27;));
+
+        $this-&gt;sendTerminal(&#x27;Generating weekly report: &#x27; . $startDate . &#x27; to &#x27; . $endDate, &#x27;blue&#x27;);
+
+        $report = $this-&gt;generateReport($startDate, $endDate);
+        $this-&gt;saveAndSendReport($report, &#x27;weekly&#x27;, $startDate);
+    }
+
+    /**
+     * Generate custom range report
+     */
+    public function METHOD_custom()
+    {
+        $startDate = $this-&gt;getOptionVar(&#x27;start&#x27;);
+        $endDate = $this-&gt;getOptionVar(&#x27;end&#x27;);
+
+        if(!$startDate || !$endDate) {
+            $startDate = $this-&gt;prompt(&#x27;Start date (Y-m-d): &#x27;);
+            $endDate = $this-&gt;prompt(&#x27;End date (Y-m-d): &#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Generating custom report: &#x27; . $startDate . &#x27; to &#x27; . $endDate, &#x27;blue&#x27;);
+
+        $report = $this-&gt;generateReport($startDate, $endDate);
+        $this-&gt;saveAndSendReport($report, &#x27;custom&#x27;, $startDate . &#x27;_to_&#x27; . $endDate);
+    }
+
+    // Helper methods
+
+    private function generateReport(string $startDate, string $endDate): array
+    {
+        $report = [
+            &#x27;period&#x27; =&gt; [
+                &#x27;start&#x27; =&gt; $startDate,
+                &#x27;end&#x27; =&gt; $endDate
+            ],
+            &#x27;metrics&#x27; =&gt; []
+        ];
+
+        // User metrics
+        $this-&gt;sendTerminal(&#x27;Fetching user metrics...&#x27;, &#x27;yellow&#x27;);
+        $report[&#x27;metrics&#x27;][&#x27;users&#x27;] = $this-&gt;getUserMetrics($startDate, $endDate);
+
+        // Revenue metrics
+        $this-&gt;sendTerminal(&#x27;Fetching revenue metrics...&#x27;, &#x27;yellow&#x27;);
+        $report[&#x27;metrics&#x27;][&#x27;revenue&#x27;] = $this-&gt;getRevenueMetrics($startDate, $endDate);
+
+        // Product metrics
+        $this-&gt;sendTerminal(&#x27;Fetching product metrics...&#x27;, &#x27;yellow&#x27;);
+        $report[&#x27;metrics&#x27;][&#x27;products&#x27;] = $this-&gt;getProductMetrics($startDate, $endDate);
+
+        return $report;
+    }
+
+    private function getUserMetrics(string $startDate, string $endDate): array
+    {
+        $query = &quot;
+            SELECT
+                COUNT(DISTINCT user_id) as total_users,
+                COUNT(DISTINCT CASE WHEN DATE(created_at) BETWEEN &#x27;{$startDate}&#x27; AND &#x27;{$endDate}&#x27; THEN user_id END) as new_users,
+                COUNT(DISTINCT CASE WHEN DATE(last_login) BETWEEN &#x27;{$startDate}&#x27; AND &#x27;{$endDate}&#x27; THEN user_id END) as active_users
+            FROM users
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+
+        return $result[0] ?? [];
+    }
+
+    private function getRevenueMetrics(string $startDate, string $endDate): array
+    {
+        $query = &quot;
+            SELECT
+                COUNT(*) as total_orders,
+                SUM(amount) as total_revenue,
+                AVG(amount) as avg_order_value,
+                MAX(amount) as max_order_value
+            FROM orders
+            WHERE DATE(created_at) BETWEEN &#x27;{$startDate}&#x27; AND &#x27;{$endDate}&#x27;
+            AND status = &#x27;completed&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+
+        return $result[0] ?? [];
+    }
+
+    private function getProductMetrics(string $startDate, string $endDate): array
+    {
+        $query = &quot;
+            SELECT
+                product_name,
+                COUNT(*) as orders,
+                SUM(quantity) as units_sold,
+                SUM(amount) as revenue
+            FROM order_items
+            WHERE DATE(created_at) BETWEEN &#x27;{$startDate}&#x27; AND &#x27;{$endDate}&#x27;
+            GROUP BY product_name
+            ORDER BY revenue DESC
+            LIMIT 10
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function saveAndSendReport(array $report, string $type, string $identifier)
+    {
+        // Save as JSON
+        $filename = &quot;report_{$type}_{$identifier}.json&quot;;
+        $localFile = &#x27;/tmp/&#x27; . $filename;
+        file_put_contents($localFile, json_encode($report, JSON_PRETTY_PRINT));
+
+        // Upload to Cloud Storage
+        $remotePath = &#x27;reports/&#x27; . date(&#x27;Y/m/&#x27;) . $filename;
+        $this-&gt;buckets-&gt;uploadFile($localFile, $remotePath);
+
+        if($this-&gt;buckets-&gt;error()) {
+            $this-&gt;sendTerminal(&#x27;Failed to upload report&#x27;, &#x27;red&#x27;);
+        } else {
+            $this-&gt;sendTerminal(&#x27;✓ Report saved: &#x27; . $remotePath, &#x27;green&#x27;);
+        }
+
+        // Generate HTML report
+        $htmlReport = $this-&gt;generateHTMLReport($report, $type);
+
+        // Send email
+        $recipients = $this-&gt;core-&gt;config-&gt;get(&#x27;reports.recipients&#x27;, []);
+
+        if(!empty($recipients)) {
+            $this-&gt;email-&gt;setTo($recipients);
+            $this-&gt;email-&gt;setSubject(&quot;Report: {$type} - {$identifier}&quot;);
+            $this-&gt;email-&gt;setBodyHTML($htmlReport);
+            $this-&gt;email-&gt;setAttachment($localFile);
+
+            if($this-&gt;email-&gt;send()) {
+                $this-&gt;sendTerminal(&#x27;✓ Report emailed to: &#x27; . implode(&#x27;, &#x27;, $recipients), &#x27;green&#x27;);
+            } else {
+                $this-&gt;sendTerminal(&#x27;Failed to send email&#x27;, &#x27;red&#x27;);
+            }
+        }
+
+        // Cleanup
+        unlink($localFile);
+    }
+
+    private function generateHTMLReport(array $report, string $type): string
+    {
+        $html = &#x27;&lt;html&gt;&lt;body&gt;&#x27;;
+        $html .= &#x27;&lt;h1&gt;&#x27; . ucfirst($type) . &#x27; Report&lt;/h1&gt;&#x27;;
+        $html .= &#x27;&lt;p&gt;Period: &#x27; . $report[&#x27;period&#x27;][&#x27;start&#x27;] . &#x27; to &#x27; . $report[&#x27;period&#x27;][&#x27;end&#x27;] . &#x27;&lt;/p&gt;&#x27;;
+
+        // User metrics
+        $html .= &#x27;&lt;h2&gt;User Metrics&lt;/h2&gt;&#x27;;
+        $html .= &#x27;&lt;ul&gt;&#x27;;
+        foreach($report[&#x27;metrics&#x27;][&#x27;users&#x27;] as $key =&gt; $value) {
+            $html .= &#x27;&lt;li&gt;&#x27; . ucwords(str_replace(&#x27;_&#x27;, &#x27; &#x27;, $key)) . &#x27;: &#x27; . $value . &#x27;&lt;/li&gt;&#x27;;
+        }
+        $html .= &#x27;&lt;/ul&gt;&#x27;;
+
+        // Revenue metrics
+        $html .= &#x27;&lt;h2&gt;Revenue Metrics&lt;/h2&gt;&#x27;;
+        $html .= &#x27;&lt;ul&gt;&#x27;;
+        foreach($report[&#x27;metrics&#x27;][&#x27;revenue&#x27;] as $key =&gt; $value) {
+            $formatted = is_numeric($value) ? &#x27;$&#x27; . number_format($value, 2) : $value;
+            $html .= &#x27;&lt;li&gt;&#x27; . ucwords(str_replace(&#x27;_&#x27;, &#x27; &#x27;, $key)) . &#x27;: &#x27; . $formatted . &#x27;&lt;/li&gt;&#x27;;
+        }
+        $html .= &#x27;&lt;/ul&gt;&#x27;;
+
+        // Top products
+        $html .= &#x27;&lt;h2&gt;Top Products&lt;/h2&gt;&#x27;;
+        $html .= &#x27;&lt;table border=&quot;1&quot; cellpadding=&quot;5&quot;&gt;&#x27;;
+        $html .= &#x27;&lt;tr&gt;&lt;th&gt;Product&lt;/th&gt;&lt;th&gt;Orders&lt;/th&gt;&lt;th&gt;Units&lt;/th&gt;&lt;th&gt;Revenue&lt;/th&gt;&lt;/tr&gt;&#x27;;
+
+        foreach($report[&#x27;metrics&#x27;][&#x27;products&#x27;] as $product) {
+            $html .= &#x27;&lt;tr&gt;&#x27;;
+            $html .= &#x27;&lt;td&gt;&#x27; . $product[&#x27;product_name&#x27;] . &#x27;&lt;/td&gt;&#x27;;
+            $html .= &#x27;&lt;td&gt;&#x27; . $product[&#x27;orders&#x27;] . &#x27;&lt;/td&gt;&#x27;;
+            $html .= &#x27;&lt;td&gt;&#x27; . $product[&#x27;units_sold&#x27;] . &#x27;&lt;/td&gt;&#x27;;
+            $html .= &#x27;&lt;td&gt;$&#x27; . number_format($product[&#x27;revenue&#x27;], 2) . &#x27;&lt;/td&gt;&#x27;;
+            $html .= &#x27;&lt;/tr&gt;&#x27;;
+        }
+
+        $html .= &#x27;&lt;/table&gt;&#x27;;
+        $html .= &#x27;&lt;/body&gt;&lt;/html&gt;&#x27;;
+
+        return $html;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>User Management Script</h2>
+
+<p>Automated user management tasks including activation, deactivation, and bulk operations.</p>
+
+<p><strong>File:</strong> <code>app/scripts/user-management.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * User Management Script
+ *
+ * Usage:
+ * php index.php script=user-management method=activate user_id=123
+ * php index.php script=user-management method=deactivate user_id=123
+ * php index.php script=user-management method=bulk-activate file=/path/to/users.csv
+ * php index.php script=user-management method=clean-inactive days=90
+ * php index.php script=user-management method=export format=csv
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $ds;
+    private $processed = 0;
+    private $failed = 0;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== User Management Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;list&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Activate user account
+     */
+    public function METHOD_activate()
+    {
+        $userId = $this-&gt;getOptionVar(&#x27;user_id&#x27;);
+
+        if(!$userId) {
+            $userId = $this-&gt;prompt(&#x27;Enter User ID: &#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Activating user: &#x27; . $userId, &#x27;blue&#x27;);
+
+        $user = $this-&gt;ds-&gt;fetchOne($userId);
+
+        if(!$user) {
+            return $this-&gt;sendTerminal(&#x27;User not found&#x27;, &#x27;red&#x27;);
+        }
+
+        if($user[&#x27;status&#x27;] === &#x27;active&#x27;) {
+            return $this-&gt;sendTerminal(&#x27;User is already active&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Update user status
+        $this-&gt;ds-&gt;updateEntity($userId, [
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;activated_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to activate user&#x27;, &#x27;red&#x27;);
+        }
+
+        // Send activation email
+        $this-&gt;sendActivationEmail($user[&#x27;email&#x27;], $user[&#x27;name&#x27;]);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_activated&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;activated_by&#x27; =&gt; &#x27;script&#x27;
+        ], &#x27;user_management&#x27;);
+
+        $this-&gt;sendTerminal(&#x27;✓ User activated successfully&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Deactivate user account
+     */
+    public function METHOD_deactivate()
+    {
+        $userId = $this-&gt;getOptionVar(&#x27;user_id&#x27;);
+
+        if(!$userId) {
+            $userId = $this-&gt;prompt(&#x27;Enter User ID: &#x27;);
+        }
+
+        $reason = $this-&gt;getOptionVar(&#x27;reason&#x27;, &#x27;Administrative action&#x27;);
+
+        $this-&gt;sendTerminal(&#x27;Deactivating user: &#x27; . $userId, &#x27;blue&#x27;);
+
+        $user = $this-&gt;ds-&gt;fetchOne($userId);
+
+        if(!$user) {
+            return $this-&gt;sendTerminal(&#x27;User not found&#x27;, &#x27;red&#x27;);
+        }
+
+        if($user[&#x27;status&#x27;] === &#x27;inactive&#x27;) {
+            return $this-&gt;sendTerminal(&#x27;User is already inactive&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Confirm action
+        if(!$this-&gt;promptConfirm(&#x27;Are you sure you want to deactivate this user?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Deactivation cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Update user status
+        $this-&gt;ds-&gt;updateEntity($userId, [
+            &#x27;status&#x27; =&gt; &#x27;inactive&#x27;,
+            &#x27;deactivated_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;deactivation_reason&#x27; =&gt; $reason,
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to deactivate user&#x27;, &#x27;red&#x27;);
+        }
+
+        // Invalidate user sessions
+        $this-&gt;invalidateUserSessions($userId);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_deactivated&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;reason&#x27; =&gt; $reason,
+            &#x27;deactivated_by&#x27; =&gt; &#x27;script&#x27;
+        ], &#x27;user_management&#x27;);
+
+        $this-&gt;sendTerminal(&#x27;✓ User deactivated successfully&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Bulk activate users from file
+     */
+    public function METHOD_bulk_activate()
+    {
+        $file = $this-&gt;getOptionVar(&#x27;file&#x27;);
+
+        if(!$file) {
+            $file = $this-&gt;prompt(&#x27;Enter file path (CSV with user IDs): &#x27;);
+        }
+
+        if(!file_exists($file)) {
+            return $this-&gt;sendTerminal(&#x27;File not found: &#x27; . $file, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Reading users from: &#x27; . $file, &#x27;blue&#x27;);
+
+        // Read user IDs from file
+        $userIds = [];
+        $handle = fopen($file, &#x27;r&#x27;);
+
+        // Skip header
+        fgetcsv($handle);
+
+        while(($row = fgetcsv($handle)) !== false) {
+            if(!empty($row[0])) {
+                $userIds[] = trim($row[0]);
+            }
+        }
+
+        fclose($handle);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($userIds) . &#x27; users to activate&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        if(!$this-&gt;promptConfirm(&#x27;Proceed with bulk activation?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Bulk activation cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        $startTime = microtime(true);
+
+        foreach($userIds as $index =&gt; $userId) {
+            $userNum = $index + 1;
+
+            $user = $this-&gt;ds-&gt;fetchOne($userId);
+
+            if(!$user) {
+                $this-&gt;sendTerminal(&quot;[{$userNum}] User {$userId}: Not found&quot;, &#x27;red&#x27;);
+                $this-&gt;failed++;
+                continue;
+            }
+
+            if($user[&#x27;status&#x27;] === &#x27;active&#x27;) {
+                $this-&gt;sendTerminal(&quot;[{$userNum}] User {$userId}: Already active&quot;, &#x27;yellow&#x27;);
+                continue;
+            }
+
+            // Activate user
+            $this-&gt;ds-&gt;updateEntity($userId, [
+                &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+                &#x27;activated_at&#x27; =&gt; date(&#x27;c&#x27;),
+                &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+            ]);
+
+            if($this-&gt;ds-&gt;error()) {
+                $this-&gt;sendTerminal(&quot;[{$userNum}] User {$userId}: Failed to activate&quot;, &#x27;red&#x27;);
+                $this-&gt;failed++;
+            } else {
+                $this-&gt;sendTerminal(&quot;[{$userNum}] User {$userId}: Activated&quot;, &#x27;green&#x27;);
+                $this-&gt;processed++;
+
+                // Send email
+                $this-&gt;sendActivationEmail($user[&#x27;email&#x27;], $user[&#x27;name&#x27;]);
+            }
+
+            // Progress every 10 users
+            if($userNum % 10 === 0) {
+                $percent = round(($userNum / count($userIds)) * 100);
+                $this-&gt;sendTerminal(&quot;Progress: {$percent}%&quot;, &#x27;blue&#x27;);
+            }
+        }
+
+        $duration = round(microtime(true) - $startTime, 2);
+
+        // Summary
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;=== Bulk Activation Summary ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total users: &#x27; . count($userIds), &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Activated: &#x27; . $this-&gt;processed, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Failed: &#x27; . $this-&gt;failed, &#x27;red&#x27;);
+        $this-&gt;sendTerminal(&#x27;Duration: &#x27; . $duration . &#x27;s&#x27;, &#x27;blue&#x27;);
+    }
+
+    /**
+     * Clean inactive users
+     */
+    public function METHOD_clean_inactive()
+    {
+        $days = (int)($this-&gt;getOptionVar(&#x27;days&#x27;, 90));
+
+        $this-&gt;sendTerminal(&quot;Cleaning users inactive for {$days}+ days&quot;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $cutoffDate = date(&#x27;Y-m-d&#x27;, strtotime(&quot;-{$days} days&quot;));
+
+        // Find inactive users
+        $allUsers = $this-&gt;ds-&gt;fetchAll();
+
+        $inactiveUsers = array_filter($allUsers, function($user) use ($cutoffDate) {
+            if($user[&#x27;status&#x27;] !== &#x27;active&#x27;) {
+                return false;
+            }
+
+            $lastLogin = $user[&#x27;last_login&#x27;] ?? $user[&#x27;created_at&#x27;];
+            return $lastLogin &lt; $cutoffDate;
+        });
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($inactiveUsers) . &#x27; inactive users&#x27;, &#x27;yellow&#x27;);
+
+        if(empty($inactiveUsers)) {
+            return $this-&gt;sendTerminal(&#x27;No inactive users to clean&#x27;, &#x27;green&#x27;);
+        }
+
+        // Preview first 5
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Preview (first 5):&#x27;, &#x27;yellow&#x27;);
+
+        $preview = array_slice($inactiveUsers, 0, 5);
+        foreach($preview as $user) {
+            $lastLogin = $user[&#x27;last_login&#x27;] ?? $user[&#x27;created_at&#x27;];
+            $this-&gt;sendTerminal(&quot;  {$user[&#x27;email&#x27;]} - Last login: {$lastLogin}&quot;, &#x27;white&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        if(!$this-&gt;promptConfirm(&#x27;Proceed with deactivation?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Cleanup cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Deactivate users
+        foreach($inactiveUsers as $user) {
+            $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+                &#x27;status&#x27; =&gt; &#x27;inactive&#x27;,
+                &#x27;deactivated_at&#x27; =&gt; date(&#x27;c&#x27;),
+                &#x27;deactivation_reason&#x27; =&gt; &quot;Inactive for {$days}+ days&quot;,
+                &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+            ]);
+
+            if(!$this-&gt;ds-&gt;error()) {
+                $this-&gt;processed++;
+                $this-&gt;sendTerminal(&quot;✓ Deactivated: {$user[&#x27;email&#x27;]}&quot;, &#x27;green&#x27;);
+            } else {
+                $this-&gt;failed++;
+                $this-&gt;sendTerminal(&quot;✗ Failed: {$user[&#x27;email&#x27;]}&quot;, &#x27;red&#x27;);
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Processed: &#x27; . $this-&gt;processed, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Failed: &#x27; . $this-&gt;failed, &#x27;red&#x27;);
+    }
+
+    /**
+     * Export users to CSV or JSON
+     */
+    public function METHOD_export()
+    {
+        $format = $this-&gt;getOptionVar(&#x27;format&#x27;, &#x27;csv&#x27;);
+        $status = $this-&gt;getOptionVar(&#x27;status&#x27;, null);
+
+        $this-&gt;sendTerminal(&#x27;Exporting users...&#x27;, &#x27;blue&#x27;);
+
+        $where = [];
+        if($status) {
+            $where[] = [&#x27;status&#x27;, &#x27;=&#x27;, $status];
+        }
+
+        $users = $this-&gt;ds-&gt;fetchAll($where);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($users) . &#x27; users&#x27;, &#x27;green&#x27;);
+
+        // Remove sensitive data
+        foreach($users as &amp;$user) {
+            unset($user[&#x27;password&#x27;]);
+            unset($user[&#x27;api_key&#x27;]);
+            unset($user[&#x27;refresh_token&#x27;]);
+        }
+
+        $filename = &#x27;users_export_&#x27; . date(&#x27;Y-m-d_H-i-s&#x27;) . &#x27;.&#x27; . $format;
+
+        if($format === &#x27;csv&#x27;) {
+            $this-&gt;exportToCSV($users, $filename);
+        } else {
+            $this-&gt;exportToJSON($users, $filename);
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Exported to: &#x27; . $filename, &#x27;green&#x27;);
+    }
+
+    /**
+     * List user statistics
+     */
+    public function METHOD_stats()
+    {
+        $this-&gt;sendTerminal(&#x27;=== User Statistics ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $allUsers = $this-&gt;ds-&gt;fetchAll();
+
+        // Count by status
+        $byStatus = [];
+        foreach($allUsers as $user) {
+            $status = $user[&#x27;status&#x27;] ?? &#x27;unknown&#x27;;
+            $byStatus[$status] = ($byStatus[$status] ?? 0) + 1;
+        }
+
+        $this-&gt;sendTerminal(&#x27;Total users: &#x27; . count($allUsers), &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $this-&gt;sendTerminal(&#x27;By status:&#x27;, &#x27;yellow&#x27;);
+        foreach($byStatus as $status =&gt; $count) {
+            $color = $status === &#x27;active&#x27; ? &#x27;green&#x27; : &#x27;white&#x27;;
+            $this-&gt;sendTerminal(&quot;  {$status}: {$count}&quot;, $color);
+        }
+
+        // Recent registrations
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Recent registrations (last 7 days):&#x27;, &#x27;yellow&#x27;);
+
+        $weekAgo = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-7 days&#x27;));
+        $recent = array_filter($allUsers, function($user) use ($weekAgo) {
+            return isset($user[&#x27;created_at&#x27;]) &amp;&amp; $user[&#x27;created_at&#x27;] &gt;= $weekAgo;
+        });
+
+        $this-&gt;sendTerminal(&#x27;  &#x27; . count($recent) . &#x27; new users&#x27;, &#x27;green&#x27;);
+
+        // Active in last 30 days
+        $monthAgo = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-30 days&#x27;));
+        $activeRecently = array_filter($allUsers, function($user) use ($monthAgo) {
+            $lastLogin = $user[&#x27;last_login&#x27;] ?? null;
+            return $lastLogin &amp;&amp; $lastLogin &gt;= $monthAgo;
+        });
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Active in last 30 days: &#x27; . count($activeRecently), &#x27;green&#x27;);
+    }
+
+    // Helper methods
+
+    private function sendActivationEmail(string $email, string $name)
+    {
+        $emailService = $this-&gt;core-&gt;loadClass(&#x27;Email&#x27;);
+        $emailService-&gt;setTo($email);
+        $emailService-&gt;setSubject(&#x27;Your Account Has Been Activated&#x27;);
+        $emailService-&gt;setBodyHTML(&quot;
+            &lt;h1&gt;Welcome back, {$name}!&lt;/h1&gt;
+            &lt;p&gt;Your account has been activated and you can now log in.&lt;/p&gt;
+        &quot;);
+        $emailService-&gt;send();
+    }
+
+    private function invalidateUserSessions(string $userId)
+    {
+        // Clear user&#x27;s refresh tokens and sessions
+        $this-&gt;ds-&gt;updateEntity($userId, [
+            &#x27;refresh_token&#x27; =&gt; null
+        ]);
+    }
+
+    private function exportToCSV(array $users, string $filename)
+    {
+        $handle = fopen($filename, &#x27;w&#x27;);
+
+        // Write header
+        if(!empty($users)) {
+            fputcsv($handle, array_keys($users[0]));
+        }
+
+        // Write data
+        foreach($users as $user) {
+            fputcsv($handle, $user);
+        }
+
+        fclose($handle);
+    }
+
+    private function exportToJSON(array $users, string $filename)
+    {
+        file_put_contents($filename, json_encode($users, JSON_PRETTY_PRINT));
+    }
+
+    private function promptConfirm(string $message): bool
+    {
+        $response = $this-&gt;prompt($message . &#x27; (yes/no): &#x27;);
+        return strtolower(trim($response)) === &#x27;yes&#x27;;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Email Campaign Script</h2>
+
+<p>Send email campaigns to users with tracking and scheduling.</p>
+
+<p><strong>File:</strong> <code>app/scripts/email-campaign.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Email Campaign Script
+ *
+ * Usage:
+ * php index.php script=email-campaign method=send campaign_id=123
+ * php index.php script=email-campaign method=schedule campaign_id=123 datetime=&quot;2024-12-25 10:00:00&quot;
+ * php index.php script=email-campaign method=test campaign_id=123 email=test@example.com
+ * php index.php script=email-campaign method=stats campaign_id=123
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $campaignsDS;
+    private $usersDS;
+    private $email;
+    private $sent = 0;
+    private $failed = 0;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Email Campaign Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $this-&gt;campaignsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;EmailCampaigns&#x27;]);
+        $this-&gt;usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+        $this-&gt;email = $this-&gt;core-&gt;loadClass(&#x27;Email&#x27;);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;send&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Send email campaign
+     */
+    public function METHOD_send()
+    {
+        $campaignId = $this-&gt;getOptionVar(&#x27;campaign_id&#x27;);
+
+        if(!$campaignId) {
+            $campaignId = $this-&gt;prompt(&#x27;Enter Campaign ID: &#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Loading campaign: &#x27; . $campaignId, &#x27;blue&#x27;);
+
+        $campaign = $this-&gt;campaignsDS-&gt;fetchOne($campaignId);
+
+        if(!$campaign) {
+            return $this-&gt;sendTerminal(&#x27;Campaign not found&#x27;, &#x27;red&#x27;);
+        }
+
+        if($campaign[&#x27;status&#x27;] !== &#x27;draft&#x27; &amp;&amp; $campaign[&#x27;status&#x27;] !== &#x27;scheduled&#x27;) {
+            return $this-&gt;sendTerminal(&#x27;Campaign already sent or in progress&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Display campaign details
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Campaign: &#x27; . $campaign[&#x27;name&#x27;], &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Subject: &#x27; . $campaign[&#x27;subject&#x27;], &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Target: &#x27; . $campaign[&#x27;target_segment&#x27;], &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        // Get recipients
+        $recipients = $this-&gt;getRecipients($campaign);
+
+        $this-&gt;sendTerminal(&#x27;Recipients: &#x27; . count($recipients), &#x27;green&#x27;);
+
+        if(empty($recipients)) {
+            return $this-&gt;sendTerminal(&#x27;No recipients found&#x27;, &#x27;red&#x27;);
+        }
+
+        // Preview first recipient
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Preview (first recipient):&#x27;, &#x27;yellow&#x27;);
+        $preview = $this-&gt;renderEmail($campaign, $recipients[0]);
+        $this-&gt;sendTerminal(&#x27;To: &#x27; . $recipients[0][&#x27;email&#x27;], &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Subject: &#x27; . $preview[&#x27;subject&#x27;], &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        if(!$this-&gt;promptConfirm(&#x27;Send campaign to all recipients?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Campaign send cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Update campaign status
+        $this-&gt;campaignsDS-&gt;updateEntity($campaignId, [
+            &#x27;status&#x27; =&gt; &#x27;sending&#x27;,
+            &#x27;started_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        $startTime = microtime(true);
+
+        // Send emails
+        foreach($recipients as $index =&gt; $recipient) {
+            $recipientNum = $index + 1;
+
+            try {
+                $rendered = $this-&gt;renderEmail($campaign, $recipient);
+
+                $this-&gt;email-&gt;setTo($recipient[&#x27;email&#x27;]);
+                $this-&gt;email-&gt;setSubject($rendered[&#x27;subject&#x27;]);
+                $this-&gt;email-&gt;setBodyHTML($rendered[&#x27;html&#x27;]);
+
+                // Add tracking pixel
+                if($campaign[&#x27;track_opens&#x27;]) {
+                    $trackingPixel = $this-&gt;generateTrackingPixel($campaignId, $recipient[&#x27;id&#x27;]);
+                    $rendered[&#x27;html&#x27;] .= $trackingPixel;
+                }
+
+                if($this-&gt;email-&gt;send()) {
+                    $this-&gt;sent++;
+                    $this-&gt;sendTerminal(&quot;[{$recipientNum}/{count($recipients)}] Sent to: {$recipient[&#x27;email&#x27;]}&quot;, &#x27;green&#x27;);
+
+                    // Log send
+                    $this-&gt;logCampaignSend($campaignId, $recipient[&#x27;id&#x27;], &#x27;sent&#x27;);
+
+                } else {
+                    $this-&gt;failed++;
+                    $this-&gt;sendTerminal(&quot;[{$recipientNum}/{count($recipients)}] Failed: {$recipient[&#x27;email&#x27;]}&quot;, &#x27;red&#x27;);
+
+                    // Log failure
+                    $this-&gt;logCampaignSend($campaignId, $recipient[&#x27;id&#x27;], &#x27;failed&#x27;);
+                }
+
+            } catch(Exception $e) {
+                $this-&gt;failed++;
+                $this-&gt;sendTerminal(&quot;[{$recipientNum}/{count($recipients)}] Error: {$recipient[&#x27;email&#x27;]} - {$e-&gt;getMessage()}&quot;, &#x27;red&#x27;);
+            }
+
+            // Rate limiting (avoid overwhelming email service)
+            if($recipientNum % 50 === 0) {
+                $this-&gt;sendTerminal(&#x27;Pausing for rate limit...&#x27;, &#x27;yellow&#x27;);
+                sleep(1);
+            }
+
+            // Progress every 25 emails
+            if($recipientNum % 25 === 0) {
+                $percent = round(($recipientNum / count($recipients)) * 100);
+                $this-&gt;sendTerminal(&quot;Progress: {$percent}%&quot;, &#x27;blue&#x27;);
+            }
+        }
+
+        $duration = round(microtime(true) - $startTime, 2);
+
+        // Update campaign
+        $this-&gt;campaignsDS-&gt;updateEntity($campaignId, [
+            &#x27;status&#x27; =&gt; &#x27;sent&#x27;,
+            &#x27;completed_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;total_sent&#x27; =&gt; $this-&gt;sent,
+            &#x27;total_failed&#x27; =&gt; $this-&gt;failed
+        ]);
+
+        // Summary
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;=== Campaign Summary ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total recipients: &#x27; . count($recipients), &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Sent: &#x27; . $this-&gt;sent, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Failed: &#x27; . $this-&gt;failed, &#x27;red&#x27;);
+        $this-&gt;sendTerminal(&#x27;Duration: &#x27; . $duration . &#x27;s&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Rate: &#x27; . round(count($recipients) / $duration, 2) . &#x27; emails/sec&#x27;, &#x27;blue&#x27;);
+    }
+
+    /**
+     * Schedule campaign for later
+     */
+    public function METHOD_schedule()
+    {
+        $campaignId = $this-&gt;getOptionVar(&#x27;campaign_id&#x27;);
+        $datetime = $this-&gt;getOptionVar(&#x27;datetime&#x27;);
+
+        if(!$campaignId) {
+            $campaignId = $this-&gt;prompt(&#x27;Enter Campaign ID: &#x27;);
+        }
+
+        if(!$datetime) {
+            $datetime = $this-&gt;prompt(&#x27;Enter schedule datetime (Y-m-d H:i:s): &#x27;);
+        }
+
+        $campaign = $this-&gt;campaignsDS-&gt;fetchOne($campaignId);
+
+        if(!$campaign) {
+            return $this-&gt;sendTerminal(&#x27;Campaign not found&#x27;, &#x27;red&#x27;);
+        }
+
+        // Validate datetime
+        $scheduleTime = strtotime($datetime);
+        if($scheduleTime === false || $scheduleTime &lt; time()) {
+            return $this-&gt;sendTerminal(&#x27;Invalid datetime or datetime is in the past&#x27;, &#x27;red&#x27;);
+        }
+
+        // Update campaign
+        $this-&gt;campaignsDS-&gt;updateEntity($campaignId, [
+            &#x27;status&#x27; =&gt; &#x27;scheduled&#x27;,
+            &#x27;scheduled_at&#x27; =&gt; date(&#x27;c&#x27;, $scheduleTime),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        $this-&gt;sendTerminal(&#x27;✓ Campaign scheduled for: &#x27; . date(&#x27;Y-m-d H:i:s&#x27;, $scheduleTime), &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Note: Set up a cron job to check for scheduled campaigns:&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;sendTerminal(&#x27;* * * * * php index.php script=email-campaign method=process-scheduled&#x27;, &#x27;white&#x27;);
+    }
+
+    /**
+     * Send test email
+     */
+    public function METHOD_test()
+    {
+        $campaignId = $this-&gt;getOptionVar(&#x27;campaign_id&#x27;);
+        $testEmail = $this-&gt;getOptionVar(&#x27;email&#x27;);
+
+        if(!$campaignId) {
+            $campaignId = $this-&gt;prompt(&#x27;Enter Campaign ID: &#x27;);
+        }
+
+        if(!$testEmail) {
+            $testEmail = $this-&gt;prompt(&#x27;Enter test email address: &#x27;);
+        }
+
+        $campaign = $this-&gt;campaignsDS-&gt;fetchOne($campaignId);
+
+        if(!$campaign) {
+            return $this-&gt;sendTerminal(&#x27;Campaign not found&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Sending test email to: &#x27; . $testEmail, &#x27;blue&#x27;);
+
+        // Create test recipient
+        $testRecipient = [
+            &#x27;id&#x27; =&gt; &#x27;test&#x27;,
+            &#x27;email&#x27; =&gt; $testEmail,
+            &#x27;name&#x27; =&gt; &#x27;Test User&#x27;,
+            &#x27;first_name&#x27; =&gt; &#x27;Test&#x27;,
+            &#x27;last_name&#x27; =&gt; &#x27;User&#x27;
+        ];
+
+        $rendered = $this-&gt;renderEmail($campaign, $testRecipient);
+
+        $this-&gt;email-&gt;setTo($testEmail);
+        $this-&gt;email-&gt;setSubject(&#x27;[TEST] &#x27; . $rendered[&#x27;subject&#x27;]);
+        $this-&gt;email-&gt;setBodyHTML($rendered[&#x27;html&#x27;]);
+
+        if($this-&gt;email-&gt;send()) {
+            $this-&gt;sendTerminal(&#x27;✓ Test email sent successfully&#x27;, &#x27;green&#x27;);
+        } else {
+            $this-&gt;sendTerminal(&#x27;✗ Failed to send test email&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Show campaign statistics
+     */
+    public function METHOD_stats()
+    {
+        $campaignId = $this-&gt;getOptionVar(&#x27;campaign_id&#x27;);
+
+        if(!$campaignId) {
+            $campaignId = $this-&gt;prompt(&#x27;Enter Campaign ID: &#x27;);
+        }
+
+        $campaign = $this-&gt;campaignsDS-&gt;fetchOne($campaignId);
+
+        if(!$campaign) {
+            return $this-&gt;sendTerminal(&#x27;Campaign not found&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;=== Campaign Statistics ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+        $this-&gt;sendTerminal(&#x27;Campaign: &#x27; . $campaign[&#x27;name&#x27;], &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Status: &#x27; . $campaign[&#x27;status&#x27;], &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        if($campaign[&#x27;status&#x27;] !== &#x27;sent&#x27;) {
+            return $this-&gt;sendTerminal(&#x27;Campaign has not been sent yet&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Get stats from campaign log
+        $logsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;CampaignLogs&#x27;]);
+        $logs = $logsDS-&gt;fetchAll([[&#x27;campaign_id&#x27;, &#x27;=&#x27;, $campaignId]]);
+
+        $totalSent = count(array_filter($logs, fn($log) =&gt; $log[&#x27;status&#x27;] === &#x27;sent&#x27;));
+        $totalOpened = count(array_filter($logs, fn($log) =&gt; $log[&#x27;opened&#x27;] === true));
+        $totalClicked = count(array_filter($logs, fn($log) =&gt; $log[&#x27;clicked&#x27;] === true));
+        $totalBounced = count(array_filter($logs, fn($log) =&gt; $log[&#x27;status&#x27;] === &#x27;bounced&#x27;));
+
+        $openRate = $totalSent &gt; 0 ? round(($totalOpened / $totalSent) * 100, 2) : 0;
+        $clickRate = $totalSent &gt; 0 ? round(($totalClicked / $totalSent) * 100, 2) : 0;
+        $bounceRate = $totalSent &gt; 0 ? round(($totalBounced / $totalSent) * 100, 2) : 0;
+
+        $this-&gt;sendTerminal(&#x27;Total sent: &#x27; . $totalSent, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total opened: &#x27; . $totalOpened . &#x27; (&#x27; . $openRate . &#x27;%)&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total clicked: &#x27; . $totalClicked . &#x27; (&#x27; . $clickRate . &#x27;%)&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total bounced: &#x27; . $totalBounced . &#x27; (&#x27; . $bounceRate . &#x27;%)&#x27;, &#x27;red&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $sent_at = $campaign[&#x27;started_at&#x27;] ?? null;
+        $completed_at = $campaign[&#x27;completed_at&#x27;] ?? null;
+
+        if($sent_at) {
+            $this-&gt;sendTerminal(&#x27;Started: &#x27; . $sent_at, &#x27;white&#x27;);
+        }
+
+        if($completed_at) {
+            $this-&gt;sendTerminal(&#x27;Completed: &#x27; . $completed_at, &#x27;white&#x27;);
+        }
+    }
+
+    /**
+     * Process scheduled campaigns
+     */
+    public function METHOD_process_scheduled()
+    {
+        $this-&gt;sendTerminal(&#x27;Checking for scheduled campaigns...&#x27;, &#x27;blue&#x27;);
+
+        $campaigns = $this-&gt;campaignsDS-&gt;fetchAll([[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;scheduled&#x27;]]);
+
+        $now = time();
+        $processed = 0;
+
+        foreach($campaigns as $campaign) {
+            $scheduledTime = strtotime($campaign[&#x27;scheduled_at&#x27;]);
+
+            if($scheduledTime &lt;= $now) {
+                $this-&gt;sendTerminal(&#x27;Processing campaign: &#x27; . $campaign[&#x27;name&#x27;], &#x27;green&#x27;);
+
+                // Execute send method
+                $this-&gt;setOptionVar(&#x27;campaign_id&#x27;, $campaign[&#x27;KeyId&#x27;]);
+                $this-&gt;METHOD_send();
+
+                $processed++;
+            }
+        }
+
+        if($processed === 0) {
+            $this-&gt;sendTerminal(&#x27;No campaigns to process&#x27;, &#x27;yellow&#x27;);
+        } else {
+            $this-&gt;sendTerminal(&#x27;Processed &#x27; . $processed . &#x27; campaign(s)&#x27;, &#x27;green&#x27;);
+        }
+    }
+
+    // Helper methods
+
+    private function getRecipients(array $campaign): array
+    {
+        $segment = $campaign[&#x27;target_segment&#x27;] ?? &#x27;all&#x27;;
+
+        $where = [[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;]];
+
+        if($segment !== &#x27;all&#x27;) {
+            $where[] = [&#x27;segment&#x27;, &#x27;=&#x27;, $segment];
+        }
+
+        return $this-&gt;usersDS-&gt;fetchAll($where);
+    }
+
+    private function renderEmail(array $campaign, array $recipient): array
+    {
+        $subject = $campaign[&#x27;subject&#x27;];
+        $html = $campaign[&#x27;html_content&#x27;];
+
+        // Replace placeholders
+        $placeholders = [
+            &#x27;{{first_name}}&#x27; =&gt; $recipient[&#x27;first_name&#x27;] ?? $recipient[&#x27;name&#x27;],
+            &#x27;{{last_name}}&#x27; =&gt; $recipient[&#x27;last_name&#x27;] ?? &#x27;&#x27;,
+            &#x27;{{name}}&#x27; =&gt; $recipient[&#x27;name&#x27;],
+            &#x27;{{email}}&#x27; =&gt; $recipient[&#x27;email&#x27;]
+        ];
+
+        foreach($placeholders as $placeholder =&gt; $value) {
+            $subject = str_replace($placeholder, $value, $subject);
+            $html = str_replace($placeholder, $value, $html);
+        }
+
+        return [&#x27;subject&#x27; =&gt; $subject, &#x27;html&#x27; =&gt; $html];
+    }
+
+    private function generateTrackingPixel(string $campaignId, string $userId): string
+    {
+        $trackingUrl = $this-&gt;core-&gt;config-&gt;get(&#x27;app.url&#x27;) . &quot;/track/open?c={$campaignId}&amp;u={$userId}&quot;;
+        return &quot;&lt;img src=&#x27;{$trackingUrl}&#x27; width=&#x27;1&#x27; height=&#x27;1&#x27; /&gt;&quot;;
+    }
+
+    private function logCampaignSend(string $campaignId, string $userId, string $status)
+    {
+        $logsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;CampaignLogs&#x27;]);
+
+        $logsDS-&gt;createEntity([
+            &#x27;campaign_id&#x27; =&gt; $campaignId,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;status&#x27; =&gt; $status,
+            &#x27;sent_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+    }
+
+    private function promptConfirm(string $message): bool
+    {
+        $response = $this-&gt;prompt($message . &#x27; (yes/no): &#x27;);
+        return strtolower(trim($response)) === &#x27;yes&#x27;;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Data Sync Script</h2>
+
+<p>Synchronize data between different systems and platforms.</p>
+
+<p><strong>File:</strong> <code>app/scripts/data-sync.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Data Sync Script
+ *
+ * Usage:
+ * php index.php script=data-sync method=sync-users source=crm
+ * php index.php script=data-sync method=sync-products source=shopify
+ * php index.php script=data-sync method=sync-orders source=stripe
+ * php index.php script=data-sync method=full-sync
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $ds;
+    private $synced = 0;
+    private $skipped = 0;
+    private $errors = 0;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Data Sync Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;full-sync&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Sync users from external CRM
+     */
+    public function METHOD_sync_users()
+    {
+        $source = $this-&gt;getOptionVar(&#x27;source&#x27;, &#x27;crm&#x27;);
+
+        $this-&gt;sendTerminal(&quot;Syncing users from {$source}...&quot;, &#x27;blue&#x27;);
+
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+
+        // Fetch users from external source
+        $externalUsers = $this-&gt;fetchExternalUsers($source);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($externalUsers) . &#x27; users in &#x27; . $source, &#x27;green&#x27;);
+
+        $startTime = microtime(true);
+
+        foreach($externalUsers as $index =&gt; $externalUser) {
+            $userNum = $index + 1;
+
+            try {
+                // Check if user exists
+                $existing = $this-&gt;ds-&gt;fetchAll([
+                    [&#x27;email&#x27;, &#x27;=&#x27;, $externalUser[&#x27;email&#x27;]]
+                ], null, 1);
+
+                if(!empty($existing)) {
+                    // Update existing user
+                    $userId = $existing[0][&#x27;KeyId&#x27;];
+
+                    $updateData = $this-&gt;mapUserData($externalUser);
+                    $updateData[&#x27;updated_at&#x27;] = date(&#x27;c&#x27;);
+                    $updateData[&#x27;last_synced_at&#x27;] = date(&#x27;c&#x27;);
+
+                    $this-&gt;ds-&gt;updateEntity($userId, $updateData);
+
+                    $this-&gt;sendTerminal(&quot;[{$userNum}] Updated: {$externalUser[&#x27;email&#x27;]}&quot;, &#x27;green&#x27;);
+                    $this-&gt;synced++;
+
+                } else {
+                    // Create new user
+                    $userData = $this-&gt;mapUserData($externalUser);
+                    $userData[&#x27;created_at&#x27;] = date(&#x27;c&#x27;);
+                    $userData[&#x27;last_synced_at&#x27;] = date(&#x27;c&#x27;);
+                    $userData[&#x27;source&#x27;] = $source;
+
+                    $userId = $this-&gt;ds-&gt;createEntity($userData);
+
+                    $this-&gt;sendTerminal(&quot;[{$userNum}] Created: {$externalUser[&#x27;email&#x27;]}&quot;, &#x27;blue&#x27;);
+                    $this-&gt;synced++;
+                }
+
+            } catch(Exception $e) {
+                $this-&gt;sendTerminal(&quot;[{$userNum}] Error: {$externalUser[&#x27;email&#x27;]} - {$e-&gt;getMessage()}&quot;, &#x27;red&#x27;);
+                $this-&gt;errors++;
+            }
+        }
+
+        $duration = round(microtime(true) - $startTime, 2);
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Synced: &#x27; . $this-&gt;synced, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Errors: &#x27; . $this-&gt;errors, &#x27;red&#x27;);
+        $this-&gt;sendTerminal(&#x27;Duration: &#x27; . $duration . &#x27;s&#x27;, &#x27;blue&#x27;);
+    }
+
+    /**
+     * Sync products from Shopify
+     */
+    public function METHOD_sync_products()
+    {
+        $source = $this-&gt;getOptionVar(&#x27;source&#x27;, &#x27;shopify&#x27;);
+
+        $this-&gt;sendTerminal(&quot;Syncing products from {$source}...&quot;, &#x27;blue&#x27;);
+
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Products&#x27;]);
+
+        // Fetch products from Shopify
+        $externalProducts = $this-&gt;fetchExternalProducts($source);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($externalProducts) . &#x27; products&#x27;, &#x27;green&#x27;);
+
+        foreach($externalProducts as $index =&gt; $externalProduct) {
+            $productNum = $index + 1;
+
+            try {
+                // Check if product exists
+                $existing = $this-&gt;ds-&gt;fetchAll([
+                    [&#x27;external_id&#x27;, &#x27;=&#x27;, $externalProduct[&#x27;id&#x27;]]
+                ], null, 1);
+
+                if(!empty($existing)) {
+                    // Update existing product
+                    $productId = $existing[0][&#x27;KeyId&#x27;];
+
+                    $updateData = $this-&gt;mapProductData($externalProduct);
+                    $updateData[&#x27;updated_at&#x27;] = date(&#x27;c&#x27;);
+
+                    $this-&gt;ds-&gt;updateEntity($productId, $updateData);
+
+                    $this-&gt;sendTerminal(&quot;[{$productNum}] Updated: {$externalProduct[&#x27;title&#x27;]}&quot;, &#x27;green&#x27;);
+                    $this-&gt;synced++;
+
+                } else {
+                    // Create new product
+                    $productData = $this-&gt;mapProductData($externalProduct);
+                    $productData[&#x27;created_at&#x27;] = date(&#x27;c&#x27;);
+                    $productData[&#x27;source&#x27;] = $source;
+
+                    $productId = $this-&gt;ds-&gt;createEntity($productData);
+
+                    $this-&gt;sendTerminal(&quot;[{$productNum}] Created: {$externalProduct[&#x27;title&#x27;]}&quot;, &#x27;blue&#x27;);
+                    $this-&gt;synced++;
+                }
+
+            } catch(Exception $e) {
+                $this-&gt;sendTerminal(&quot;[{$productNum}] Error: {$externalProduct[&#x27;title&#x27;]} - {$e-&gt;getMessage()}&quot;, &#x27;red&#x27;);
+                $this-&gt;errors++;
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Synced: &#x27; . $this-&gt;synced, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Errors: &#x27; . $this-&gt;errors, &#x27;red&#x27;);
+    }
+
+    /**
+     * Sync orders from Stripe
+     */
+    public function METHOD_sync_orders()
+    {
+        $source = $this-&gt;getOptionVar(&#x27;source&#x27;, &#x27;stripe&#x27;);
+
+        $this-&gt;sendTerminal(&quot;Syncing orders from {$source}...&quot;, &#x27;blue&#x27;);
+
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Orders&#x27;]);
+
+        // Fetch orders from Stripe
+        $externalOrders = $this-&gt;fetchExternalOrders($source);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($externalOrders) . &#x27; orders&#x27;, &#x27;green&#x27;);
+
+        foreach($externalOrders as $index =&gt; $externalOrder) {
+            $orderNum = $index + 1;
+
+            try {
+                // Check if order exists
+                $existing = $this-&gt;ds-&gt;fetchAll([
+                    [&#x27;external_id&#x27;, &#x27;=&#x27;, $externalOrder[&#x27;id&#x27;]]
+                ], null, 1);
+
+                if(!empty($existing)) {
+                    // Update existing order
+                    $orderId = $existing[0][&#x27;KeyId&#x27;];
+
+                    $updateData = $this-&gt;mapOrderData($externalOrder);
+                    $updateData[&#x27;updated_at&#x27;] = date(&#x27;c&#x27;);
+
+                    $this-&gt;ds-&gt;updateEntity($orderId, $updateData);
+
+                    $this-&gt;sendTerminal(&quot;[{$orderNum}] Updated: {$externalOrder[&#x27;id&#x27;]}&quot;, &#x27;green&#x27;);
+                    $this-&gt;synced++;
+
+                } else {
+                    // Create new order
+                    $orderData = $this-&gt;mapOrderData($externalOrder);
+                    $orderData[&#x27;created_at&#x27;] = date(&#x27;c&#x27;);
+                    $orderData[&#x27;source&#x27;] = $source;
+
+                    $orderId = $this-&gt;ds-&gt;createEntity($orderData);
+
+                    $this-&gt;sendTerminal(&quot;[{$orderNum}] Created: {$externalOrder[&#x27;id&#x27;]}&quot;, &#x27;blue&#x27;);
+                    $this-&gt;synced++;
+                }
+
+            } catch(Exception $e) {
+                $this-&gt;sendTerminal(&quot;[{$orderNum}] Error: {$externalOrder[&#x27;id&#x27;]} - {$e-&gt;getMessage()}&quot;, &#x27;red&#x27;);
+                $this-&gt;errors++;
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Synced: &#x27; . $this-&gt;synced, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;Errors: &#x27; . $this-&gt;errors, &#x27;red&#x27;);
+    }
+
+    /**
+     * Full sync of all data
+     */
+    public function METHOD_full_sync()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Starting Full Data Sync ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $startTime = microtime(true);
+
+        // Sync users
+        $this-&gt;sendTerminal(&#x27;1. Syncing Users&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_sync_users();
+        $this-&gt;resetCounters();
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        // Sync products
+        $this-&gt;sendTerminal(&#x27;2. Syncing Products&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_sync_products();
+        $this-&gt;resetCounters();
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        // Sync orders
+        $this-&gt;sendTerminal(&#x27;3. Syncing Orders&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_sync_orders();
+
+        $totalDuration = round(microtime(true) - $startTime, 2);
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;=== Full Sync Completed ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total duration: &#x27; . $totalDuration . &#x27;s&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Sync to BigQuery for analytics
+     */
+    public function METHOD_sync_to_bigquery()
+    {
+        $this-&gt;sendTerminal(&#x27;Syncing data to BigQuery...&#x27;, &#x27;blue&#x27;);
+
+        $bq = $this-&gt;core-&gt;loadClass(&#x27;DataBQ&#x27;, [&#x27;analytics&#x27;]);
+
+        // Sync users
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+        $users = $usersDS-&gt;fetchAll();
+
+        $this-&gt;sendTerminal(&#x27;Syncing &#x27; . count($users) . &#x27; users to BigQuery...&#x27;, &#x27;yellow&#x27;);
+
+        $result = $bq-&gt;insert(&#x27;users&#x27;, $users);
+
+        if($bq-&gt;error()) {
+            $this-&gt;sendTerminal(&#x27;Failed to sync users&#x27;, &#x27;red&#x27;);
+        } else {
+            $this-&gt;sendTerminal(&#x27;✓ Users synced&#x27;, &#x27;green&#x27;);
+        }
+
+        // Sync orders
+        $ordersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Orders&#x27;]);
+        $orders = $ordersDS-&gt;fetchAll();
+
+        $this-&gt;sendTerminal(&#x27;Syncing &#x27; . count($orders) . &#x27; orders to BigQuery...&#x27;, &#x27;yellow&#x27;);
+
+        $result = $bq-&gt;insert(&#x27;orders&#x27;, $orders);
+
+        if($bq-&gt;error()) {
+            $this-&gt;sendTerminal(&#x27;Failed to sync orders&#x27;, &#x27;red&#x27;);
+        } else {
+            $this-&gt;sendTerminal(&#x27;✓ Orders synced&#x27;, &#x27;green&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;✓ BigQuery sync completed&#x27;, &#x27;green&#x27;);
+    }
+
+    // Helper methods
+
+    private function fetchExternalUsers(string $source): array
+    {
+        // Mock implementation - replace with actual API call
+        if($source === &#x27;crm&#x27;) {
+            // Fetch from CRM API
+            $apiUrl = $this-&gt;core-&gt;config-&gt;get(&#x27;sync.crm.api_url&#x27;);
+            $apiKey = $this-&gt;core-&gt;config-&gt;get(&#x27;sync.crm.api_key&#x27;);
+
+            // Make API request
+            // $response = file_get_contents($apiUrl . &#x27;/users&#x27;, [
+            //     &#x27;http&#x27; =&gt; [&#x27;header&#x27; =&gt; &quot;Authorization: Bearer {$apiKey}&quot;]
+            // ]);
+
+            // return json_decode($response, true);
+        }
+
+        // Mock data
+        return [
+            [&#x27;id&#x27; =&gt; &#x27;1&#x27;, &#x27;email&#x27; =&gt; &#x27;user1@example.com&#x27;, &#x27;name&#x27; =&gt; &#x27;User 1&#x27;, &#x27;phone&#x27; =&gt; &#x27;123456789&#x27;],
+            [&#x27;id&#x27; =&gt; &#x27;2&#x27;, &#x27;email&#x27; =&gt; &#x27;user2@example.com&#x27;, &#x27;name&#x27; =&gt; &#x27;User 2&#x27;, &#x27;phone&#x27; =&gt; &#x27;987654321&#x27;]
+        ];
+    }
+
+    private function fetchExternalProducts(string $source): array
+    {
+        // Mock implementation
+        return [
+            [&#x27;id&#x27; =&gt; &#x27;prod_1&#x27;, &#x27;title&#x27; =&gt; &#x27;Product 1&#x27;, &#x27;price&#x27; =&gt; 29.99, &#x27;stock&#x27; =&gt; 100],
+            [&#x27;id&#x27; =&gt; &#x27;prod_2&#x27;, &#x27;title&#x27; =&gt; &#x27;Product 2&#x27;, &#x27;price&#x27; =&gt; 49.99, &#x27;stock&#x27; =&gt; 50]
+        ];
+    }
+
+    private function fetchExternalOrders(string $source): array
+    {
+        // Mock implementation
+        return [
+            [&#x27;id&#x27; =&gt; &#x27;order_1&#x27;, &#x27;customer_email&#x27; =&gt; &#x27;user1@example.com&#x27;, &#x27;amount&#x27; =&gt; 100, &#x27;status&#x27; =&gt; &#x27;paid&#x27;],
+            [&#x27;id&#x27; =&gt; &#x27;order_2&#x27;, &#x27;customer_email&#x27; =&gt; &#x27;user2@example.com&#x27;, &#x27;amount&#x27; =&gt; 200, &#x27;status&#x27; =&gt; &#x27;paid&#x27;]
+        ];
+    }
+
+    private function mapUserData(array $externalUser): array
+    {
+        return [
+            &#x27;external_id&#x27; =&gt; $externalUser[&#x27;id&#x27;],
+            &#x27;email&#x27; =&gt; $externalUser[&#x27;email&#x27;],
+            &#x27;name&#x27; =&gt; $externalUser[&#x27;name&#x27;],
+            &#x27;phone&#x27; =&gt; $externalUser[&#x27;phone&#x27;] ?? null,
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;
+        ];
+    }
+
+    private function mapProductData(array $externalProduct): array
+    {
+        return [
+            &#x27;external_id&#x27; =&gt; $externalProduct[&#x27;id&#x27;],
+            &#x27;name&#x27; =&gt; $externalProduct[&#x27;title&#x27;],
+            &#x27;price&#x27; =&gt; $externalProduct[&#x27;price&#x27;],
+            &#x27;stock&#x27; =&gt; $externalProduct[&#x27;stock&#x27;],
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;
+        ];
+    }
+
+    private function mapOrderData(array $externalOrder): array
+    {
+        return [
+            &#x27;external_id&#x27; =&gt; $externalOrder[&#x27;id&#x27;],
+            &#x27;customer_email&#x27; =&gt; $externalOrder[&#x27;customer_email&#x27;],
+            &#x27;amount&#x27; =&gt; $externalOrder[&#x27;amount&#x27;],
+            &#x27;status&#x27; =&gt; $externalOrder[&#x27;status&#x27;]
+        ];
+    }
+
+    private function resetCounters()
+    {
+        $this-&gt;synced = 0;
+        $this-&gt;skipped = 0;
+        $this-&gt;errors = 0;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Cleanup Script</h2>
+
+<p>Automated cleanup of old data, logs, and temporary files.</p>
+
+<p><strong>File:</strong> <code>app/scripts/cleanup.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Cleanup Script
+ *
+ * Usage:
+ * php index.php script=cleanup method=logs days=30
+ * php index.php script=cleanup method=cache
+ * php index.php script=cleanup method=temp-files
+ * php index.php script=cleanup method=old-data days=90
+ * php index.php script=cleanup method=all
+ */
+
+use CloudFramework\Patterns\Scripts2020;
+
+class Script extends Scripts2020
+{
+    private $deleted = 0;
+    private $totalSize = 0;
+
+    function main()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Cleanup Script ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $method = $this-&gt;getOptionVar(&#x27;method&#x27;, &#x27;all&#x27;);
+
+        if(!$this-&gt;useFunction(&#x27;METHOD_&#x27; . $method)) {
+            $this-&gt;sendTerminal(&#x27;Invalid method&#x27;, &#x27;red&#x27;);
+        }
+    }
+
+    /**
+     * Clean old logs
+     */
+    public function METHOD_logs()
+    {
+        $days = (int)($this-&gt;getOptionVar(&#x27;days&#x27;, 30));
+
+        $this-&gt;sendTerminal(&quot;Cleaning logs older than {$days} days...&quot;, &#x27;blue&#x27;);
+
+        $logsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Logs&#x27;]);
+
+        $cutoffDate = date(&#x27;Y-m-d&#x27;, strtotime(&quot;-{$days} days&quot;));
+
+        // Get old logs
+        $oldLogs = $logsDS-&gt;fetchAll([
+            [&#x27;created_at&#x27;, &#x27;&lt;&#x27;, $cutoffDate]
+        ]);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($oldLogs) . &#x27; old log entries&#x27;, &#x27;yellow&#x27;);
+
+        if(empty($oldLogs)) {
+            return $this-&gt;sendTerminal(&#x27;No logs to clean&#x27;, &#x27;green&#x27;);
+        }
+
+        if(!$this-&gt;promptConfirm(&#x27;Delete these log entries?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Cleanup cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Delete logs
+        foreach($oldLogs as $log) {
+            $logsDS-&gt;delete($log[&#x27;KeyId&#x27;]);
+
+            if(!$logsDS-&gt;error()) {
+                $this-&gt;deleted++;
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Deleted &#x27; . $this-&gt;deleted . &#x27; log entries&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Clean cache
+     */
+    public function METHOD_cache()
+    {
+        $this-&gt;sendTerminal(&#x27;Cleaning cache...&#x27;, &#x27;blue&#x27;);
+
+        $cachePath = $this-&gt;core-&gt;config-&gt;get(&#x27;core.cache.cache_path&#x27;);
+
+        if(!$cachePath || !is_dir($cachePath)) {
+            return $this-&gt;sendTerminal(&#x27;Cache directory not found&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Cache path: &#x27; . $cachePath, &#x27;white&#x27;);
+
+        // Get cache files
+        $files = glob($cachePath . &#x27;/*&#x27;);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($files) . &#x27; cache files&#x27;, &#x27;yellow&#x27;);
+
+        if(empty($files)) {
+            return $this-&gt;sendTerminal(&#x27;No cache files to clean&#x27;, &#x27;green&#x27;);
+        }
+
+        // Calculate total size
+        $totalSize = 0;
+        foreach($files as $file) {
+            if(is_file($file)) {
+                $totalSize += filesize($file);
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;Total cache size: &#x27; . $this-&gt;formatBytes($totalSize), &#x27;white&#x27;);
+
+        if(!$this-&gt;promptConfirm(&#x27;Delete all cache files?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Cache cleanup cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Delete cache files
+        foreach($files as $file) {
+            if(is_file($file)) {
+                unlink($file);
+                $this-&gt;deleted++;
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Deleted &#x27; . $this-&gt;deleted . &#x27; cache files&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;✓ Freed &#x27; . $this-&gt;formatBytes($totalSize) . &#x27; of space&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Clean temporary files
+     */
+    public function METHOD_temp_files()
+    {
+        $this-&gt;sendTerminal(&#x27;Cleaning temporary files...&#x27;, &#x27;blue&#x27;);
+
+        $tempPath = &#x27;/tmp&#x27;;
+        $prefix = &#x27;cf_&#x27;; // CloudFramework temp files prefix
+
+        $pattern = $tempPath . &#x27;/&#x27; . $prefix . &#x27;*&#x27;;
+        $files = glob($pattern);
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($files) . &#x27; temporary files&#x27;, &#x27;yellow&#x27;);
+
+        if(empty($files)) {
+            return $this-&gt;sendTerminal(&#x27;No temporary files to clean&#x27;, &#x27;green&#x27;);
+        }
+
+        // Calculate size and filter old files
+        $oldFiles = [];
+        $totalSize = 0;
+        $cutoff = time() - (24 * 3600); // 24 hours
+
+        foreach($files as $file) {
+            if(is_file($file) &amp;&amp; filemtime($file) &lt; $cutoff) {
+                $oldFiles[] = $file;
+                $totalSize += filesize($file);
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($oldFiles) . &#x27; old temp files (&#x27; . $this-&gt;formatBytes($totalSize) . &#x27;)&#x27;, &#x27;yellow&#x27;);
+
+        if(empty($oldFiles)) {
+            return $this-&gt;sendTerminal(&#x27;No old temporary files to clean&#x27;, &#x27;green&#x27;);
+        }
+
+        if(!$this-&gt;promptConfirm(&#x27;Delete old temporary files?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Cleanup cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        // Delete files
+        foreach($oldFiles as $file) {
+            unlink($file);
+            $this-&gt;deleted++;
+        }
+
+        $this-&gt;sendTerminal(&#x27;✓ Deleted &#x27; . $this-&gt;deleted . &#x27; temporary files&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;✓ Freed &#x27; . $this-&gt;formatBytes($totalSize) . &#x27; of space&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Clean old data
+     */
+    public function METHOD_old_data()
+    {
+        $days = (int)($this-&gt;getOptionVar(&#x27;days&#x27;, 90));
+
+        $this-&gt;sendTerminal(&quot;Cleaning data older than {$days} days...&quot;, &#x27;blue&#x27;);
+
+        $cutoffDate = date(&#x27;Y-m-d&#x27;, strtotime(&quot;-{$days} days&quot;));
+
+        // Clean old sessions
+        $this-&gt;sendTerminal(&#x27;Cleaning old sessions...&#x27;, &#x27;yellow&#x27;);
+        $sessionsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Sessions&#x27;]);
+        $oldSessions = $sessionsDS-&gt;fetchAll([[&#x27;created_at&#x27;, &#x27;&lt;&#x27;, $cutoffDate]]);
+
+        foreach($oldSessions as $session) {
+            $sessionsDS-&gt;delete($session[&#x27;KeyId&#x27;]);
+            $this-&gt;deleted++;
+        }
+
+        $this-&gt;sendTerminal(&#x27;  ✓ Deleted &#x27; . count($oldSessions) . &#x27; old sessions&#x27;, &#x27;green&#x27;);
+
+        // Clean old notifications
+        $this-&gt;sendTerminal(&#x27;Cleaning old notifications...&#x27;, &#x27;yellow&#x27;);
+        $notificationsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Notifications&#x27;]);
+        $oldNotifications = $notificationsDS-&gt;fetchAll([
+            [&#x27;created_at&#x27;, &#x27;&lt;&#x27;, $cutoffDate],
+            [&#x27;read&#x27;, &#x27;=&#x27;, true]
+        ]);
+
+        foreach($oldNotifications as $notification) {
+            $notificationsDS-&gt;delete($notification[&#x27;KeyId&#x27;]);
+            $this-&gt;deleted++;
+        }
+
+        $this-&gt;sendTerminal(&#x27;  ✓ Deleted &#x27; . count($oldNotifications) . &#x27; old notifications&#x27;, &#x27;green&#x27;);
+
+        // Clean old analytics events
+        $this-&gt;sendTerminal(&#x27;Cleaning old analytics events...&#x27;, &#x27;yellow&#x27;);
+        $eventsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;AnalyticsEvents&#x27;]);
+        $oldEvents = $eventsDS-&gt;fetchAll([[&#x27;created_at&#x27;, &#x27;&lt;&#x27;, $cutoffDate]]);
+
+        foreach($oldEvents as $event) {
+            $eventsDS-&gt;delete($event[&#x27;KeyId&#x27;]);
+            $this-&gt;deleted++;
+        }
+
+        $this-&gt;sendTerminal(&#x27;  ✓ Deleted &#x27; . count($oldEvents) . &#x27; old events&#x27;, &#x27;green&#x27;);
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total deleted: &#x27; . $this-&gt;deleted . &#x27; records&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Clean everything
+     */
+    public function METHOD_all()
+    {
+        $this-&gt;sendTerminal(&#x27;=== Running Full Cleanup ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;&#x27;);
+
+        $startTime = microtime(true);
+
+        // Clean logs
+        $this-&gt;sendTerminal(&#x27;1. Cleaning Logs&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_logs();
+        $this-&gt;resetCounters();
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        // Clean cache
+        $this-&gt;sendTerminal(&#x27;2. Cleaning Cache&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_cache();
+        $this-&gt;resetCounters();
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        // Clean temp files
+        $this-&gt;sendTerminal(&#x27;3. Cleaning Temporary Files&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_temp_files();
+        $this-&gt;resetCounters();
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+
+        // Clean old data
+        $this-&gt;sendTerminal(&#x27;4. Cleaning Old Data&#x27;, &#x27;yellow&#x27;);
+        $this-&gt;METHOD_old_data();
+
+        $duration = round(microtime(true) - $startTime, 2);
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;=== Cleanup Completed ===&#x27;, &#x27;blue&#x27;);
+        $this-&gt;sendTerminal(&#x27;Total duration: &#x27; . $duration . &#x27;s&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Vacuum/optimize database
+     */
+    public function METHOD_optimize_database()
+    {
+        $this-&gt;sendTerminal(&#x27;Optimizing database...&#x27;, &#x27;blue&#x27;);
+
+        $sql = $this-&gt;core-&gt;loadClass(&#x27;CloudSQL&#x27;);
+
+        // Get all tables
+        $tables = $sql-&gt;command(&quot;SHOW TABLES&quot;);
+
+        if($sql-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to get tables&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($tables) . &#x27; tables&#x27;, &#x27;yellow&#x27;);
+
+        foreach($tables as $table) {
+            $tableName = array_values($table)[0];
+
+            $this-&gt;sendTerminal(&#x27;Optimizing: &#x27; . $tableName, &#x27;white&#x27;);
+
+            $sql-&gt;command(&quot;OPTIMIZE TABLE `{$tableName}`&quot;);
+
+            if(!$sql-&gt;error()) {
+                $this-&gt;sendTerminal(&#x27;  ✓ Optimized&#x27;, &#x27;green&#x27;);
+            } else {
+                $this-&gt;sendTerminal(&#x27;  ✗ Failed&#x27;, &#x27;red&#x27;);
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;✓ Database optimization completed&#x27;, &#x27;green&#x27;);
+    }
+
+    /**
+     * Clean Cloud Storage old files
+     */
+    public function METHOD_storage()
+    {
+        $days = (int)($this-&gt;getOptionVar(&#x27;days&#x27;, 90));
+
+        $this-&gt;sendTerminal(&quot;Cleaning Cloud Storage files older than {$days} days...&quot;, &#x27;blue&#x27;);
+
+        $buckets = $this-&gt;core-&gt;loadClass(&#x27;Buckets&#x27;, [&#x27;gs://my-uploads-bucket&#x27;]);
+
+        $files = $buckets-&gt;scan(&#x27;uploads/&#x27;);
+
+        if($buckets-&gt;error()) {
+            return $this-&gt;sendTerminal(&#x27;Failed to scan bucket&#x27;, &#x27;red&#x27;);
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($files) . &#x27; files&#x27;, &#x27;yellow&#x27;);
+
+        $cutoff = time() - ($days * 24 * 3600);
+        $oldFiles = [];
+        $totalSize = 0;
+
+        foreach($files as $file) {
+            $info = $buckets-&gt;getFileInfo($file);
+
+            if(isset($info[&#x27;updated&#x27;]) &amp;&amp; strtotime($info[&#x27;updated&#x27;]) &lt; $cutoff) {
+                $oldFiles[] = $file;
+                $totalSize += $info[&#x27;size&#x27;] ?? 0;
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;Found &#x27; . count($oldFiles) . &#x27; old files (&#x27; . $this-&gt;formatBytes($totalSize) . &#x27;)&#x27;, &#x27;yellow&#x27;);
+
+        if(empty($oldFiles)) {
+            return $this-&gt;sendTerminal(&#x27;No old files to clean&#x27;, &#x27;green&#x27;);
+        }
+
+        if(!$this-&gt;promptConfirm(&#x27;Delete old files from Cloud Storage?&#x27;)) {
+            return $this-&gt;sendTerminal(&#x27;Cleanup cancelled&#x27;, &#x27;yellow&#x27;);
+        }
+
+        foreach($oldFiles as $file) {
+            $buckets-&gt;delete($file);
+
+            if(!$buckets-&gt;error()) {
+                $this-&gt;deleted++;
+                $this-&gt;sendTerminal(&#x27;  ✓ Deleted: &#x27; . basename($file), &#x27;green&#x27;);
+            } else {
+                $this-&gt;sendTerminal(&#x27;  ✗ Failed: &#x27; . basename($file), &#x27;red&#x27;);
+            }
+        }
+
+        $this-&gt;sendTerminal(&#x27;&#x27;, &#x27;white&#x27;);
+        $this-&gt;sendTerminal(&#x27;✓ Deleted &#x27; . $this-&gt;deleted . &#x27; files&#x27;, &#x27;green&#x27;);
+        $this-&gt;sendTerminal(&#x27;✓ Freed &#x27; . $this-&gt;formatBytes($totalSize) . &#x27; of space&#x27;, &#x27;green&#x27;);
+    }
+
+    // Helper methods
+
+    private function formatBytes(int $bytes): string
+    {
+        $units = [&#x27;B&#x27;, &#x27;KB&#x27;, &#x27;MB&#x27;, &#x27;GB&#x27;, &#x27;TB&#x27;];
+        $bytes = max($bytes, 0);
+        $pow = floor(($bytes ? log($bytes) : 0) / log(1024));
+        $pow = min($pow, count($units) - 1);
+        $bytes /= (1 &lt;&lt; (10 * $pow));
+
+        return round($bytes, 2) . &#x27; &#x27; . $units[$pow];
+    }
+
+    private function promptConfirm(string $message): bool
+    {
+        $response = $this-&gt;prompt($message . &#x27; (yes/no): &#x27;);
+        return strtolower(trim($response)) === &#x27;yes&#x27;;
+    }
+
+    private function resetCounters()
+    {
+        $this-&gt;deleted = 0;
+        $this-&gt;totalSize = 0;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/script-development.html">Script Development Guide</a></li>
+<li><a href="../api-reference/Scripts2020.html">Scripts2020 Class Reference</a></li>
+<li><a href="api-examples.html">API Examples</a></li>
+<li><a href="gcp-examples.html">GCP Examples</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

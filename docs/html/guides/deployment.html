@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deployment - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Deploy to Google Cloud Platform">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link active">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Deployment Guide</h1>
+
+<h2>Overview</h2>
+
+<p>CloudFramework Backend Core PHP8 can be deployed to various environments:</p>
+<ul>
+<li>Google App Engine (recommended)</li>
+<li>Google Cloud Functions</li>
+<li>Google Cloud Run</li>
+<li>Traditional servers (Apache, Nginx)</li>
+<li>Docker containers</li>
+</ul>
+
+<p>This guide covers deployment strategies, configuration, and best practices for each platform.</p>
+
+<p>---</p>
+
+<h2>Table of Contents</h2>
+
+<ol>
+<li><a href="#pre-deployment-checklist">Pre-Deployment Checklist</a></li>
+<li><a href="#google-app-engine">Google App Engine</a></li>
+<li><a href="#google-cloud-functions">Google Cloud Functions</a></li>
+<li><a href="#google-cloud-run">Google Cloud Run</a></li>
+<li><a href="#docker-deployment">Docker Deployment</a></li>
+<li><a href="#traditional-server-deployment">Traditional Server Deployment</a></li>
+<li><a href="#environment-configuration">Environment Configuration</a></li>
+<li><a href="#health-checks--monitoring">Health Checks & Monitoring</a></li>
+<li><a href="#scaling--performance">Scaling & Performance</a></li>
+<li><a href="#troubleshooting">Troubleshooting</a></li>
+</ol>
+
+<p>---</p>
+
+<h2>Pre-Deployment Checklist</h2>
+
+<h3>1. Code Preparation</h3>
+
+<ul>
+<li>[ ] All dependencies installed via Composer</li>
+<li>[ ] Remove development dependencies: <code>composer install --no-dev</code></li>
+<li>[ ] Configuration files ready (no sensitive data in git)</li>
+<li>[ ] Error handling implemented</li>
+<li>[ ] Logs configured properly</li>
+</ul>
+
+<h3>2. Security</h3>
+
+<ul>
+<li>[ ] API keys and secrets in environment variables</li>
+<li>[ ] CORS configured for production domains</li>
+<li>[ ] Rate limiting enabled</li>
+<li>[ ] SQL injection protection verified</li>
+<li>[ ] XSS protection implemented</li>
+</ul>
+
+<h3>3. GCP Setup</h3>
+
+<ul>
+<li>[ ] GCP project created</li>
+<li>[ ] Service account created with appropriate roles</li>
+<li>[ ] APIs enabled (Datastore, Storage, BigQuery, Cloud SQL)</li>
+<li>[ ] Billing enabled</li>
+</ul>
+
+<h3>4. Database</h3>
+
+<ul>
+<li>[ ] Database schema created</li>
+<li>[ ] Migration scripts ready</li>
+<li>[ ] Backup strategy in place</li>
+<li>[ ] Connection pooling configured</li>
+</ul>
+
+<h3>5. Testing</h3>
+
+<ul>
+<li>[ ] All tests passing</li>
+<li>[ ] Load testing completed</li>
+<li>[ ] Security audit performed</li>
+<li>[ ] API endpoints tested</li>
+</ul>
+
+<p>---</p>
+
+<h2>Google App Engine</h2>
+
+<h3>Overview</h3>
+
+<p>Google App Engine is a fully managed platform ideal for CloudFramework applications. It provides:</p>
+<ul>
+<li>Automatic scaling</li>
+<li>Built-in load balancing</li>
+<li>Zero-downtime deployments</li>
+<li>Direct Cloud SQL connections</li>
+<li>Integrated monitoring</li>
+</ul>
+
+<h3>Prerequisites</h3>
+
+<ol>
+<li>Install Google Cloud SDK:</li>
+</ol>
+<pre><code><h1>macOS</h1>
+<p>brew install google-cloud-sdk</p>
+
+<h1>Or download from:</h1>
+<h1>https://cloud.google.com/sdk/docs/install</h1></code></pre>
+
+<ol>
+<li>Initialize and authenticate:</li>
+</ol>
+<pre><code>gcloud init
+<p>gcloud auth login</p>
+<p>gcloud config set project YOUR_PROJECT_ID</code></pre></p>
+
+<h3>Project Structure</h3>
+
+<pre><code>project/
+<p>├── app/</p>
+<p>│   ├── api/</p>
+<p>│   └── scripts/</p>
+<p>├── vendor/</p>
+<p>├── app.yaml           # App Engine configuration</p>
+<p>├── composer.json</p>
+<p>├── config.json</p>
+<p>└── .gcloudignore      # Files to ignore during deployment</code></pre></p>
+
+<h3>app.yaml Configuration</h3>
+
+<strong>Basic Configuration:</strong>
+
+<pre><code>runtime: php83
+
+<p>env_variables:</p>
+<p>  GCP_PROJECT_ID: 'my-project-123'</p>
+<p>  DB_PASSWORD: 'production_password'</p>
+<p>  ENCRYPTION_KEY: 'your-encryption-key'</p>
+
+<h1>Recommended for APIs</h1>
+<p>automatic_scaling:</p>
+<p>  min_instances: 1</p>
+<p>  max_instances: 10</p>
+<p>  target_cpu_utilization: 0.65</p>
+<p>  target_throughput_utilization: 0.6</p>
+
+<h1>Instance resources</h1>
+<p>instance_class: F2</p>
+
+<h1>Handlers</h1>
+<p>handlers:</p>
+<p>  # Serve static files</p>
+<ul>
+<li>url: /static</li>
+</ul>
+<p>    static_dir: static</p>
+<p>    secure: always</p>
+
+<p>  # All other requests to index.php</p>
+<ul>
+<li>url: /.*</li>
+</ul>
+<p>    script: auto</p>
+<p>    secure: always</code></pre></p>
+
+<strong>Advanced Configuration with Cloud SQL:</strong>
+
+<pre><code>runtime: php83
+
+<p>env_variables:</p>
+<p>  GCP_PROJECT_ID: 'my-project-123'</p>
+<p>  DB_PASSWORD: 'production_password'</p>
+<p>  CACHE_TYPE: 'datastore'</p>
+
+<h1>Cloud SQL connection</h1>
+<p>vpc_access_connector:</p>
+<p>  name: "projects/my-project/locations/us-central1/connectors/my-connector"</p>
+
+<h1>Connect to Cloud SQL via Unix socket</h1>
+<p>beta_settings:</p>
+<p>  cloud_sql_instances: "my-project:us-central1:main-instance"</p>
+
+<p>automatic_scaling:</p>
+<p>  min_instances: 2</p>
+<p>  max_instances: 20</p>
+<p>  target_cpu_utilization: 0.65</p>
+
+<p>instance_class: F4</p>
+
+<p>handlers:</p>
+<ul>
+<li>url: /static</li>
+</ul>
+<p>    static_dir: static</p>
+<p>    secure: always</p>
+<p>    expiration: "1d"</p>
+
+<ul>
+<li>url: /.*</li>
+</ul>
+<p>    script: auto</p>
+<p>    secure: always</code></pre></p>
+
+<strong>Configuration with Multiple Services:</strong>
+
+<pre><code><h1>default service (app.yaml)</h1>
+<p>runtime: php83</p>
+<p>service: default</p>
+
+<p>env_variables:</p>
+<p>  SERVICE_NAME: 'api'</p>
+
+<p>automatic_scaling:</p>
+<p>  min_instances: 2</p>
+<p>  max_instances: 20</p>
+
+<p>handlers:</p>
+<ul>
+<li>url: /.*</li>
+</ul>
+<p>    script: auto</p>
+<p>    secure: always</code></pre></p>
+
+<pre><code><h1>admin service (admin.yaml)</h1>
+<p>runtime: php83</p>
+<p>service: admin</p>
+
+<p>env_variables:</p>
+<p>  SERVICE_NAME: 'admin'</p>
+
+<p>basic_scaling:</p>
+<p>  max_instances: 2</p>
+<p>  idle_timeout: 10m</p>
+
+<p>handlers:</p>
+<ul>
+<li>url: /.*</li>
+</ul>
+<p>    script: auto</p>
+<p>    secure: always</p>
+<p>    login: admin  # Requires Google account login</code></pre></p>
+
+<h3>.gcloudignore File</h3>
+
+<p>Create a <code>.gcloudignore</code> file to exclude unnecessary files:</p>
+
+<pre><code><h1>Ignore development files</h1>
+<p>.git/</p>
+<p>.gitignore</p>
+<p>.env</p>
+<p>local_config.json</p>
+<p>local_script.json</p>
+
+<h1>Ignore tests</h1>
+<p>tests/</p>
+<p>phpunit.xml</p>
+
+<h1>Ignore documentation</h1>
+<p>docs/</p>
+<p>*.md</p>
+<p>README.md</p>
+
+<h1>Ignore development dependencies</h1>
+<p>/vendor/phpunit/</p>
+<p>/vendor/mockery/</p>
+
+<h1>Ignore IDE files</h1>
+<p>.idea/</p>
+<p>.vscode/</p>
+<p>*.swp</p>
+<p>*.swo</p>
+
+<h1>Ignore logs</h1>
+<p>*.log</p>
+<p>logs/</p>
+
+<h1>Ignore cache</h1>
+<p>cache/</p>
+<p>tmp/</code></pre></p>
+
+<h3>Deployment Commands</h3>
+
+<strong>Deploy default service:</strong>
+<pre><code>gcloud app deploy</code></pre>
+
+<strong>Deploy with specific version:</strong>
+<pre><code>gcloud app deploy --version=v1-0-0 --no-promote</code></pre>
+
+<strong>Deploy multiple services:</strong>
+<pre><code>gcloud app deploy app.yaml admin.yaml</code></pre>
+
+<strong>Deploy and view logs:</strong>
+<pre><code>gcloud app deploy && gcloud app logs tail -s default</code></pre>
+
+<strong>Set traffic splitting:</strong>
+<pre><code><h1>Split traffic 50/50 between versions</h1>
+<p>gcloud app services set-traffic default --splits v1=0.5,v2=0.5</p>
+
+<h1>Migrate all traffic to new version</h1>
+<p>gcloud app services set-traffic default --splits v2=1.0 --migrate</code></pre></p>
+
+<h3>Post-Deployment</h3>
+
+<strong>View application:</strong>
+<pre><code>gcloud app browse</code></pre>
+
+<strong>View logs:</strong>
+<pre><code>gcloud app logs tail -s default</code></pre>
+
+<strong>Check versions:</strong>
+<pre><code>gcloud app versions list</code></pre>
+
+<strong>Delete old versions:</strong>
+<pre><code>gcloud app versions delete v1-0-0</code></pre>
+
+<p>---</p>
+
+<h2>Google Cloud Functions</h2>
+
+<h3>Overview</h3>
+
+<p>Cloud Functions is ideal for:</p>
+<ul>
+<li>Single API endpoints</li>
+<li>Webhooks</li>
+<li>Event-driven tasks</li>
+<li>Microservices architecture</li>
+</ul>
+
+<h3>Project Structure</h3>
+
+<pre><code>function/
+<p>├── vendor/</p>
+<p>├── composer.json</p>
+<p>├── config.json</p>
+<p>├── index.php           # Entry point</p>
+<p>└── .gcloudignore</code></pre></p>
+
+<h3>index.php Entry Point</h3>
+
+<pre><code><?php
+<p>require_once __DIR__ . '/vendor/autoload.php';</p>
+
+<p>use CloudFramework\Core;</p>
+<p>use CloudFramework\Patterns\RESTful;</p>
+
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Your API logic</p>
+<p>        $endpoint = $this->params[0] ?? 'default';</p>
+<p>        $this->useFunction('ENDPOINT_' . $endpoint);</p>
+<p>    }</p>
+
+<p>    public function ENDPOINT_default()</p>
+<p>    {</p>
+<p>        $this->addReturnData(['message' => 'Hello from Cloud Function']);</p>
+<p>    }</p>
+
+<p>    public function ENDPOINT_users()</p>
+<p>    {</p>
+<p>        if(!$this->checkMethod('GET')) return;</p>
+
+<p>        $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $users = $ds->fetchAll();</p>
+
+<p>        $this->addReturnData($users);</p>
+<p>    }</p>
+<p>}</p>
+
+<p>// Handle the request</p>
+<p>$core = new Core();</p>
+<p>$api = new API($core);</p>
+<p>$api->execute();</p>
+<p>$api->send();</code></pre></p>
+
+<h3>Deployment</h3>
+
+<strong>Deploy HTTP function:</strong>
+<pre><code>gcloud functions deploy my-api \
+<p>  --runtime php83 \</p>
+<p>  --trigger-http \</p>
+<p>  --allow-unauthenticated \</p>
+<p>  --entry-point=index.php \</p>
+<p>  --set-env-vars GCP_PROJECT_ID=my-project,DB_PASSWORD=secret \</p>
+<p>  --region us-central1 \</p>
+<p>  --memory 256MB \</p>
+<p>  --timeout 60s</code></pre></p>
+
+<strong>Deploy with service account:</strong>
+<pre><code>gcloud functions deploy my-api \
+<p>  --runtime php83 \</p>
+<p>  --trigger-http \</p>
+<p>  --entry-point=index.php \</p>
+<p>  --service-account my-function@my-project.iam.gserviceaccount.com \</p>
+<p>  --set-env-vars GCP_PROJECT_ID=my-project \</p>
+<p>  --region us-central1</code></pre></p>
+
+<strong>Deploy Pub/Sub triggered function:</strong>
+<pre><code>gcloud functions deploy process-events \
+<p>  --runtime php83 \</p>
+<p>  --trigger-topic my-topic \</p>
+<p>  --entry-point=processEvent \</p>
+<p>  --set-env-vars GCP_PROJECT_ID=my-project \</p>
+<p>  --region us-central1</code></pre></p>
+
+<h3>Get function URL:</h3>
+<pre><code>gcloud functions describe my-api --region us-central1 --format="value(httpsTrigger.url)"</code></pre>
+
+<h3>View logs:</h3>
+<pre><code>gcloud functions logs read my-api --region us-central1 --limit 50</code></pre>
+
+<p>---</p>
+
+<h2>Google Cloud Run</h2>
+
+<h3>Overview</h3>
+
+<p>Cloud Run combines the flexibility of containers with serverless benefits:</p>
+<ul>
+<li>Custom Docker images</li>
+<li>Any dependencies</li>
+<li>Full control over environment</li>
+<li>Automatic scaling</li>
+<li>Pay per use</li>
+</ul>
+
+<h3>Project Structure</h3>
+
+<pre><code>project/
+<p>├── app/</p>
+<p>├── vendor/</p>
+<p>├── Dockerfile</p>
+<p>├── .dockerignore</p>
+<p>├── composer.json</p>
+<p>├── config.json</p>
+<p>└── nginx.conf</code></pre></p>
+
+<h3>Dockerfile</h3>
+
+<pre><code><h1>Use official PHP 8.3 image</h1>
+<p>FROM php:8.3-fpm-alpine</p>
+
+<h1>Install system dependencies</h1>
+<p>RUN apk add --no-cache \</p>
+<p>    nginx \</p>
+<p>    supervisor \</p>
+<p>    git \</p>
+<p>    zip \</p>
+<p>    unzip</p>
+
+<h1>Install PHP extensions</h1>
+<p>RUN docker-php-ext-install pdo pdo_mysql opcache</p>
+
+<h1>Install Composer</h1>
+<p>COPY --from=composer:latest /usr/bin/composer /usr/bin/composer</p>
+
+<h1>Set working directory</h1>
+<p>WORKDIR /app</p>
+
+<h1>Copy composer files</h1>
+<p>COPY composer.json composer.lock ./</p>
+
+<h1>Install dependencies</h1>
+<p>RUN composer install --no-dev --optimize-autoloader --no-interaction</p>
+
+<h1>Copy application</h1>
+<p>COPY . .</p>
+
+<h1>Copy nginx config</h1>
+<p>COPY nginx.conf /etc/nginx/nginx.conf</p>
+
+<h1>Copy supervisor config</h1>
+<p>COPY supervisord.conf /etc/supervisord.conf</p>
+
+<h1>Expose port</h1>
+<p>EXPOSE 8080</p>
+
+<h1>Start supervisor (manages nginx + php-fpm)</h1>
+<p>CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]</code></pre></p>
+
+<h3>nginx.conf</h3>
+
+<pre><code>worker_processes auto;
+<p>daemon off;</p>
+
+<p>events {</p>
+<p>    worker_connections 1024;</p>
+<p>}</p>
+
+<p>http {</p>
+<p>    include mime.types;</p>
+<p>    default_type application/octet-stream;</p>
+
+<p>    sendfile on;</p>
+<p>    keepalive_timeout 65;</p>
+
+<p>    upstream php-fpm {</p>
+<p>        server 127.0.0.1:9000;</p>
+<p>    }</p>
+
+<p>    server {</p>
+<p>        listen 8080;</p>
+<p>        server_name _;</p>
+<p>        root /app;</p>
+<p>        index index.php;</p>
+
+<p>        location / {</p>
+<p>            try_files $uri $uri/ /index.php?$query_string;</p>
+<p>        }</p>
+
+<p>        location ~ \.php$ {</p>
+<p>            fastcgi_pass php-fpm;</p>
+<p>            fastcgi_index index.php;</p>
+<p>            fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;</p>
+<p>            include fastcgi_params;</p>
+<p>        }</p>
+
+<p>        location ~ /\. {</p>
+<p>            deny all;</p>
+<p>        }</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>supervisord.conf</h3>
+
+<pre><code>[supervisord]
+<p>nodaemon=true</p>
+<p>user=root</p>
+
+<p>[program:php-fpm]</p>
+<p>command=php-fpm -F</p>
+<p>autostart=true</p>
+<p>autorestart=true</p>
+<p>stdout_logfile=/dev/stdout</p>
+<p>stdout_logfile_maxbytes=0</p>
+<p>stderr_logfile=/dev/stderr</p>
+<p>stderr_logfile_maxbytes=0</p>
+
+<p>[program:nginx]</p>
+<p>command=nginx</p>
+<p>autostart=true</p>
+<p>autorestart=true</p>
+<p>stdout_logfile=/dev/stdout</p>
+<p>stdout_logfile_maxbytes=0</p>
+<p>stderr_logfile=/dev/stderr</p>
+<p>stderr_logfile_maxbytes=0</code></pre></p>
+
+<h3>.dockerignore</h3>
+
+<pre><code>.git
+<p>.gitignore</p>
+<p>.env</p>
+<p>local_config.json</p>
+<p>local_script.json</p>
+<p>tests/</p>
+<p>docs/</p>
+<p>*.md</p>
+<p>.idea/</p>
+<p>.vscode/</p>
+<p>cache/</p>
+<p>tmp/</p>
+<p>logs/</code></pre></p>
+
+<h3>Build and Deploy</h3>
+
+<strong>Build locally:</strong>
+<pre><code>docker build -t gcr.io/my-project/my-app:v1 .</code></pre>
+
+<strong>Test locally:</strong>
+<pre><code>docker run -p 8080:8080 \
+<p>  -e GCP_PROJECT_ID=my-project \</p>
+<p>  -e DB_PASSWORD=password \</p>
+<p>  gcr.io/my-project/my-app:v1</code></pre></p>
+
+<strong>Push to Container Registry:</strong>
+<pre><code>docker push gcr.io/my-project/my-app:v1</code></pre>
+
+<strong>Deploy to Cloud Run:</strong>
+<pre><code>gcloud run deploy my-app \
+<p>  --image gcr.io/my-project/my-app:v1 \</p>
+<p>  --platform managed \</p>
+<p>  --region us-central1 \</p>
+<p>  --allow-unauthenticated \</p>
+<p>  --set-env-vars GCP_PROJECT_ID=my-project,DB_PASSWORD=secret \</p>
+<p>  --memory 512Mi \</p>
+<p>  --cpu 1 \</p>
+<p>  --max-instances 10 \</p>
+<p>  --min-instances 1 \</p>
+<p>  --timeout 300</code></pre></p>
+
+<strong>Deploy with Cloud SQL:</strong>
+<pre><code>gcloud run deploy my-app \
+<p>  --image gcr.io/my-project/my-app:v1 \</p>
+<p>  --platform managed \</p>
+<p>  --region us-central1 \</p>
+<p>  --add-cloudsql-instances my-project:us-central1:main-instance \</p>
+<p>  --set-env-vars DB_SOCKET=/cloudsql/my-project:us-central1:main-instance \</p>
+<p>  --memory 1Gi \</p>
+<p>  --cpu 2</code></pre></p>
+
+<strong>Deploy using gcloud build:</strong>
+<pre><code><h1>Build and deploy in one command</h1>
+<p>gcloud run deploy my-app \</p>
+<p>  --source . \</p>
+<p>  --platform managed \</p>
+<p>  --region us-central1 \</p>
+<p>  --allow-unauthenticated</code></pre></p>
+
+<p>---</p>
+
+<h2>Docker Deployment</h2>
+
+<h3>Docker Compose for Development</h3>
+
+<strong>docker-compose.yml:</strong>
+
+<pre><code>version: '3.8'
+
+<p>services:</p>
+<p>  app:</p>
+<p>    build: .</p>
+<p>    ports:</p>
+<ul>
+<li>"8080:8080"</li>
+</ul>
+<p>    environment:</p>
+<ul>
+<li>GCP_PROJECT_ID=my-project-dev</li>
+<li>DB_HOST=mysql</li>
+<li>DB_USER=root</li>
+<li>DB_PASSWORD=password</li>
+<li>DB_NAME=myapp</li>
+<li>CACHE_TYPE=file</li>
+</ul>
+<p>    volumes:</p>
+<ul>
+<li>./:/app</li>
+<li>./cache:/tmp/cache</li>
+</ul>
+<p>    depends_on:</p>
+<ul>
+<li>mysql</li>
+</ul>
+
+<p>  mysql:</p>
+<p>    image: mysql:8.0</p>
+<p>    environment:</p>
+<ul>
+<li>MYSQL_ROOT_PASSWORD=password</li>
+<li>MYSQL_DATABASE=myapp</li>
+</ul>
+<p>    ports:</p>
+<ul>
+<li>"3306:3306"</li>
+</ul>
+<p>    volumes:</p>
+<ul>
+<li>mysql_data:/var/lib/mysql</li>
+</ul>
+
+<p>volumes:</p>
+<p>  mysql_data:</code></pre></p>
+
+<strong>Run with Docker Compose:</strong>
+<pre><code>docker-compose up -d
+<p>docker-compose logs -f app</p>
+<p>docker-compose down</code></pre></p>
+
+<p>---</p>
+
+<h2>Traditional Server Deployment</h2>
+
+<h3>Apache Configuration</h3>
+
+<strong>Create VirtualHost (.htaccess):</strong>
+
+<pre><code><IfModule mod_rewrite.c>
+<p>    RewriteEngine On</p>
+<p>    RewriteBase /</p>
+
+<p>    # Redirect to HTTPS</p>
+<p>    RewriteCond %{HTTPS} off</p>
+<p>    RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]</p>
+
+<p>    # Route all requests to index.php</p>
+<p>    RewriteCond %{REQUEST_FILENAME} !-f</p>
+<p>    RewriteCond %{REQUEST_FILENAME} !-d</p>
+<p>    RewriteRule ^(.*)$ index.php/$1 [L,QSA]</p>
+</IfModule>
+
+<h1>Security headers</h1>
+<IfModule mod_headers.c>
+<p>    Header set X-Content-Type-Options "nosniff"</p>
+<p>    Header set X-Frame-Options "SAMEORIGIN"</p>
+<p>    Header set X-XSS-Protection "1; mode=block"</p>
+</IfModule>
+
+<h1>Disable directory listing</h1>
+<p>Options -Indexes</p>
+
+<h1>Protect sensitive files</h1>
+<FilesMatch "^(config\.json|composer\.(json|lock)|\.env)$">
+<p>    Order allow,deny</p>
+<p>    Deny from all</p>
+</FilesMatch></code></pre>
+
+<strong>VirtualHost Configuration:</strong>
+
+<pre><code><VirtualHost *:80>
+<p>    ServerName api.example.com</p>
+<p>    DocumentRoot /var/www/html/api</p>
+
+<p>    <Directory /var/www/html/api></p>
+<p>        AllowOverride All</p>
+<p>        Require all granted</p>
+<p>    </Directory></p>
+
+<p>    ErrorLog ${APACHE_LOG_DIR}/api_error.log</p>
+<p>    CustomLog ${APACHE_LOG_DIR}/api_access.log combined</p>
+</VirtualHost></code></pre>
+
+<h3>Nginx Configuration</h3>
+
+<pre><code>server {
+<p>    listen 80;</p>
+<p>    server_name api.example.com;</p>
+<p>    root /var/www/html/api;</p>
+<p>    index index.php;</p>
+
+<p>    # Logging</p>
+<p>    access_log /var/log/nginx/api_access.log;</p>
+<p>    error_log /var/log/nginx/api_error.log;</p>
+
+<p>    # Security headers</p>
+<p>    add_header X-Content-Type-Options "nosniff" always;</p>
+<p>    add_header X-Frame-Options "SAMEORIGIN" always;</p>
+<p>    add_header X-XSS-Protection "1; mode=block" always;</p>
+
+<p>    # Route all requests to index.php</p>
+<p>    location / {</p>
+<p>        try_files $uri $uri/ /index.php?$query_string;</p>
+<p>    }</p>
+
+<p>    # PHP-FPM configuration</p>
+<p>    location ~ \.php$ {</p>
+<p>        fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;</p>
+<p>        fastcgi_index index.php;</p>
+<p>        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;</p>
+<p>        include fastcgi_params;</p>
+<p>    }</p>
+
+<p>    # Deny access to sensitive files</p>
+<p>    location ~ /(config\.json|composer\.(json|lock)|\.env) {</p>
+<p>        deny all;</p>
+<p>        return 404;</p>
+<p>    }</p>
+
+<p>    # Deny access to hidden files</p>
+<p>    location ~ /\. {</p>
+<p>        deny all;</p>
+<p>        return 404;</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>PHP Configuration (php.ini)</h3>
+
+<pre><code>; Memory and execution time
+<p>memory_limit = 256M</p>
+<p>max_execution_time = 60</p>
+<p>upload_max_filesize = 50M</p>
+<p>post_max_size = 50M</p>
+
+<p>; Error handling (production)</p>
+<p>display_errors = Off</p>
+<p>display_startup_errors = Off</p>
+<p>error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT</p>
+<p>log_errors = On</p>
+<p>error_log = /var/log/php/error.log</p>
+
+<p>; Session</p>
+<p>session.save_handler = files</p>
+<p>session.save_path = "/tmp"</p>
+
+<p>; Opcache (highly recommended)</p>
+<p>opcache.enable=1</p>
+<p>opcache.memory_consumption=128</p>
+<p>opcache.interned_strings_buffer=8</p>
+<p>opcache.max_accelerated_files=10000</p>
+<p>opcache.revalidate_freq=60</code></pre></p>
+
+<p>---</p>
+
+<h2>Environment Configuration</h2>
+
+<h3>Production config.json</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "project": {</p>
+<p>      "environment": "production"</p>
+<p>    },</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "${GCP_PROJECT_ID}",</p>
+<p>      "service_account": "/app/credentials/service-account.json"</p>
+<p>    },</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "datastore",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "dbSocket": "/cloudsql/${CLOUD_SQL_INSTANCE}",</p>
+<p>  "dbPassword": "${DB_PASSWORD}",</p>
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": ["https://app.example.com"]</p>
+<p>    },</p>
+<p>    "response": {</p>
+<p>      "pretty_print": false,</p>
+<p>      "include_performance": false</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Environment Variables</h3>
+
+<p>Set these in your deployment platform:</p>
+
+<pre><code><h1>GCP</h1>
+<p>GCP_PROJECT_ID=my-project-123</p>
+<p>GCP_SERVICE_ACCOUNT=/path/to/service-account.json</p>
+
+<h1>Database</h1>
+<p>DB_PASSWORD=secure_production_password</p>
+<p>CLOUD_SQL_INSTANCE=my-project:us-central1:main-db</p>
+
+<h1>Security</h1>
+<p>ENCRYPTION_KEY=your-32-character-key</p>
+<p>API_KEY_1=production-api-key-1</p>
+<p>API_KEY_2=production-api-key-2</p>
+
+<h1>Application</h1>
+<p>CACHE_TYPE=datastore</p>
+<p>ENVIRONMENT=production</code></pre></p>
+
+<p>---</p>
+
+<h2>Health Checks & Monitoring</h2>
+
+<h3>Health Check Endpoint</h3>
+
+<strong>Create health check API:</strong>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    public function ENDPOINT_health()</p>
+<p>    {</p>
+<p>        $health = [</p>
+<p>            'status' => 'ok',</p>
+<p>            'timestamp' => date('c'),</p>
+<p>            'checks' => []</p>
+<p>        ];</p>
+
+<p>        // Check database</p>
+<p>        try {</p>
+<p>            $sql = $this->core->loadClass('CloudSQL');</p>
+<p>            if(!$sql->error()) {</p>
+<p>                $health['checks']['database'] = 'ok';</p>
+<p>            } else {</p>
+<p>                $health['checks']['database'] = 'error';</p>
+<p>                $health['status'] = 'degraded';</p>
+<p>            }</p>
+<p>        } catch(Exception $e) {</p>
+<p>            $health['checks']['database'] = 'error';</p>
+<p>            $health['status'] = 'degraded';</p>
+<p>        }</p>
+
+<p>        // Check cache</p>
+<p>        try {</p>
+<p>            $this->core->cache->set('health_check', 'ok', 10);</p>
+<p>            $value = $this->core->cache->get('health_check');</p>
+<p>            $health['checks']['cache'] = ($value === 'ok') ? 'ok' : 'error';</p>
+<p>        } catch(Exception $e) {</p>
+<p>            $health['checks']['cache'] = 'error';</p>
+<p>        }</p>
+
+<p>        // Check Datastore</p>
+<p>        try {</p>
+<p>            $ds = $this->core->loadClass('DataStore', ['__health__']);</p>
+<p>            $health['checks']['datastore'] = 'ok';</p>
+<p>        } catch(Exception $e) {</p>
+<p>            $health['checks']['datastore'] = 'error';</p>
+<p>            $health['status'] = 'degraded';</p>
+<p>        }</p>
+
+<p>        $statusCode = ($health['status'] === 'ok') ? 200 : 503;</p>
+<p>        $this->setReturnStatus($statusCode);</p>
+<p>        $this->addReturnData($health);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>App Engine Health Check</h3>
+
+<strong>app.yaml:</strong>
+<pre><code>health_check:
+<p>  enable_health_check: True</p>
+<p>  check_interval_sec: 30</p>
+<p>  timeout_sec: 4</p>
+<p>  unhealthy_threshold: 2</p>
+<p>  healthy_threshold: 2</p>
+
+<p>liveness_check:</p>
+<p>  path: "/health"</p>
+<p>  check_interval_sec: 30</p>
+<p>  timeout_sec: 4</p>
+<p>  failure_threshold: 2</p>
+<p>  success_threshold: 2</p>
+
+<p>readiness_check:</p>
+<p>  path: "/health"</p>
+<p>  check_interval_sec: 5</p>
+<p>  timeout_sec: 4</p>
+<p>  failure_threshold: 2</p>
+<p>  success_threshold: 2</p>
+<p>  app_start_timeout_sec: 300</code></pre></p>
+
+<h3>Cloud Run Health Check</h3>
+
+<pre><code>gcloud run services update my-app \
+<p>  --region us-central1 \</p>
+<p>  --health-check-path=/health \</p>
+<p>  --health-check-interval=30s \</p>
+<p>  --health-check-timeout=4s</code></pre></p>
+
+<h3>Logging</h3>
+
+<pre><code>// Log important events
+<p>$this->core->logs->add('User logged in', 'auth');</p>
+<p>$this->core->errors->add('Payment failed', 'payments', 'error');</p>
+
+<p>// Structured logging for Cloud Logging</p>
+<p>error_log(json_encode([</p>
+<p>    'severity' => 'INFO',</p>
+<p>    'message' => 'User action completed',</p>
+<p>    'user_id' => $userId,</p>
+<p>    'action' => 'purchase',</p>
+<p>    'timestamp' => time()</p>
+<p>]));</code></pre></p>
+
+<p>---</p>
+
+<h2>Scaling & Performance</h2>
+
+<h3>App Engine Scaling Configuration</h3>
+
+<strong>Automatic Scaling (recommended):</strong>
+<pre><code>automatic_scaling:
+<p>  min_instances: 2              # Always have 2 instances ready</p>
+<p>  max_instances: 20             # Scale up to 20 instances</p>
+<p>  target_cpu_utilization: 0.65  # Scale when CPU > 65%</p>
+<p>  target_throughput_utilization: 0.6</p>
+<p>  max_concurrent_requests: 80</code></pre></p>
+
+<strong>Basic Scaling (for admin/cron services):</strong>
+<pre><code>basic_scaling:
+<p>  max_instances: 3</p>
+<p>  idle_timeout: 10m</code></pre></p>
+
+<strong>Manual Scaling:</strong>
+<pre><code>manual_scaling:
+<p>  instances: 5</code></pre></p>
+
+<h3>Cloud Run Scaling</h3>
+
+<pre><code>gcloud run services update my-app \
+<p>  --min-instances=2 \</p>
+<p>  --max-instances=100 \</p>
+<p>  --concurrency=80 \</p>
+<p>  --cpu=2 \</p>
+<p>  --memory=1Gi</code></pre></p>
+
+<h3>Performance Optimization</h3>
+
+<strong>1. Enable OpCache (php.ini):</strong>
+<pre><code>opcache.enable=1
+<p>opcache.memory_consumption=256</p>
+<p>opcache.max_accelerated_files=20000</p>
+<p>opcache.validate_timestamps=0  # Production only</code></pre></p>
+
+<strong>2. Use Datastore Cache:</strong>
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "datastore",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>3. Optimize Composer:</strong>
+<pre><code>composer install --no-dev --optimize-autoloader --classmap-authoritative</code></pre>
+
+<strong>4. Connection Pooling (CloudSQL):</strong>
+<pre><code>class API extends RESTful
+<p>{</p>
+<p>    private static $sqlConnection = null;</p>
+
+<p>    function main()</p>
+<p>    {</p>
+<p>        if(self::$sqlConnection === null) {</p>
+<p>            self::$sqlConnection = $this->core->loadClass('CloudSQL');</p>
+<p>        }</p>
+<p>        $this->sql = self::$sqlConnection;</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Troubleshooting</h2>
+
+<h3>Common Deployment Issues</h3>
+
+<strong>1. 502 Bad Gateway</strong>
+<ul>
+<li>Check application logs: <code>gcloud app logs tail -s default</code></li>
+<li>Verify all dependencies installed</li>
+<li>Check PHP version compatibility</li>
+<li>Increase instance resources</li>
+</ul>
+
+<strong>2. Service Account Permissions</strong>
+<pre><code><h1>Grant required roles</h1>
+<p>gcloud projects add-iam-policy-binding my-project \</p>
+<p>  --member="serviceAccount:my-service@my-project.iam.gserviceaccount.com" \</p>
+<p>  --role="roles/datastore.user"</p>
+
+<p>gcloud projects add-iam-policy-binding my-project \</p>
+<p>  --member="serviceAccount:my-service@my-project.iam.gserviceaccount.com" \</p>
+<p>  --role="roles/storage.objectAdmin"</code></pre></p>
+
+<strong>3. CloudSQL Connection Timeout</strong>
+<ul>
+<li>Verify socket path: <code>/cloudsql/project:region:instance</code></li>
+<li>Check Cloud SQL instance is running</li>
+<li>Verify service account has Cloud SQL Client role</li>
+<li>Enable Cloud SQL Admin API</li>
+</ul>
+
+<strong>4. Memory Exceeded</strong>
+<ul>
+<li>Increase instance class in app.yaml: <code>instance_class: F4</code></li>
+<li>Optimize queries and data structures</li>
+<li>Implement pagination</li>
+<li>Use caching effectively</li>
+</ul>
+
+<strong>5. Slow Cold Starts</strong>
+<ul>
+<li>Set min_instances > 0</li>
+<li>Reduce composer dependencies</li>
+<li>Enable OpCache</li>
+<li>Use Cloud Run over Cloud Functions for large apps</li>
+</ul>
+
+<h3>Debug Mode</h3>
+
+<strong>Enable debug in development:</strong>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "debug": {</p>
+<p>      "enabled": true,</p>
+<p>      "display_errors": true,</p>
+<p>      "log_queries": true</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>View detailed errors:</strong>
+<pre><code>ini_set('display_errors', 1);
+<p>error_reporting(E_ALL);</code></pre></p>
+
+<h3>Rollback Deployment</h3>
+
+<strong>App Engine:</strong>
+<pre><code><h1>List versions</h1>
+<p>gcloud app versions list</p>
+
+<h1>Migrate traffic back</h1>
+<p>gcloud app services set-traffic default --splits v1=1.0 --migrate</p>
+
+<h1>Delete bad version</h1>
+<p>gcloud app versions delete v2</code></pre></p>
+
+<strong>Cloud Run:</strong>
+<pre><code><h1>Deploy previous revision</h1>
+<p>gcloud run services update-traffic my-app \</p>
+<p>  --to-revisions=my-app-00001-abc=100</code></pre></p>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="configuration.html">Configuration Guide</a></li>
+<li><a href="security.html">Security Guide</a></li>
+<li><a href="gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="testing.html">Testing Guide</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataMongoDB Class - CloudFramework Backend Core PHP8</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CloudFramework</h2>
+                <p>Backend Core PHP8</p>
+            </div>
+            <nav>
+                <a href="../index.html">Home</a>
+                <h3>Core Classes</h3>
+                <a href="Core7.html">Core7</a>
+                <a href="RESTful.html">RESTful</a>
+                <a href="Scripts2020.html">Scripts2020</a>
+                <h3>Configuration & Security</h3>
+                <a href="CoreConfig.html">CoreConfig</a>
+                <a href="CoreCache.html">CoreCache</a>
+                <a href="CoreSession.html">CoreSession</a>
+                <a href="CoreSecurity.html">CoreSecurity</a>
+                <h3>Data Storage</h3>
+                <a href="DataStore.html">DataStore</a>
+                <a href="Buckets.html">Buckets</a>
+                <a href="DataBQ.html">DataBQ</a>
+                <a href="CloudSQL.html">CloudSQL</a>
+                <a href="DataSQL.html">DataSQL</a>
+                <a href="DataMongoDB.html" class="active">DataMongoDB</a>
+                <h3>Utilities</h3>
+                <a href="Email.html">Email</a>
+                <a href="DataValidation.html">DataValidation</a>
+                <a href="WorkFlows.html">WorkFlows</a>
+                <h3>GCP Integration</h3>
+                <a href="GoogleSecrets.html">GoogleSecrets</a>
+                <a href="PubSub.html">PubSub</a>
+            </nav>
+        </aside>
+        <main class="content">
+<h1>DataMongoDB Class</h1>
+
+<h2>Overview</h2>
+
+<p>The <code>DataMongoDB</code> class provides integration with MongoDB for NoSQL document storage. It offers methods for connecting to MongoDB, performing CRUD operations, and querying collections.</p>
+
+<h2>Loading the Class</h2>
+
+<pre><code class="language-php">$mongo = $this->core->loadClass('DataMongoDB');
+</code></pre>
+
+<h2>Properties</h2>
+
+<p>| Property | Type | Description | |----------|------|-------------| | <code>$core</code> | Core7 | Reference to Core7 instance | | <code>$error</code> | bool | Error flag | | <code>$errorMsg</code> | array | Error messages | | <code>$connection</code> | MongoDB\Client | MongoDB client connection | | <code>$db</code> | MongoDB\Database | Current database | | <code>$collection</code> | MongoDB\Collection | Current collection |</p>
+
+<p>---</p>
+
+<h2>Connection Methods</h2>
+
+<h3>connect()</h3>
+
+<pre><code class="language-php">public function connect($uri, $dbName): bool
+</code></pre>
+
+<p>Connects to MongoDB.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$uri</code> (string): MongoDB connection URI</li>
+<li><code>$dbName</code> (string): Database name</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success
+
+<strong>Example:</strong>
+<pre><code class="language-php">$mongo = $this->core->loadClass('DataMongoDB');
+<p>$connected = $mongo->connect('mongodb://localhost:27017', 'myapp');</p>
+
+<p>if(!$connected) { // Handle connection error }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>selectCollection()</h3>
+
+<pre><code class="language-php">public function selectCollection($collectionName): void
+</code></pre>
+
+<p>Selects a collection to work with.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$mongo->selectCollection('users');
+</code></pre>
+
+<p>---</p>
+
+<h2>CRUD Operations</h2>
+
+<h3>insert()</h3>
+
+<pre><code class="language-php">public function insert($document): string|false
+</code></pre>
+
+<p>Inserts a document into the collection.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$document</code> (array): Document to insert</li>
+</ul>
+
+<strong>Returns:</strong> Inserted document ID, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$mongo->selectCollection('users');
+<p>$userId = $mongo->insert([ 'name' => 'John Doe', 'email' => 'john@example.com', 'created_at' => new MongoDB\BSON\UTCDateTime() ]);</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>find()</h3>
+
+<pre><code class="language-php">public function find($filter = [], $options = []): array
+</code></pre>
+
+<p>Finds documents matching filter.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filter</code> (array): Query filter</li>
+<li><code>$options</code> (array): Query options (limit, sort, projection)</li>
+</ul>
+
+<strong>Returns:</strong> Array of documents
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Find all active users
+<p>$users = $mongo->find(['status' => 'active']);</p>
+
+<p>// Find with options $users = $mongo->find( ['age' => ['$gte' => 18]], ['limit' => 10, 'sort' => ['name' => 1]] );</p>
+
+<p>// Find with projection $users = $mongo->find( ['status' => 'active'], ['projection' => ['name' => 1, 'email' => 1]] );</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>findOne()</h3>
+
+<pre><code class="language-php">public function findOne($filter = [], $options = []): array|null
+</code></pre>
+
+<p>Finds a single document.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$user = $mongo->findOne(['email' => 'john@example.com']);
+</code></pre>
+
+<p>---</p>
+
+<h3>update()</h3>
+
+<pre><code class="language-php">public function update($filter, $update, $options = []): int
+</code></pre>
+
+<p>Updates documents matching filter.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filter</code> (array): Query filter</li>
+<li><code>$update</code> (array): Update operations</li>
+<li><code>$options</code> (array): Update options</li>
+</ul>
+
+<strong>Returns:</strong> Number of modified documents
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Update single document
+<p>$mongo->update( ['email' => 'john@example.com'], ['$set' => ['status' => 'verified']] );</p>
+
+<p>// Update multiple $mongo->update( ['status' => 'pending'], ['$set' => ['status' => 'active']], ['multi' => true] );</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>delete()</h3>
+
+<pre><code class="language-php">public function delete($filter): int
+</code></pre>
+
+<p>Deletes documents matching filter.</p>
+
+<strong>Returns:</strong> Number of deleted documents
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Delete single document
+<p>$deleted = $mongo->delete(['email' => 'john@example.com']);</p>
+
+<p>// Delete multiple $deleted = $mongo->delete(['status' => 'inactive']);</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>count()</h3>
+
+<pre><code class="language-php">public function count($filter = []): int
+</code></pre>
+
+<p>Counts documents matching filter.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$activeUsers = $mongo->count(['status' => 'active']);
+</code></pre>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>User Management</h3>
+
+<pre><code class="language-php">class API extends RESTful
+<p>{ private $mongo;</p>
+
+<p>function main() { $this->mongo = $this->core->loadClass('DataMongoDB'); $this->mongo->connect('mongodb://localhost:27017', 'myapp'); $this->mongo->selectCollection('users');</p>
+
+<p>if(!$this->useFunction('ENDPOINT_' . ($this->params[0] ?? 'list'))) { return $this->setErrorFromCodelib('params-error', 'Endpoint not found'); } }</p>
+
+<p>public function ENDPOINT_create() { if(!$this->checkMethod('POST')) return;</p>
+
+<p>$userId = $this->mongo->insert([ 'name' => $this->formParams['name'], 'email' => $this->formParams['email'], 'status' => 'active', 'created_at' => new MongoDB\BSON\UTCDateTime() ]);</p>
+
+<p>$this->addReturnData(['user_id' => $userId]); }</p>
+
+<p>public function ENDPOINT_list() { $users = $this->mongo->find( ['status' => 'active'], ['limit' => 50, 'sort' => ['created_at' => -1]] );</p>
+
+<p>$this->addReturnData($users); }</p>
+
+<p>public function ENDPOINT_get() { $userId = $this->params[1] ?? null;</p>
+
+<p>$user = $this->mongo->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);</p>
+
+<p>if($user) { $this->addReturnData($user); } else { return $this->setErrorFromCodelib('not-found', 'User not found'); } }</p>
+
+<p>public function ENDPOINT_update() { if(!$this->checkMethod('PUT')) return;</p>
+
+<p>$userId = $this->params[1] ?? null;</p>
+
+<p>$this->mongo->update( ['_id' => new MongoDB\BSON\ObjectId($userId)], ['$set' => [ 'name' => $this->formParams['name'], 'email' => $this->formParams['email'], 'updated_at' => new MongoDB\BSON\UTCDateTime() ]] );</p>
+
+<p>$this->addReturnData(['status' => 'updated']); }</p>
+
+<p>public function ENDPOINT_delete() { if(!$this->checkMethod('DELETE')) return;</p>
+
+<p>$userId = $this->params[1] ?? null;</p>
+
+<p>$this->mongo->delete(['_id' => new MongoDB\BSON\ObjectId($userId)]);</p>
+
+<p>$this->addReturnData(['status' => 'deleted']); } }</p>
+</code></pre>
+
+<h3>Search and Filter</h3>
+
+<pre><code class="language-php">// Complex queries
+<p>$users = $mongo->find([ 'age' => ['$gte' => 18, '$lte' => 65], 'status' => 'active', '$or' => [ ['city' => 'New York'], ['city' => 'Los Angeles'] ] ]);</p>
+
+<p>// Text search $results = $mongo->find([ '$text' => ['$search' => 'developer'] ]);</p>
+
+<p>// Array contains $users = $mongo->find([ 'tags' => ['$in' => ['premium', 'vip']] ]);</p>
+</code></pre>
+
+<h3>Aggregation</h3>
+
+<pre><code class="language-php">$pipeline = [
+<p>['$match' => ['status' => 'active']], ['$group' => [ '_id' => '$city', 'count' => ['$sum' => 1], 'avg_age' => ['$avg' => '$age'] ]], ['$sort' => ['count' => -1]] ];</p>
+
+<p>$results = $mongo->aggregate($pipeline);</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>MongoDB Operators</h2>
+
+<h3>Comparison</h3>
+
+<ul>
+<li><code>$eq</code> - Equal</li>
+<li><code>$ne</code> - Not equal</li>
+<li><code>$gt</code> - Greater than</li>
+<li><code>$gte</code> - Greater than or equal</li>
+<li><code>$lt</code> - Less than</li>
+<li><code>$lte</code> - Less than or equal</li>
+<li><code>$in</code> - In array</li>
+<li><code>$nin</code> - Not in array</li>
+</ul>
+
+<h3>Logical</h3>
+
+<ul>
+<li><code>$and</code> - Logical AND</li>
+<li><code>$or</code> - Logical OR</li>
+<li><code>$not</code> - Logical NOT</li>
+<li><code>$nor</code> - Logical NOR</li>
+</ul>
+
+<h3>Update</h3>
+
+<ul>
+<li><code>$set</code> - Set field value</li>
+<li><code>$unset</code> - Remove field</li>
+<li><code>$inc</code> - Increment value</li>
+<li><code>$push</code> - Add to array</li>
+<li><code>$pull</code> - Remove from array</li>
+</ul>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="DataStore.html">DataStore Class Reference</a></li>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+    <script src="../js/main.js"></script>
+</body>
+</html>

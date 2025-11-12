@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<phpdocumentor
+        configVersion="3"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="https://www.phpdoc.org"
+        xsi:noNamespaceSchemaLocation="https://docs.phpdoc.org/latest/phpdoc.xsd"
+>
+    <paths>
+        <output>docs</output>
+        <cache>local_data/cache</cache>
+    </paths>
+    <version number="3.0.0">
+        <api format="php">
+            <source dsn="./vendor/cloudframework-io/backend-core-php8">
+                <path>src</path>
+            </source>
+            <ignore hidden="true" symlinks="true">
+                <path>src/class/Opauth/*</path>
+                <path>src/class/lib/*</path>
+            </ignore>
+            <extensions>
+                <extension>php</extension>
+            </extensions>
+        </api>
+    </version>
+</phpdocumentor>

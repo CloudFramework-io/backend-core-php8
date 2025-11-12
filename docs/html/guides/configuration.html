@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuration - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Configure CloudFramework for your needs">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link active">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Configuration Guide</h1>
+
+<h2>Overview</h2>
+
+<p>CloudFramework uses a flexible JSON-based configuration system that supports:</p>
+<ul>
+<li>Environment-specific settings (development, production)</li>
+<li>Google Cloud Platform integration</li>
+<li>Database connections</li>
+<li>Cache strategies</li>
+<li>Security policies</li>
+<li>API behavior customization</li>
+</ul>
+
+<p>Configuration is loaded from JSON files and can be accessed throughout your application using <code>$this->core->config</code>.</p>
+
+<p>---</p>
+
+<h2>Table of Contents</h2>
+
+<ol>
+<li><a href="#configuration-files">Configuration Files</a></li>
+<li><a href="#core-configuration">Core Configuration</a></li>
+<li><a href="#gcp-configuration">GCP Configuration</a></li>
+<li><a href="#database-configuration">Database Configuration</a></li>
+<li><a href="#cache-configuration">Cache Configuration</a></li>
+<li><a href="#api-configuration">API Configuration</a></li>
+<li><a href="#security-configuration">Security Configuration</a></li>
+<li><a href="#environment-variables">Environment Variables</a></li>
+<li><a href="#accessing-configuration">Accessing Configuration</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ol>
+
+<p>---</p>
+
+<h2>Configuration Files</h2>
+
+<h3>File Loading Order</h3>
+
+<p>CloudFramework loads configuration files in this order:</p>
+
+<ol>
+<li><strong><code>config.json</code></strong> - Main configuration file (always loaded)</li>
+<li><strong><code>local_config.json</code></strong> - Local overrides for development (loaded in development mode)</li>
+<li><strong><code>local_script.json</code></strong> - Script-specific overrides (loaded when running CLI scripts in development)</li>
+</ol>
+
+<pre><code>project/
+<p>├── config.json              # Main configuration (committed to git)</p>
+<p>├── local_config.json        # Local overrides (ignored by git)</p>
+<p>└── local_script.json        # Script overrides (ignored by git)</code></pre></p>
+
+<h3>Basic config.json Structure</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "my-project-id",</p>
+<p>      "service_account": "/path/to/service-account.json"</p>
+<p>    },</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "file"</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "dbServer": "127.0.0.1",</p>
+<p>  "dbUser": "root",</p>
+<p>  "dbPassword": "password",</p>
+<p>  "dbName": "mydatabase",</p>
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": ["*"]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Core Configuration</h2>
+
+<h3>Project Settings</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "project": {</p>
+<p>      "name": "My Application",</p>
+<p>      "version": "1.0.0",</p>
+<p>      "environment": "production"</p>
+<p>    },</p>
+<p>    "timezone": "UTC",</p>
+<p>    "locale": "en_US"</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Available Options:</strong>
+
+<p>| Option | Type | Description | Default |</p>
+<p>|--------|------|-------------|---------|</p>
+<p>| <code>core.project.name</code> | string | Application name | - |</p>
+<p>| <code>core.project.version</code> | string | Application version | - |</p>
+<p>| <code>core.project.environment</code> | string | Environment (production, development) | auto-detected |</p>
+<p>| <code>core.timezone</code> | string | Default timezone | UTC |</p>
+<p>| <code>core.locale</code> | string | Default locale | en_US |</p>
+
+<h3>Root Paths</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "root_path": "/var/www/html",</p>
+<p>    "app_path": "/var/www/html/app",</p>
+<p>    "tmp_path": "/tmp"</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>GCP Configuration</h2>
+
+<h3>Basic GCP Setup</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "my-gcp-project",</p>
+<p>      "service_account": "/path/to/service-account.json",</p>
+<p>      "location": "us-central1"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Cloud Datastore Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "datastore": {</p>
+<p>        "namespace": "production",</p>
+<p>        "cache_queries": true</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Cloud Storage Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "storage": {</p>
+<p>        "default_bucket": "gs://my-bucket",</p>
+<p>        "upload_path": "uploads/",</p>
+<p>        "public_url": "https://storage.googleapis.com/my-bucket"</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>BigQuery Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "bigquery": {</p>
+<p>        "dataset": "analytics",</p>
+<p>        "location": "US",</p>
+<p>        "maximum_bytes_billed": "1000000000"</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Cloud SQL Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "cloudsql": {</p>
+<p>        "socket": "/cloudsql/project:region:instance",</p>
+<p>        "instance": "project:region:instance"</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Complete GCP Example</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "my-project-123",</p>
+<p>      "service_account": "/app/credentials/service-account.json",</p>
+<p>      "location": "us-central1",</p>
+<p>      "datastore": {</p>
+<p>        "namespace": "production"</p>
+<p>      },</p>
+<p>      "storage": {</p>
+<p>        "default_bucket": "gs://my-app-uploads",</p>
+<p>        "upload_path": "uploads/"</p>
+<p>      },</p>
+<p>      "bigquery": {</p>
+<p>        "dataset": "analytics",</p>
+<p>        "location": "US"</p>
+<p>      },</p>
+<p>      "cloudsql": {</p>
+<p>        "socket": "/cloudsql/my-project-123:us-central1:main-db"</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Database Configuration</h2>
+
+<h3>Cloud SQL / MySQL Configuration</h3>
+
+<pre><code>{
+<p>  "dbServer": "127.0.0.1",</p>
+<p>  "dbUser": "root",</p>
+<p>  "dbPassword": "secure_password",</p>
+<p>  "dbName": "production_db",</p>
+<p>  "dbPort": "3306",</p>
+<p>  "dbSocket": "",</p>
+<p>  "dbCharset": "utf8mb4"</p>
+<p>}</code></pre></p>
+
+<strong>Available Options:</strong>
+
+<p>| Option | Type | Description | Default |</p>
+<p>|--------|------|-------------|---------|</p>
+<p>| <code>dbServer</code> | string | Database host or IP | - |</p>
+<p>| <code>dbUser</code> | string | Database username | - |</p>
+<p>| <code>dbPassword</code> | string | Database password | - |</p>
+<p>| <code>dbName</code> | string | Database name | - |</p>
+<p>| <code>dbPort</code> | string | Database port | 3306 |</p>
+<p>| <code>dbSocket</code> | string | Unix socket path (Cloud SQL) | - |</p>
+<p>| <code>dbCharset</code> | string | Character set | utf8mb4 |</p>
+
+<h3>Cloud SQL Socket Connection (App Engine)</h3>
+
+<pre><code>{
+<p>  "dbServer": "",</p>
+<p>  "dbUser": "root",</p>
+<p>  "dbPassword": "password",</p>
+<p>  "dbName": "mydb",</p>
+<p>  "dbPort": "3306",</p>
+<p>  "dbSocket": "/cloudsql/project:region:instance",</p>
+<p>  "dbCharset": "utf8mb4"</p>
+<p>}</code></pre></p>
+
+<h3>Multiple Database Connections</h3>
+
+<pre><code>{
+<p>  "databases": {</p>
+<p>    "main": {</p>
+<p>      "host": "127.0.0.1",</p>
+<p>      "user": "app_user",</p>
+<p>      "password": "password",</p>
+<p>      "database": "app_db"</p>
+<p>    },</p>
+<p>    "analytics": {</p>
+<p>      "host": "127.0.0.1",</p>
+<p>      "user": "analytics_user",</p>
+<p>      "password": "password",</p>
+<p>      "database": "analytics_db"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Usage:</strong>
+
+<pre><code>// Main database
+<p>$mainDb = $this->core->config->get('databases.main');</p>
+<p>$sql = $this->core->loadClass('CloudSQL', [</p>
+<p>    $mainDb['host'],</p>
+<p>    $mainDb['user'],</p>
+<p>    $mainDb['password'],</p>
+<p>    $mainDb['database']</p>
+<p>]);</p>
+
+<p>// Analytics database</p>
+<p>$analyticsDb = $this->core->config->get('databases.analytics');</p>
+<p>$analyticsSql = $this->core->loadClass('CloudSQL', [</p>
+<p>    $analyticsDb['host'],</p>
+<p>    $analyticsDb['user'],</p>
+<p>    $analyticsDb['password'],</p>
+<p>    $analyticsDb['database']</p>
+<p>]);</code></pre></p>
+
+<p>---</p>
+
+<h2>Cache Configuration</h2>
+
+<h3>Cache Types</h3>
+
+<p>CloudFramework supports three cache types:</p>
+
+<ol>
+<li><strong>File Cache</strong> - Stores cache in filesystem</li>
+<li><strong>Memory Cache</strong> - Stores cache in PHP memory (not persistent)</li>
+<li><strong>Datastore Cache</strong> - Stores cache in Google Cloud Datastore</li>
+</ol>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "file",</p>
+<p>      "cache_path": "/tmp/cache",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>File Cache Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "file",</p>
+<p>      "cache_path": "/tmp/cloudframework_cache",</p>
+<p>      "default_ttl": 3600,</p>
+<p>      "cleanup_probability": 0.01</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Options:</strong>
+
+<p>| Option | Description | Default |</p>
+<p>|--------|-------------|---------|</p>
+<p>| <code>cache_type</code> | Cache type (file, memory, datastore) | file |</p>
+<p>| <code>cache_path</code> | Directory for cache files | /tmp/cache |</p>
+<p>| <code>default_ttl</code> | Default time-to-live in seconds | 3600 |</p>
+<p>| <code>cleanup_probability</code> | Probability of cleanup on write (0-1) | 0.01 |</p>
+
+<h3>Memory Cache Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "memory",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>> <strong>Note:</strong> Memory cache is not persistent across requests. Use for single-request caching only.</p>
+
+<h3>Datastore Cache Configuration</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "datastore",</p>
+<p>      "cache_namespace": "cache",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Environment-Specific Cache</h3>
+
+<strong>Production (config.json):</strong>
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "datastore",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Development (local_config.json):</strong>
+<pre><code>{
+<p>  "core": {</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "file",</p>
+<p>      "cache_path": "/tmp/dev_cache"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>API Configuration</h2>
+
+<h3>CORS Configuration</h3>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": ["https://example.com", "https://app.example.com"],</p>
+<p>      "allowed_methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],</p>
+<p>      "allowed_headers": ["Content-Type", "Authorization", "X-API-Key"],</p>
+<p>      "allow_credentials": true,</p>
+<p>      "max_age": 86400</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Allow All Origins (Development Only):</strong>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": ["*"]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>API Timeouts</h3>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "timeout": 30,</p>
+<p>    "max_execution_time": 60</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Rate Limiting</h3>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "rate_limit": {</p>
+<p>      "enabled": true,</p>
+<p>      "requests_per_minute": 60,</p>
+<p>      "requests_per_hour": 1000</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>API Response Format</h3>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "response": {</p>
+<p>      "pretty_print": false,</p>
+<p>      "include_performance": false,</p>
+<p>      "date_format": "Y-m-d H:i:s"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Complete API Configuration Example</h3>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": ["https://app.example.com"],</p>
+<p>      "allowed_methods": ["GET", "POST", "PUT", "DELETE"],</p>
+<p>      "allowed_headers": ["Content-Type", "Authorization"],</p>
+<p>      "allow_credentials": true</p>
+<p>    },</p>
+<p>    "timeout": 30,</p>
+<p>    "max_execution_time": 60,</p>
+<p>    "rate_limit": {</p>
+<p>      "enabled": true,</p>
+<p>      "requests_per_minute": 100</p>
+<p>    },</p>
+<p>    "response": {</p>
+<p>      "pretty_print": false,</p>
+<p>      "include_performance": true</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Security Configuration</h2>
+
+<h3>API Keys</h3>
+
+<pre><code>{
+<p>  "security": {</p>
+<p>    "api_keys": {</p>
+<p>      "enabled": true,</p>
+<p>      "header_name": "X-API-Key",</p>
+<p>      "valid_keys": [</p>
+<p>        "key1_production_secret",</p>
+<p>        "key2_production_secret"</p>
+<p>      ]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Usage in API:</strong>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Check API key</p>
+<p>    $apiKey = $_SERVER['HTTP_X_API_KEY'] ?? '';</p>
+<p>    $validKeys = $this->core->config->get('security.api_keys.valid_keys', []);</p>
+
+<p>    if(!in_array($apiKey, $validKeys)) {</p>
+<p>        return $this->setError('Invalid API key', 401);</p>
+<p>    }</p>
+
+<p>    // Continue with API logic</p>
+<p>}</code></pre></p>
+
+<h3>IP Whitelisting</h3>
+
+<pre><code>{
+<p>  "security": {</p>
+<p>    "ip_whitelist": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_ips": [</p>
+<p>        "192.168.1.1",</p>
+<p>        "10.0.0.0/8",</p>
+<p>        "172.16.0.0/12"</p>
+<p>      ]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Basic Authentication</h3>
+
+<pre><code>{
+<p>  "security": {</p>
+<p>    "basic_auth": {</p>
+<p>      "enabled": true,</p>
+<p>      "users": {</p>
+<p>        "admin": "hashed_password",</p>
+<p>        "user": "hashed_password"</p>
+<p>      }</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Encryption Keys</h3>
+
+<pre><code>{
+<p>  "security": {</p>
+<p>    "encryption": {</p>
+<p>      "key": "your-32-character-encryption-key",</p>
+<p>      "algorithm": "AES-256-CBC"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Usage:</strong>
+
+<pre><code>$encrypted = $this->core->security->encrypt(
+<p>    'sensitive data',</p>
+<p>    $this->core->config->get('security.encryption.key')</p>
+<p>);</p>
+
+<p>$decrypted = $this->core->security->decrypt(</p>
+<p>    $encrypted,</p>
+<p>    $this->core->config->get('security.encryption.key')</p>
+<p>);</code></pre></p>
+
+<h3>JWT Configuration</h3>
+
+<pre><code>{
+<p>  "security": {</p>
+<p>    "jwt": {</p>
+<p>      "secret": "your-jwt-secret-key",</p>
+<p>      "algorithm": "HS256",</p>
+<p>      "expiration": 3600,</p>
+<p>      "issuer": "my-app.com"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Environment Variables</h2>
+
+<h3>Using Environment Variables</h3>
+
+<p>You can use environment variables in configuration files:</p>
+
+<strong>config.json:</strong>
+<pre><code>{
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "${GCP_PROJECT_ID}",</p>
+<p>      "service_account": "${GCP_SERVICE_ACCOUNT}"</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "dbPassword": "${DB_PASSWORD}",</p>
+<p>  "security": {</p>
+<p>    "encryption": {</p>
+<p>      "key": "${ENCRYPTION_KEY}"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Access in PHP:</strong>
+<pre><code>$projectId = $this->core->config->get('core.gcp.project_id');
+<p>// Returns value from $_ENV['GCP_PROJECT_ID']</code></pre></p>
+
+<h3>.env File Support</h3>
+
+<p>Create a <code>.env</code> file in your project root:</p>
+
+<pre><code><h1>.env</h1>
+<p>GCP_PROJECT_ID=my-project-123</p>
+<p>GCP_SERVICE_ACCOUNT=/path/to/service-account.json</p>
+<p>DB_PASSWORD=secure_password</p>
+<p>ENCRYPTION_KEY=your-32-char-key-here</code></pre></p>
+
+<h3>App Engine Environment Variables</h3>
+
+<strong>app.yaml:</strong>
+<pre><code>runtime: php83
+
+<p>env_variables:</p>
+<p>  GCP_PROJECT_ID: 'my-project-123'</p>
+<p>  DB_PASSWORD: 'production_password'</p>
+<p>  CACHE_TYPE: 'datastore'</code></pre></p>
+
+<p>---</p>
+
+<h2>Accessing Configuration</h2>
+
+<h3>Get Configuration Values</h3>
+
+<pre><code>// Simple value
+<p>$projectId = $this->core->config->get('core.gcp.project_id');</p>
+
+<p>// Nested value</p>
+<p>$bucket = $this->core->config->get('core.gcp.storage.default_bucket');</p>
+
+<p>// With default value</p>
+<p>$timeout = $this->core->config->get('api.timeout', 30);</p>
+
+<p>// Get entire section</p>
+<p>$gcpConfig = $this->core->config->get('core.gcp');</code></pre></p>
+
+<h3>Set Configuration Values</h3>
+
+<pre><code>// Set single value
+<p>$this->core->config->set('api.timeout', 60);</p>
+
+<p>// Set nested value</p>
+<p>$this->core->config->set('custom.feature.enabled', true);</code></pre></p>
+
+<h3>Load Additional Config Files</h3>
+
+<pre><code>// Load custom configuration file
+<p>$this->core->config->readConfigJSONFile('/path/to/custom-config.json');</code></pre></p>
+
+<h3>Check if Configuration Exists</h3>
+
+<pre><code>$hasApiKey = $this->core->config->get('security.api_keys.enabled') !== null;
+
+<p>if($hasApiKey) {</p>
+<p>    // API key validation enabled</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Best Practices</h2>
+
+<h3>1. Separate Secrets from Code</h3>
+
+<strong>Don't:</strong>
+<pre><code>{
+<p>  "dbPassword": "my_actual_password"</p>
+<p>}</code></pre></p>
+
+<strong>Do:</strong>
+<pre><code>{
+<p>  "dbPassword": "${DB_PASSWORD}"</p>
+<p>}</code></pre></p>
+
+<h3>2. Use Environment-Specific Files</h3>
+
+<strong>config.json (committed):</strong>
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "allowed_origins": ["https://production.com"]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>local_config.json (not committed):</strong>
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "allowed_origins": ["*"]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>3. Document Your Configuration</h3>
+
+<p>Add a <code>config.example.json</code>:</p>
+
+<pre><code>{
+<p>  "_comment": "Copy this file to config.json and update values",</p>
+<p>  "core": {</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "your-project-id",</p>
+<p>      "service_account": "/path/to/service-account.json"</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "dbPassword": "your-database-password"</p>
+<p>}</code></pre></p>
+
+<h3>4. Validate Configuration on Startup</h3>
+
+<pre><code>class API extends RESTful
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Validate required configuration</p>
+<p>        $required = [</p>
+<p>            'core.gcp.project_id',</p>
+<p>            'dbServer',</p>
+<p>            'dbName'</p>
+<p>        ];</p>
+
+<p>        foreach($required as $key) {</p>
+<p>            if($this->core->config->get($key) === null) {</p>
+<p>                return $this->setError("Missing required configuration: {$key}", 500);</p>
+<p>            }</p>
+<p>        }</p>
+
+<p>        // Continue with API logic</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>5. Use Consistent Naming</h3>
+
+<pre><code>{
+<p>  "feature_name": {</p>
+<p>    "enabled": true,</p>
+<p>    "option_one": "value",</p>
+<p>    "option_two": "value"</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>6. Cache Configuration Values</h3>
+
+<pre><code>// Cache frequently accessed config
+<p>private $timeout;</p>
+
+<p>function main()</p>
+<p>{</p>
+<p>    // Cache in constructor or first access</p>
+<p>    if($this->timeout === null) {</p>
+<p>        $this->timeout = $this->core->config->get('api.timeout', 30);</p>
+<p>    }</p>
+
+<p>    // Use cached value</p>
+<p>    // ... code using $this->timeout</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Complete Configuration Example</h2>
+
+<h3>Production config.json</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "project": {</p>
+<p>      "name": "My Application",</p>
+<p>      "version": "1.0.0",</p>
+<p>      "environment": "production"</p>
+<p>    },</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "${GCP_PROJECT_ID}",</p>
+<p>      "service_account": "/app/credentials/service-account.json",</p>
+<p>      "location": "us-central1",</p>
+<p>      "datastore": {</p>
+<p>        "namespace": "production"</p>
+<p>      },</p>
+<p>      "storage": {</p>
+<p>        "default_bucket": "gs://myapp-production",</p>
+<p>        "upload_path": "uploads/"</p>
+<p>      },</p>
+<p>      "bigquery": {</p>
+<p>        "dataset": "analytics",</p>
+<p>        "location": "US"</p>
+<p>      }</p>
+<p>    },</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "datastore",</p>
+<p>      "default_ttl": 3600</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "dbServer": "",</p>
+<p>  "dbUser": "root",</p>
+<p>  "dbPassword": "${DB_PASSWORD}",</p>
+<p>  "dbName": "production_db",</p>
+<p>  "dbSocket": "/cloudsql/my-project:us-central1:main-db",</p>
+<p>  "dbCharset": "utf8mb4",</p>
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": ["https://app.mysite.com"],</p>
+<p>      "allowed_methods": ["GET", "POST", "PUT", "DELETE"],</p>
+<p>      "allow_credentials": true</p>
+<p>    },</p>
+<p>    "timeout": 30,</p>
+<p>    "rate_limit": {</p>
+<p>      "enabled": true,</p>
+<p>      "requests_per_minute": 100</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "security": {</p>
+<p>    "api_keys": {</p>
+<p>      "enabled": true,</p>
+<p>      "header_name": "X-API-Key",</p>
+<p>      "valid_keys": ["${API_KEY_1}", "${API_KEY_2}"]</p>
+<p>    },</p>
+<p>    "encryption": {</p>
+<p>      "key": "${ENCRYPTION_KEY}"</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>Development local_config.json</h3>
+
+<pre><code>{
+<p>  "core": {</p>
+<p>    "project": {</p>
+<p>      "environment": "development"</p>
+<p>    },</p>
+<p>    "gcp": {</p>
+<p>      "project_id": "my-project-dev",</p>
+<p>      "service_account": "/Users/me/credentials/service-account-dev.json"</p>
+<p>    },</p>
+<p>    "cache": {</p>
+<p>      "cache_type": "file",</p>
+<p>      "cache_path": "/tmp/dev_cache"</p>
+<p>    }</p>
+<p>  },</p>
+<p>  "dbServer": "127.0.0.1",</p>
+<p>  "dbPassword": "dev_password",</p>
+<p>  "dbSocket": "",</p>
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "allowed_origins": ["*"]</p>
+<p>    },</p>
+<p>    "response": {</p>
+<p>      "pretty_print": true,</p>
+<p>      "include_performance": true</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="getting-started.html">Getting Started Guide</a></li>
+<li><a href="api-development.html">API Development Guide</a></li>
+<li><a href="gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="security.html">Security Guide</a></li>
+<li><a href="deployment.html">Deployment Guide</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

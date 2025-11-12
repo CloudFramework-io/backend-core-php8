@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkFlows Class - CloudFramework Backend Core PHP8</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CloudFramework</h2>
+                <p>Backend Core PHP8</p>
+            </div>
+            <nav>
+                <a href="../index.html">Home</a>
+                <h3>Core Classes</h3>
+                <a href="Core7.html">Core7</a>
+                <a href="RESTful.html">RESTful</a>
+                <a href="Scripts2020.html">Scripts2020</a>
+                <h3>Configuration & Security</h3>
+                <a href="CoreConfig.html">CoreConfig</a>
+                <a href="CoreCache.html">CoreCache</a>
+                <a href="CoreSession.html">CoreSession</a>
+                <a href="CoreSecurity.html">CoreSecurity</a>
+                <h3>Data Storage</h3>
+                <a href="DataStore.html">DataStore</a>
+                <a href="Buckets.html">Buckets</a>
+                <a href="DataBQ.html">DataBQ</a>
+                <a href="CloudSQL.html">CloudSQL</a>
+                <a href="DataSQL.html">DataSQL</a>
+                <a href="DataMongoDB.html">DataMongoDB</a>
+                <h3>Utilities</h3>
+                <a href="Email.html">Email</a>
+                <a href="DataValidation.html">DataValidation</a>
+                <a href="WorkFlows.html" class="active">WorkFlows</a>
+                <h3>GCP Integration</h3>
+                <a href="GoogleSecrets.html">GoogleSecrets</a>
+                <a href="PubSub.html">PubSub</a>
+            </nav>
+        </aside>
+        <main class="content">
+<h1>WorkFlows Class</h1>
+
+<h2>Overview</h2>
+
+<p>The <code>WorkFlows</code> class provides workflow management functionality for orchestrating multi-step business processes. It helps manage state transitions, approvals, and automated task execution.</p>
+
+<h2>Loading the Class</h2>
+
+<pre><code class="language-php">$workflows = $this->core->loadClass('WorkFlows');
+</code></pre>
+
+<h2>Properties</h2>
+
+<p>| Property | Type | Description | |----------|------|-------------| | <code>$core</code> | Core7 | Reference to Core7 instance | | <code>$error</code> | bool | Error flag | | <code>$errorMsg</code> | array | Error messages |</p>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>Order Processing Workflow</h3>
+
+<pre><code class="language-php">class API extends RESTful
+<p>{ public function ENDPOINT_process_order() { $orderId = $this->params[0] ?? null;</p>
+
+<p>$workflows = $this->core->loadClass('WorkFlows');</p>
+
+<p>// Define workflow states $workflow = [ 'states' => [ 'pending' => ['next' => ['processing', 'cancelled']], 'processing' => ['next' => ['shipped', 'cancelled']], 'shipped' => ['next' => ['delivered', 'returned']], 'delivered' => ['next' => ['completed']], 'cancelled' => ['final' => true], 'completed' => ['final' => true], 'returned' => ['final' => true] ] ];</p>
+
+<p>// Get current order state $order = $this->getOrder($orderId); $currentState = $order['status'];</p>
+
+<p>// Transition to next state $newState = 'processing';</p>
+
+<p>if($workflows->canTransition($currentState, $newState, $workflow)) { $this->updateOrderStatus($orderId, $newState);</p>
+
+<p>// Trigger workflow actions $this->executeWorkflowActions($newState, $order);</p>
+
+<p>$this->addReturnData(['status' => $newState]); } else { return $this->setErrorFromCodelib('workflow-error', 'Invalid state transition'); } }</p>
+
+<p>private function executeWorkflowActions($state, $order) { switch($state) { case 'processing': // Charge payment $this->chargePayment($order); // Send confirmation email $this->sendOrderConfirmation($order); break;</p>
+
+<p>case 'shipped': // Send tracking email $this->sendTrackingInfo($order); break;</p>
+
+<p>case 'delivered': // Request review $this->requestProductReview($order); break; } } }</p>
+</code></pre>
+
+<h3>Approval Workflow</h3>
+
+<pre><code class="language-php">// Document approval workflow
+<p>$workflow = [ 'states' => [ 'draft' => ['next' => ['pending_review']], 'pending_review' => ['next' => ['approved', 'rejected', 'needs_changes']], 'needs_changes' => ['next' => ['pending_review']], 'approved' => ['next' => ['published']], 'published' => ['final' => true], 'rejected' => ['final' => true] ], 'permissions' => [ 'draft' => ['author'], 'pending_review' => ['author'], 'approved' => ['manager', 'admin'], 'rejected' => ['manager', 'admin'], 'published' => ['admin'] ] ];</p>
+
+<p>// Check if user can approve public function canApprove($documentId, $userId) { $document = $this->getDocument($documentId); $user = $this->getUser($userId);</p>
+
+<p>$workflows = $this->core->loadClass('WorkFlows');</p>
+
+<p>$currentState = $document['status']; $newState = 'approved';</p>
+
+<p>// Check transition is valid if(!$workflows->canTransition($currentState, $newState, $workflow)) { return false; }</p>
+
+<p>// Check user has permission $allowedRoles = $workflow['permissions'][$newState] ?? []; return in_array($user['role'], $allowedRoles); }</p>
+</code></pre>
+
+<h3>Task Workflow</h3>
+
+<pre><code class="language-php">// Support ticket workflow
+<p>class API extends RESTful { public function ENDPOINT_ticket_workflow() { $ticketId = $this->params[0] ?? null; $action = $this->params[1] ?? null;</p>
+
+<p>$workflows = $this->core->loadClass('WorkFlows');</p>
+
+<p>$workflow = [ 'states' => [ 'new' => [ 'next' => ['assigned', 'closed'], 'actions' => ['assign', 'close'] ], 'assigned' => [ 'next' => ['in_progress', 'closed'], 'actions' => ['start', 'close'] ], 'in_progress' => [ 'next' => ['waiting_customer', 'resolved', 'closed'], 'actions' => ['wait_customer', 'resolve', 'close'] ], 'waiting_customer' => [ 'next' => ['in_progress', 'closed'], 'actions' => ['resume', 'close'] ], 'resolved' => [ 'next' => ['closed', 'in_progress'], 'actions' => ['close', 'reopen'] ], 'closed' => ['final' => true] ] ];</p>
+
+<p>$ticket = $this->getTicket($ticketId);</p>
+
+<p>// Execute action switch($action) { case 'assign': $this->assignTicket($ticketId, $this->formParams['agent_id']); $this->updateTicketStatus($ticketId, 'assigned'); break;</p>
+
+<p>case 'start': $this->updateTicketStatus($ticketId, 'in_progress'); break;</p>
+
+<p>case 'resolve': $this->updateTicketStatus($ticketId, 'resolved'); $this->sendResolutionEmail($ticket); break;</p>
+
+<p>case 'close': $this->updateTicketStatus($ticketId, 'closed'); break; }</p>
+
+<p>$this->addReturnData(['status' => 'success']); } }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Workflow Patterns</h2>
+
+<h3>State Machine</h3>
+
+<pre><code class="language-php">$workflow = [
+<p>'initial_state' => 'draft', 'states' => [ 'draft' => ['next' => ['review']], 'review' => ['next' => ['approved', 'rejected']], 'approved' => ['final' => true], 'rejected' => ['final' => true] ] ];</p>
+</code></pre>
+
+<h3>Multi-Step Process</h3>
+
+<pre><code class="language-php">$workflow = [
+<p>'steps' => [ ['name' => 'collect_info', 'required_fields' => ['name', 'email']], ['name' => 'verify_identity', 'required_fields' => ['id_number']], ['name' => 'payment', 'required_fields' => ['card_number']], ['name' => 'confirmation', 'final' => true] ] ];</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+<li><a href="DataStore.html">DataStore Class Reference</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+    <script src="../js/main.js"></script>
+</body>
+</html>

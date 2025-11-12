@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getting Started - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Get started with CloudFramework Backend Core PHP8 - Installation, setup, and your first API">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link active">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Getting Started with CloudFramework Backend Core PHP8</h1>
+
+            <p>This guide will walk you through setting up CloudFramework Backend Core and creating your first API and script.</p>
+
+            <h2 id="table-of-contents">Table of Contents</h2>
+            <ul>
+                <li><a href="#prerequisites">Prerequisites</a></li>
+                <li><a href="#installation">Installation</a></li>
+                <li><a href="#project-setup">Project Setup</a></li>
+                <li><a href="#your-first-api">Your First API</a></li>
+                <li><a href="#your-first-script">Your First Script</a></li>
+                <li><a href="#configuration">Configuration</a></li>
+                <li><a href="#next-steps">Next Steps</a></li>
+            </ul>
+
+            <h2 id="prerequisites">Prerequisites</h2>
+
+            <p>Before you begin, ensure you have the following installed:</p>
+
+            <h3>PHP 8.3 or higher</h3>
+            <pre><code>php --version</code></pre>
+
+            <h3>Composer (PHP dependency manager)</h3>
+            <pre><code>composer --version</code></pre>
+
+            <h3>Python 3.x (for development tools)</h3>
+            <pre><code>python3 --version</code></pre>
+
+            <h3>Google Cloud SDK (optional, for GCP deployment)</h3>
+            <pre><code>gcloud --version</code></pre>
+
+            <h2 id="installation">Installation</h2>
+
+            <h3>Step 1: Install via Composer</h3>
+
+            <p>Create a new directory for your project and install the framework:</p>
+
+            <pre><code># Create project directory
+mkdir my-api-project
+cd my-api-project
+
+# Install CloudFramework
+composer require cloudframework-io/backend-core-php8</code></pre>
+
+            <p>If you encounter GRPC extension issues:</p>
+
+            <pre><code>composer require cloudframework-io/backend-core-php8 --ignore-platform-req=ext-grpc</code></pre>
+
+            <h3>Step 2: Initialize Project Structure</h3>
+
+            <p>Run the installation script to set up your project:</p>
+
+            <pre><code>php vendor/cloudframework-io/backend-core-php8/install.php</code></pre>
+
+            <p>This creates the following structure:</p>
+
+            <pre><code>my-api-project/
+├── api/                    # API endpoints
+│   ├── index.php          # Main API endpoint
+│   └── training/          # Example APIs
+│       ├── hello.php
+│       └── hello-advanced.php
+├── scripts/               # Background scripts
+│   ├── template.php
+│   └── training/
+│       └── hello.php
+├── local_data/            # Local development data
+│   └── cache/            # Cache directory
+├── config.json           # Framework configuration
+├── composer.json         # Composer configuration
+├── app.yaml             # Google App Engine config
+├── .gcloudignore        # GCP deployment ignore rules
+├── .gitignore           # Git ignore rules
+├── php.ini              # PHP configuration
+└── README.md            # Project README</code></pre>
+
+            <h2 id="project-setup">Project Setup</h2>
+
+            <h3>Configure Composer Scripts</h3>
+
+            <p>Your <code>composer.json</code> should include these helpful scripts:</p>
+
+            <pre><code>{
+  "scripts": {
+    "server": "php -S localhost:8080 -t . vendor/cloudframework-io/backend-core-php8/runapi.php",
+    "serve": "@server",
+    "script": "php vendor/cloudframework-io/backend-core-php8/runscript.php",
+    "setup": "@script _setup",
+    "credentials": "@script _install-development-credentials",
+    "deploy": "gcloud app deploy"
+  }
+}</code></pre>
+
+            <h3>Configure Development Environment</h3>
+
+            <p>Run the setup script to configure your development environment:</p>
+
+            <pre><code>composer setup</code></pre>
+
+            <p>This interactive setup will configure:</p>
+            <ul>
+                <li>Shell environment (macOS zsh support)</li>
+                <li>CloudFramework Platform connection (optional)</li>
+                <li>GCP project settings</li>
+                <li>Data repository access (Datastore, Cloud Storage, BigQuery)</li>
+                <li>Local cache configuration</li>
+            </ul>
+
+            <h2 id="your-first-api">Your First API</h2>
+
+            <h3 id="quick-start">Start the Development Server</h3>
+
+            <p>Launch the built-in PHP development server:</p>
+
+            <pre><code>composer server</code></pre>
+
+            <p>The server will start at <code>http://localhost:8080/</code></p>
+
+            <h3>Test the Default APIs</h3>
+
+            <p>Open your browser and test these endpoints:</p>
+
+            <ol>
+                <li><strong>Main endpoint</strong>: <a href="http://localhost:8080/" target="_blank">http://localhost:8080/</a>
+                    <br>Returns API information and available endpoints</li>
+                <li><strong>Simple Hello World</strong>: <a href="http://localhost:8080/training/hello" target="_blank">http://localhost:8080/training/hello</a>
+                    <br>Returns: <code>{"success": true, "status": 200, "code": "ok", "data": "hello World"}</code></li>
+                <li><strong>Advanced Hello World</strong>: <a href="http://localhost:8080/training/hello-advanced" target="_blank">http://localhost:8080/training/hello-advanced</a>
+                    <br>Returns structured endpoint information</li>
+            </ol>
+
+            <h3>Create Your First API</h3>
+
+            <p>Create a new file <code>api/myapi.php</code>:</p>
+
+            <pre><code>&lt;?php
+/**
+ * My First API
+ */
+class API extends RESTful
+{
+    function main()
+    {
+        // This method is called automatically
+        $this->addReturnData([
+            'message' => 'Welcome to my API!',
+            'timestamp' => date('Y-m-d H:i:s'),
+            'version' => '1.0'
+        ]);
+    }
+}</code></pre>
+
+            <p>Test it at: <a href="http://localhost:8080/myapi" target="_blank">http://localhost:8080/myapi</a></p>
+
+            <h3>Create an API with Endpoints</h3>
+
+            <p>Create <code>api/users/index.php</code>:</p>
+
+            <pre><code>&lt;?php
+/**
+ * Users API
+ */
+class API extends RESTful
+{
+    function main()
+    {
+        // Only allow specific methods
+        if(!$this->checkMethod('GET,POST,PUT,DELETE')) return;
+
+        // Route to endpoint based on first parameter
+        $endpoint = $this->params[0] ?? 'list';
+
+        // Call ENDPOINT_{name} method
+        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+            return $this->setErrorFromCodelib('not-found',
+                ": Endpoint /{$this->service}/{$endpoint} not found");
+        }
+    }
+
+    /**
+     * GET /users
+     * List all users
+     */
+    public function ENDPOINT_list()
+    {
+        if(!$this->checkMethod('GET')) return;
+
+        $users = [
+            ['id' => 1, 'name' => 'John Doe', 'email' => 'john@example.com'],
+            ['id' => 2, 'name' => 'Jane Smith', 'email' => 'jane@example.com']
+        ];
+
+        $this->addReturnData([
+            'users' => $users,
+            'total' => count($users)
+        ]);
+    }
+
+    /**
+     * POST /users/create
+     * Create a new user
+     */
+    public function ENDPOINT_create()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Validate required fields
+        if(!$this->checkMandatoryFormParams(['name', 'email'])) {
+            return;
+        }
+
+        // Validate email format
+        if(!$this->validateValue('email', $this->formParams['email'], 'email')) {
+            return;
+        }
+
+        // Create user (example)
+        $newUser = [
+            'id' => rand(1000, 9999),
+            'name' => $this->formParams['name'],
+            'email' => $this->formParams['email'],
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+
+        $this->setReturnStatus(201);
+        $this->setReturnCode('inserted');
+        $this->addReturnData($newUser);
+    }
+
+    /**
+     * GET /users/get/{id}
+     * Get a specific user
+     */
+    public function ENDPOINT_get()
+    {
+        if(!$this->checkMethod('GET')) return;
+
+        // Get user ID from URL parameter
+        $userId = $this->checkMandatoryParam(1, 'User ID is required');
+        if(!$userId) return;
+
+        // Example: Get user from database
+        $user = [
+            'id' => $userId,
+            'name' => 'John Doe',
+            'email' => 'john@example.com'
+        ];
+
+        $this->addReturnData($user);
+    }
+}</code></pre>
+
+            <p>Test the endpoints:</p>
+            <ul>
+                <li>List users: http://localhost:8080/users or http://localhost:8080/users/list</li>
+                <li>Get user: http://localhost:8080/users/get/123</li>
+                <li>Create user (POST): http://localhost:8080/users/create with JSON body</li>
+            </ul>
+
+            <h3>Test with cURL</h3>
+
+            <pre><code># GET request
+curl http://localhost:8080/users
+
+# POST request
+curl -X POST http://localhost:8080/users/create \
+  -H "Content-Type: application/json" \
+  -d '{"name":"John Doe","email":"john@example.com"}'
+
+# GET specific user
+curl http://localhost:8080/users/get/123</code></pre>
+
+            <h2 id="your-first-script">Your First Script</h2>
+
+            <p>Scripts are background processes that can be executed via CLI.</p>
+
+            <h3>Run Example Scripts</h3>
+
+            <pre><code># Run the hello training script
+composer script training/hello
+
+# Run with a method
+composer script training/hello/world</code></pre>
+
+            <h3>Create Your First Script</h3>
+
+            <p>Create <code>scripts/myprocess.php</code>:</p>
+
+            <pre><code>&lt;?php
+/**
+ * My First Script
+ */
+class Script extends Scripts2020
+{
+    function main()
+    {
+        // Get method from parameters (default: 'default')
+        $method = $this->params[0] ?? 'default';
+
+        // Call METHOD_{name} function
+        if (!$this->useFunction('METHOD_' . $method)) {
+            return $this->setErrorFromCodelib('params-error',
+                ": Method {$method} not found");
+        }
+    }
+
+    /**
+     * Default method: composer script myprocess
+     */
+    function METHOD_default()
+    {
+        $this->sendTerminal("=== My Process Script ===");
+        $this->sendTerminal("Available methods:");
+        $this->sendTerminal("  - composer script myprocess/hello");
+        $this->sendTerminal("  - composer script myprocess/process");
+    }
+
+    /**
+     * Hello method: composer script myprocess/hello
+     */
+    function METHOD_hello()
+    {
+        $this->sendTerminal("Hello from my script!");
+
+        // Access core framework
+        $this->sendTerminal("Server time: " . date('Y-m-d H:i:s'));
+
+        // Log information
+        $this->core->logs->add("Script executed successfully", 'myprocess');
+    }
+
+    /**
+     * Process method: composer script myprocess/process
+     */
+    function METHOD_process()
+    {
+        $this->sendTerminal("Starting process...");
+
+        // Your processing logic here
+        for ($i = 1; $i <= 5; $i++) {
+            $this->sendTerminal("Processing item {$i}/5");
+            sleep(1); // Simulate work
+        }
+
+        $this->sendTerminal("Process completed!");
+    }
+}</code></pre>
+
+            <p>Run your scripts:</p>
+
+            <pre><code># Show available methods
+composer script myprocess
+
+# Run hello method
+composer script myprocess/hello
+
+# Run process method
+composer script myprocess/process</code></pre>
+
+            <h2 id="configuration">Configuration</h2>
+
+            <h3>Basic Configuration</h3>
+
+            <p>Edit <code>config.json</code> to configure your project:</p>
+
+            <pre><code>{
+  "core.gcp.project_id": "your-project-id",
+  "core.datastore.on": false,
+  "core.datastorage.on": false,
+  "core.bigquery.on": false,
+  "development": {
+    "core.cache.cache_path": "{{rootPath}}/local_data/cache"
+  }
+}</code></pre>
+
+            <h3>Enable GCP Services</h3>
+
+            <p>To enable Google Cloud services:</p>
+
+            <pre><code>{
+  "core.gcp.project_id": "your-gcp-project",
+  "core.datastore.on": true,
+  "core.gcp.datastore.project_id": "",
+  "core.datastorage.on": true,
+  "core.gcp.datastorage.project_id": "",
+  "core.bigquery.on": true,
+  "core.gcp.bigquery.project_id": ""
+}</code></pre>
+
+            <h2 id="next-steps">Next Steps</h2>
+
+            <p>Now that you have CloudFramework set up, explore these topics:</p>
+
+            <h3>Learn More</h3>
+            <ul>
+                <li><a href="api-development.html"><strong>API Development Guide</strong></a> - Advanced API techniques</li>
+                <li><a href="script-development.html"><strong>Script Development Guide</strong></a> - Background script patterns</li>
+                <li><a href="configuration.html"><strong>Configuration Guide</strong></a> - All configuration options</li>
+                <li><a href="gcp-integration.html"><strong>GCP Integration</strong></a> - Working with Google Cloud services</li>
+            </ul>
+
+            <h3>Deploy Your Application</h3>
+            <ul>
+                <li><a href="deployment.html"><strong>Deployment Guide</strong></a> - Deploy to App Engine, Cloud Run, etc.</li>
+            </ul>
+
+            <h3>Getting Help</h3>
+            <p>If you need assistance:</p>
+            <ul>
+                <li><strong>Documentation</strong>: Check the docs/ directory</li>
+                <li><strong>GitHub Issues</strong>: <a href="https://github.com/CloudFramework-io/backend-core-php8/issues" target="_blank">Report issues</a></li>
+                <li><strong>Examples</strong>: Review training examples in api/training/ and scripts/training/</li>
+            </ul>
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

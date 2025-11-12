@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Security - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Security best practices for CloudFramework">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link active">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Security Guide</h1>
+
+<h2>Overview</h2>
+
+<p>Security is critical for any web application. CloudFramework provides built-in security features and follows best practices to protect your APIs and data. This guide covers:</p>
+
+<ul>
+<li>Authentication and authorization</li>
+<li>Input validation and sanitization</li>
+<li>Protection against common vulnerabilities</li>
+<li>Secure data handling</li>
+<li>GCP security integration</li>
+<li>Security monitoring and auditing</li>
+</ul>
+
+<p>---</p>
+
+<h2>Table of Contents</h2>
+
+<ol>
+<li><a href="#security-checklist">Security Checklist</a></li>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#authorization">Authorization</a></li>
+<li><a href="#input-validation">Input Validation</a></li>
+<li><a href="#sql-injection-prevention">SQL Injection Prevention</a></li>
+<li><a href="#xss-protection">XSS Protection</a></li>
+<li><a href="#csrf-protection">CSRF Protection</a></li>
+<li><a href="#cors-configuration">CORS Configuration</a></li>
+<li><a href="#rate-limiting">Rate Limiting</a></li>
+<li><a href="#encryption--data-protection">Encryption & Data Protection</a></li>
+<li><a href="#secure-file-uploads">Secure File Uploads</a></li>
+<li><a href="#security-headers">Security Headers</a></li>
+<li><a href="#logging--auditing">Logging & Auditing</a></li>
+<li><a href="#gcp-security">GCP Security</a></li>
+<li><a href="#common-vulnerabilities">Common Vulnerabilities</a></li>
+</ol>
+
+<p>---</p>
+
+<h2>Security Checklist</h2>
+
+<h3>Pre-Production Checklist</h3>
+
+<ul>
+<li>[ ] Authentication implemented for protected endpoints</li>
+<li>[ ] Authorization checks in place</li>
+<li>[ ] All user inputs validated and sanitized</li>
+<li>[ ] Parameterized queries used (no string concatenation)</li>
+<li>[ ] XSS protection implemented</li>
+<li>[ ] CORS properly configured</li>
+<li>[ ] Rate limiting enabled</li>
+<li>[ ] Sensitive data encrypted</li>
+<li>[ ] Security headers configured</li>
+<li>[ ] Error messages don't expose sensitive information</li>
+<li>[ ] Logging and monitoring enabled</li>
+<li>[ ] Service account permissions minimized</li>
+<li>[ ] Secrets stored in environment variables</li>
+<li>[ ] HTTPS enforced</li>
+<li>[ ] File upload validation implemented</li>
+</ul>
+
+<p>---</p>
+
+<h2>Authentication</h2>
+
+<h3>API Key Authentication</h3>
+
+<strong>Configuration (config.json):</strong>
+
+<pre><code>{
+<p>  "security": {</p>
+<p>    "api_keys": {</p>
+<p>      "enabled": true,</p>
+<p>      "header_name": "X-API-Key",</p>
+<p>      "valid_keys": [</p>
+<p>        "${API_KEY_1}",</p>
+<p>        "${API_KEY_2}"</p>
+<p>      ]</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Implementation:</strong>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Validate API key</p>
+<p>        if(!$this->validateAPIKey()) {</p>
+<p>            return $this->setError('Invalid or missing API key', 401);</p>
+<p>        }</p>
+
+<p>        // Continue with API logic</p>
+<p>        $endpoint = $this->params[0] ?? 'default';</p>
+<p>        $this->useFunction('ENDPOINT_' . $endpoint);</p>
+<p>    }</p>
+
+<p>    private function validateAPIKey(): bool</p>
+<p>    {</p>
+<p>        $apiKey = $_SERVER['HTTP_X_API_KEY'] ?? '';</p>
+
+<p>        if(empty($apiKey)) {</p>
+<p>            return false;</p>
+<p>        }</p>
+
+<p>        $validKeys = $this->core->config->get('security.api_keys.valid_keys', []);</p>
+<p>        return in_array($apiKey, $validKeys);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<strong>Usage:</strong>
+
+<pre><code>curl -H "X-API-Key: your-api-key-here" https://api.example.com/users</code></pre>
+
+<h3>Token-Based Authentication (JWT)</h3>
+
+<strong>Generate JWT Token:</strong>
+
+<pre><code>private function generateJWT(array $payload): string
+<p>{</p>
+<p>    $secret = $this->core->config->get('security.jwt.secret');</p>
+<p>    $algorithm = $this->core->config->get('security.jwt.algorithm', 'HS256');</p>
+
+<p>    $header = base64_encode(json_encode(['alg' => $algorithm, 'typ' => 'JWT']));</p>
+<p>    $payload['exp'] = time() + 3600; // 1 hour expiration</p>
+<p>    $payload['iat'] = time();</p>
+
+<p>    $payloadEncoded = base64_encode(json_encode($payload));</p>
+<p>    $signature = base64_encode(hash_hmac('sha256', "$header.$payloadEncoded", $secret, true));</p>
+
+<p>    return "$header.$payloadEncoded.$signature";</p>
+<p>}</code></pre></p>
+
+<strong>Validate JWT Token:</strong>
+
+<pre><code>private function validateJWT(string $token): array|false
+<p>{</p>
+<p>    $secret = $this->core->config->get('security.jwt.secret');</p>
+
+<p>    $parts = explode('.', $token);</p>
+<p>    if(count($parts) !== 3) {</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    [$header, $payload, $signature] = $parts;</p>
+
+<p>    // Verify signature</p>
+<p>    $expectedSignature = base64_encode(hash_hmac('sha256', "$header.$payload", $secret, true));</p>
+<p>    if($signature !== $expectedSignature) {</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    // Decode payload</p>
+<p>    $payloadData = json_decode(base64_decode($payload), true);</p>
+
+<p>    // Check expiration</p>
+<p>    if(isset($payloadData['exp']) && $payloadData['exp'] < time()) {</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    return $payloadData;</p>
+<p>}</code></pre></p>
+
+<strong>Login Endpoint:</strong>
+
+<pre><code>public function ENDPOINT_login()
+<p>{</p>
+<p>    if(!$this->checkMethod('POST')) return;</p>
+<p>    if(!$this->checkMandatoryFormParams(['email', 'password'])) return;</p>
+
+<p>    $email = $this->formParams['email'];</p>
+<p>    $password = $this->formParams['password'];</p>
+
+<p>    // Verify credentials (example with Datastore)</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $users = $ds->fetchAll([['email', '=', $email]], null, 1);</p>
+
+<p>    if(empty($users)) {</p>
+<p>        return $this->setError('Invalid credentials', 401);</p>
+<p>    }</p>
+
+<p>    $user = $users[0];</p>
+
+<p>    // Verify password</p>
+<p>    if(!password_verify($password, $user['password'])) {</p>
+<p>        return $this->setError('Invalid credentials', 401);</p>
+<p>    }</p>
+
+<p>    // Generate JWT token</p>
+<p>    $token = $this->generateJWT([</p>
+<p>        'user_id' => $user['KeyId'],</p>
+<p>        'email' => $user['email'],</p>
+<p>        'role' => $user['role'] ?? 'user'</p>
+<p>    ]);</p>
+
+<p>    $this->addReturnData([</p>
+<p>        'token' => $token,</p>
+<p>        'user' => [</p>
+<p>            'id' => $user['KeyId'],</p>
+<p>            'email' => $user['email'],</p>
+<p>            'role' => $user['role'] ?? 'user'</p>
+<p>        ]</p>
+<p>    ]);</p>
+<p>}</code></pre></p>
+
+<strong>Protected Endpoint:</strong>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Extract token from Authorization header</p>
+<p>    $authHeader = $_SERVER['HTTP_AUTHORIZATION'] ?? '';</p>
+
+<p>    if(!preg_match('/Bearer\s+(.*)$/i', $authHeader, $matches)) {</p>
+<p>        return $this->setError('Missing authorization token', 401);</p>
+<p>    }</p>
+
+<p>    $token = $matches[1];</p>
+<p>    $payload = $this->validateJWT($token);</p>
+
+<p>    if(!$payload) {</p>
+<p>        return $this->setError('Invalid or expired token', 401);</p>
+<p>    }</p>
+
+<p>    // Store user info for use in endpoints</p>
+<p>    $this->currentUser = $payload;</p>
+
+<p>    // Continue with API logic</p>
+<p>    $endpoint = $this->params[0] ?? 'default';</p>
+<p>    $this->useFunction('ENDPOINT_' . $endpoint);</p>
+<p>}</code></pre></p>
+
+<h3>HTTP Basic Authentication</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    if(!$this->core->security->existBasicAuth()) {</p>
+<p>        header('WWW-Authenticate: Basic realm="Protected Area"');</p>
+<p>        return $this->setError('Authentication required', 401);</p>
+<p>    }</p>
+
+<p>    $username = $_SERVER['PHP_AUTH_USER'];</p>
+<p>    $password = $_SERVER['PHP_AUTH_PW'];</p>
+
+<p>    // Verify credentials</p>
+<p>    if(!$this->verifyCredentials($username, $password)) {</p>
+<p>        return $this->setError('Invalid credentials', 401);</p>
+<p>    }</p>
+
+<p>    // Continue with API logic</p>
+<p>}</p>
+
+<p>private function verifyCredentials(string $username, string $password): bool</p>
+<p>{</p>
+<p>    $users = $this->core->config->get('security.basic_auth.users', []);</p>
+
+<p>    if(!isset($users[$username])) {</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    return password_verify($password, $users[$username]);</p>
+<p>}</code></pre></p>
+
+<h3>Google OAuth2 Authentication</h3>
+
+<pre><code>// Verify Google ID Token
+<p>private function verifyGoogleToken(string $idToken): array|false</p>
+<p>{</p>
+<p>    $client = new Google\Client();</p>
+<p>    $client->setAuthConfig($this->core->config->get('core.gcp.service_account'));</p>
+
+<p>    try {</p>
+<p>        $payload = $client->verifyIdToken($idToken);</p>
+
+<p>        if($payload) {</p>
+<p>            return [</p>
+<p>                'user_id' => $payload['sub'],</p>
+<p>                'email' => $payload['email'],</p>
+<p>                'name' => $payload['name'],</p>
+<p>                'picture' => $payload['picture']</p>
+<p>            ];</p>
+<p>        }</p>
+<p>    } catch(Exception $e) {</p>
+<p>        $this->core->errors->add($e->getMessage(), 'auth', 'error');</p>
+<p>    }</p>
+
+<p>    return false;</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Authorization</h2>
+
+<h3>Role-Based Access Control (RBAC)</h3>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    private $currentUser;</p>
+<p>    private $roles = [</p>
+<p>        'admin' => ['users:read', 'users:write', 'users:delete', 'settings:write'],</p>
+<p>        'editor' => ['users:read', 'users:write'],</p>
+<p>        'viewer' => ['users:read']</p>
+<p>    ];</p>
+
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Authenticate user first</p>
+<p>        if(!$this->authenticate()) {</p>
+<p>            return $this->setError('Authentication required', 401);</p>
+<p>        }</p>
+
+<p>        // Route to endpoints</p>
+<p>        $endpoint = $this->params[0] ?? 'list';</p>
+<p>        $this->useFunction('ENDPOINT_' . $endpoint);</p>
+<p>    }</p>
+
+<p>    public function ENDPOINT_list()</p>
+<p>    {</p>
+<p>        if(!$this->checkPermission('users:read')) {</p>
+<p>            return $this->setError('Insufficient permissions', 403);</p>
+<p>        }</p>
+
+<p>        // Fetch users</p>
+<p>        $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $users = $ds->fetchAll();</p>
+
+<p>        $this->addReturnData($users);</p>
+<p>    }</p>
+
+<p>    public function ENDPOINT_create()</p>
+<p>    {</p>
+<p>        if(!$this->checkPermission('users:write')) {</p>
+<p>            return $this->setError('Insufficient permissions', 403);</p>
+<p>        }</p>
+
+<p>        // Create user logic</p>
+<p>    }</p>
+
+<p>    public function ENDPOINT_delete()</p>
+<p>    {</p>
+<p>        if(!$this->checkPermission('users:delete')) {</p>
+<p>            return $this->setError('Insufficient permissions', 403);</p>
+<p>        }</p>
+
+<p>        // Delete user logic</p>
+<p>    }</p>
+
+<p>    private function checkPermission(string $permission): bool</p>
+<p>    {</p>
+<p>        $userRole = $this->currentUser['role'] ?? 'viewer';</p>
+<p>        $permissions = $this->roles[$userRole] ?? [];</p>
+
+<p>        return in_array($permission, $permissions);</p>
+<p>    }</p>
+
+<p>    private function authenticate(): bool</p>
+<p>    {</p>
+<p>        // Authentication logic (JWT, API key, etc.)</p>
+<p>        // Set $this->currentUser on success</p>
+<p>        return true;</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Resource Ownership Validation</h3>
+
+<pre><code>public function ENDPOINT_update()
+<p>{</p>
+<p>    if(!$this->checkMethod('PUT')) return;</p>
+
+<p>    $userId = $this->params[1] ?? null;</p>
+<p>    if(!$userId) {</p>
+<p>        return $this->setError('User ID required', 400);</p>
+<p>    }</p>
+
+<p>    // Check if user can modify this resource</p>
+<p>    if(!$this->canAccessResource($userId)) {</p>
+<p>        return $this->setError('Access denied', 403);</p>
+<p>    }</p>
+
+<p>    // Update user logic</p>
+<p>}</p>
+
+<p>private function canAccessResource(string $resourceUserId): bool</p>
+<p>{</p>
+<p>    $currentUserId = $this->currentUser['user_id'];</p>
+<p>    $currentUserRole = $this->currentUser['role'];</p>
+
+<p>    // Admins can access any resource</p>
+<p>    if($currentUserRole === 'admin') {</p>
+<p>        return true;</p>
+<p>    }</p>
+
+<p>    // Users can only access their own resources</p>
+<p>    return $currentUserId === $resourceUserId;</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Input Validation</h2>
+
+<h3>Validate Form Parameters</h3>
+
+<pre><code>public function ENDPOINT_create()
+<p>{</p>
+<p>    if(!$this->checkMethod('POST')) return;</p>
+
+<p>    // Check mandatory fields</p>
+<p>    if(!$this->checkMandatoryFormParams(['name', 'email', 'age'])) return;</p>
+
+<p>    // Validate email format</p>
+<p>    if(!filter_var($this->formParams['email'], FILTER_VALIDATE_EMAIL)) {</p>
+<p>        return $this->setError('Invalid email format', 400);</p>
+<p>    }</p>
+
+<p>    // Validate age range</p>
+<p>    $age = (int)$this->formParams['age'];</p>
+<p>    if($age < 18 || $age > 120) {</p>
+<p>        return $this->setError('Age must be between 18 and 120', 400);</p>
+<p>    }</p>
+
+<p>    // Validate name length</p>
+<p>    $name = trim($this->formParams['name']);</p>
+<p>    if(strlen($name) < 2 || strlen($name) > 100) {</p>
+<p>        return $this->setError('Name must be between 2 and 100 characters', 400);</p>
+<p>    }</p>
+
+<p>    // Sanitize inputs</p>
+<p>    $sanitizedData = [</p>
+<p>        'name' => htmlspecialchars($name, ENT_QUOTES, 'UTF-8'),</p>
+<p>        'email' => filter_var($this->formParams['email'], FILTER_SANITIZE_EMAIL),</p>
+<p>        'age' => $age</p>
+<p>    ];</p>
+
+<p>    // Continue with creation</p>
+<p>}</code></pre></p>
+
+<h3>Custom Validation Function</h3>
+
+<pre><code>private function validateInput(array $rules): bool
+<p>{</p>
+<p>    foreach($rules as $field => $fieldRules) {</p>
+<p>        $value = $this->formParams[$field] ?? null;</p>
+
+<p>        // Required check</p>
+<p>        if(in_array('required', $fieldRules) && empty($value)) {</p>
+<p>            $this->setError("Field '{$field}' is required", 400);</p>
+<p>            return false;</p>
+<p>        }</p>
+
+<p>        // Email validation</p>
+<p>        if(in_array('email', $fieldRules) && !filter_var($value, FILTER_VALIDATE_EMAIL)) {</p>
+<p>            $this->setError("Field '{$field}' must be a valid email", 400);</p>
+<p>            return false;</p>
+<p>        }</p>
+
+<p>        // Numeric validation</p>
+<p>        if(in_array('numeric', $fieldRules) && !is_numeric($value)) {</p>
+<p>            $this->setError("Field '{$field}' must be numeric", 400);</p>
+<p>            return false;</p>
+<p>        }</p>
+
+<p>        // Min length</p>
+<p>        foreach($fieldRules as $rule) {</p>
+<p>            if(preg_match('/^min:(\d+)$/', $rule, $matches)) {</p>
+<p>                if(strlen($value) < $matches[1]) {</p>
+<p>                    $this->setError("Field '{$field}' must be at least {$matches[1]} characters", 400);</p>
+<p>                    return false;</p>
+<p>                }</p>
+<p>            }</p>
+<p>        }</p>
+
+<p>        // Max length</p>
+<p>        foreach($fieldRules as $rule) {</p>
+<p>            if(preg_match('/^max:(\d+)$/', $rule, $matches)) {</p>
+<p>                if(strlen($value) > $matches[1]) {</p>
+<p>                    $this->setError("Field '{$field}' must not exceed {$matches[1]} characters", 400);</p>
+<p>                    return false;</p>
+<p>                }</p>
+<p>            }</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    return true;</p>
+<p>}</p>
+
+<p>public function ENDPOINT_create()</p>
+<p>{</p>
+<p>    if(!$this->checkMethod('POST')) return;</p>
+
+<p>    $rules = [</p>
+<p>        'name' => ['required', 'min:2', 'max:100'],</p>
+<p>        'email' => ['required', 'email'],</p>
+<p>        'age' => ['required', 'numeric']</p>
+<p>    ];</p>
+
+<p>    if(!$this->validateInput($rules)) {</p>
+<p>        return; // Error already set</p>
+<p>    }</p>
+
+<p>    // Continue with creation</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>SQL Injection Prevention</h2>
+
+<h3>Always Use Parameterized Queries</h3>
+
+<strong>Good (Safe):</strong>
+
+<pre><code>// Using parameterized queries
+<p>$users = $sql->command(</p>
+<p>    "SELECT * FROM users WHERE email = ? AND status = ?",</p>
+<p>    [$email, $status]</p>
+<p>);</p>
+
+<p>// Multiple parameters</p>
+<p>$orders = $sql->command(</p>
+<p>    "SELECT * FROM orders WHERE user_id = ? AND created_at >= ? AND status IN (?, ?)",</p>
+<p>    [$userId, $startDate, 'completed', 'shipped']</p>
+<p>);</p>
+
+<p>// INSERT with parameters</p>
+<p>$sql->command(</p>
+<p>    "INSERT INTO users (name, email, age) VALUES (?, ?, ?)",</p>
+<p>    [$name, $email, $age]</p>
+<p>);</code></pre></p>
+
+<strong>Bad (Vulnerable):</strong>
+
+<pre><code>// NEVER DO THIS - Vulnerable to SQL injection
+<p>$users = $sql->command("SELECT * FROM users WHERE email = '{$email}'");</p>
+
+<p>// NEVER DO THIS - String concatenation</p>
+<p>$users = $sql->command("SELECT * FROM users WHERE email = '" . $email . "'");</code></pre></p>
+
+<h3>DataStore Security</h3>
+
+<p>DataStore queries are inherently safe from SQL injection, but validate input types:</p>
+
+<pre><code>$ds = $this->core->loadClass('DataStore', ['Users']);
+
+<p>// Safe - using proper WHERE clauses</p>
+<p>$users = $ds->fetchAll([</p>
+<p>    ['email', '=', $email],</p>
+<p>    ['age', '>', $minAge]</p>
+<p>]);</p>
+
+<p>// Validate input types</p>
+<p>$age = (int)$this->formParams['age']; // Ensure integer</p>
+<p>$email = filter_var($this->formParams['email'], FILTER_VALIDATE_EMAIL);</code></pre></p>
+
+<p>---</p>
+
+<h2>XSS Protection</h2>
+
+<h3>Output Encoding</h3>
+
+<pre><code>// Encode output in API responses
+<p>public function ENDPOINT_users()</p>
+<p>{</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $users = $ds->fetchAll();</p>
+
+<p>    // Sanitize output</p>
+<p>    foreach($users as &$user) {</p>
+<p>        $user['name'] = htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8');</p>
+<p>        $user['bio'] = htmlspecialchars($user['bio'], ENT_QUOTES, 'UTF-8');</p>
+<p>    }</p>
+
+<p>    $this->addReturnData($users);</p>
+<p>}</code></pre></p>
+
+<h3>Content Security Policy (CSP)</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Set CSP header</p>
+<p>    header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'");</p>
+
+<p>    // Continue with API logic</p>
+<p>}</code></pre></p>
+
+<h3>Strip Dangerous HTML Tags</h3>
+
+<pre><code>private function sanitizeHTML(string $html): string
+<p>{</p>
+<p>    // Allow only safe tags</p>
+<p>    $allowedTags = '<p><br><strong><em><u><a>';</p>
+<p>    return strip_tags($html, $allowedTags);</p>
+<p>}</p>
+
+<p>public function ENDPOINT_update_profile()</p>
+<p>{</p>
+<p>    if(!$this->checkMethod('PUT')) return;</p>
+
+<p>    $bio = $this->formParams['bio'] ?? '';</p>
+<p>    $sanitizedBio = $this->sanitizeHTML($bio);</p>
+
+<p>    // Save sanitized bio</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>CSRF Protection</h2>
+
+<h3>Token-Based CSRF Protection</h3>
+
+<pre><code>class API extends RESTful
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Check CSRF token for state-changing methods</p>
+<p>        if(in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'DELETE'])) {</p>
+<p>            if(!$this->validateCSRFToken()) {</p>
+<p>                return $this->setError('Invalid CSRF token', 403);</p>
+<p>            }</p>
+<p>        }</p>
+
+<p>        // Continue with API logic</p>
+<p>    }</p>
+
+<p>    private function generateCSRFToken(): string</p>
+<p>    {</p>
+<p>        if(!isset($_SESSION['csrf_token'])) {</p>
+<p>            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));</p>
+<p>        }</p>
+<p>        return $_SESSION['csrf_token'];</p>
+<p>    }</p>
+
+<p>    private function validateCSRFToken(): bool</p>
+<p>    {</p>
+<p>        $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? $this->formParams['csrf_token'] ?? '';</p>
+<p>        $sessionToken = $_SESSION['csrf_token'] ?? '';</p>
+
+<p>        return hash_equals($sessionToken, $token);</p>
+<p>    }</p>
+
+<p>    public function ENDPOINT_get_token()</p>
+<p>    {</p>
+<p>        $this->addReturnData(['csrf_token' => $this->generateCSRFToken()]);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>CORS Configuration</h2>
+
+<h3>Secure CORS Setup</h3>
+
+<strong>Production (config.json):</strong>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "enabled": true,</p>
+<p>      "allowed_origins": [</p>
+<p>        "https://app.example.com",</p>
+<p>        "https://admin.example.com"</p>
+<p>      ],</p>
+<p>      "allowed_methods": ["GET", "POST", "PUT", "DELETE"],</p>
+<p>      "allowed_headers": ["Content-Type", "Authorization", "X-API-Key"],</p>
+<p>      "allow_credentials": true,</p>
+<p>      "max_age": 86400</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<strong>Implementation:</strong>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Send CORS headers</p>
+<p>    $this->sendCorsHeaders();</p>
+
+<p>    // Handle preflight OPTIONS request</p>
+<p>    if($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {</p>
+<p>        http_response_code(204);</p>
+<p>        exit;</p>
+<p>    }</p>
+
+<p>    // Continue with API logic</p>
+<p>}</code></pre></p>
+
+<strong>Never use wildcard with credentials:</strong>
+
+<pre><code>{
+<p>  "api": {</p>
+<p>    "cors": {</p>
+<p>      "allowed_origins": ["*"],</p>
+<p>      "allow_credentials": true  // BAD - Don't do this</p>
+<p>    }</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Rate Limiting</h2>
+
+<h3>IP-Based Rate Limiting</h3>
+
+<pre><code>class API extends RESTful
+<p>{</p>
+<p>    private $rateLimit = 100; // requests per minute</p>
+<p>    private $rateLimitWindow = 60; // seconds</p>
+
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Check rate limit</p>
+<p>        if(!$this->checkRateLimit()) {</p>
+<p>            return $this->setError('Rate limit exceeded', 429);</p>
+<p>        }</p>
+
+<p>        // Continue with API logic</p>
+<p>    }</p>
+
+<p>    private function checkRateLimit(): bool</p>
+<p>    {</p>
+<p>        $ip = $_SERVER['REMOTE_ADDR'];</p>
+<p>        $cacheKey = "rate_limit:{$ip}";</p>
+
+<p>        // Get current count</p>
+<p>        $count = $this->core->cache->get($cacheKey) ?? 0;</p>
+
+<p>        if($count >= $this->rateLimit) {</p>
+<p>            return false;</p>
+<p>        }</p>
+
+<p>        // Increment count</p>
+<p>        $this->core->cache->set($cacheKey, $count + 1, $this->rateLimitWindow);</p>
+
+<p>        // Set rate limit headers</p>
+<p>        header("X-RateLimit-Limit: {$this->rateLimit}");</p>
+<p>        header("X-RateLimit-Remaining: " . ($this->rateLimit - $count - 1));</p>
+
+<p>        return true;</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>User-Based Rate Limiting</h3>
+
+<pre><code>private function checkRateLimit(): bool
+<p>{</p>
+<p>    $userId = $this->currentUser['user_id'] ?? 'anonymous';</p>
+<p>    $cacheKey = "rate_limit:user:{$userId}";</p>
+
+<p>    $count = $this->core->cache->get($cacheKey) ?? 0;</p>
+
+<p>    if($count >= $this->rateLimit) {</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    $this->core->cache->set($cacheKey, $count + 1, $this->rateLimitWindow);</p>
+<p>    return true;</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Encryption & Data Protection</h2>
+
+<h3>Encrypt Sensitive Data</h3>
+
+<pre><code>// Configuration
+<p>$encryptionKey = $this->core->config->get('security.encryption.key');</p>
+
+<p>// Encrypt data before storing</p>
+<p>$sensitiveData = 'credit card number';</p>
+<p>$encrypted = $this->core->security->encrypt($sensitiveData, $encryptionKey);</p>
+
+<p>// Store encrypted data</p>
+<p>$ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>$ds->createEntity([</p>
+<p>    'name' => 'John Doe',</p>
+<p>    'payment_info' => $encrypted // Encrypted field</p>
+<p>]);</p>
+
+<p>// Decrypt when needed</p>
+<p>$user = $ds->fetchOne($userId);</p>
+<p>$decrypted = $this->core->security->decrypt($user['payment_info'], $encryptionKey);</code></pre></p>
+
+<h3>Hash Passwords</h3>
+
+<pre><code>public function ENDPOINT_register()
+<p>{</p>
+<p>    if(!$this->checkMethod('POST')) return;</p>
+<p>    if(!$this->checkMandatoryFormParams(['email', 'password'])) return;</p>
+
+<p>    $password = $this->formParams['password'];</p>
+
+<p>    // Validate password strength</p>
+<p>    if(strlen($password) < 8) {</p>
+<p>        return $this->setError('Password must be at least 8 characters', 400);</p>
+<p>    }</p>
+
+<p>    // Hash password</p>
+<p>    $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);</p>
+
+<p>    // Create user</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $userId = $ds->createEntity([</p>
+<p>        'email' => $this->formParams['email'],</p>
+<p>        'password' => $hashedPassword,</p>
+<p>        'created_at' => date('c')</p>
+<p>    ]);</p>
+
+<p>    $this->addReturnData(['user_id' => $userId]);</p>
+<p>}</code></pre></p>
+
+<h3>Secure Session Handling</h3>
+
+<pre><code>// Configure secure sessions
+<p>ini_set('session.cookie_httponly', 1);</p>
+<p>ini_set('session.cookie_secure', 1);  // HTTPS only</p>
+<p>ini_set('session.cookie_samesite', 'Strict');</p>
+<p>ini_set('session.use_strict_mode', 1);</p>
+
+<p>// Initialize session</p>
+<p>$this->core->session->init('MyApp');</p>
+
+<p>// Store user data</p>
+<p>$this->core->session->set('user_id', $userId);</p>
+<p>$this->core->session->set('role', 'admin');</p>
+
+<p>// Regenerate session ID after login</p>
+<p>session_regenerate_id(true);</code></pre></p>
+
+<p>---</p>
+
+<h2>Secure File Uploads</h2>
+
+<h3>Validate File Uploads</h3>
+
+<pre><code>public function ENDPOINT_upload()
+<p>{</p>
+<p>    if(!$this->checkMethod('POST')) return;</p>
+
+<p>    if(empty($_FILES['file'])) {</p>
+<p>        return $this->setError('No file uploaded', 400);</p>
+<p>    }</p>
+
+<p>    $file = $_FILES['file'];</p>
+
+<p>    // Validate file size (5MB max)</p>
+<p>    $maxSize = 5 * 1024 * 1024;</p>
+<p>    if($file['size'] > $maxSize) {</p>
+<p>        return $this->setError('File too large (max 5MB)', 400);</p>
+<p>    }</p>
+
+<p>    // Validate file type</p>
+<p>    $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];</p>
+<p>    $finfo = finfo_open(FILEINFO_MIME_TYPE);</p>
+<p>    $mimeType = finfo_file($finfo, $file['tmp_name']);</p>
+<p>    finfo_close($finfo);</p>
+
+<p>    if(!in_array($mimeType, $allowedTypes)) {</p>
+<p>        return $this->setError('Invalid file type', 400);</p>
+<p>    }</p>
+
+<p>    // Validate file extension</p>
+<p>    $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf'];</p>
+<p>    $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));</p>
+
+<p>    if(!in_array($extension, $allowedExtensions)) {</p>
+<p>        return $this->setError('Invalid file extension', 400);</p>
+<p>    }</p>
+
+<p>    // Generate safe filename</p>
+<p>    $safeFilename = bin2hex(random_bytes(16)) . '.' . $extension;</p>
+
+<p>    // Upload to Cloud Storage</p>
+<p>    $buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);</p>
+<p>    $result = $buckets->uploadFile($file['tmp_name'], "uploads/{$safeFilename}");</p>
+
+<p>    if($buckets->error()) {</p>
+<p>        return $this->setError('Upload failed', 500);</p>
+<p>    }</p>
+
+<p>    $this->addReturnData([</p>
+<p>        'filename' => $safeFilename,</p>
+<p>        'url' => "https://storage.googleapis.com/my-bucket/uploads/{$safeFilename}"</p>
+<p>    ]);</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Security Headers</h2>
+
+<h3>Implement Security Headers</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Prevent clickjacking</p>
+<p>    header('X-Frame-Options: SAMEORIGIN');</p>
+
+<p>    // Prevent MIME sniffing</p>
+<p>    header('X-Content-Type-Options: nosniff');</p>
+
+<p>    // Enable XSS protection</p>
+<p>    header('X-XSS-Protection: 1; mode=block');</p>
+
+<p>    // HTTPS only</p>
+<p>    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');</p>
+
+<p>    // Content Security Policy</p>
+<p>    header("Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'");</p>
+
+<p>    // Referrer Policy</p>
+<p>    header('Referrer-Policy: strict-origin-when-cross-origin');</p>
+
+<p>    // Permissions Policy</p>
+<p>    header('Permissions-Policy: geolocation=(), microphone=(), camera=()');</p>
+
+<p>    // Continue with API logic</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Logging & Auditing</h2>
+
+<h3>Security Event Logging</h3>
+
+<pre><code>// Log authentication attempts
+<p>private function logAuthAttempt(string $email, bool $success)</p>
+<p>{</p>
+<p>    $this->core->logs->add([</p>
+<p>        'event' => 'auth_attempt',</p>
+<p>        'email' => $email,</p>
+<p>        'success' => $success,</p>
+<p>        'ip' => $_SERVER['REMOTE_ADDR'],</p>
+<p>        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',</p>
+<p>        'timestamp' => time()</p>
+<p>    ], 'security');</p>
+<p>}</p>
+
+<p>// Log data access</p>
+<p>private function logDataAccess(string $resource, string $action)</p>
+<p>{</p>
+<p>    $this->core->logs->add([</p>
+<p>        'event' => 'data_access',</p>
+<p>        'resource' => $resource,</p>
+<p>        'action' => $action,</p>
+<p>        'user_id' => $this->currentUser['user_id'] ?? 'anonymous',</p>
+<p>        'ip' => $_SERVER['REMOTE_ADDR'],</p>
+<p>        'timestamp' => time()</p>
+<p>    ], 'audit');</p>
+<p>}</p>
+
+<p>// Usage</p>
+<p>public function ENDPOINT_login()</p>
+<p>{</p>
+<p>    // ... authentication logic ...</p>
+
+<p>    if($success) {</p>
+<p>        $this->logAuthAttempt($email, true);</p>
+<p>    } else {</p>
+<p>        $this->logAuthAttempt($email, false);</p>
+<p>    }</p>
+<p>}</p>
+
+<p>public function ENDPOINT_users()</p>
+<p>{</p>
+<p>    $this->logDataAccess('users', 'read');</p>
+<p>    // ... fetch users ...</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>GCP Security</h2>
+
+<h3>Service Account Best Practices</h3>
+
+<strong>1. Principle of Least Privilege:</strong>
+
+<pre><code><h1>Grant only necessary roles</h1>
+<p>gcloud projects add-iam-policy-binding my-project \</p>
+<p>  --member="serviceAccount:my-api@my-project.iam.gserviceaccount.com" \</p>
+<p>  --role="roles/datastore.user"</p>
+
+<h1>Don't grant overly permissive roles like:</h1>
+<h1>roles/owner, roles/editor</h1></code></pre>
+
+<strong>2. Use separate service accounts:</strong>
+
+<pre><code><h1>API service account</h1>
+<p>gcloud iam service-accounts create api-service \</p>
+<p>  --display-name="API Service Account"</p>
+
+<h1>Scripts service account</h1>
+<p>gcloud iam service-accounts create scripts-service \</p>
+<p>  --display-name="Scripts Service Account"</code></pre></p>
+
+<strong>3. Rotate service account keys:</strong>
+
+<pre><code><h1>Create new key</h1>
+<p>gcloud iam service-accounts keys create new-key.json \</p>
+<p>  --iam-account=my-api@my-project.iam.gserviceaccount.com</p>
+
+<h1>Delete old key</h1>
+<p>gcloud iam service-accounts keys delete OLD_KEY_ID \</p>
+<p>  --iam-account=my-api@my-project.iam.gserviceaccount.com</code></pre></p>
+
+<h3>Secure Data in Datastore</h3>
+
+<pre><code>// Use namespaces to separate environments
+<p>$ds = $this->core->loadClass('DataStore', ['Users']);</p>
+
+<p>// Don't expose internal IDs</p>
+<p>public function ENDPOINT_users()</p>
+<p>{</p>
+<p>    $users = $ds->fetchAll();</p>
+
+<p>    // Remove sensitive fields</p>
+<p>    foreach($users as &$user) {</p>
+<p>        unset($user['password']);</p>
+<p>        unset($user['payment_info']);</p>
+<p>        unset($user['internal_notes']);</p>
+<p>    }</p>
+
+<p>    $this->addReturnData($users);</p>
+<p>}</code></pre></p>
+
+<h3>Enable Cloud Audit Logs</h3>
+
+<p>Enable in GCP Console:</p>
+<ul>
+<li>IAM & Admin → Audit Logs</li>
+<li>Enable Admin Read, Data Read, Data Write</li>
+</ul>
+
+<p>---</p>
+
+<h2>Common Vulnerabilities</h2>
+
+<h3>1. Insecure Direct Object References (IDOR)</h3>
+
+<strong>Vulnerable:</strong>
+<pre><code>public function ENDPOINT_user()
+<p>{</p>
+<p>    $userId = $this->params[1];</p>
+
+<p>    // Anyone can access any user</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $user = $ds->fetchOne($userId);</p>
+
+<p>    $this->addReturnData($user);</p>
+<p>}</code></pre></p>
+
+<strong>Secure:</strong>
+<pre><code>public function ENDPOINT_user()
+<p>{</p>
+<p>    $userId = $this->params[1];</p>
+<p>    $currentUserId = $this->currentUser['user_id'];</p>
+
+<p>    // Users can only access their own data (unless admin)</p>
+<p>    if($userId !== $currentUserId && $this->currentUser['role'] !== 'admin') {</p>
+<p>        return $this->setError('Access denied', 403);</p>
+<p>    }</p>
+
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $user = $ds->fetchOne($userId);</p>
+
+<p>    $this->addReturnData($user);</p>
+<p>}</code></pre></p>
+
+<h3>2. Mass Assignment</h3>
+
+<strong>Vulnerable:</strong>
+<pre><code>public function ENDPOINT_update()
+<p>{</p>
+<p>    // User can modify any field, including 'role'</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $ds->updateEntity($userId, $this->formParams);</p>
+<p>}</code></pre></p>
+
+<strong>Secure:</strong>
+<pre><code>public function ENDPOINT_update()
+<p>{</p>
+<p>    // Whitelist allowed fields</p>
+<p>    $allowedFields = ['name', 'email', 'bio'];</p>
+<p>    $updateData = [];</p>
+
+<p>    foreach($allowedFields as $field) {</p>
+<p>        if(isset($this->formParams[$field])) {</p>
+<p>            $updateData[$field] = $this->formParams[$field];</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>    $ds->updateEntity($userId, $updateData);</p>
+<p>}</code></pre></p>
+
+<h3>3. Information Disclosure</h3>
+
+<strong>Vulnerable:</strong>
+<pre><code>catch(Exception $e) {
+<p>    return $this->setError($e->getMessage(), 500); // Exposes internal details</p>
+<p>}</code></pre></p>
+
+<strong>Secure:</strong>
+<pre><code>catch(Exception $e) {
+<p>    // Log detailed error</p>
+<p>    $this->core->errors->add($e->getMessage(), 'api', 'error');</p>
+
+<p>    // Return generic error to user</p>
+<p>    return $this->setError('An error occurred', 500);</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="api-development.html">API Development Guide</a></li>
+<li><a href="configuration.html">Configuration Guide</a></li>
+<li><a href="deployment.html">Deployment Guide</a></li>
+<li><a href="gcp-integration.html">GCP Integration Guide</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

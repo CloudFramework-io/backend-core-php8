@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Development - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Build robust RESTful APIs with CloudFramework">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link active">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>API Development Guide</h1>
+
+<p>This guide covers advanced techniques for building robust RESTful APIs with CloudFramework Backend Core.</p>
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#api-basics">API Basics</a></li>
+<li><a href="#routing-and-endpoints">Routing and Endpoints</a></li>
+<li><a href="#request-handling">Request Handling</a></li>
+<li><a href="#response-formatting">Response Formatting</a></li>
+<li><a href="#validation">Validation</a></li>
+<li><a href="#error-handling">Error Handling</a></li>
+<li><a href="#authentication">Authentication</a></li>
+<li><a href="#cors-configuration">CORS Configuration</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ul>
+
+<h2>API Basics</h2>
+
+<h3>Simple API Structure</h3>
+
+<p>Every API extends the <code>RESTful</code> base class:</p>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Your main logic here</p>
+<p>        $this->addReturnData('Hello World');</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>API Lifecycle</h3>
+
+<ol>
+<li>Request received by <code>runapi.php</code></li>
+<li><code>RESTful</code> class instantiated</li>
+<li>Request parameters parsed</li>
+<li>Your <code>main()</code> method called</li>
+<li>Response formatted and sent</li>
+</ol>
+
+<h2>Routing and Endpoints</h2>
+
+<h3>URL Structure</h3>
+
+<p>URLs are structured as:</p>
+<pre><code>http://your-domain.com/service/param1/param2/param3</code></pre>
+
+<ul>
+<li><code>service</code>: Maps to the API file or directory</li>
+<li><code>param1</code>, <code>param2</code>, etc.: Available in <code>$this->params[]</code></li>
+</ul>
+
+<h3>Single Endpoint API</h3>
+
+<p>Create <code>api/users.php</code>:</p>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Handle different HTTP methods</p>
+<p>        switch($this->method) {</p>
+<p>            case 'GET':</p>
+<p>                $this->getUsers();</p>
+<p>                break;</p>
+<p>            case 'POST':</p>
+<p>                $this->createUser();</p>
+<p>                break;</p>
+<p>            case 'PUT':</p>
+<p>                $this->updateUser();</p>
+<p>                break;</p>
+<p>            case 'DELETE':</p>
+<p>                $this->deleteUser();</p>
+<p>                break;</p>
+<p>            default:</p>
+<p>                $this->setErrorFromCodelib('method-error');</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    private function getUsers()</p>
+<p>    {</p>
+<p>        $userId = $this->params[0] ?? null;</p>
+
+<p>        if($userId) {</p>
+<p>            // Get specific user</p>
+<p>            $user = $this->getUserById($userId);</p>
+<p>            if(!$user) {</p>
+<p>                return $this->setErrorFromCodelib('not-found');</p>
+<p>            }</p>
+<p>            $this->addReturnData($user);</p>
+<p>        } else {</p>
+<p>            // Get all users</p>
+<p>            $users = $this->getAllUsers();</p>
+<p>            $this->addReturnData(['users' => $users]);</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    private function getUserById($id) {</p>
+<p>        // Your database logic</p>
+<p>        return ['id' => $id, 'name' => 'John Doe'];</p>
+<p>    }</p>
+
+<p>    private function getAllUsers() {</p>
+<p>        // Your database logic</p>
+<p>        return [];</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Multiple Endpoints API</h3>
+
+<p>Create <code>api/myservice/index.php</code>:</p>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Get endpoint from first parameter</p>
+<p>        $endpoint = str_replace('-', '_', $this->params[0] ?? 'default');</p>
+
+<p>        // Route to ENDPOINT_{name} method</p>
+<p>        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {</p>
+<p>            return $this->setErrorFromCodelib('not-found',</p>
+<p>                ": Endpoint /{$this->service}/{$endpoint} not found");</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    // GET /myservice or /myservice/default</p>
+<p>    public function ENDPOINT_default()</p>
+<p>    {</p>
+<p>        $this->addReturnData([</p>
+<p>            'service' => 'My Service',</p>
+<p>            'endpoints' => [</p>
+<p>                '/myservice/users',</p>
+<p>                '/myservice/products',</p>
+<p>                '/myservice/orders'</p>
+<p>            ]</p>
+<p>        ]);</p>
+<p>    }</p>
+
+<p>    // /myservice/users</p>
+<p>    public function ENDPOINT_users()</p>
+<p>    {</p>
+<p>        if(!$this->checkMethod('GET,POST')) return;</p>
+<p>        // Your logic here</p>
+<p>    }</p>
+
+<p>    // /myservice/products</p>
+<p>    public function ENDPOINT_products()</p>
+<p>    {</p>
+<p>        if(!$this->checkMethod('GET')) return;</p>
+<p>        // Your logic here</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Nested Endpoints</h3>
+
+<p>For deeply nested routes, use multiple parameters:</p>
+
+<pre><code>// URL: /api/projects/123/tasks/456
+<p>public function ENDPOINT_projects()</p>
+<p>{</p>
+<p>    $projectId = $this->checkMandatoryParam(1, 'Project ID required');</p>
+<p>    if(!$projectId) return;</p>
+
+<p>    $action = $this->params[2] ?? null; // 'tasks'</p>
+<p>    $taskId = $this->params[3] ?? null;  // '456'</p>
+
+<p>    if($action === 'tasks') {</p>
+<p>        if($taskId) {</p>
+<p>            $this->getProjectTask($projectId, $taskId);</p>
+<p>        } else {</p>
+<p>            $this->getProjectTasks($projectId);</p>
+<p>        }</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>Request Handling</h2>
+
+<h3>HTTP Methods</h3>
+
+<p>Restrict allowed methods:</p>
+
+<pre><code>// Only allow GET and POST
+<p>if(!$this->checkMethod('GET,POST')) return;</p>
+
+<p>// Only GET</p>
+<p>if(!$this->checkMethod('GET')) return;</code></pre></p>
+
+<h3>URL Parameters</h3>
+
+<p>Access URL parameters from <code>$this->params[]</code>:</p>
+
+<pre><code>// URL: /users/123/profile
+<p>$userId = $this->params[0];     // '123'</p>
+<p>$section = $this->params[1];    // 'profile'</p>
+
+<p>// With validation</p>
+<p>$userId = $this->checkMandatoryParam(0, 'User ID is required');</p>
+<p>if(!$userId) return;</code></pre></p>
+
+<h3>Form Parameters (POST/GET Data)</h3>
+
+<p>Access form data from <code>$this->formParams[]</code>:</p>
+
+<pre><code>// Single parameter
+<p>$email = $this->formParams['email'] ?? null;</p>
+
+<p>// Multiple parameters</p>
+<p>$name = $this->formParams['name'] ?? null;</p>
+<p>$age = $this->formParams['age'] ?? null;</p>
+
+<p>// With validation</p>
+<p>$email = $this->checkMandatoryFormParam('email', 'Email is required');</p>
+<p>if(!$email) return;</code></pre></p>
+
+<h3>Raw Input (JSON)</h3>
+
+<p>Raw POST body is automatically parsed:</p>
+
+<pre><code>// POST body: {"name":"John","age":30}
+<p>// Automatically available in:</p>
+<p>$name = $this->formParams['name'];  // 'John'</p>
+<p>$age = $this->formParams['age'];     // 30</p>
+
+<p>// Access raw input</p>
+<p>$rawInput = $this->formParams['_raw_input_'];</code></pre></p>
+
+<h3>Request Headers</h3>
+
+<pre><code>// Get specific header
+<p>$auth = $this->getHeaderAuthorization();</p>
+<p>$contentType = $this->getRequestHeader('Content-Type');</p>
+<p>$customHeader = $this->getRequestHeader('X-Custom-Header');</p>
+
+<p>// Check if header exists</p>
+<p>if(!$auth) {</p>
+<p>    return $this->setErrorFromCodelib('security-error');</p>
+<p>}</code></pre></p>
+
+<h2>Response Formatting</h2>
+
+<h3>Adding Data</h3>
+
+<pre><code>// Simple data
+<p>$this->addReturnData('Hello World');</p>
+
+<p>// Array data</p>
+<p>$this->addReturnData(['message' => 'Success', 'id' => 123]);</p>
+
+<p>// Merging data</p>
+<p>$this->addReturnData(['users' => $users]);</p>
+<p>$this->addReturnData(['total' => count($users)]);</p>
+<p>// Result: {'users': [...], 'total': 10}</code></pre></p>
+
+<h3>Setting Complete Response</h3>
+
+<pre><code>$this->setReturnData([
+<p>    'users' => $users,</p>
+<p>    'pagination' => [</p>
+<p>        'page' => 1,</p>
+<p>        'per_page' => 10,</p>
+<p>        'total' => 100</p>
+<p>    ]</p>
+<p>]);</code></pre></p>
+
+<h3>HTTP Status Codes</h3>
+
+<pre><code>// Success - 200 (default)
+<p>$this->setReturnStatus(200);</p>
+
+<p>// Created - 201</p>
+<p>$this->setReturnStatus(201);</p>
+<p>$this->setReturnCode('inserted');</p>
+
+<p>// No Content - 204</p>
+<p>$this->setReturnStatus(204);</p>
+
+<p>// Bad Request - 400</p>
+<p>$this->setReturnStatus(400);</p>
+
+<p>// Unauthorized - 401</p>
+<p>$this->setReturnStatus(401);</p>
+
+<p>// Not Found - 404</p>
+<p>$this->setReturnStatus(404);</p>
+
+<p>// Server Error - 500</p>
+<p>$this->setReturnStatus(500);</code></pre></p>
+
+<h3>Custom Headers</h3>
+
+<pre><code>// Add custom headers
+<p>$this->addHeader('X-Total-Count', '100');</p>
+<p>$this->addHeader('X-Rate-Limit-Remaining', '99');</p>
+<p>$this->addHeader('Cache-Control', 'no-cache');</code></pre></p>
+
+<h3>Response Messages</h3>
+
+<pre><code>// Success message
+<p>$this->setMessage('User created successfully', 'success');</p>
+
+<p>// Info message</p>
+<p>$this->setMessage('Processing...', 'info', 'Your request is being processed', 5);</p>
+
+<p>// Warning message</p>
+<p>$this->setMessage('Disk space low', 'warning');</p>
+
+<p>// Multiple messages</p>
+<p>$this->addMessage('Step 1 completed', 'success');</p>
+<p>$this->addMessage('Step 2 completed', 'success');</code></pre></p>
+
+<h2>Validation</h2>
+
+<h3>Mandatory Parameters</h3>
+
+<pre><code>// Single parameter
+<p>$userId = $this->checkMandatoryParam(0, 'User ID is required');</p>
+<p>if(!$userId) return;</p>
+
+<p>// Multiple parameters</p>
+<p>if(!$this->checkMandatoryFormParams(['name', 'email', 'password'])) {</p>
+<p>    return;</p>
+<p>}</p>
+
+<p>// With allowed values</p>
+<p>$status = $this->checkMandatoryFormParam('status', 'Invalid status',</p>
+<p>    ['active', 'inactive', 'pending']);</p>
+<p>if(!$status) return;</p>
+
+<p>// With minimum length</p>
+<p>$password = $this->checkMandatoryFormParam('password',</p>
+<p>    'Password must be at least 8 characters', [], 8);</p>
+<p>if(!$password) return;</code></pre></p>
+
+<h3>Value Type Validation</h3>
+
+<pre><code>// Email validation
+<p>if(!$this->validateValue('email', $email, 'email')) return;</p>
+
+<p>// Integer validation</p>
+<p>if(!$this->validateValue('age', $age, 'integer')) return;</p>
+
+<p>// URL validation</p>
+<p>if(!$this->validateValue('website', $url, 'url')) return;</p>
+
+<p>// Custom error message</p>
+<p>if(!$this->validateValue('email', $email, 'email', '',</p>
+<p>    'Please provide a valid email address')) return;</code></pre></p>
+
+<h3>Model-Based Validation</h3>
+
+<pre><code>// Define model
+<p>$userModel = [</p>
+<p>    'name' => ['type' => 'string', 'required' => true, 'min_length' => 2],</p>
+<p>    'email' => ['type' => 'email', 'required' => true],</p>
+<p>    'age' => ['type' => 'integer', 'min' => 18, 'max' => 120],</p>
+<p>    'status' => ['type' => 'string', 'values' => ['active', 'inactive']]</p>
+<p>];</p>
+
+<p>// Validate POST data</p>
+<p>$data = [];</p>
+<p>if(!$this->validatePostData($userModel, 'user-validation', $data)) {</p>
+<p>    return;</p>
+<p>}</p>
+
+<p>// Use validated data</p>
+<p>$this->createUser($data);</code></pre></p>
+
+<h3>Custom Validation</h3>
+
+<pre><code>// Custom validation logic
+<p>private function validateUsername($username)</p>
+<p>{</p>
+<p>    if(strlen($username) < 3) {</p>
+<p>        $this->setError('Username must be at least 3 characters', 400);</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    if(!preg_match('/^[a-zA-Z0-9_]+$/', $username)) {</p>
+<p>        $this->setError('Username can only contain letters, numbers and underscore', 400);</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    return true;</p>
+<p>}</p>
+
+<p>// Use in endpoint</p>
+<p>public function ENDPOINT_register()</p>
+<p>{</p>
+<p>    $username = $this->checkMandatoryFormParam('username', 'Username required');</p>
+<p>    if(!$username) return;</p>
+
+<p>    if(!$this->validateUsername($username)) return;</p>
+
+<p>    // Continue with registration</p>
+<p>}</code></pre></p>
+
+<h2>Error Handling</h2>
+
+<h3>Predefined Error Codes</h3>
+
+<pre><code>// Use built-in error codes
+<p>$this->setErrorFromCodelib('not-found');</p>
+<p>$this->setErrorFromCodelib('security-error');</p>
+<p>$this->setErrorFromCodelib('params-error');</p>
+<p>$this->setErrorFromCodelib('method-error');</p>
+
+<p>// With extra message</p>
+<p>$this->setErrorFromCodelib('not-found', ': User with ID 123 not found');</code></pre></p>
+
+<h3>Custom Error Codes</h3>
+
+<pre><code>// Define in constructor or main
+<p>function main()</p>
+<p>{</p>
+<p>    // Add custom error codes</p>
+<p>    $this->addCodeLib('insufficient-credits', 'Insufficient credits', 402);</p>
+<p>    $this->addCodeLib('quota-exceeded', 'API quota exceeded', 429);</p>
+<p>    $this->addCodeLib('invalid-token', 'Invalid authentication token', 401);</p>
+
+<p>    // Use them</p>
+<p>    if($credits < $cost) {</p>
+<p>        return $this->setErrorFromCodelib('insufficient-credits');</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Direct Error Setting</h3>
+
+<pre><code>// Simple error
+<p>$this->setError('Something went wrong', 500);</p>
+
+<p>// Error with code</p>
+<p>$this->setError('User not found', 404, 'user-not-found');</p>
+
+<p>// Error array</p>
+<p>$this->setError([</p>
+<p>    'field' => 'email',</p>
+<p>    'message' => 'Email already exists',</p>
+<p>    'code' => 'duplicate-email'</p>
+<p>], 409);</code></pre></p>
+
+<h3>Try-Catch Error Handling</h3>
+
+<pre><code>public function ENDPOINT_process()
+<p>{</p>
+<p>    try {</p>
+<p>        $result = $this->processData();</p>
+<p>        $this->addReturnData($result);</p>
+<p>    } catch (DatabaseException $e) {</p>
+<p>        $this->core->logs->add($e->getMessage(), 'database-error', 'error');</p>
+<p>        $this->setErrorFromCodelib('database-error');</p>
+<p>    } catch (Exception $e) {</p>
+<p>        $this->core->logs->add($e->getMessage(), 'general-error', 'error');</p>
+<p>        $this->setError('An unexpected error occurred', 500);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>Authentication</h2>
+
+<h3>Basic Authentication</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Check basic auth</p>
+<p>    if(!$this->core->security->existBasicAuth()) {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': Basic authentication required');</p>
+<p>    }</p>
+
+<p>    // Get credentials</p>
+<p>    $username = $_SERVER['PHP_AUTH_USER'] ?? '';</p>
+<p>    $password = $_SERVER['PHP_AUTH_PW'] ?? '';</p>
+
+<p>    // Validate credentials</p>
+<p>    if(!$this->validateCredentials($username, $password)) {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': Invalid credentials');</p>
+<p>    }</p>
+
+<p>    // Continue with endpoint routing</p>
+<p>}</code></pre></p>
+
+<h3>Token Authentication</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Get token from Authorization header</p>
+<p>    $authHeader = $this->getHeaderAuthorization();</p>
+
+<p>    if(!$authHeader) {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': Authorization header required');</p>
+<p>    }</p>
+
+<p>    // Extract token (Bearer token format)</p>
+<p>    if(strpos($authHeader, 'Bearer ') === 0) {</p>
+<p>        $token = substr($authHeader, 7);</p>
+<p>    } else {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': Invalid authorization format');</p>
+<p>    }</p>
+
+<p>    // Validate token</p>
+<p>    if(!$this->validateToken($token)) {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': Invalid or expired token');</p>
+<p>    }</p>
+
+<p>    // Continue with endpoint routing</p>
+<p>}</p>
+
+<p>private function validateToken($token)</p>
+<p>{</p>
+<p>    // Your token validation logic</p>
+<p>    // e.g., check database, verify JWT, etc.</p>
+<p>    return true;</p>
+<p>}</code></pre></p>
+
+<h3>API Key Authentication</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Get API key from header</p>
+<p>    $apiKey = $this->getRequestHeader('X-API-Key');</p>
+
+<p>    if(!$apiKey) {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': API key required');</p>
+<p>    }</p>
+
+<p>    // Validate API key</p>
+<p>    if(!$this->isValidApiKey($apiKey)) {</p>
+<p>        return $this->setErrorFromCodelib('security-error',</p>
+<p>            ': Invalid API key');</p>
+<p>    }</p>
+
+<p>    // Continue with endpoint routing</p>
+<p>}</code></pre></p>
+
+<h2>CORS Configuration</h2>
+
+<h3>Enable CORS for All Origins</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Allow all origins</p>
+<p>    $this->sendCorsHeaders('GET,POST,PUT,DELETE');</p>
+
+<p>    // Your endpoint logic</p>
+<p>}</code></pre></p>
+
+<h3>Restrict CORS Origins</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Allow specific origins</p>
+<p>    $allowed_origins = 'https://app.example.com,https://admin.example.com';</p>
+<p>    $this->sendCorsHeaders('GET,POST,PUT,DELETE', $allowed_origins);</p>
+
+<p>    // Your endpoint logic</p>
+<p>}</code></pre></p>
+
+<h3>CORS with Custom Headers</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Allow custom headers</p>
+<p>    $this->sendCorsHeaders('GET,POST,PUT,DELETE', '*', 'X-Custom-Header,X-API-Key');</p>
+
+<p>    // Your endpoint logic</p>
+<p>}</code></pre></p>
+
+<h2>Best Practices</h2>
+
+<h3>1. Organize Your APIs</h3>
+
+<pre><code>api/
+<p>├── v1/</p>
+<p>│   ├── users/</p>
+<p>│   │   └── index.php</p>
+<p>│   ├── products/</p>
+<p>│   │   └── index.php</p>
+<p>│   └── orders/</p>
+<p>│       └── index.php</p>
+<p>└── v2/</p>
+<p>    ├── users/</p>
+<p>    │   └── index.php</p>
+<p>    └── products/</p>
+<p>        └── index.php</code></pre></p>
+
+<h3>2. Use Proper HTTP Methods</h3>
+
+<ul>
+<li><code>GET</code>: Retrieve data (idempotent, safe)</li>
+<li><code>POST</code>: Create new resources</li>
+<li><code>PUT</code>: Update existing resources (full update)</li>
+<li><code>PATCH</code>: Partial update</li>
+<li><code>DELETE</code>: Remove resources</li>
+</ul>
+
+<h3>3. Return Appropriate Status Codes</h3>
+
+<pre><code>// Success
+<p>200 - OK (default)</p>
+<p>201 - Created (after POST)</p>
+<p>204 - No Content (after DELETE)</p>
+
+<p>// Client Errors</p>
+<p>400 - Bad Request (validation errors)</p>
+<p>401 - Unauthorized (authentication required)</p>
+<p>403 - Forbidden (insufficient permissions)</p>
+<p>404 - Not Found</p>
+<p>409 - Conflict (duplicate resource)</p>
+<p>422 - Unprocessable Entity (semantic errors)</p>
+
+<p>// Server Errors</p>
+<p>500 - Internal Server Error</p>
+<p>503 - Service Unavailable</code></pre></p>
+
+<h3>4. Validate All Input</h3>
+
+<pre><code>// Always validate
+<p>$email = $this->checkMandatoryFormParam('email', 'Email required');</p>
+<p>if(!$email) return;</p>
+
+<p>if(!$this->validateValue('email', $email, 'email')) return;</p>
+
+<p>// Sanitize if needed</p>
+<p>$name = htmlspecialchars($this->formParams['name']);</code></pre></p>
+
+<h3>5. Log Important Events</h3>
+
+<pre><code>// Log API calls
+<p>$this->core->logs->add("User {$userId} accessed data", 'api-access');</p>
+
+<p>// Log errors</p>
+<p>$this->core->logs->add("Failed to process payment: {$error}", 'payment', 'error');</p>
+
+<p>// Log debug info (only in development)</p>
+<p>if($this->core->is->development()) {</p>
+<p>    $this->core->logs->add("Debug: " . json_encode($data), 'debug');</p>
+<p>}</code></pre></p>
+
+<h3>6. Use Consistent Response Format</h3>
+
+<pre><code>// Success response
+<p>{</p>
+<p>    "success": true,</p>
+<p>    "status": 200,</p>
+<p>    "code": "ok",</p>
+<p>    "data": { ... }</p>
+<p>}</p>
+
+<p>// Error response</p>
+<p>{</p>
+<p>    "success": false,</p>
+<p>    "status": 400,</p>
+<p>    "code": "validation-error",</p>
+<p>    "errors": [ ... ]</p>
+<p>}</code></pre></p>
+
+<h3>7. Implement Rate Limiting</h3>
+
+<pre><code>function main()
+<p>{</p>
+<p>    // Check rate limit</p>
+<p>    $clientId = $this->getClientIdentifier();</p>
+<p>    if($this->isRateLimited($clientId)) {</p>
+<p>        return $this->setError('Rate limit exceeded', 429, 'rate-limit');</p>
+<p>    }</p>
+
+<p>    // Continue with API logic</p>
+<p>}</p>
+
+<p>private function getClientIdentifier()</p>
+<p>{</p>
+<p>    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';</p>
+<p>}</p>
+
+<p>private function isRateLimited($clientId)</p>
+<p>{</p>
+<p>    $key = "rate_limit:{$clientId}";</p>
+<p>    $count = (int)$this->core->cache->get($key);</p>
+
+<p>    if($count >= 100) { // 100 requests per hour</p>
+<p>        return true;</p>
+<p>    }</p>
+
+<p>    $this->core->cache->set($key, $count + 1, 3600);</p>
+<p>    return false;</p>
+<p>}</code></pre></p>
+
+<h3>8. Version Your APIs</h3>
+
+<pre><code>// Option 1: URL versioning
+<p>// /v1/users</p>
+<p>// /v2/users</p>
+
+<p>// Option 2: Header versioning</p>
+<p>function main()</p>
+<p>{</p>
+<p>    $version = $this->getRequestHeader('X-API-Version') ?? '1';</p>
+
+<p>    if($version === '2') {</p>
+<p>        $this->handleV2();</p>
+<p>    } else {</p>
+<p>        $this->handleV1();</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>Complete Example</h2>
+
+<p>Here's a complete, production-ready API example:</p>
+
+<pre><code><?php
+<p>/**</p>
+<ul>
+<li>Products API - v1</li>
+</ul>
+<p> */</p>
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Enable CORS</p>
+<p>        $this->sendCorsHeaders('GET,POST,PUT,DELETE',</p>
+<p>            'https://app.example.com');</p>
+
+<p>        // Authenticate</p>
+<p>        if(!$this->authenticate()) return;</p>
+
+<p>        // Rate limiting</p>
+<p>        if($this->isRateLimited()) {</p>
+<p>            return $this->setError('Rate limit exceeded', 429);</p>
+<p>        }</p>
+
+<p>        // Route to endpoints</p>
+<p>        $endpoint = str_replace('-', '_', $this->params[0] ?? 'list');</p>
+<p>        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {</p>
+<p>            return $this->setErrorFromCodelib('not-found');</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    private function authenticate()</p>
+<p>    {</p>
+<p>        $token = $this->getHeaderAuthorization();</p>
+<p>        if(!$token || !$this->validateToken($token)) {</p>
+<p>            $this->setErrorFromCodelib('security-error');</p>
+<p>            return false;</p>
+<p>        }</p>
+<p>        return true;</p>
+<p>    }</p>
+
+<p>    private function validateToken($token) {</p>
+<p>        // Implement your token validation</p>
+<p>        return true;</p>
+<p>    }</p>
+
+<p>    private function isRateLimited() {</p>
+<p>        // Implement rate limiting</p>
+<p>        return false;</p>
+<p>    }</p>
+
+<p>    // GET /products/list</p>
+<p>    public function ENDPOINT_list()</p>
+<p>    {</p>
+<p>        if(!$this->checkMethod('GET')) return;</p>
+
+<p>        $page = (int)($this->formParams['page'] ?? 1);</p>
+<p>        $limit = min((int)($this->formParams['limit'] ?? 10), 100);</p>
+
+<p>        $products = $this->getProducts($page, $limit);</p>
+<p>        $total = $this->getTotalProducts();</p>
+
+<p>        $this->addReturnData([</p>
+<p>            'products' => $products,</p>
+<p>            'pagination' => [</p>
+<p>                'page' => $page,</p>
+<p>                'limit' => $limit,</p>
+<p>                'total' => $total,</p>
+<p>                'pages' => ceil($total / $limit)</p>
+<p>            ]</p>
+<p>        ]);</p>
+<p>    }</p>
+
+<p>    // POST /products/create</p>
+<p>    public function ENDPOINT_create()</p>
+<p>    {</p>
+<p>        if(!$this->checkMethod('POST')) return;</p>
+
+<p>        // Validate required fields</p>
+<p>        if(!$this->checkMandatoryFormParams(['name', 'price', 'category'])) {</p>
+<p>            return;</p>
+<p>        }</p>
+
+<p>        // Validate types</p>
+<p>        if(!$this->validateValue('price', $this->formParams['price'], 'float')) {</p>
+<p>            return;</p>
+<p>        }</p>
+
+<p>        // Create product</p>
+<p>        try {</p>
+<p>            $product = $this->createProduct($this->formParams);</p>
+<p>            $this->setReturnStatus(201);</p>
+<p>            $this->setReturnCode('inserted');</p>
+<p>            $this->addReturnData($product);</p>
+<p>            $this->core->logs->add("Product created: {$product['id']}", 'products');</p>
+<p>        } catch (Exception $e) {</p>
+<p>            $this->core->logs->add($e->getMessage(), 'products', 'error');</p>
+<p>            $this->setError('Failed to create product', 500);</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    private function getProducts($page, $limit) {</p>
+<p>        // Database logic</p>
+<p>        return [];</p>
+<p>    }</p>
+
+<p>    private function getTotalProducts() {</p>
+<p>        // Database logic</p>
+<p>        return 0;</p>
+<p>    }</p>
+
+<p>    private function createProduct($data) {</p>
+<p>        // Database logic</p>
+<p>        return ['id' => 123, 'name' => $data['name']];</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>Next Steps</h2>
+
+<ul>
+<li><a href="script-development.html">Script Development Guide</a></li>
+<li><a href="gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="security.html">Security Best Practices</a></li>
+<li><a href="../api-reference/RESTful.html">RESTful Class Reference</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+runtime: php81
+
+# the default is to serve your app using `public/index.php` or `index.php`
+entrypoint: serve  vendor/cloudframework-io/backend-core-php8/src/dispatcher.php
+
+handlers:
+
+  # Serve images as static resources.
+  - url: /(.+\.(gif|png|jpg|css|ico|txt|htm|js|ttf|woff|eot|svg|woff2|json|html|xml|mp4|ogg|webm|m4v|3gp|pdf))$
+    static_files: \1
+    upload: .+\.(gif|png|jpg|css|ico|txt|htm|js|ttf|woff|eot|svg|woff2|json|html|xml|mp4|ogg|webm|m4v|3gp|pdf)$
+    secure: optional
+
+  # Serve your app through a front controller at index.php or public/index.php.
+  - url: .*
+    script: auto

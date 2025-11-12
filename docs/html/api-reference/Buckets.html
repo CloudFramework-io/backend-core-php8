@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buckets Class - CloudFramework Backend Core PHP8</title>
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <h2>CloudFramework</h2>
+                <p>Backend Core PHP8</p>
+            </div>
+            <nav>
+                <a href="../index.html">Home</a>
+                <h3>Core Classes</h3>
+                <a href="Core7.html">Core7</a>
+                <a href="RESTful.html">RESTful</a>
+                <a href="Scripts2020.html">Scripts2020</a>
+                <h3>Configuration & Security</h3>
+                <a href="CoreConfig.html">CoreConfig</a>
+                <a href="CoreCache.html">CoreCache</a>
+                <a href="CoreSession.html">CoreSession</a>
+                <a href="CoreSecurity.html">CoreSecurity</a>
+                <h3>Data Storage</h3>
+                <a href="DataStore.html">DataStore</a>
+                <a href="Buckets.html" class="active">Buckets</a>
+                <a href="DataBQ.html">DataBQ</a>
+                <a href="CloudSQL.html">CloudSQL</a>
+                <a href="DataSQL.html">DataSQL</a>
+                <a href="DataMongoDB.html">DataMongoDB</a>
+                <h3>Utilities</h3>
+                <a href="Email.html">Email</a>
+                <a href="DataValidation.html">DataValidation</a>
+                <a href="WorkFlows.html">WorkFlows</a>
+                <h3>GCP Integration</h3>
+                <a href="GoogleSecrets.html">GoogleSecrets</a>
+                <a href="PubSub.html">PubSub</a>
+            </nav>
+        </aside>
+        <main class="content">
+<h1>Buckets Class</h1>
+
+<h2>Overview</h2>
+
+<p>The <code>Buckets</code> class provides a comprehensive interface to Google Cloud Storage (GCS), allowing you to manage files, directories, and objects in GCS buckets. It handles uploads, downloads, permissions, signed URLs, and more.</p>
+
+<h2>Requirements</h2>
+
+<ul>
+<li>Google Cloud Storage API enabled</li>
+<li>Service account with Storage Object Admin role</li>
+<li>Configuration in <code>config.json</code>:</li>
+</ul>
+  <pre><code class="language-json">  {
+<p>"core.datastorage.on": true, "core.gcp.datastorage.project_id": "your-project-id" }</p>
+  </code></pre>
+
+<h2>Basic Usage</h2>
+
+<pre><code class="language-php">// Load Buckets class
+<p>$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);</p>
+
+<p>// Check for errors if($buckets->error) { echo "Error: " . implode(', ', $buckets->errorMsg); return; }</p>
+
+<p>// Upload file $buckets->uploadFile('/path/in/bucket/file.pdf', '/local/path/file.pdf');</p>
+
+<p>// Download file $buckets->download('gs://my-bucket/file.pdf', '/local/destination.pdf');</p>
+
+<p>// List files $files = $buckets->scan('/documents/');</p>
+
+<p>// Delete file $buckets->deleteFile('/path/in/bucket/file.pdf');</p>
+</code></pre>
+
+<h2>Constructor</h2>
+
+<pre><code class="language-php">function __construct(Core7 &$core, $bucket = null, $options = [])
+</code></pre>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$bucket</code> (string): Bucket name in format <code>gs://bucket-name</code> or just <code>bucket-name</code></li>
+<li><code>$options</code> (array, optional): Additional options</li>
+</ul>
+<p>- <code>project_id</code> (string): GCP project ID - <code>keyFile</code> (array): Service account credentials</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Simple initialization
+<p>$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);</p>
+
+<p>// With project ID $buckets = $this->core->loadClass('Buckets', [ 'gs://my-bucket', ['project_id' => 'my-project'] ]);</p>
+
+<p>// With service account $buckets = $this->core->loadClass('Buckets', [ 'gs://my-bucket', ['keyFile' => $serviceAccountArray] ]);</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>File Upload Methods</h2>
+
+<h3>manageUploadFiles()</h3>
+
+<pre><code class="language-php">function manageUploadFiles($path = '', $options = []): array|false
+</code></pre>
+
+<p>Manages files uploaded via <code>$_FILES</code> and moves them to Cloud Storage.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Destination path in bucket (must start with <code>/</code>)</li>
+<li><code>$options</code> (array): Upload options</li>
+</ul>
+<p>- <code>public</code> (bool): Make files publicly accessible - <code>field_name</code> (string): Process only specific field name - <code>apply_hash_to_filenames</code> (bool): Rename files with hash to avoid duplicates - <code>allowed_extensions</code> (string): Comma-separated allowed extensions (e.g., 'jpg,pdf,png') - <code>allowed_content_types</code> (string): Comma-separated allowed content types (e.g., 'image,application/pdf')</p>
+
+<strong>Returns:</strong> Array of uploaded files with details, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">// In your API endpoint
+<p>public function ENDPOINT_upload() { if(!isset($_FILES['documents'])) { return $this->setError('No files uploaded', 400); }</p>
+
+<p>$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);</p>
+
+<p>// Configure upload options $options = [ 'public' => true, 'apply_hash_to_filenames' => true, 'allowed_extensions' => 'jpg,png,pdf', 'allowed_content_types' => 'image,application/pdf' ];</p>
+
+<p>// Upload files $uploaded = $buckets->manageUploadFiles('/uploads', $options);</p>
+
+<p>if($buckets->error) { return $this->setError(implode(', ', $buckets->errorMsg), 400); }</p>
+
+<p>$this->addReturnData($uploaded); }</p>
+</code></pre>
+
+<strong>Response Structure:</strong>
+<pre><code class="language-json">{
+<p>"field_name": [ { "name": "20221221042421_upload63a9cab5988ac.jpg", "type": "image/jpeg", "tmp_name": "/tmp/phpG9pBMz", "error": 0, "size": 1412041, "hash_from_name": "original-filename.jpg", "movedTo": "gs://my-bucket/uploads/20221221042421_upload63a9cab5988ac.jpg", "publicUrl": "https://storage.googleapis.com/my-bucket/uploads/file.jpg", "mediaLink": "https://storage.googleapis.com/download/storage/v1/b/..." } ] }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>uploadFile()</h3>
+
+<pre><code class="language-php">function uploadFile(string $filename_path, string $source_file_path, array $options = []): bool
+</code></pre>
+
+<p>Uploads a file from local filesystem to Cloud Storage.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename_path</code> (string): Destination path in bucket (with or without <code>gs://</code>)</li>
+<li><code>$source_file_path</code> (string): Source file path on local filesystem</li>
+<li><code>$options</code> (array): Upload options</li>
+</ul>
+<p>- <code>public</code> (bool): Make file publicly accessible - <code>metadata</code> (array): Custom metadata - <code>contentType</code> (string): Content-Type header - <code>cacheControl</code> (string): Cache-Control header</p>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Simple upload $buckets->uploadFile('/documents/report.pdf', '/local/path/report.pdf');</p>
+
+<p>// Upload with options $buckets->uploadFile( '/images/photo.jpg', '/tmp/photo.jpg', [ 'public' => true, 'metadata' => ['user_id' => '123', 'uploaded_at' => date('Y-m-d H:i:s')], 'contentType' => 'image/jpeg', 'cacheControl' => 'public, max-age=3600' ] );</p>
+
+<p>if($buckets->error) { echo "Upload failed: " . implode(', ', $buckets->errorMsg); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>uploadContents()</h3>
+
+<pre><code class="language-php">function uploadContents(string $filename_path, string $contents, array $options = []): bool
+</code></pre>
+
+<p>Uploads content directly to Cloud Storage without using a local file.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename_path</code> (string): Destination path in bucket</li>
+<li><code>$contents</code> (string): File contents</li>
+<li><code>$options</code> (array): Upload options (same as <code>uploadFile</code>)</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Upload text content $buckets->uploadContents( '/data/config.json', json_encode(['key' => 'value']), ['contentType' => 'application/json'] );</p>
+
+<p>// Upload generated CSV $csv = "Name,Email\nJohn,john@example.com\nJane,jane@example.com"; $buckets->uploadContents('/exports/users.csv', $csv);</p>
+
+<p>// Upload image from memory $imageData = file_get_contents('php://input'); $buckets->uploadContents('/uploads/image.jpg', $imageData, ['public' => true]);</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>putContents()</h3>
+
+<pre><code class="language-php">function putContents(string $filename, $data, string $path = '', array $options = []): bool
+</code></pre>
+
+<p>Alternative method to upload contents to a file.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename</code> (string): File name</li>
+<li><code>$data</code> (string): File contents</li>
+<li><code>$path</code> (string): Directory path in bucket</li>
+<li><code>$options</code> (array): Upload options</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets->putContents('data.json', json_encode($data), '/exports/');
+</code></pre>
+
+<p>---</p>
+
+<h2>File Download Methods</h2>
+
+<h3>getContents()</h3>
+
+<pre><code class="language-php">function getContents($file, $path = ''): string|false
+</code></pre>
+
+<p>Downloads and returns file contents as a string.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$file</code> (string): File name or full path</li>
+<li><code>$path</code> (string): Directory path (if $file is just filename)</li>
+</ul>
+
+<strong>Returns:</strong> File contents as string, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Get file contents $contents = $buckets->getContents('/data/config.json');</p>
+
+<p>if($contents) { $config = json_decode($contents, true); }</p>
+
+<p>// Alternative syntax $contents = $buckets->getContents('config.json', '/data/');</p>
+
+<p>// Download image $imageData = $buckets->getContents('/images/photo.jpg'); if($imageData) { header('Content-Type: image/jpeg'); echo $imageData; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>download()</h3>
+
+<pre><code class="language-php">function download(string $source, string $destination): bool
+</code></pre>
+
+<p>Downloads a file from Cloud Storage to local filesystem.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$source</code> (string): Source file path in bucket (with or without <code>gs://</code>)</li>
+<li><code>$destination</code> (string): Local destination path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Download file $buckets->download( 'gs://my-bucket/documents/report.pdf', '/tmp/report.pdf' );</p>
+
+<p>// Download without gs:// prefix $buckets->download( '/exports/data.csv', '/local/path/data.csv' );</p>
+
+<p>if($buckets->error) { echo "Download failed: " . implode(', ', $buckets->errorMsg); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Directory Methods</h2>
+
+<h3>mkdir()</h3>
+
+<pre><code class="language-php">public function mkdir(string $path): bool
+</code></pre>
+
+<p>Creates a directory in the bucket.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Directory path (must start with <code>/</code>)</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success or if already exists, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Create directory $buckets->mkdir('/uploads/2024/'); $buckets->mkdir('/documents/invoices/');</p>
+
+<p>// Nested directories $buckets->mkdir('/data/exports/monthly/2024/');</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>rmdir()</h3>
+
+<pre><code class="language-php">public function rmdir(string $path): bool
+</code></pre>
+
+<p>Removes a directory and all its contents.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Directory path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Remove directory and all files in it $buckets->rmdir('/temp/'); $buckets->rmdir('gs://my-bucket/old-data/');</p>
+
+<p>if($buckets->error) { echo "Failed to remove directory"; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>isDir()</h3>
+
+<pre><code class="language-php">public function isDir($path = ''): bool
+</code></pre>
+
+<p>Checks if a path is a directory.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Directory path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if directory exists, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>if($buckets->isDir('/uploads/')) { echo "Directory exists"; } else { $buckets->mkdir('/uploads/'); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>scan()</h3>
+
+<pre><code class="language-php">function scan(string $path = ''): array|false
+</code></pre>
+
+<p>Scans a directory and returns detailed file information.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Directory path to scan</li>
+</ul>
+
+<strong>Returns:</strong> Array of file objects with details, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Scan directory $files = $buckets->scan('/documents/');</p>
+
+<p>foreach($files as $file) { echo $file['name'];           // File name echo $file['size'];           // File size in bytes echo $file['timeCreated'];    // Creation timestamp echo $file['updated'];        // Last update timestamp echo $file['contentType'];    // MIME type echo $file['mediaLink'];      // Download URL }</p>
+
+<p>// Scan subdirectory $images = $buckets->scan('/uploads/images/');</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>fastScan()</h3>
+
+<pre><code class="language-php">function fastScan(string $path = ''): array|false
+</code></pre>
+
+<p>Quickly scans a directory and returns just file names (faster than <code>scan()</code>).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Directory path to scan</li>
+</ul>
+
+<strong>Returns:</strong> Array of file names, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Quick scan for file names only $fileNames = $buckets->fastScan('/documents/');</p>
+
+<p>// Result: ['file1.pdf', 'file2.docx', 'file3.txt']</p>
+
+<p>foreach($fileNames as $fileName) { echo $fileName . "\n"; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>File Operations</h2>
+
+<h3>deleteFile()</h3>
+
+<pre><code class="language-php">function deleteFile(string $filename_path): bool
+</code></pre>
+
+<p>Deletes a file from Cloud Storage.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename_path</code> (string): File path to delete</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Delete file $buckets->deleteFile('/uploads/old-file.pdf'); $buckets->deleteFile('gs://my-bucket/temp/data.csv');</p>
+
+<p>if($buckets->error) { echo "Delete failed"; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>copyFile()</h3>
+
+<pre><code class="language-php">function copyFile(string $filename_path_source, string $filename_path_target): bool
+</code></pre>
+
+<p>Copies a file to a new location.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename_path_source</code> (string): Source file path</li>
+<li><code>$filename_path_target</code> (string): Destination file path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Copy file $buckets->copyFile( '/documents/report.pdf', '/backups/report-backup.pdf' );</p>
+
+<p>// Copy between directories $buckets->copyFile( '/uploads/photo.jpg', '/archive/2024/photo.jpg' );</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>moveFile()</h3>
+
+<pre><code class="language-php">function moveFile(string $filename_path_source, string $filename_path_target): bool
+</code></pre>
+
+<p>Moves a file to a new location (copy + delete).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename_path_source</code> (string): Source file path</li>
+<li><code>$filename_path_target</code> (string): Destination file path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Move file $buckets->moveFile( '/temp/upload.pdf', '/documents/final.pdf' );</p>
+
+<p>// Rename file $buckets->moveFile( '/uploads/IMG_001.jpg', '/uploads/profile-photo.jpg' );</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>isFile()</h3>
+
+<pre><code class="language-php">function isFile(string $path): bool
+</code></pre>
+
+<p>Checks if a file exists.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): File path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if file exists, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>if($buckets->isFile('/documents/report.pdf')) { echo "File exists"; } else { echo "File not found"; }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Permission Methods</h2>
+
+<h3>setFilePublic()</h3>
+
+<pre><code class="language-php">function setFilePublic(string $file_path): bool
+</code></pre>
+
+<p>Makes a file publicly accessible.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$file_path</code> (string): File path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Make file public $buckets->setFilePublic('/documents/public-report.pdf');</p>
+
+<p>// Get public URL $publicUrl = $buckets->getPublicUrl('/documents/public-report.pdf');</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>setFilePrivate()</h3>
+
+<pre><code class="language-php">function setFilePrivate(string $file_path): bool
+</code></pre>
+
+<p>Makes a file private (removes public access).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$file_path</code> (string): File path</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Make file private $buckets->setFilePrivate('/documents/confidential.pdf');</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Signed URL Methods</h2>
+
+<h3>getSignedUploadUrl()</h3>
+
+<pre><code class="language-php">function getSignedUploadUrl($upload_file_path, int $expiration_in_minutes = 15): string|false
+</code></pre>
+
+<p>Generates a signed URL for uploading files directly to Cloud Storage.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$upload_file_path</code> (string): Destination file path</li>
+<li><code>$expiration_in_minutes</code> (int): URL expiration time (default: 15 minutes)</li>
+</ul>
+
+<strong>Returns:</strong> Signed URL string, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Generate upload URL $uploadUrl = $buckets->getSignedUploadUrl('/uploads/user-file.pdf', 30);</p>
+
+<p>// Return to client for direct upload $this->addReturnData([ 'upload_url' => $uploadUrl, 'expires_in' => 30 * 60 // seconds ]);</p>
+
+<p>// Client-side (JavaScript) // fetch(uploadUrl, { //   method: 'PUT', //   body: file, //   headers: {'Content-Type': 'application/pdf'} // });</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>getSignedDownloadUrl()</h3>
+
+<pre><code class="language-php">function getSignedDownloadUrl($filename_path, int $expiration_in_minutes = 1, $download_options = []): string|false
+</code></pre>
+
+<p>Generates a signed URL for downloading private files.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$filename_path</code> (string): File path</li>
+<li><code>$expiration_in_minutes</code> (int): URL expiration time (default: 1 minute)</li>
+<li><code>$download_options</code> (array): Additional options</li>
+</ul>
+<p>- <code>responseDisposition</code> (string): Content-Disposition header - <code>responseType</code> (string): Content-Type override</p>
+
+<strong>Returns:</strong> Signed URL string, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Simple signed URL $downloadUrl = $buckets->getSignedDownloadUrl('/documents/report.pdf', 5);</p>
+
+<p>// Force download with custom filename $downloadUrl = $buckets->getSignedDownloadUrl( '/documents/report.pdf', 10, ['responseDisposition' => 'attachment; filename="My-Report.pdf"'] );</p>
+
+<p>// Return to client $this->addReturnData([ 'download_url' => $downloadUrl, 'expires_in' => 600 // seconds ]);</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Information Methods</h2>
+
+<h3>getPublicUrl()</h3>
+
+<pre><code class="language-php">function getPublicUrl(string $file_path, string $content_type = ''): string|false
+</code></pre>
+
+<p>Gets the public URL for a file.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$file_path</code> (string): File path</li>
+<li><code>$content_type</code> (string): Content-Type (optional)</li>
+</ul>
+
+<strong>Returns:</strong> Public URL string, or <code>false</code> if not public
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Get public URL $url = $buckets->getPublicUrl('/images/photo.jpg'); // Returns: https://storage.googleapis.com/my-bucket/images/photo.jpg</p>
+
+<p>// Use in response $this->addReturnData([ 'image_url' => $url ]);</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>getFileInfo()</h3>
+
+<pre><code class="language-php">function getFileInfo(string $file_path): array|false
+</code></pre>
+
+<p>Gets detailed information about a file.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$file_path</code> (string): File path</li>
+</ul>
+
+<strong>Returns:</strong> File information array, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>$info = $buckets->getFileInfo('/documents/report.pdf');</p>
+
+<p>if($info) { echo $info['name'];           // File name echo $info['size'];           // Size in bytes echo $info['contentType'];    // MIME type echo $info['timeCreated'];    // Creation time echo $info['updated'];        // Last update time echo $info['md5Hash'];        // MD5 hash echo $info['crc32c'];         // CRC32C checksum echo $info['mediaLink'];      // Download link echo $info['metadata'];       // Custom metadata }</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>getInfo()</h3>
+
+<pre><code class="language-php">function getInfo(): array
+</code></pre>
+
+<p>Gets information about the bucket.</p>
+
+<strong>Returns:</strong> Bucket information array
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>$info = $buckets->getInfo();</p>
+
+<p>echo $info['name'];              // Bucket name echo $info['location'];          // Bucket location echo $info['storageClass'];      // Storage class echo $info['timeCreated'];       // Creation time</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>getBucketPath()</h3>
+
+<pre><code class="language-php">public function getBucketPath(string $path): string
+</code></pre>
+
+<p>Converts a path to full bucket path format.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$path</code> (string): Relative or absolute path</li>
+</ul>
+
+<strong>Returns:</strong> Full bucket path (gs://bucket-name/path)
+
+<strong>Example:</strong>
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>$fullPath = $buckets->getBucketPath('/documents/file.pdf'); // Returns: gs://my-bucket/documents/file.pdf</p>
+
+<p>$fullPath = $buckets->getBucketPath('gs://my-bucket/file.pdf'); // Returns: gs://my-bucket/file.pdf</p>
+</code></pre>
+
+<p>---</p>
+
+<h3>getMimeTypeFromExtension()</h3>
+
+<pre><code class="language-php">public function getMimeTypeFromExtension(string $extension): string
+</code></pre>
+
+<p>Gets MIME type from file extension.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$extension</code> (string): File extension (with or without dot)</li>
+</ul>
+
+<strong>Returns:</strong> MIME type string
+
+<strong>Example:</strong>
+<pre><code class="language-php">$mime = $buckets->getMimeTypeFromExtension('pdf');
+<p>// Returns: application/pdf</p>
+
+<p>$mime = $buckets->getMimeTypeFromExtension('.jpg'); // Returns: image/jpeg</p>
+
+<p>$mime = $buckets->getMimeTypeFromExtension('json'); // Returns: application/json</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Error Handling</h2>
+
+<p>The Buckets class provides error information through properties:</p>
+
+<pre><code class="language-php">$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);
+
+<p>// Check for errors if($buckets->error) { echo "Error Code: " . $buckets->errorCode . "\n"; echo "Error Messages: " . implode(', ', $buckets->errorMsg) . "\n"; }</p>
+
+<p>// Example with error handling $result = $buckets->uploadFile('/path/file.pdf', '/local/file.pdf');</p>
+
+<p>if($buckets->error) { $this->core->logs->add($buckets->errorMsg, 'buckets', 'error'); return $this->setError('Upload failed', 500); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>Complete Examples</h2>
+
+<h3>File Upload API</h3>
+
+<pre><code class="language-php"><?php
+<p>class API extends RESTful { // POST /storage/upload public function ENDPOINT_upload() { if(!$this->checkMethod('POST')) return;</p>
+
+<p>// Check uploaded files if(!isset($_FILES['file'])) { return $this->setError('No file uploaded', 400); }</p>
+
+<p>// Load Buckets $buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']); if($buckets->error) { return $this->setError('Storage initialization failed', 500); }</p>
+
+<p>// Configure upload $options = [ 'public' => true, 'apply_hash_to_filenames' => true, 'allowed_extensions' => 'jpg,png,pdf,docx', 'allowed_content_types' => 'image,application/pdf,application/vnd.openxmlformats' ];</p>
+
+<p>// Upload files $uploaded = $buckets->manageUploadFiles('/uploads/' . date('Y/m/'), $options);</p>
+
+<p>if($buckets->error) { return $this->setError(implode(', ', $buckets->errorMsg), 400); }</p>
+
+<p>$this->setReturnStatus(201); $this->addReturnData($uploaded); } }</p>
+</code></pre>
+
+<h3>File Download API</h3>
+
+<pre><code class="language-php">// GET /storage/download/{filename}
+<p>public function ENDPOINT_download() { if(!$this->checkMethod('GET')) return;</p>
+
+<p>$filename = $this->checkMandatoryParam(1, 'Filename required'); if(!$filename) return;</p>
+
+<p>$buckets = $this->core->loadClass('Buckets', ['gs://my-bucket']);</p>
+
+<p>// Check if file exists $filePath = '/documents/' . $filename; if(!$buckets->isFile($filePath)) { return $this->setError('File not found', 404); }</p>
+
+<p>// Generate signed download URL $downloadUrl = $buckets->getSignedDownloadUrl($filePath, 5, [ 'responseDisposition' => 'attachment; filename="' . $filename . '"' ]);</p>
+
+<p>if($buckets->error) { return $this->setError('Failed to generate download URL', 500); }</p>
+
+<p>// Redirect to signed URL header('Location: ' . $downloadUrl); exit; }</p>
+</code></pre>
+
+<h3>Image Gallery</h3>
+
+<pre><code class="language-php">// GET /gallery/list
+<p>public function ENDPOINT_list() { $buckets = $this->core->loadClass('Buckets', ['gs://my-images']);</p>
+
+<p>// Scan images directory $files = $buckets->scan('/gallery/');</p>
+
+<p>if($buckets->error) { return $this->setError('Failed to list files', 500); }</p>
+
+<p>// Filter images and add public URLs $images = []; foreach($files as $file) { if(strpos($file['contentType'], 'image/') === 0) { $images[] = [ 'name' => $file['name'], 'size' => $file['size'], 'url' => $buckets->getPublicUrl('/gallery/' . $file['name']), 'created' => $file['timeCreated'] ]; } }</p>
+
+<p>$this->addReturnData(['images' => $images, 'total' => count($images)]); }</p>
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/getting-started.html">Getting Started Guide</a></li>
+<li><a href="../guides/gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="DataStore.html">DataStore Class</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+    <script src="../js/main.js"></script>
+</body>
+</html>
