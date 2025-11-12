@@ -7306,6 +7306,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             // To reset cache they have to call $this->resetCache();
             $ret_models = $this->getCache($models);
+            //_printe('aaaa',$ret_models);
             if(!$ret_models || isset($ret_models['Unknown'])) {
                 $ret_models =  $this->core->request->get_json_decode('https://api.cloudframework.io/erp/models/export',['models'=>$models,'source'=>($source?:$this->core->user->id.'_'.$this->core->user->namespace.'_'.($this->core->system->url['host']??'nohost'))],['X-WEB-KEY'=>$api_key]);
                 if($this->core->request->error)  {
@@ -7338,6 +7339,97 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             return $ret_models;
+        }
+
+        /**
+         * Processes CFO objects and maps them to the corresponding models based on platform and type.
+         *
+         * @param array $CFOs List of CFO objects passed by reference. Each CFO is expected to contain keys like 'KeyName', 'interface',
+         *                    'entity', 'type', etc., to construct the model associations.
+         * @param array $models The associative array of models grouped by type (e.g., DataStoreEntities, DataBaseTables, Unknown, etc.).
+         *                      This is modified to include information from each CFO based on its characteristics.
+         * @param string $platform Describes the platform being used (e.g., 'cloudframework'). This modifies behavior, such as the 'cfo_locked' handling.
+         *
+         * @return bool Returns true after processing all CFOs correctly. Returns false if any error occurs during processing, such as missing
+         *              mandatory keys (e.g., 'KeyName') in CFO data, which triggers `addError`.
+         */
+        public function processReadCFOsIntoModels(array $CFOs, array &$models, string $platform): bool
+        {
+
+            if(!isset($CFOs[0])) return $this->addError( 'processReadCFOs(..), [$CFOs] has to be an array of CFOs');
+            foreach ($CFOs as $i=> $item) {
+
+                if (!isset($item['KeyName'])) return $this->addError( 'processReadCFOs(..), [KeyName] is missing in cfo: ' . $i);
+
+                $extends = $item['extends'] ?? null;
+                $entity = $item['interface']['object'] ?? $item['entity'];
+                $project_id = $item['interface']['project_id'] ?? null;
+                $secret = $item['interface']['secret'] ?? ($item['lowCode']['secret'] ?? null);
+                $namespace = $item['interface']['namespace'] ?? null;
+                $dbName = $item['interface']['dbName'] ?? null;
+                $bq = $item['model']['bq'] ?? null;
+                $workFlows = $item['events'] ?? null;
+                $hasExternalWorkFlows = ($item['hasExternalWorkflows'] ?? false) ? true : false;
+
+                //set $cfo_locked only for cloudframework cfos
+                $cfo_locked = ($platform=='cloudframework' && isset($item['securityAndFields']['security']['cfo_locked']))?($item['securityAndFields']['security']['cfo_locked']?1:0):null;
+
+                if(isset($models['Unknown']))
+                    if (key_exists($item['KeyName'], $models['Unknown'])) unset($models['Unknown'][$item['KeyName']]);
+
+                if ($item['type'] == 'ds') {
+                    $_type = 'DataStoreEntities';
+                } elseif ($item['type'] == 'db') {
+                    $_type = 'DataBaseTables';
+                } elseif ($item['type'] == 'bq') {
+                    $_type = 'BigqueryDataSets';
+                } elseif ($item['type'] == 'mongodb') {
+                    $_type = 'MongoDBCollections';
+                } elseif ($item['type'] == 'api') {
+                    $_type = 'APIUrls';
+                } else {
+                    $_type = 'Unknown';
+                }
+
+                //avoid to rewrite previous locked cfos in cloudframework
+                if(isset($models[$_type][$item['KeyName']]['cfo'])) {
+                    if($models[$_type][$item['KeyName']]['cfo_locked']??null) continue;
+                    elseif(!isset($models[$_type][$item['KeyName']]['cfo_locked']) && ($extend_cfo = $models[$_type][$item['KeyName']]['extends']??null)) {
+                        if($models[$_type][$extend_cfo]['cfo_locked']??null) continue;
+                    }
+                }
+
+                // if of cfo
+                $models[$_type][$item['KeyName']]['cfo'] = $item['KeyName'];
+                // when the cfo has been read
+                $models[$_type][$item['KeyName']]['read'] = date('Y-m-d H:i:s e');
+                // from what platform
+                $models[$_type][$item['KeyName']]['platform'] = $platform;
+                // is the cfo locked in cloudframework
+                if($cfo_locked!==null) $models[$_type][$item['KeyName']]['cfo_locked'] = $cfo_locked;
+                // the cfo extends other
+                if ($extends) $models[$_type][$item['KeyName']]['extends'] = $extends;
+                //has specific project_id set?
+                if ($project_id) $models[$_type][$item['KeyName']]['project_id'] = $project_id;
+                //has a secret key defined
+                if ($secret) $models[$_type][$item['KeyName']]['secret'] = $secret;
+                //has a specific namespace
+                if ($namespace) $models[$_type][$item['KeyName']]['namespace'] = $namespace;
+                //what entity in databases will read
+                $models[$_type][$item['KeyName']]['entity'] = $entity;
+                //has a specific dbName?
+                if ($_type == 'DataBaseTables' && $dbName) $models[$_type][$item['KeyName']]['dbName'] = $dbName;
+                //describe de model
+                $models[$_type][$item['KeyName']]['model'] = $item['model']['model'] ?? null;
+                //has linked any bq entity
+                if ($bq) $models[$_type][$item['KeyName']]['bq'] = $bq;
+                //has any workflow?
+                $models[$_type][$item['KeyName']]['workFlows'] = $workFlows;
+                //has allowed external workflows?
+                $models[$_type][$item['KeyName']]['hasExternalWorkFlows'] = $hasExternalWorkFlows;
+            }
+
+            return true;
         }
 
         /**
@@ -7952,7 +8044,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Reads the cache and initializes it if necessary
+         * Loads the cached data into the $cache property. If no cached data is found, it initializes $cache to an empty array.
          *
          * @return void
          */
@@ -7982,17 +8074,36 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Update Cache of the module
+         * Updates the cache with the specified variable and data.
+         *
+         * @param mixed $var The key of the cache item to update.
+         * @param mixed $data The data to store in the cache.
+         * @return void
          */
-        public function updateCache($var,$data) {
+        public function updateCache($var,$data): void
+        {
             $this->readCache();
             $this->cache[$var] = $data;
             $this->core->cache->set('Core7.CoreModel',$this->cache);
-
         }
 
         /**
-         * Get var Cache of the module
+         * Saves the current cache data into the Core7 caching system for persistent storage.
+         * Updates the cache with the provided data if it exists as an array.
+         *
+         * @return void
+         */
+        public function saveCache(): void
+        {
+            if(is_array($this->cache))
+                $this->core->cache->set('Core7.CoreModel',$this->cache);
+        }
+
+        /**
+         * Retrieve a specific cache value based on the provided key.
+         *
+         * @param mixed $var The key used to identify the cached data.
+         * @return mixed|null The cached value associated with the key if found, otherwise null.
          */
         public function getCache($var) {
             $this->readCache();
@@ -8001,12 +8112,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Add an error in the class
-         * @param $msg
-         * @param $code
-         * @return false to facilitate the return of other methods
+         * Adds an error message, sets an error state, and returns false.
+         *
+         * @param string $msg The error message to register.
+         * @param int $code Optional error code. Default is 0.
+         * @return false Always returns false.
          */
-        private function addError($msg,$code=0) {
+        private function addError($msg,$code=0): false
+        {
             $this->error = true;
             $this->errorCode = $code;
             $this->errorMsg[] = $msg;
