@@ -30,40 +30,19 @@ $logger = null;
 
 $projectId = getenv('PROJECT_ID') ?: null;
 
-if ($projectId) {
+if ($projectId && $core->is->production()) {    
 
-    if ($core->is->production()) {
+    // 🟩 PRODUCTION (App Engine / Cloud Run)
+    // Avoid gRPC and BatchRunner, which cause infinite recursion in PHP 8.3/8.4
+    $client = new LoggingClient([
+        'projectId' => $projectId,
+        'transport' => 'rest',     // << Force REST
+    ]);
 
-        // 🟩 PRODUCTION (App Engine / Cloud Run)
-        // Avoid gRPC and BatchRunner, which cause infinite recursion in PHP 8.3/8.4
-        $client = new LoggingClient([
-            'projectId' => $projectId,
-            'transport' => 'rest',     // << Force REST
-        ]);
+    $logger = $client->psrLogger('app', [
+        'batchEnabled' => false,   // << Avoid BatchRunner (critical point)
+    ]);
 
-        $logger = $client->psrLogger('app', [
-            'batchEnabled' => false,   // << Avoid BatchRunner (critical point)
-        ]);
-
-    } else {
-
-        // 🟦 LOCAL: basic logging that DOES NOT send to Google Cloud
-        // Compatible with PHP 8.4 without gRPC, without batch, without Cloud Logging
-        $logger = new class {
-            public function info($msg, $context = []) {
-                error_log("[LOCAL-INFO] " . $msg);
-            }
-            public function error($msg, $context = []) {
-                error_log("[LOCAL-ERROR] " . $msg);
-            }
-            public function warning($msg, $context = []) {
-                error_log("[LOCAL-WARNING] " . $msg);
-            }
-            public function debug($msg, $context = []) {
-                error_log("[LOCAL-DEBUG] " . $msg);
-            }
-        };
-    }
 }
 //endregion
 
