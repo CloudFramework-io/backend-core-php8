@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.5';  // 2025-11-12 2
+        var $_version = '8.4.6';  // 2025-11-17 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -346,6 +346,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 // If empty by default it will be index
                 if(!$apifile) {
                     $apifile='index';
+                }
+
+                // Detect security issue
+                if(preg_match('/\.(php|json|txt)($|\/|\?)/',$apifile)) {
+                    header("Content-Type: text/plain");
+                    header("HTTP/1.0 403 Forbidden");
+                    die("Your IP [{$this->system->ip}] has been blocked");
                 }
 
                 // if $apifile starts with '_' character or start with queue the look into the framework
