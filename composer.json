@@ -6,6 +6,7 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "require": {
+    "google/core": "^1.68",
     "google/cloud-datastore": "^1.26",
     "google/cloud-storage": "^1.36",
     "google/cloud-logging": "^1.28",
@@ -17,7 +18,7 @@
     "zbateson/mail-mime-parser": "^2.4",
     "google/cloud-pubsub": "^1.48",
     "google/cloud-kms": "^1.21",
-    "google/cloud-iam": "^0.5.1"
+    "google/cloud-iam": "^1.0"
   },
   "authors": [
     { "name": "Héctor López", "email": "hl@cloudframework.io"},
