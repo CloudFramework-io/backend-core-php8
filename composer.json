@@ -6,7 +6,7 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "require": {
-    "google/core": "^1.68",
+    "google/cloud-core": "^1.68",
     "google/cloud-datastore": "^1.26",
     "google/cloud-storage": "^1.36",
     "google/cloud-logging": "^1.28",
