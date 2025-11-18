@@ -11,7 +11,7 @@ if (($_SERVER['REQUEST_METHOD']??'')=='OPTIONS') {
 }
 //endregion
 
-//region SET $_root_path and autolad
+//region SET $_root_path and autoload
 $_root_path = (strlen($_SERVER['DOCUMENT_ROOT'])) ? $_SERVER['DOCUMENT_ROOT'] : $_SERVER['PWD'];
 // Autoload libraries
 require_once  $_root_path.'/vendor/autoload.php';
@@ -26,8 +26,11 @@ $core = new Core7();
 // https://cloud.google.com/logging/docs/setup/php
 use Google\Cloud\Logging\LoggingClient;
 $logger = null;
-if(getenv('PROJECT_ID') && $core->is->production()) {
-    $logger = LoggingClient::psrBatchLogger('app');
+$project_id = $core->config->get("core.gcp.logger.project_id")?:($core->config->get("core.gcp.project_id")?:getenv('PROJECT_ID'));
+if($project_id && $core->is->production()) {
+    // Allow to configure transport and project for logger. gRPC cause infinite recursion in PHP 8.3/8.4. Default is 'rest'
+    $transport = ($core->config->get('core.logger.transport')=='grpc')?'grpc':'rest';
+    $logger = LoggingClient::psrBatchLogger('app',['clientConfig'=>['projectId'=>$project_id,'transport'=>$transport]]);
 }
 //endregion
 
