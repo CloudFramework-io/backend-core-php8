@@ -4,48 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataValidation Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="DataValidation Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html" class="active">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link active">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>DataValidation Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>DataValidation</code> class provides comprehensive data validation functionality for API requests and form data. It validates data types, formats, ranges, patterns, and custom rules based on model definitions.</p>
+The <code>DataValidation</code> class provides comprehensive data validation functionality for API requests and form data. It validates data types, formats, ranges, patterns, and custom rules based on model definitions.
 
 <h2>Loading the Class</h2>
 
@@ -74,17 +146,39 @@
 
 <strong>Model Structure:</strong>
 <pre><code class="language-php">$model = [
-<p>'field_name' => [ 'type' => 'string',       // Data type 'required' => true,       // Is required 'maxlength' => 100,       // Max length 'minlength' => 3,         // Min length 'email' => true,          // Email format 'values' => ['a', 'b'],   // Allowed values 'range' => [1, 100],      // Numeric range 'regex' => '/^[A-Z]/',    // Regex pattern // ... more rules ] ];</p>
+    'field_name' => [
+        'type' => 'string',       // Data type
+        'required' => true,       // Is required
+        'maxlength' => 100,       // Max length
+        'minlength' => 3,         // Min length
+        'email' => true,          // Email format
+        'values' => ['a', 'b'],   // Allowed values
+        'range' => [1, 100],      // Numeric range
+        'regex' => '/^[A-Z]/',    // Regex pattern
+        // ... more rules
+    ]
+];
 </code></pre>
 
 <strong>Example:</strong>
 <pre><code class="language-php">$validator = $this->core->loadClass('DataValidation');
 
-<p>$model = [ 'name' => ['type' => 'string', 'required' => true, 'maxlength' => 100], 'email' => ['type' => 'string', 'required' => true, 'email' => true], 'age' => ['type' => 'integer', 'range' => [18, 100]], 'status' => ['type' => 'string', 'values' => ['active', 'inactive']] ];</p>
+$model = [
+    'name' => ['type' => 'string', 'required' => true, 'maxlength' => 100],
+    'email' => ['type' => 'string', 'required' => true, 'email' => true],
+    'age' => ['type' => 'integer', 'range' => [18, 100]],
+    'status' => ['type' => 'string', 'values' => ['active', 'inactive']]
+];
 
-<p>$data = $this->formParams;</p>
+$data = $this->formParams;
 
-<p>if($validator->validateModel($model, $data)) { // Data is valid, use $data } else { // Validation failed $errors = $this->core->errors->getErrorMsg(); return $this->setErrorFromCodelib('validation-error', $errors); }</p>
+if($validator->validateModel($model, $data)) {
+    // Data is valid, use $data
+} else {
+    // Validation failed
+    $errors = $this->core->errors->getErrorMsg();
+    return $this->setErrorFromCodelib('validation-error', $errors);
+}
 </code></pre>
 
 <p>---</p>
@@ -112,7 +206,8 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">if($validator->validType('age', 'integer', $data)) {
-<p>// Age is valid integer }</p>
+    // Age is valid integer
+}
 </code></pre>
 
 <p>---</p>
@@ -232,35 +327,124 @@
 <h3>API Request Validation</h3>
 
 <pre><code class="language-php">class API extends RESTful
-<p>{ public function ENDPOINT_create_user() { if(!$this->checkMethod('POST')) return;</p>
+{
+    public function ENDPOINT_create_user()
+    {
+        if(!$this->checkMethod('POST')) return;
 
-<p>// Define validation model $model = [ 'name' => [ 'type' => 'string', 'required' => true, 'minlength' => 2, 'maxlength' => 100 ], 'email' => [ 'type' => 'string', 'required' => true, 'email' => true ], 'age' => [ 'type' => 'integer', 'required' => true, 'range' => [18, 120] ], 'country' => [ 'type' => 'string', 'required' => true, 'values' => ['US', 'UK', 'ES', 'FR', 'DE'] ], 'phone' => [ 'type' => 'string', 'regex' => '/^\+?[0-9]{10,15}$/' ] ];</p>
+        // Define validation model
+        $model = [
+            'name' => [
+                'type' => 'string',
+                'required' => true,
+                'minlength' => 2,
+                'maxlength' => 100
+            ],
+            'email' => [
+                'type' => 'string',
+                'required' => true,
+                'email' => true
+            ],
+            'age' => [
+                'type' => 'integer',
+                'required' => true,
+                'range' => [18, 120]
+            ],
+            'country' => [
+                'type' => 'string',
+                'required' => true,
+                'values' => ['US', 'UK', 'ES', 'FR', 'DE']
+            ],
+            'phone' => [
+                'type' => 'string',
+                'regex' => '/^\+?[0-9]{10,15}$/'
+            ]
+        ];
 
-<p>// Validate $validator = $this->core->loadClass('DataValidation'); $data = $this->formParams;</p>
+        // Validate
+        $validator = $this->core->loadClass('DataValidation');
+        $data = $this->formParams;
 
-<p>if(!$validator->validateModel($model, $data)) { $errors = $this->core->errors->getErrorMsg(); return $this->setErrorFromCodelib('validation-error', json_encode($errors)); }</p>
+        if(!$validator->validateModel($model, $data)) {
+            $errors = $this->core->errors->getErrorMsg();
+            return $this->setErrorFromCodelib('validation-error', json_encode($errors));
+        }
 
-<p>// Data is valid - create user $userId = $this->createUser($data);</p>
+        // Data is valid - create user
+        $userId = $this->createUser($data);
 
-<p>$this->addReturnData(['user_id' => $userId]); } }</p>
+        $this->addReturnData(['user_id' => $userId]);
+    }
+}
 </code></pre>
 
 <h3>Complex Validation</h3>
 
 <pre><code class="language-php">$model = [
-<p>'product_name' => [ 'type' => 'string', 'required' => true, 'minlength' => 3, 'maxlength' => 200 ], 'price' => [ 'type' => 'float', 'required' => true, 'range' => [0.01, 999999.99], 'unsigned' => true ], 'quantity' => [ 'type' => 'integer', 'required' => true, 'range' => [0, 10000], 'unsigned' => true ], 'category' => [ 'type' => 'string', 'required' => true, 'values' => ['electronics', 'clothing', 'food', 'books'] ], 'sku' => [ 'type' => 'string', 'required' => true, 'regex' => '/^[A-Z]{3}-[0-9]{6}$/', 'fixlength' => 10 ], 'description' => [ 'type' => 'string', 'maxlength' => 1000 ], 'tags' => [ 'type' => 'array' ], 'metadata' => [ 'type' => 'json' ] ];</p>
+    'product_name' => [
+        'type' => 'string',
+        'required' => true,
+        'minlength' => 3,
+        'maxlength' => 200
+    ],
+    'price' => [
+        'type' => 'float',
+        'required' => true,
+        'range' => [0.01, 999999.99],
+        'unsigned' => true
+    ],
+    'quantity' => [
+        'type' => 'integer',
+        'required' => true,
+        'range' => [0, 10000],
+        'unsigned' => true
+    ],
+    'category' => [
+        'type' => 'string',
+        'required' => true,
+        'values' => ['electronics', 'clothing', 'food', 'books']
+    ],
+    'sku' => [
+        'type' => 'string',
+        'required' => true,
+        'regex' => '/^[A-Z]{3}-[0-9]{6}$/',
+        'fixlength' => 10
+    ],
+    'description' => [
+        'type' => 'string',
+        'maxlength' => 1000
+    ],
+    'tags' => [
+        'type' => 'array'
+    ],
+    'metadata' => [
+        'type' => 'json'
+    ]
+];
 
-<p>$validator = $this->core->loadClass('DataValidation'); if(!$validator->validateModel($model, $productData)) { // Handle validation errors }</p>
+$validator = $this->core->loadClass('DataValidation');
+if(!$validator->validateModel($model, $productData)) {
+    // Handle validation errors
+}
 </code></pre>
 
 <h3>Partial Validation (Update)</h3>
 
 <pre><code class="language-php">// Only validate fields that are present
-<p>$model = [ 'name' => ['type' => 'string', 'maxlength' => 100], 'email' => ['type' => 'string', 'email' => true], 'status' => ['type' => 'string', 'values' => ['active', 'inactive']] ];</p>
+$model = [
+    'name' => ['type' => 'string', 'maxlength' => 100],
+    'email' => ['type' => 'string', 'email' => true],
+    'status' => ['type' => 'string', 'values' => ['active', 'inactive']]
+];
 
-<p>$data = $this->formParams;</p>
+$data = $this->formParams;
 
-<p>// Validate only present fields (not all) $validator = $this->core->loadClass('DataValidation'); if($validator->validateModel($model, $data, [], false)) { // Update user with $data $this->updateUser($userId, $data); }</p>
+// Validate only present fields (not all)
+$validator = $this->core->loadClass('DataValidation');
+if($validator->validateModel($model, $data, [], false)) {
+    // Update user with $data
+    $this->updateUser($userId, $data);
+}
 </code></pre>
 
 <p>---</p>
@@ -317,6 +501,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

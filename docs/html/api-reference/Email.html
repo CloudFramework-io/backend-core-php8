@@ -4,48 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Email Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html" class="active">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link active">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>Email Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>Email</code> class provides email sending functionality with support for SendGrid integration. It offers a fluent API for building and sending emails with attachments, templates, and multiple recipients.</p>
+The <code>Email</code> class provides email sending functionality with support for SendGrid integration. It offers a fluent API for building and sending emails with attachments, templates, and multiple recipients.
 
 <h2>Loading the Class</h2>
 
@@ -63,7 +135,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$email = $this->core->loadClass('Email');
-<p>$email->setTo('user@example.com');</p>
+$email->setTo('user@example.com');
 </code></pre>
 
 <p>---</p>
@@ -77,7 +149,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$email->addTo('user@example.com', 'John Doe');
-<p>$email->addTo('another@example.com');</p>
+$email->addTo('another@example.com');
 </code></pre>
 
 <p>---</p>
@@ -139,7 +211,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$html = '<h1>Welcome!</h1><p>Thanks for joining our platform.</p>';
-<p>$email->setHtml($html);</p>
+$email->setHtml($html);
 </code></pre>
 
 <p>---</p>
@@ -205,7 +277,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">if($email->send()) {
-<p>// Email sent successfully } else { // Handle error }</p>
+    // Email sent successfully
+} else {
+    // Handle error
+}
 </code></pre>
 
 <p>---</p>
@@ -215,57 +290,108 @@
 <h3>Simple Email</h3>
 
 <pre><code class="language-php">$email = $this->core->loadClass('Email');
-<p>$email->setFrom('noreply@myapp.com') ->setFromName('My Application') ->setTo('user@example.com') ->setSubject('Welcome!') ->setHtml('<h1>Welcome!</h1><p>Thanks for joining.</p>') ->send();</p>
+$email->setFrom('noreply@myapp.com')
+      ->setFromName('My Application')
+      ->setTo('user@example.com')
+      ->setSubject('Welcome!')
+      ->setHtml('<h1>Welcome!</h1><p>Thanks for joining.</p>')
+      ->send();
 </code></pre>
 
 <h3>Email with Multiple Recipients</h3>
 
 <pre><code class="language-php">$email = $this->core->loadClass('Email');
-<p>$email->setFrom('noreply@myapp.com') ->setSubject('Team Announcement') ->addTo('user1@example.com', 'User One') ->addTo('user2@example.com', 'User Two') ->addCc('manager@example.com') ->setHtml('<p>Important team update...</p>') ->send();</p>
+$email->setFrom('noreply@myapp.com')
+      ->setSubject('Team Announcement')
+      ->addTo('user1@example.com', 'User One')
+      ->addTo('user2@example.com', 'User Two')
+      ->addCc('manager@example.com')
+      ->setHtml('<p>Important team update...</p>')
+      ->send();
 </code></pre>
 
 <h3>Email with Attachment</h3>
 
 <pre><code class="language-php">$email = $this->core->loadClass('Email');
-<p>$email->setFrom('billing@myapp.com') ->setTo($user['email']) ->setSubject('Your Invoice') ->setHtml('<p>Please find your invoice attached.</p>') ->addAttachment('/tmp/invoice-' . $invoiceId . '.pdf', 'invoice.pdf') ->send();</p>
+$email->setFrom('billing@myapp.com')
+      ->setTo($user['email'])
+      ->setSubject('Your Invoice')
+      ->setHtml('<p>Please find your invoice attached.</p>')
+      ->addAttachment('/tmp/invoice-' . $invoiceId . '.pdf', 'invoice.pdf')
+      ->send();
 </code></pre>
 
 <h3>Template-Based Email</h3>
 
 <pre><code class="language-php">$email = $this->core->loadClass('Email');
 
-<p>// Load template $template = file_get_contents($this->core->system->app_path . '/templates/welcome-email.html');</p>
+// Load template
+$template = file_get_contents($this->core->system->app_path . '/templates/welcome-email.html');
 
-<p>// Replace placeholders $html = str_replace([ '{{name}}', '{{email}}', '{{activation_link}}' ], [ $user['name'], $user['email'], 'https://myapp.com/activate?token=' . $token ], $template);</p>
+// Replace placeholders
+$html = str_replace([
+    '{{name}}',
+    '{{email}}',
+    '{{activation_link}}'
+], [
+    $user['name'],
+    $user['email'],
+    'https://myapp.com/activate?token=' . $token
+], $template);
 
-<p>$email->setFrom('noreply@myapp.com') ->setTo($user['email']) ->setSubject('Activate Your Account') ->setHtml($html) ->send();</p>
+$email->setFrom('noreply@myapp.com')
+      ->setTo($user['email'])
+      ->setSubject('Activate Your Account')
+      ->setHtml($html)
+      ->send();
 </code></pre>
 
 <h3>Transactional Emails</h3>
 
 <pre><code class="language-php">// Order confirmation
-<p>public function sendOrderConfirmation($orderId, $userEmail) { $order = $this->getOrder($orderId);</p>
+public function sendOrderConfirmation($orderId, $userEmail)
+{
+    $order = $this->getOrder($orderId);
 
-<p>$email = $this->core->loadClass('Email'); $email->setFrom('orders@myapp.com') ->setFromName('My Shop') ->setTo($userEmail) ->setSubject('Order Confirmation #' . $orderId) ->setHtml($this->buildOrderEmailHtml($order)) ->send(); }</p>
+    $email = $this->core->loadClass('Email');
+    $email->setFrom('orders@myapp.com')
+          ->setFromName('My Shop')
+          ->setTo($userEmail)
+          ->setSubject('Order Confirmation #' . $orderId)
+          ->setHtml($this->buildOrderEmailHtml($order))
+          ->send();
+}
 
-<p>// Password reset public function sendPasswordReset($userEmail, $resetToken) { $resetLink = 'https://myapp.com/reset-password?token=' . $resetToken;</p>
+// Password reset
+public function sendPasswordReset($userEmail, $resetToken)
+{
+    $resetLink = 'https://myapp.com/reset-password?token=' . $resetToken;
 
-<p>$email = $this->core->loadClass('Email'); $email->setFrom('noreply@myapp.com') ->setTo($userEmail) ->setSubject('Reset Your Password') ->setHtml("</p>
+    $email = $this->core->loadClass('Email');
+    $email->setFrom('noreply@myapp.com')
+          ->setTo($userEmail)
+          ->setSubject('Reset Your Password')
+          ->setHtml("
               <h2>Reset Your Password</h2>
               <p>Click the link below to reset your password:</p>
               <p><a href='{$resetLink}'>Reset Password</a></p>
               <p>This link expires in 1 hour.</p>
-<p>") ->send(); }</p>
+          ")
+          ->send();
+}
 </code></pre>
 
 <p>---</p>
 
 <h2>Configuration</h2>
 
-<p>Configure email settings in <code>config.json</code>:</p>
+Configure email settings in <code>config.json</code>:
 
 <pre><code class="language-json">{
-<p>"email.from": "noreply@myapp.com", "email.from_name": "My Application", "sendgrid.api_key": "SG.your-api-key-here" }</p>
+  "email.from": "noreply@myapp.com",
+  "email.from_name": "My Application",
+  "sendgrid.api_key": "SG.your-api-key-here"
+}
 </code></pre>
 
 <p>---</p>
@@ -279,6 +405,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

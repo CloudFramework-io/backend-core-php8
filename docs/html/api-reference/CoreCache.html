@@ -4,66 +4,203 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoreCache Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="CoreCache Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html" class="active">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link active">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>CoreCache Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>CoreCache</code> class provides a flexible caching system for CloudFramework with support for multiple backends including Redis (memory), local files (directory), and Google Cloud Datastore. It handles caching with expiration, hashing validation, and optional encryption.</p>
+The <code>CoreCache</code> class provides a flexible caching system for CloudFramework with support for multiple backends including Redis (memory), local files (directory), and Google Cloud Datastore. It handles caching with expiration, hashing validation, and optional encryption.
 
 <h2>Inheritance</h2>
 
-<p>Access CoreCache through the Core7 instance:</p>
+Access CoreCache through the Core7 instance:
 
 <pre><code class="language-php">// Set cache value
-<p>$this->core->cache->set('user_123', $userData);</p>
+$this->core->cache->set('user_123', $userData);
 
-<p>// Get cache value $userData = $this->core->cache->get('user_123');</p>
+// Get cache value
+$userData = $this->core->cache->get('user_123');
 
-<p>// Delete cache $this->core->cache->delete('user_123');</p>
+// Delete cache
+$this->core->cache->delete('user_123');
 </code></pre>
 
 <h2>Properties</h2>
 
 <h3>Public Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$cache</code> | object\|null | Cache backend instance (Redis, CoreCacheFile, or CoreCacheDataStore) | | <code>$spacename</code> | string | Namespace for cache keys (default: 'CloudFrameWork') | | <code>$type</code> | string | Cache type: 'memory' (Redis), 'directory' (files), or 'datastore' | | <code>$dir</code> | string | Directory path for file-based cache | | <code>$error</code> | bool | Error flag | | <code>$errorMsg</code> | array | Error messages | | <code>$debug</code> | bool | Debug mode flag | | <code>$lastHash</code> | string\|null | Last retrieved cache entry hash | | <code>$lastExpireTime</code> | float\|null | Time since last cache entry was set | | <code>$errorSecurity</code> | bool | Security error flag (wrong encryption keys) |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$cache</code></td>
+<td>object\</td>
+<td>null</td>
+<td>Cache backend instance (Redis, CoreCacheFile, or CoreCacheDataStore)</td>
+</tr>
+<tr>
+<td><code>$spacename</code></td>
+<td>string</td>
+<td>Namespace for cache keys (default: 'CloudFrameWork')</td>
+</tr>
+<tr>
+<td><code>$type</code></td>
+<td>string</td>
+<td>Cache type: 'memory' (Redis), 'directory' (files), or 'datastore'</td>
+</tr>
+<tr>
+<td><code>$dir</code></td>
+<td>string</td>
+<td>Directory path for file-based cache</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>bool</td>
+<td>Error flag</td>
+</tr>
+<tr>
+<td><code>$errorMsg</code></td>
+<td>array</td>
+<td>Error messages</td>
+</tr>
+<tr>
+<td><code>$debug</code></td>
+<td>bool</td>
+<td>Debug mode flag</td>
+</tr>
+<tr>
+<td><code>$lastHash</code></td>
+<td>string\</td>
+<td>null</td>
+<td>Last retrieved cache entry hash</td>
+</tr>
+<tr>
+<td><code>$lastExpireTime</code></td>
+<td>float\</td>
+<td>null</td>
+<td>Time since last cache entry was set</td>
+</tr>
+<tr>
+<td><code>$errorSecurity</code></td>
+<td>bool</td>
+<td>Security error flag (wrong encryption keys)</td>
+</tr>
+</tbody>
+</table>
 
 <p>---</p>
 
@@ -84,9 +221,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Initialized automatically in Core7
-<p>// You access it via $this->core->cache</p>
+// You access it via $this->core->cache
 
-<p>// The cache is initialized based on configuration: // - In development: uses file cache from core.cache.cache_path // - In production with Redis: uses memory cache (Redis)</p>
+// The cache is initialized based on configuration:
+// - In development: uses file cache from core.cache.cache_path
+// - In production with Redis: uses memory cache (Redis)
 </code></pre>
 
 <p>---</p>
@@ -131,7 +270,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Activate file cache
-<p>$cachePath = $this->core->system->root_path . '/local_data/cache'; if($this->core->cache->activateCacheFile($cachePath)) { // File cache is active }</p>
+$cachePath = $this->core->system->root_path . '/local_data/cache';
+if($this->core->cache->activateCacheFile($cachePath)) {
+    // File cache is active
+}
 </code></pre>
 
 <p>---</p>
@@ -152,7 +294,9 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Activate Datastore cache
-<p>if($this->core->cache->activateDataStore('my_app')) { // Datastore cache is active }</p>
+if($this->core->cache->activateDataStore('my_app')) {
+    // Datastore cache is active
+}
 </code></pre>
 
 <p>---</p>
@@ -179,13 +323,24 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Simple get
-<p>$userData = $this->core->cache->get('user_123');</p>
+$userData = $this->core->cache->get('user_123');
 
-<p>// Get with expiration (cache for 1 hour) $userData = $this->core->cache->get('user_123', 3600);</p>
+// Get with expiration (cache for 1 hour)
+$userData = $this->core->cache->get('user_123', 3600);
 
-<p>// Get with hash validation $hash = md5($queryString); $results = $this->core->cache->get('query_results', 3600, $hash); if(!$results) { // Cache miss or hash changed - regenerate $results = $this->runQuery($queryString); $this->core->cache->set('query_results', $results, $hash); }</p>
+// Get with hash validation
+$hash = md5($queryString);
+$results = $this->core->cache->get('query_results', 3600, $hash);
+if(!$results) {
+    // Cache miss or hash changed - regenerate
+    $results = $this->runQuery($queryString);
+    $this->core->cache->set('query_results', $results, $hash);
+}
 
-<p>// Get with encryption $secretKey = $this->core->config->get('core.gcp.secrets.cache_encrypt_key'); $secretIv = $this->core->config->get('core.gcp.secrets.cache_encrypt_iv'); $sensitiveData = $this->core->cache->get('sensitive_data', -1, '', $secretKey, $secretIv);</p>
+// Get with encryption
+$secretKey = $this->core->config->get('core.gcp.secrets.cache_encrypt_key');
+$secretIv = $this->core->config->get('core.gcp.secrets.cache_encrypt_iv');
+$sensitiveData = $this->core->cache->get('sensitive_data', -1, '', $secretKey, $secretIv);
 </code></pre>
 
 <strong>Special Features:</strong>
@@ -218,13 +373,23 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Simple set
-<p>$this->core->cache->set('user_123', $userData);</p>
+$this->core->cache->set('user_123', $userData);
 
-<p>// Set with hash $hash = md5($queryString); $this->core->cache->set('query_results', $results, $hash);</p>
+// Set with hash
+$hash = md5($queryString);
+$this->core->cache->set('query_results', $results, $hash);
 
-<p>// Set with encryption $secretKey = $this->core->config->get('core.gcp.secrets.cache_encrypt_key'); $secretIv = $this->core->config->get('core.gcp.secrets.cache_encrypt_iv'); $this->core->cache->set('sensitive_data', $data, null, $secretKey, $secretIv);</p>
+// Set with encryption
+$secretKey = $this->core->config->get('core.gcp.secrets.cache_encrypt_key');
+$secretIv = $this->core->config->get('core.gcp.secrets.cache_encrypt_iv');
+$this->core->cache->set('sensitive_data', $data, null, $secretKey, $secretIv);
 
-<p>// Cache complex objects $this->core->cache->set('products_list', [ 'items' => $products, 'total' => count($products), 'timestamp' => time() ]);</p>
+// Cache complex objects
+$this->core->cache->set('products_list', [
+    'items' => $products,
+    'total' => count($products),
+    'timestamp' => time()
+]);
 </code></pre>
 
 <strong>Data Handling:</strong>
@@ -253,9 +418,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Delete specific cache entry
-<p>$this->core->cache->delete('user_123');</p>
+$this->core->cache->delete('user_123');
 
-<p>// Delete after update $this->updateUser($userId, $data); $this->core->cache->delete('user_' . $userId);</p>
+// Delete after update
+$this->updateUser($userId, $data);
+$this->core->cache->delete('user_' . $userId);
 </code></pre>
 
 <p>---</p>
@@ -276,11 +443,16 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Get all cache keys
-<p>$allKeys = $this->core->cache->keys();</p>
+$allKeys = $this->core->cache->keys();
 
-<p>// Search for specific pattern $userKeys = $this->core->cache->keys('user_*');</p>
+// Search for specific pattern
+$userKeys = $this->core->cache->keys('user_*');
 
-<p>// Delete all user caches $userKeys = $this->core->cache->keys('user_*'); foreach($userKeys as $key) { $this->core->cache->delete($key); }</p>
+// Delete all user caches
+$userKeys = $this->core->cache->keys('user_*');
+foreach($userKeys as $key) {
+    $this->core->cache->delete($key);
+}
 </code></pre>
 
 <strong>Note:</strong> Only works with Redis (memory) cache type.
@@ -306,7 +478,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$hash = md5(json_encode($filters));
-<p>$results = $this->core->cache->getByHash('search_results', $hash); if(!$results) { // Cache miss or filters changed $results = $this->search($filters); $this->core->cache->set('search_results', $results, $hash); }</p>
+$results = $this->core->cache->getByHash('search_results', $hash);
+if(!$results) {
+    // Cache miss or filters changed
+    $results = $this->search($filters);
+    $this->core->cache->set('search_results', $results, $hash);
+}
 </code></pre>
 
 <p>---</p>
@@ -328,9 +505,14 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Cache for 1 hour (3600 seconds)
-<p>$data = $this->core->cache->getByExpireTime('hourly_stats', 3600); if(!$data) { $data = $this->calculateStats(); $this->core->cache->set('hourly_stats', $data); }</p>
+$data = $this->core->cache->getByExpireTime('hourly_stats', 3600);
+if(!$data) {
+    $data = $this->calculateStats();
+    $this->core->cache->set('hourly_stats', $data);
+}
 
-<p>// Cache for 5 minutes $data = $this->core->cache->getByExpireTime('live_data', 300);</p>
+// Cache for 5 minutes
+$data = $this->core->cache->getByExpireTime('live_data', 300);
 </code></pre>
 
 <p>---</p>
@@ -351,9 +533,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Use different namespace for different tenants
-<p>$tenantId = $this->getCurrentTenantId(); $this->core->cache->setNameSpace('tenant_' . $tenantId);</p>
+$tenantId = $this->getCurrentTenantId();
+$this->core->cache->setNameSpace('tenant_' . $tenantId);
 
-<p>// Now all cache operations use this namespace $this->core->cache->set('config', $tenantConfig); // Stored as: CloudFrameWork_directory_tenant_123-config</p>
+// Now all cache operations use this namespace
+$this->core->cache->set('config', $tenantConfig);
+// Stored as: CloudFrameWork_directory_tenant_123-config
 </code></pre>
 
 <strong>Note:</strong> <code>setSpaceName()</code> is deprecated, use <code>setNameSpace()</code> instead.
@@ -385,69 +570,128 @@
 <h3>Basic Caching</h3>
 
 <pre><code class="language-php">// Check cache first
-<p>$data = $this->core->cache->get('expensive_operation'); if(!$data) { // Cache miss - compute data $data = $this->performExpensiveOperation();</p>
+$data = $this->core->cache->get('expensive_operation');
+if(!$data) {
+    // Cache miss - compute data
+    $data = $this->performExpensiveOperation();
 
-<p>// Store in cache $this->core->cache->set('expensive_operation', $data); }</p>
+    // Store in cache
+    $this->core->cache->set('expensive_operation', $data);
+}
 
-<p>// Use data return $data;</p>
+// Use data
+return $data;
 </code></pre>
 
 <h3>Caching with Expiration</h3>
 
 <pre><code class="language-php">// Cache for 1 hour
-<p>$cacheKey = 'dashboard_stats'; $stats = $this->core->cache->get($cacheKey, 3600);</p>
+$cacheKey = 'dashboard_stats';
+$stats = $this->core->cache->get($cacheKey, 3600);
 
-<p>if(!$stats) { // Cache expired or doesn't exist $stats = $this->calculateDashboardStats(); $this->core->cache->set($cacheKey, $stats); }</p>
+if(!$stats) {
+    // Cache expired or doesn't exist
+    $stats = $this->calculateDashboardStats();
+    $this->core->cache->set($cacheKey, $stats);
+}
 
-<p>return $stats;</p>
+return $stats;
 </code></pre>
 
 <h3>Caching with Hash Validation</h3>
 
 <pre><code class="language-php">// Generate hash from query parameters
-<p>$hash = md5(json_encode([ 'filters' => $filters, 'sort' => $sortBy, 'page' => $page ]));</p>
+$hash = md5(json_encode([
+    'filters' => $filters,
+    'sort' => $sortBy,
+    'page' => $page
+]));
 
-<p>// Try to get cached results $results = $this->core->cache->get('search_results', 3600, $hash);</p>
+// Try to get cached results
+$results = $this->core->cache->get('search_results', 3600, $hash);
 
-<p>if(!$results) { // Hash changed or cache expired $results = $this->search($filters, $sortBy, $page); $this->core->cache->set('search_results', $results, $hash); }</p>
+if(!$results) {
+    // Hash changed or cache expired
+    $results = $this->search($filters, $sortBy, $page);
+    $this->core->cache->set('search_results', $results, $hash);
+}
 
-<p>return $results;</p>
+return $results;
 </code></pre>
 
 <h3>Encrypted Cache</h3>
 
 <pre><code class="language-php">// Get encryption keys from config
-<p>$key = $this->core->config->get('core.gcp.secrets.cache_encrypt_key'); $iv = $this->core->config->get('core.gcp.secrets.cache_encrypt_iv');</p>
+$key = $this->core->config->get('core.gcp.secrets.cache_encrypt_key');
+$iv = $this->core->config->get('core.gcp.secrets.cache_encrypt_iv');
 
-<p>// Store sensitive data encrypted $this->core->cache->set('user_tokens', $tokens, null, $key, $iv);</p>
+// Store sensitive data encrypted
+$this->core->cache->set('user_tokens', $tokens, null, $key, $iv);
 
-<p>// Retrieve encrypted data $tokens = $this->core->cache->get('user_tokens', -1, '', $key, $iv);</p>
+// Retrieve encrypted data
+$tokens = $this->core->cache->get('user_tokens', -1, '', $key, $iv);
 
-<p>// Check for security errors (wrong keys) if($this->core->cache->errorSecurity) { // Wrong encryption keys used $this->core->logs->add('Cache security error - wrong keys'); }</p>
+// Check for security errors (wrong keys)
+if($this->core->cache->errorSecurity) {
+    // Wrong encryption keys used
+    $this->core->logs->add('Cache security error - wrong keys');
+}
 </code></pre>
 
 <h3>Multi-tenant Caching</h3>
 
 <pre><code class="language-php">class API extends RESTful
-<p>{ function main() { // Set namespace per tenant $tenantId = $this->getTenantId(); $this->core->cache->setNameSpace('tenant_' . $tenantId);</p>
+{
+    function main()
+    {
+        // Set namespace per tenant
+        $tenantId = $this->getTenantId();
+        $this->core->cache->setNameSpace('tenant_' . $tenantId);
 
-<p>// Now cache is isolated per tenant $config = $this->core->cache->get('config'); if(!$config) { $config = $this->loadTenantConfig($tenantId); $this->core->cache->set('config', $config); } } }</p>
+        // Now cache is isolated per tenant
+        $config = $this->core->cache->get('config');
+        if(!$config) {
+            $config = $this->loadTenantConfig($tenantId);
+            $this->core->cache->set('config', $config);
+        }
+    }
+}
 </code></pre>
 
 <h3>Cache Invalidation</h3>
 
 <pre><code class="language-php">// Invalidate specific cache
-<p>function updateUser($userId, $data) { // Update database $this->updateDatabase($userId, $data);</p>
+function updateUser($userId, $data) {
+    // Update database
+    $this->updateDatabase($userId, $data);
 
-<p>// Invalidate cache $this->core->cache->delete('user_' . $userId); $this->core->cache->delete('users_list'); }</p>
+    // Invalidate cache
+    $this->core->cache->delete('user_' . $userId);
+    $this->core->cache->delete('users_list');
+}
 
-<p>// Invalidate pattern (Redis only) function clearUserCaches() { $userKeys = $this->core->cache->keys('user_*'); foreach($userKeys as $key) { $this->core->cache->delete($key); } }</p>
+// Invalidate pattern (Redis only)
+function clearUserCaches() {
+    $userKeys = $this->core->cache->keys('user_*');
+    foreach($userKeys as $key) {
+        $this->core->cache->delete($key);
+    }
+}
 </code></pre>
 
 <h3>Conditional Caching</h3>
 
 <pre><code class="language-php">// Only cache in production
-<p>if($this->core->is->production()) { $data = $this->core->cache->get('heavy_computation', 3600); if(!$data) { $data = $this->heavyComputation(); $this->core->cache->set('heavy_computation', $data); } } else { // Always fresh in development $data = $this->heavyComputation(); }</p>
+if($this->core->is->production()) {
+    $data = $this->core->cache->get('heavy_computation', 3600);
+    if(!$data) {
+        $data = $this->heavyComputation();
+        $this->core->cache->set('heavy_computation', $data);
+    }
+} else {
+    // Always fresh in development
+    $data = $this->heavyComputation();
+}
 </code></pre>
 
 <p>---</p>
@@ -471,7 +715,8 @@
 
 <strong>Setup:</strong>
 <pre><code class="language-bash"># Set environment variables
-<p>export REDIS_HOST=localhost export REDIS_PORT=6379</p>
+export REDIS_HOST=localhost
+export REDIS_PORT=6379
 </code></pre>
 
 <pre><code class="language-php">$this->core->cache->activateMemory();
@@ -494,7 +739,7 @@
 
 <strong>Setup:</strong>
 <pre><code class="language-php">$cachePath = $this->core->system->root_path . '/local_data/cache';
-<p>$this->core->cache->activateCacheFile($cachePath);</p>
+$this->core->cache->activateCacheFile($cachePath);
 </code></pre>
 
 <h3>Datastore</h3>
@@ -524,45 +769,58 @@
 <h3>Cache Key Design</h3>
 
 <pre><code class="language-php">// Good: Specific keys
-<p>$this->core->cache->get('user_123'); $this->core->cache->get('product_456'); $this->core->cache->get('search_electronics_page_2');</p>
+$this->core->cache->get('user_123');
+$this->core->cache->get('product_456');
+$this->core->cache->get('search_electronics_page_2');
 
-<p>// Bad: Generic keys (causes conflicts) $this->core->cache->get('data'); $this->core->cache->get('results');</p>
+// Bad: Generic keys (causes conflicts)
+$this->core->cache->get('data');
+$this->core->cache->get('results');
 </code></pre>
 
 <h3>Expiration Strategy</h3>
 
 <pre><code class="language-php">// Short expiration for frequently changing data
-<p>$this->core->cache->get('live_prices', 60); // 1 minute</p>
+$this->core->cache->get('live_prices', 60); // 1 minute
 
-<p>// Medium expiration for moderate data $this->core->cache->get('product_catalog', 3600); // 1 hour</p>
+// Medium expiration for moderate data
+$this->core->cache->get('product_catalog', 3600); // 1 hour
 
-<p>// Long expiration for rarely changing data $this->core->cache->get('country_list', 86400); // 24 hours</p>
+// Long expiration for rarely changing data
+$this->core->cache->get('country_list', 86400); // 24 hours
 
-<p>// No expiration for static data $this->core->cache->get('config', -1); // Never expires</p>
+// No expiration for static data
+$this->core->cache->get('config', -1); // Never expires
 </code></pre>
 
 <h3>Cache Size</h3>
 
 <pre><code class="language-php">// Avoid caching huge objects
-<p>$hugeData = $this->getAllDataFromDatabase(); // DON'T cache this</p>
+$hugeData = $this->getAllDataFromDatabase(); // DON'T cache this
 
-<p>// Cache smaller, more specific data $pageData = $this->getPageData($page); // Good $this->core->cache->set('page_' . $page, $pageData);</p>
+// Cache smaller, more specific data
+$pageData = $this->getPageData($page); // Good
+$this->core->cache->set('page_' . $page, $pageData);
 </code></pre>
 
 <p>---</p>
 
 <h2>Debug Mode</h2>
 
-<p>When debug mode is enabled, cache operations are logged:</p>
+When debug mode is enabled, cache operations are logged:
 
 <pre><code class="language-php">// Enable debug
-<p>$this->core->cache->debug = true;</p>
+$this->core->cache->debug = true;
 
-<p>// Operations will be logged $this->core->cache->set('test', 'value'); // Log: "set($key=test,..) in namespace..."</p>
+// Operations will be logged
+$this->core->cache->set('test', 'value');
+// Log: "set($key=test,..) in namespace..."
 
-<p>$value = $this->core->cache->get('test'); // Log: "get($key=test) successful returned in namespace..."</p>
+$value = $this->core->cache->get('test');
+// Log: "get($key=test) successful returned in namespace..."
 
-<p>$this->core->cache->delete('test'); // Log: "delete(). token: CloudFrameWork_directory-test"</p>
+$this->core->cache->delete('test');
+// Log: "delete(). token: CloudFrameWork_directory-test"
 </code></pre>
 
 <p>---</p>
@@ -570,31 +828,46 @@
 <h2>Error Handling</h2>
 
 <pre><code class="language-php">// Check for errors
-<p>$this->core->cache->set('key', $data); if($this->core->cache->error) { $errors = $this->core->cache->errorMsg; // Handle errors }</p>
+$this->core->cache->set('key', $data);
+if($this->core->cache->error) {
+    $errors = $this->core->cache->errorMsg;
+    // Handle errors
+}
 
-<p>// Check for security errors (wrong encryption keys) $data = $this->core->cache->get('key', -1, '', $wrongKey, $wrongIv); if($this->core->cache->errorSecurity) { // Wrong encryption keys - cache was deleted for security }</p>
+// Check for security errors (wrong encryption keys)
+$data = $this->core->cache->get('key', -1, '', $wrongKey, $wrongIv);
+if($this->core->cache->errorSecurity) {
+    // Wrong encryption keys - cache was deleted for security
+}
 </code></pre>
 
 <p>---</p>
 
 <h2>Configuration</h2>
 
-<p>Set cache configuration in <code>config.json</code>:</p>
+Set cache configuration in <code>config.json</code>:
 
 <pre><code class="language-json">{
-<p>"core.cache.cache_path": "{{rootPath}}/local_data/cache", "core.gcp.secrets.cache_encrypt_key": "your-base64-key", "core.gcp.secrets.cache_encrypt_iv": "your-base64-iv",</p>
+  "core.cache.cache_path": "{{rootPath}}/local_data/cache",
+  "core.gcp.secrets.cache_encrypt_key": "your-base64-key",
+  "core.gcp.secrets.cache_encrypt_iv": "your-base64-iv",
 
-<p>"development:": { "core.cache.cache_path": "{{rootPath}}/local_data/cache" },</p>
+  "development:": {
+    "core.cache.cache_path": "{{rootPath}}/local_data/cache"
+  },
 
-<p>"production:": { "core.cache.type": "memory" } }</p>
+  "production:": {
+    "core.cache.type": "memory"
+  }
+}
 </code></pre>
 
 <p>Generate encryption keys:</p>
 <pre><code class="language-bash"># Generate key (32 bytes)
-<p>openssl rand -base64 32</p>
+openssl rand -base64 32
 
 <h1>Generate IV (24 bytes)</h1>
-<p>openssl rand -base64 24</p>
+openssl rand -base64 24
 </code></pre>
 
 <p>---</p>
@@ -610,6 +883,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

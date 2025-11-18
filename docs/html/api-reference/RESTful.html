@@ -4,66 +4,220 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RESTful Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="RESTful Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html" class="active">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link active">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>RESTful Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>RESTful</code> class is the base class for all API endpoints in CloudFramework. It provides comprehensive functionality for handling HTTP requests, responses, validation, error handling, and CORS support.</p>
+The <code>RESTful</code> class is the base class for all API endpoints in CloudFramework. It provides comprehensive functionality for handling HTTP requests, responses, validation, error handling, and CORS support.
 
 <h2>Inheritance</h2>
 
-<p>All your API classes should extend <code>RESTful</code>:</p>
+All your API classes should extend <code>RESTful</code>:
 
 <pre><code class="language-php"><?php
-<p>class API extends RESTful { function main() { // Your API logic here } }</p>
+class API extends RESTful
+{
+    function main()
+    {
+        // Your API logic here
+    }
+}
 </code></pre>
 
 <h2>Properties</h2>
 
 <h3>Public Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$formParams</code> | array | Form parameters from GET/POST requests | | <code>$params</code> | array | URL path parameters | | <code>$method</code> | string | HTTP method (GET, POST, PUT, DELETE, etc.) | | <code>$service</code> | string | Service name from URL | | <code>$error</code> | int | Error code (0 if no error) | | <code>$code</code> | string\|null | Response code identifier | | <code>$core</code> | Core7 | Reference to Core7 framework instance |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$formParams</code></td>
+<td>array</td>
+<td>Form parameters from GET/POST requests</td>
+</tr>
+<tr>
+<td><code>$params</code></td>
+<td>array</td>
+<td>URL path parameters</td>
+</tr>
+<tr>
+<td><code>$method</code></td>
+<td>string</td>
+<td>HTTP method (GET, POST, PUT, DELETE, etc.)</td>
+</tr>
+<tr>
+<td><code>$service</code></td>
+<td>string</td>
+<td>Service name from URL</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>int</td>
+<td>Error code (0 if no error)</td>
+</tr>
+<tr>
+<td><code>$code</code></td>
+<td>string\</td>
+<td>null</td>
+<td>Response code identifier</td>
+</tr>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 framework instance</td>
+</tr>
+</tbody>
+</table>
 
 <h3>Protected Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$version</code> | string | RESTful class version | | <code>$returnData</code> | mixed | Data to be returned in the response | | <code>$requestHeaders</code> | array | Request headers | | <code>$extra_headers</code> | array | Additional response headers |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$version</code></td>
+<td>string</td>
+<td>RESTful class version</td>
+</tr>
+<tr>
+<td><code>$returnData</code></td>
+<td>mixed</td>
+<td>Data to be returned in the response</td>
+</tr>
+<tr>
+<td><code>$requestHeaders</code></td>
+<td>array</td>
+<td>Request headers</td>
+</tr>
+<tr>
+<td><code>$extra_headers</code></td>
+<td>array</td>
+<td>Additional response headers</td>
+</tr>
+</tbody>
+</table>
 
 <h2>Main Methods</h2>
 
@@ -110,9 +264,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Only allow GET and POST
-<p>if(!$this->checkMethod('GET,POST')) return;</p>
+if(!$this->checkMethod('GET,POST')) return;
 
-<p>// With custom error message if(!$this->checkMethod('GET', 'Only GET requests allowed')) return;</p>
+// With custom error message
+if(!$this->checkMethod('GET', 'Only GET requests allowed')) return;
 </code></pre>
 
 <p>---</p>
@@ -133,11 +288,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Allow all origins
-<p>$this->sendCorsHeaders('GET,POST,PUT,DELETE');</p>
+$this->sendCorsHeaders('GET,POST,PUT,DELETE');
 
-<p>// Allow specific origins $this->sendCorsHeaders('GET,POST', 'https://example.com,https://app.example.com');</p>
+// Allow specific origins
+$this->sendCorsHeaders('GET,POST', 'https://example.com,https://app.example.com');
 
-<p>// Allow extra headers $this->sendCorsHeaders('GET,POST', '*', 'X-Custom-Header,X-Api-Key');</p>
+// Allow extra headers
+$this->sendCorsHeaders('GET,POST', '*', 'X-Custom-Header,X-Api-Key');
 </code></pre>
 
 <p>---</p>
@@ -163,9 +320,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Check if parameter exists at position 0
-<p>$userId = $this->checkMandatoryParam(0, 'User ID is required'); if(!$userId) return;</p>
+$userId = $this->checkMandatoryParam(0, 'User ID is required');
+if(!$userId) return;
 
-<p>// With validation $userId = $this->checkMandatoryParam(0, 'Invalid user ID', ['type' => 'integer']); if(!$userId) return;</p>
+// With validation
+$userId = $this->checkMandatoryParam(0, 'Invalid user ID', ['type' => 'integer']);
+if(!$userId) return;
 </code></pre>
 
 <p>---</p>
@@ -190,11 +350,16 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Check required parameter
-<p>$email = $this->checkMandatoryFormParam('email', 'Email is required'); if(!$email) return;</p>
+$email = $this->checkMandatoryFormParam('email', 'Email is required');
+if(!$email) return;
 
-<p>// Check with allowed values $status = $this->checkMandatoryFormParam('status', 'Invalid status', ['active', 'inactive']); if(!$status) return;</p>
+// Check with allowed values
+$status = $this->checkMandatoryFormParam('status', 'Invalid status', ['active', 'inactive']);
+if(!$status) return;
 
-<p>// Check with minimum length $password = $this->checkMandatoryFormParam('password', 'Password too short', [], 8); if(!$password) return;</p>
+// Check with minimum length
+$password = $this->checkMandatoryFormParam('password', 'Password too short', [], 8);
+if(!$password) return;
 </code></pre>
 
 <p>---</p>
@@ -215,9 +380,15 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Simple validation
-<p>$required = ['email', 'password', 'name']; if(!$this->checkMandatoryFormParams($required)) return;</p>
+$required = ['email', 'password', 'name'];
+if(!$this->checkMandatoryFormParams($required)) return;
 
-<p>// With configurations $required = [ 'email' => ['error' => 'Email required'], 'status' => ['values' => ['active', 'inactive'], 'error' => 'Invalid status'] ]; if(!$this->checkMandatoryFormParams($required)) return;</p>
+// With configurations
+$required = [
+    'email' => ['error' => 'Email required'],
+    'status' => ['values' => ['active', 'inactive'], 'error' => 'Invalid status']
+];
+if(!$this->checkMandatoryFormParams($required)) return;
 </code></pre>
 
 <p>---</p>
@@ -242,11 +413,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Validate email
-<p>if(!$this->validateValue('email', $email, 'email')) return;</p>
+if(!$this->validateValue('email', $email, 'email')) return;
 
-<p>// Validate integer if(!$this->validateValue('age', $age, 'integer')) return;</p>
+// Validate integer
+if(!$this->validateValue('age', $age, 'integer')) return;
 
-<p>// Validate with custom message if(!$this->validateValue('url', $url, 'url', '', 'Invalid URL format')) return;</p>
+// Validate with custom message
+if(!$this->validateValue('url', $url, 'url', '', 'Invalid URL format')) return;
 </code></pre>
 
 <p>---</p>
@@ -272,9 +445,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$model = [
-<p>'name' => ['type' => 'string', 'required' => true], 'email' => ['type' => 'email', 'required' => true], 'age' => ['type' => 'integer', 'min' => 18] ];</p>
+    'name' => ['type' => 'string', 'required' => true],
+    'email' => ['type' => 'email', 'required' => true],
+    'age' => ['type' => 'integer', 'min' => 18]
+];
 
-<p>$data = []; if(!$this->validatePostData($model, 'user-validation-error', $data)) return;</p>
+$data = [];
+if(!$this->validatePostData($model, 'user-validation-error', $data)) return;
 </code></pre>
 
 <p>---</p>
@@ -304,11 +481,14 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Add simple data
-<p>$this->addReturnData('Hello World');</p>
+$this->addReturnData('Hello World');
 
-<p>// Add array data $this->addReturnData(['users' => $users, 'total' => $total]);</p>
+// Add array data
+$this->addReturnData(['users' => $users, 'total' => $total]);
 
-<p>// Add multiple times (will merge/append) $this->addReturnData(['name' => 'John']); $this->addReturnData(['age' => 30]);</p>
+// Add multiple times (will merge/append)
+$this->addReturnData(['name' => 'John']);
+$this->addReturnData(['age' => 30]);
 </code></pre>
 
 <p>---</p>
@@ -345,7 +525,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->setReturnResponse([
-<p>'success' => true, 'status' => 200, 'data' => $data, 'message' => 'Operation successful' ]);</p>
+    'success' => true,
+    'status' => 200,
+    'data' => $data,
+    'message' => 'Operation successful'
+]);
 </code></pre>
 
 <p>---</p>
@@ -387,11 +571,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Simple error
-<p>$this->setError('Invalid user ID', 400);</p>
+$this->setError('Invalid user ID', 400);
 
-<p>// With code $this->setError('User not found', 404, 'user-not-found');</p>
+// With code
+$this->setError('User not found', 404, 'user-not-found');
 
-<p>// With array $this->setError(['field' => 'email', 'message' => 'Email already exists'], 409);</p>
+// With array
+$this->setError(['field' => 'email', 'message' => 'Email already exists'], 409);
 </code></pre>
 
 <p>---</p>
@@ -413,7 +599,9 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Define custom error codes
-<p>$this->addCodeLib('user-not-found', 'User not found', 404); $this->addCodeLib('invalid-token', 'Invalid authentication token', 401); $this->addCodeLib('rate-limit', 'Rate limit exceeded', 429);</p>
+$this->addCodeLib('user-not-found', 'User not found', 404);
+$this->addCodeLib('invalid-token', 'Invalid authentication token', 401);
+$this->addCodeLib('rate-limit', 'Rate limit exceeded', 429);
 </code></pre>
 
 <p>---</p>
@@ -433,9 +621,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Use predefined error code
-<p>$this->setErrorFromCodelib('user-not-found');</p>
+$this->setErrorFromCodelib('user-not-found');
 
-<p>// With extra message $this->setErrorFromCodelib('params-error', ': user_id is required');</p>
+// With extra message
+$this->setErrorFromCodelib('params-error', ': user_id is required');
 </code></pre>
 
 <p>---</p>
@@ -520,7 +709,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->addHeader('X-Custom-Header', 'CustomValue');
-<p>$this->addHeader('X-Rate-Limit-Remaining', '100');</p>
+$this->addHeader('X-Rate-Limit-Remaining', '100');
 </code></pre>
 
 <p>---</p>
@@ -541,7 +730,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$auth = $this->getRequestHeader('Authorization');
-<p>$contentType = $this->getRequestHeader('Content-Type');</p>
+$contentType = $this->getRequestHeader('Content-Type');
 </code></pre>
 
 <p>---</p>
@@ -557,7 +746,9 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$token = $this->getHeaderAuthorization();
-<p>if($token) { // Validate token }</p>
+if($token) {
+    // Validate token
+}
 </code></pre>
 
 <p>---</p>
@@ -582,7 +773,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->setMessage('User created successfully', 'success');
-<p>$this->setMessage('Operation completed', 'info', 'Your data has been saved', 3);</p>
+$this->setMessage('Operation completed', 'info', 'Your data has been saved', 3);
 </code></pre>
 
 <p>---</p>
@@ -612,7 +803,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->setReturnFormat('JSON'); // Default
-<p>$this->setReturnFormat('XML');</p>
+$this->setReturnFormat('XML');
 </code></pre>
 
 <p>---</p>
@@ -633,43 +824,216 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Route to ENDPOINT_xxx methods
-<p>$endpoint = $this->params[0] ?? 'default'; if(!$this->useFunction('ENDPOINT_' . $endpoint)) { return $this->setErrorFromCodelib('not-found'); }</p>
+$endpoint = $this->params[0] ?? 'default';
+if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+    return $this->setErrorFromCodelib('not-found');
+}
 </code></pre>
 
 <p>---</p>
 
 <h2>Default Code Library</h2>
 
-<p>The RESTful class includes these predefined error codes:</p>
+The RESTful class includes these predefined error codes:
 
-<p>| Code | Message | Status | |------|---------|--------| | <code>ok</code> | OK | 200 | | <code>inserted</code> | Inserted successfully | 201 | | <code>no-content</code> | No content | 204 | | <code>form-params-error</code> | Wrong form parameters | 400 | | <code>params-error</code> | Wrong parameters | 400 | | <code>security-error</code> | You don't have right credentials | 401 | | <code>not-allowed</code> | You are not allowed | 403 | | <code>not-found</code> | Not Found | 404 | | <code>method-error</code> | Wrong method | 405 | | <code>conflict</code> | There are conflicts | 409 | | <code>gone</code> | The resource is not longer available | 410 | | <code>unsupported-media</code> | Unsupported Media Type | 415 | | <code>server-error</code> | Generic server error | 500 | | <code>not-implemented</code> | Not implemented yet | 501 | | <code>service-unavailable</code> | The service is unavailable | 503 | | <code>system-error</code> | Problem in the platform | 503 | | <code>datastore-error</code> | Problem with Datastore | 503 | | <code>database-error</code> | Problem with Database | 503 | | <code>bigquery-error</code> | Problem with BigQuery | 503 |</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Message</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ok</code></td>
+<td>OK</td>
+<td>200</td>
+</tr>
+<tr>
+<td><code>inserted</code></td>
+<td>Inserted successfully</td>
+<td>201</td>
+</tr>
+<tr>
+<td><code>no-content</code></td>
+<td>No content</td>
+<td>204</td>
+</tr>
+<tr>
+<td><code>form-params-error</code></td>
+<td>Wrong form parameters</td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>params-error</code></td>
+<td>Wrong parameters</td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>security-error</code></td>
+<td>You don't have right credentials</td>
+<td>401</td>
+</tr>
+<tr>
+<td><code>not-allowed</code></td>
+<td>You are not allowed</td>
+<td>403</td>
+</tr>
+<tr>
+<td><code>not-found</code></td>
+<td>Not Found</td>
+<td>404</td>
+</tr>
+<tr>
+<td><code>method-error</code></td>
+<td>Wrong method</td>
+<td>405</td>
+</tr>
+<tr>
+<td><code>conflict</code></td>
+<td>There are conflicts</td>
+<td>409</td>
+</tr>
+<tr>
+<td><code>gone</code></td>
+<td>The resource is not longer available</td>
+<td>410</td>
+</tr>
+<tr>
+<td><code>unsupported-media</code></td>
+<td>Unsupported Media Type</td>
+<td>415</td>
+</tr>
+<tr>
+<td><code>server-error</code></td>
+<td>Generic server error</td>
+<td>500</td>
+</tr>
+<tr>
+<td><code>not-implemented</code></td>
+<td>Not implemented yet</td>
+<td>501</td>
+</tr>
+<tr>
+<td><code>service-unavailable</code></td>
+<td>The service is unavailable</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>system-error</code></td>
+<td>Problem in the platform</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>datastore-error</code></td>
+<td>Problem with Datastore</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>database-error</code></td>
+<td>Problem with Database</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>bigquery-error</code></td>
+<td>Problem with BigQuery</td>
+<td>503</td>
+</tr>
+</tbody>
+</table>
 
 <p>---</p>
 
 <h2>Complete API Example</h2>
 
 <pre><code class="language-php"><?php
-<p>class API extends RESTful { function main() { // Enable CORS $this->sendCorsHeaders('GET,POST,PUT,DELETE');</p>
+class API extends RESTful
+{
+    function main()
+    {
+        // Enable CORS
+        $this->sendCorsHeaders('GET,POST,PUT,DELETE');
 
-<p>// Check authentication $token = $this->getHeaderAuthorization(); if(!$token) { return $this->setErrorFromCodelib('security-error'); }</p>
+        // Check authentication
+        $token = $this->getHeaderAuthorization();
+        if(!$token) {
+            return $this->setErrorFromCodelib('security-error');
+        }
 
-<p>// Route to endpoints $endpoint = str_replace('-', '_', $this->params[0] ?? 'default'); if(!$this->useFunction('ENDPOINT_' . $endpoint)) { return $this->setErrorFromCodelib('not-found'); } }</p>
+        // Route to endpoints
+        $endpoint = str_replace('-', '_', $this->params[0] ?? 'default');
+        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+            return $this->setErrorFromCodelib('not-found');
+        }
+    }
 
-<p>public function ENDPOINT_default() { $this->addReturnData([ 'api' => 'My API', 'version' => '1.0', 'endpoints' => ['/users', '/products', '/orders'] ]); }</p>
+    public function ENDPOINT_default()
+    {
+        $this->addReturnData([
+            'api' => 'My API',
+            'version' => '1.0',
+            'endpoints' => ['/users', '/products', '/orders']
+        ]);
+    }
 
-<p>public function ENDPOINT_users() { // Only allow GET and POST if(!$this->checkMethod('GET,POST')) return;</p>
+    public function ENDPOINT_users()
+    {
+        // Only allow GET and POST
+        if(!$this->checkMethod('GET,POST')) return;
 
-<p>if($this->method == 'GET') { // Get user ID from URL $userId = $this->params[1] ?? null;</p>
+        if($this->method == 'GET') {
+            // Get user ID from URL
+            $userId = $this->params[1] ?? null;
 
-<p>if($userId) { // Get specific user $user = $this->getUser($userId); if(!$user) { return $this->setErrorFromCodelib('not-found', ': User not found'); } $this->addReturnData($user); } else { // Get all users $users = $this->getAllUsers(); $this->addReturnData(['users' => $users]); } } else { // POST - Create user // Validate required fields if(!$this->checkMandatoryFormParams(['email', 'name', 'password'])) { return; }</p>
+            if($userId) {
+                // Get specific user
+                $user = $this->getUser($userId);
+                if(!$user) {
+                    return $this->setErrorFromCodelib('not-found', ': User not found');
+                }
+                $this->addReturnData($user);
+            } else {
+                // Get all users
+                $users = $this->getAllUsers();
+                $this->addReturnData(['users' => $users]);
+            }
+        } else {
+            // POST - Create user
+            // Validate required fields
+            if(!$this->checkMandatoryFormParams(['email', 'name', 'password'])) {
+                return;
+            }
 
-<p>// Create user $user = $this->createUser($this->formParams); $this->setReturnStatus(201); $this->setReturnCode('inserted'); $this->addReturnData($user); } }</p>
+            // Create user
+            $user = $this->createUser($this->formParams);
+            $this->setReturnStatus(201);
+            $this->setReturnCode('inserted');
+            $this->addReturnData($user);
+        }
+    }
 
-<p>private function getUser($id) { // Your logic to get user return ['id' => $id, 'name' => 'John Doe', 'email' => 'john@example.com']; }</p>
+    private function getUser($id)
+    {
+        // Your logic to get user
+        return ['id' => $id, 'name' => 'John Doe', 'email' => 'john@example.com'];
+    }
 
-<p>private function getAllUsers() { // Your logic to get all users return [ ['id' => 1, 'name' => 'John Doe'], ['id' => 2, 'name' => 'Jane Smith'] ]; }</p>
+    private function getAllUsers()
+    {
+        // Your logic to get all users
+        return [
+            ['id' => 1, 'name' => 'John Doe'],
+            ['id' => 2, 'name' => 'Jane Smith']
+        ];
+    }
 
-<p>private function createUser($data) { // Your logic to create user return ['id' => 123, 'name' => $data['name'], 'email' => $data['email']]; } }</p>
+    private function createUser($data)
+    {
+        // Your logic to create user
+        return ['id' => 123, 'name' => $data['name'], 'email' => $data['email']];
+    }
+}
 </code></pre>
 
 <p>---</p>
@@ -685,6 +1049,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

@@ -4,48 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataStore Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="DataStore Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html" class="active">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link active">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>DataStore Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>DataStore</code> class provides a comprehensive interface to Google Cloud Datastore, a NoSQL document database. It handles entity creation, querying, updating, deletion, and includes support for CloudFramework models, caching, and transactions.</p>
+The <code>DataStore</code> class provides a comprehensive interface to Google Cloud Datastore, a NoSQL document database. It handles entity creation, querying, updating, deletion, and includes support for CloudFramework models, caching, and transactions.
 
 <h2>Requirements</h2>
 
@@ -55,21 +127,37 @@
 <li>Configuration in <code>config.json</code>:</li>
 </ul>
   <pre><code class="language-json">  {
-<p>"core.datastore.on": true, "core.gcp.datastore.project_id": "your-project-id", "core.gcp.datastore.transport": "rest" }</p>
+    "core.datastore.on": true,
+    "core.gcp.datastore.project_id": "your-project-id",
+    "core.gcp.datastore.transport": "rest"
+  }
   </code></pre>
 
 <h2>Basic Usage</h2>
 
 <pre><code class="language-php">// Load DataStore class
-<p>$ds = $this->core->loadClass('DataStore', [ 'Users',                    // Entity name 'default',                  // Namespace (optional) $schema                     // CloudFramework model schema (optional) ]);</p>
+$ds = $this->core->loadClass('DataStore', [
+    'Users',                    // Entity name
+    'default',                  // Namespace (optional)
+    $schema                     // CloudFramework model schema (optional)
+]);
 
-<p>// Create entity $user = $ds->createEntity([ 'name' => 'John Doe', 'email' => 'john@example.com', 'age' => 30 ]);</p>
+// Create entity
+$user = $ds->createEntity([
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'age' => 30
+]);
 
-<p>// Fetch entities $users = $ds->fetchAll('*', ['age' => 30]);</p>
+// Fetch entities
+$users = $ds->fetchAll('*', ['age' => 30]);
 
-<p>// Update entity $user['name'] = 'Jane Doe'; $updated = $ds->createEntity($user); // Updates if KeyId/KeyName exists</p>
+// Update entity
+$user['name'] = 'Jane Doe';
+$updated = $ds->createEntity($user); // Updates if KeyId/KeyName exists
 
-<p>// Delete entity $ds->delete(['KeyId' => $user['KeyId']]);</p>
+// Delete entity
+$ds->delete(['KeyId' => $user['KeyId']]);
 </code></pre>
 
 <h2>Constructor</h2>
@@ -95,7 +183,16 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$ds = $this->core->loadClass('DataStore', [
-<p>'entity_name' => 'Users', 'namespace' => 'production', 'schema' => [ 'props' => [ 'name' => ['Name', 'string'], 'email' => ['Email', 'string', 'unique'], 'age' => ['Age', 'integer'] ] ] ]);</p>
+    'entity_name' => 'Users',
+    'namespace' => 'production',
+    'schema' => [
+        'props' => [
+            'name' => ['Name', 'string'],
+            'email' => ['Email', 'string', 'unique'],
+            'age' => ['Age', 'integer']
+        ]
+    ]
+]);
 </code></pre>
 
 <p>---</p>
@@ -119,7 +216,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$ds->updateServiceAccount([
-<p>'private_key' => '-----BEGIN PRIVATE KEY-----...', 'project_id' => 'my-other-project', 'client_email' => 'service@my-project.iam.gserviceaccount.com', 'namespace' => 'production' ]);</p>
+    'private_key' => '-----BEGIN PRIVATE KEY-----...',
+    'project_id' => 'my-other-project',
+    'client_email' => 'service@my-project.iam.gserviceaccount.com',
+    'namespace' => 'production'
+]);
 </code></pre>
 
 <p>---</p>
@@ -143,11 +244,23 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Create new entity
-<p>$user = $ds->createEntity([ 'name' => 'John Doe', 'email' => 'john@example.com', 'age' => 30, 'active' => true ]);</p>
+$user = $ds->createEntity([
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'age' => 30,
+    'active' => true
+]);
 
-<p>// Create with specific KeyName $user = $ds->createEntity([ 'KeyName' => 'user-john-doe', 'name' => 'John Doe', 'email' => 'john@example.com' ]);</p>
+// Create with specific KeyName
+$user = $ds->createEntity([
+    'KeyName' => 'user-john-doe',
+    'name' => 'John Doe',
+    'email' => 'john@example.com'
+]);
 
-<p>// Update existing entity $user['age'] = 31; $updated = $ds->createEntity($user);</p>
+// Update existing entity
+$user['age'] = 31;
+$updated = $ds->createEntity($user);
 </code></pre>
 
 <p>---</p>
@@ -169,9 +282,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$users = $ds->createEntities([
-<p>['name' => 'John Doe', 'email' => 'john@example.com'], ['name' => 'Jane Smith', 'email' => 'jane@example.com'], ['name' => 'Bob Wilson', 'email' => 'bob@example.com'] ]);</p>
+    ['name' => 'John Doe', 'email' => 'john@example.com'],
+    ['name' => 'Jane Smith', 'email' => 'jane@example.com'],
+    ['name' => 'Bob Wilson', 'email' => 'bob@example.com']
+]);
 
-<p>// With transactions $users = $ds->createEntities($data, true);</p>
+// With transactions
+$users = $ds->createEntities($data, true);
 </code></pre>
 
 <p>---</p>
@@ -196,11 +313,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch one user
-<p>$user = $ds->fetchOne('*', ['email' => 'john@example.com']);</p>
+$user = $ds->fetchOne('*', ['email' => 'john@example.com']);
 
-<p>// Fetch specific fields $user = $ds->fetchOne(['name', 'email'], ['age' => 30]);</p>
+// Fetch specific fields
+$user = $ds->fetchOne(['name', 'email'], ['age' => 30]);
 
-<p>// With ordering $user = $ds->fetchOne('*', null, ['created_at' => 'DESC']);</p>
+// With ordering
+$user = $ds->fetchOne('*', null, ['created_at' => 'DESC']);
 </code></pre>
 
 <p>---</p>
@@ -223,15 +342,22 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch all users
-<p>$users = $ds->fetchAll();</p>
+$users = $ds->fetchAll();
 
-<p>// Filter by age $users = $ds->fetchAll('*', ['age' => 30]);</p>
+// Filter by age
+$users = $ds->fetchAll('*', ['age' => 30]);
 
-<p>// Multiple conditions $users = $ds->fetchAll('*', [ 'age' => 30, 'active' => true ]);</p>
+// Multiple conditions
+$users = $ds->fetchAll('*', [
+    'age' => 30,
+    'active' => true
+]);
 
-<p>// With ordering $users = $ds->fetchAll('*', null, ['name' => 'ASC']);</p>
+// With ordering
+$users = $ds->fetchAll('*', null, ['name' => 'ASC']);
 
-<p>// Fetch only keys $userKeys = $ds->fetchAll('__key__', ['age' => 30]);</p>
+// Fetch only keys
+$userKeys = $ds->fetchAll('__key__', ['age' => 30]);
 </code></pre>
 
 <p>---</p>
@@ -255,11 +381,15 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch first 10 users
-<p>$users = $ds->fetchLimit('*', null, ['name' => 'ASC'], 10);</p>
+$users = $ds->fetchLimit('*', null, ['name' => 'ASC'], 10);
 
-<p>// Pagination with cursor $users = $ds->fetchLimit('*', null, ['created_at' => 'DESC'], 20); $nextCursor = $ds->cursor; // Save cursor for next page</p>
+// Pagination with cursor
+$users = $ds->fetchLimit('*', null, ['created_at' => 'DESC'], 20);
+$nextCursor = $ds->cursor; // Save cursor for next page
 
-<p>// Next page $ds->cursor = $nextCursor; $moreUsers = $ds->fetchLimit('*', null, ['created_at' => 'DESC'], 20);</p>
+// Next page
+$ds->cursor = $nextCursor;
+$moreUsers = $ds->fetchLimit('*', null, ['created_at' => 'DESC'], 20);
 </code></pre>
 
 <p>---</p>
@@ -280,9 +410,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch by KeyIds
-<p>$users = $ds->fetchByKeys([123, 456, 789]);</p>
+$users = $ds->fetchByKeys([123, 456, 789]);
 
-<p>// Fetch by KeyNames $users = $ds->fetchByKeys(['user-john', 'user-jane']);</p>
+// Fetch by KeyNames
+$users = $ds->fetchByKeys(['user-john', 'user-jane']);
 </code></pre>
 
 <p>---</p>
@@ -303,9 +434,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch by KeyId
-<p>$user = $ds->fetchOneByKey(123456);</p>
+$user = $ds->fetchOneByKey(123456);
 
-<p>// Fetch by KeyName $user = $ds->fetchOneByKey('user-john-doe');</p>
+// Fetch by KeyName
+$user = $ds->fetchOneByKey('user-john-doe');
 </code></pre>
 
 <p>---</p>
@@ -328,11 +460,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Count all users
-<p>$total = $ds->count();</p>
+$total = $ds->count();
 
-<p>// Count active users $activeCount = $ds->count(['active' => true]);</p>
+// Count active users
+$activeCount = $ds->count(['active' => true]);
 
-<p>// Count by age $count30 = $ds->count(['age' => 30]);</p>
+// Count by age
+$count30 = $ds->count(['age' => 30]);
 </code></pre>
 
 <p>---</p>
@@ -354,9 +488,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Sum of all ages
-<p>$totalAge = $ds->sum('age');</p>
+$totalAge = $ds->sum('age');
 
-<p>// Sum with filter $totalSalary = $ds->sum('salary', ['department' => 'Engineering']);</p>
+// Sum with filter
+$totalSalary = $ds->sum('salary', ['department' => 'Engineering']);
 </code></pre>
 
 <p>---</p>
@@ -378,9 +513,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Average age
-<p>$avgAge = $ds->avg('age');</p>
+$avgAge = $ds->avg('age');
 
-<p>// Average with filter $avgSalary = $ds->avg('salary', ['department' => 'Sales']);</p>
+// Average with filter
+$avgSalary = $ds->avg('salary', ['department' => 'Sales']);
 </code></pre>
 
 <p>---</p>
@@ -403,11 +539,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Delete by KeyId
-<p>$ds->delete(['KeyId' => 123456]);</p>
+$ds->delete(['KeyId' => 123456]);
 
-<p>// Delete by KeyName $ds->delete(['KeyName' => 'user-john-doe']);</p>
+// Delete by KeyName
+$ds->delete(['KeyName' => 'user-john-doe']);
 
-<p>// Delete by field (fetches and deletes matching entities) $ds->delete(['email' => 'john@example.com']);</p>
+// Delete by field (fetches and deletes matching entities)
+$ds->delete(['email' => 'john@example.com']);
 </code></pre>
 
 <p>---</p>
@@ -428,9 +566,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Delete multiple entities
-<p>$ds->deleteByKeys([123, 456, 789]);</p>
+$ds->deleteByKeys([123, 456, 789]);
 
-<p>// Delete by KeyNames $ds->deleteByKeys(['user-john', 'user-jane', 'user-bob']);</p>
+// Delete by KeyNames
+$ds->deleteByKeys(['user-john', 'user-jane', 'user-bob']);
 </code></pre>
 
 <p>---</p>
@@ -453,11 +592,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Enable cache
-<p>$ds->activateCache(true);</p>
+$ds->activateCache(true);
 
-<p>// Enable with encryption $ds->activateCache(true, 'my-secret-key', 'my-secret-iv');</p>
+// Enable with encryption
+$ds->activateCache(true, 'my-secret-key', 'my-secret-iv');
 
-<p>// Disable cache $ds->deactivateCache();</p>
+// Disable cache
+$ds->deactivateCache();
 </code></pre>
 
 <p>---</p>
@@ -493,7 +634,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$template = $ds->getEntityTemplate();
-<p>// Returns: ['name' => '', 'email' => '', 'age' => 0, ...]</p>
+// Returns: ['name' => '', 'email' => '', 'age' => 0, ...]
 </code></pre>
 
 <p>---</p>
@@ -516,14 +657,17 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$validatedData = $ds->getCheckedRecordWithMapData([
-<p>'name' => 'John Doe', 'email' => 'john@example.com', 'age' => 30 ], true);</p>
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'age' => 30
+], true);
 </code></pre>
 
 <p>---</p>
 
 <h2>Where Clause Operators</h2>
 
-<p>The <code>$where</code> parameter in fetch methods supports various operators:</p>
+The <code>$where</code> parameter in fetch methods supports various operators:
 
 <h3>Basic Equality</h3>
 <pre><code class="language-php">$users = $ds->fetchAll('*', ['age' => 30]);
@@ -531,27 +675,35 @@
 
 <h3>Comparison Operators</h3>
 <pre><code class="language-php">// Greater than
-<p>$users = $ds->fetchAll('*', ['age' => ['>' => 30]]);</p>
+$users = $ds->fetchAll('*', ['age' => ['>' => 30]]);
 
-<p>// Greater than or equal $users = $ds->fetchAll('*', ['age' => ['>=' => 18]]);</p>
+// Greater than or equal
+$users = $ds->fetchAll('*', ['age' => ['>=' => 18]]);
 
-<p>// Less than $users = $ds->fetchAll('*', ['age' => ['<' => 65]]);</p>
+// Less than
+$users = $ds->fetchAll('*', ['age' => ['<' => 65]]);
 
-<p>// Less than or equal $users = $ds->fetchAll('*', ['age' => ['<=' => 100]]);</p>
+// Less than or equal
+$users = $ds->fetchAll('*', ['age' => ['<=' => 100]]);
 
-<p>// Not equal $users = $ds->fetchAll('*', ['status' => ['!=' => 'deleted']]);</p>
+// Not equal
+$users = $ds->fetchAll('*', ['status' => ['!=' => 'deleted']]);
 </code></pre>
 
 <h3>Array Operators</h3>
 <pre><code class="language-php">// IN operator
-<p>$users = $ds->fetchAll('*', ['age' => ['in' => [25, 30, 35]]]);</p>
+$users = $ds->fetchAll('*', ['age' => ['in' => [25, 30, 35]]]);
 
-<p>// NOT IN operator $users = $ds->fetchAll('*', ['status' => ['!in' => ['deleted', 'banned']]]);</p>
+// NOT IN operator
+$users = $ds->fetchAll('*', ['status' => ['!in' => ['deleted', 'banned']]]);
 </code></pre>
 
 <h3>Multiple Conditions</h3>
 <pre><code class="language-php">$users = $ds->fetchAll('*', [
-<p>'age' => ['>=' => 18], 'active' => true, 'role' => ['in' => ['admin', 'editor']] ]);</p>
+    'age' => ['>=' => 18],
+    'active' => true,
+    'role' => ['in' => ['admin', 'editor']]
+]);
 </code></pre>
 
 <p>---</p>
@@ -559,29 +711,51 @@
 <h2>Order Clause</h2>
 
 <pre><code class="language-php">// Ascending order
-<p>$users = $ds->fetchAll('*', null, ['name' => 'ASC']);</p>
+$users = $ds->fetchAll('*', null, ['name' => 'ASC']);
 
-<p>// Descending order $users = $ds->fetchAll('*', null, ['created_at' => 'DESC']);</p>
+// Descending order
+$users = $ds->fetchAll('*', null, ['created_at' => 'DESC']);
 
-<p>// Multiple fields $users = $ds->fetchAll('*', null, [ 'department' => 'ASC', 'name' => 'ASC' ]);</p>
+// Multiple fields
+$users = $ds->fetchAll('*', null, [
+    'department' => 'ASC',
+    'name' => 'ASC'
+]);
 </code></pre>
 
 <p>---</p>
 
 <h2>CloudFramework Model Schema</h2>
 
-<p>Define a schema to add validation and type checking:</p>
+Define a schema to add validation and type checking:
 
 <pre><code class="language-php">$schema = [
-<p>'props' => [ // Basic field: [DisplayName, Type] 'name' => ['Name', 'string'], 'email' => ['Email', 'string', 'unique'], 'age' => ['Age', 'integer'], 'active' => ['Active', 'boolean'], 'created_at' => ['Created At', 'datetime'], 'tags' => ['Tags', 'list'],</p>
+    'props' => [
+        // Basic field: [DisplayName, Type]
+        'name' => ['Name', 'string'],
+        'email' => ['Email', 'string', 'unique'],
+        'age' => ['Age', 'integer'],
+        'active' => ['Active', 'boolean'],
+        'created_at' => ['Created At', 'datetime'],
+        'tags' => ['Tags', 'list'],
 
-<p>// Field with validation 'status' => ['Status', 'string', 'values:active,inactive,pending'],</p>
+        // Field with validation
+        'status' => ['Status', 'string', 'values:active,inactive,pending'],
 
-<p>// Required field 'email' => ['Email', 'string', 'required|unique'],</p>
+        // Required field
+        'email' => ['Email', 'string', 'required|unique'],
 
-<p>// Key fields 'user_id' => ['User ID', 'key'], 'username' => ['Username', 'keyname'] ] ];</p>
+        // Key fields
+        'user_id' => ['User ID', 'key'],
+        'username' => ['Username', 'keyname']
+    ]
+];
 
-<p>$ds = $this->core->loadClass('DataStore', [ 'Users', 'default', $schema ]);</p>
+$ds = $this->core->loadClass('DataStore', [
+    'Users',
+    'default',
+    $schema
+]);
 </code></pre>
 
 <h3>Supported Field Types</h3>
@@ -614,9 +788,19 @@
 <h2>Error Handling</h2>
 
 <pre><code class="language-php">// Check for errors
-<p>if($ds->error) { echo "Error: " . implode(', ', $ds->errorMsg); echo "Status: " . $ds->errorCode; }</p>
+if($ds->error) {
+    echo "Error: " . implode(', ', $ds->errorMsg);
+    echo "Status: " . $ds->errorCode;
+}
 
-<p>// Create with error handling $user = $ds->createEntity($data); if(!$user) { // Handle error $this->core->logs->add($ds->errorMsg, 'datastore', 'error'); $this->setError('Failed to create user', $ds->errorCode); return; }</p>
+// Create with error handling
+$user = $ds->createEntity($data);
+if(!$user) {
+    // Handle error
+    $this->core->logs->add($ds->errorMsg, 'datastore', 'error');
+    $this->setError('Failed to create user', $ds->errorCode);
+    return;
+}
 </code></pre>
 
 <p>---</p>
@@ -624,47 +808,115 @@
 <h2>Complete Example</h2>
 
 <pre><code class="language-php"><?php
-<p>class API extends RESTful { function main() { // Define schema $schema = [ 'props' => [ 'name' => ['Name', 'string', 'required'], 'email' => ['Email', 'string', 'required|unique'], 'age' => ['Age', 'integer'], 'active' => ['Active', 'boolean'], 'created_at' => ['Created At', 'datetime'] ] ];</p>
+class API extends RESTful
+{
+    function main()
+    {
+        // Define schema
+        $schema = [
+            'props' => [
+                'name' => ['Name', 'string', 'required'],
+                'email' => ['Email', 'string', 'required|unique'],
+                'age' => ['Age', 'integer'],
+                'active' => ['Active', 'boolean'],
+                'created_at' => ['Created At', 'datetime']
+            ]
+        ];
 
-<p>// Load DataStore $ds = $this->core->loadClass('DataStore', [ 'Users', 'production', $schema ]);</p>
+        // Load DataStore
+        $ds = $this->core->loadClass('DataStore', [
+            'Users',
+            'production',
+            $schema
+        ]);
 
-<p>// Enable caching $ds->activateCache(true);</p>
+        // Enable caching
+        $ds->activateCache(true);
 
-<p>// Route to endpoints $endpoint = $this->params[0] ?? 'list'; if(!$this->useFunction('ENDPOINT_' . $endpoint)) { return $this->setErrorFromCodelib('not-found'); } }</p>
+        // Route to endpoints
+        $endpoint = $this->params[0] ?? 'list';
+        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+            return $this->setErrorFromCodelib('not-found');
+        }
+    }
 
-<p>// GET /users/list public function ENDPOINT_list() { $ds = $this->core->loadClass('DataStore', 'Users');</p>
+    // GET /users/list
+    public function ENDPOINT_list()
+    {
+        $ds = $this->core->loadClass('DataStore', 'Users');
 
-<p>// Pagination $page = (int)($this->formParams['page'] ?? 1); $limit = (int)($this->formParams['limit'] ?? 10);</p>
+        // Pagination
+        $page = (int)($this->formParams['page'] ?? 1);
+        $limit = (int)($this->formParams['limit'] ?? 10);
 
-<p>// Filters $where = []; if(isset($this->formParams['active'])) { $where['active'] = ($this->formParams['active'] === 'true'); }</p>
+        // Filters
+        $where = [];
+        if(isset($this->formParams['active'])) {
+            $where['active'] = ($this->formParams['active'] === 'true');
+        }
 
-<p>// Fetch users $users = $ds->fetchLimit('*', $where, ['name' => 'ASC'], $limit);</p>
+        // Fetch users
+        $users = $ds->fetchLimit('*', $where, ['name' => 'ASC'], $limit);
 
-<p>// Get total $total = $ds->count($where);</p>
+        // Get total
+        $total = $ds->count($where);
 
-<p>$this->addReturnData([ 'users' => $users, 'pagination' => [ 'page' => $page, 'limit' => $limit, 'total' => $total ] ]); }</p>
+        $this->addReturnData([
+            'users' => $users,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total
+            ]
+        ]);
+    }
 
-<p>// POST /users/create public function ENDPOINT_create() { if(!$this->checkMethod('POST')) return;</p>
+    // POST /users/create
+    public function ENDPOINT_create()
+    {
+        if(!$this->checkMethod('POST')) return;
 
-<p>// Validate if(!$this->checkMandatoryFormParams(['name', 'email'])) return;</p>
+        // Validate
+        if(!$this->checkMandatoryFormParams(['name', 'email'])) return;
 
-<p>$ds = $this->core->loadClass('DataStore', 'Users');</p>
+        $ds = $this->core->loadClass('DataStore', 'Users');
 
-<p>// Create user $user = $ds->createEntity([ 'name' => $this->formParams['name'], 'email' => $this->formParams['email'], 'age' => (int)($this->formParams['age'] ?? 0), 'active' => true, 'created_at' => new DateTime() ]);</p>
+        // Create user
+        $user = $ds->createEntity([
+            'name' => $this->formParams['name'],
+            'email' => $this->formParams['email'],
+            'age' => (int)($this->formParams['age'] ?? 0),
+            'active' => true,
+            'created_at' => new DateTime()
+        ]);
 
-<p>if(!$user) { $this->core->logs->add($ds->errorMsg, 'users', 'error'); return $this->setError('Failed to create user', $ds->errorCode); }</p>
+        if(!$user) {
+            $this->core->logs->add($ds->errorMsg, 'users', 'error');
+            return $this->setError('Failed to create user', $ds->errorCode);
+        }
 
-<p>$this->setReturnStatus(201); $this->addReturnData($user); }</p>
+        $this->setReturnStatus(201);
+        $this->addReturnData($user);
+    }
 
-<p>// DELETE /users/delete/{id} public function ENDPOINT_delete() { if(!$this->checkMethod('DELETE')) return;</p>
+    // DELETE /users/delete/{id}
+    public function ENDPOINT_delete()
+    {
+        if(!$this->checkMethod('DELETE')) return;
 
-<p>$userId = $this->checkMandatoryParam(1, 'User ID required'); if(!$userId) return;</p>
+        $userId = $this->checkMandatoryParam(1, 'User ID required');
+        if(!$userId) return;
 
-<p>$ds = $this->core->loadClass('DataStore', 'Users');</p>
+        $ds = $this->core->loadClass('DataStore', 'Users');
 
-<p>// Delete user if(!$ds->delete(['KeyId' => $userId])) { return $this->setError('Failed to delete user', 500); }</p>
+        // Delete user
+        if(!$ds->delete(['KeyId' => $userId])) {
+            return $this->setError('Failed to delete user', 500);
+        }
 
-<p>$this->setReturnStatus(204); } }</p>
+        $this->setReturnStatus(204);
+    }
+}
 </code></pre>
 
 <p>---</p>
@@ -680,6 +932,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

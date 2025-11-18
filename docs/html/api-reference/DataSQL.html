@@ -4,64 +4,233 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataSQL Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="DataSQL Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html" class="active">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link active">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>DataSQL Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>DataSQL</code> class provides a model-based interface for querying SQL databases (MySQL, PostgreSQL, etc.) in CloudFramework. It offers a fluent API for building SELECT queries with WHERE conditions, JOINs, GROUP BY, ORDER BY, and pagination.</p>
+The <code>DataSQL</code> class provides a model-based interface for querying SQL databases (MySQL, PostgreSQL, etc.) in CloudFramework. It offers a fluent API for building SELECT queries with WHERE conditions, JOINs, GROUP BY, ORDER BY, and pagination.
 
 <strong>Note:</strong> This class is primarily for <strong>reading data</strong> (SELECT queries). For write operations, use the CloudSQL class directly or DataStore for NoSQL operations.
 
 <h2>Loading the Class</h2>
 
 <pre><code class="language-php">$model = [
-<p>'model' => [ 'id' => ['int', 'isKey'], 'name' => ['varchar(255)'], 'email' => ['varchar(255)', 'index'], 'status' => ['int', 'index'], 'created_at' => ['datetime'] ] ];</p>
+    'model' => [
+        'id' => ['int', 'isKey'],
+        'name' => ['varchar(255)'],
+        'email' => ['varchar(255)', 'index'],
+        'status' => ['int', 'index'],
+        'created_at' => ['datetime']
+    ]
+];
 
-<p>$sql = $this->core->loadClass('DataSQL', ['users', $model]);</p>
+$sql = $this->core->loadClass('DataSQL', ['users', $model]);
 </code></pre>
 
 <h2>Properties</h2>
 
 <h3>Public Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$version</code> | string | Class version | | <code>$core</code> | Core7 | Reference to Core7 instance | | <code>$error</code> | bool | Error flag | | <code>$errorMsg</code> | string | Error message | | <code>$entity_schema</code> | array | Table schema definition | | <code>$entity_name</code> | string | Table name | | <code>$keys</code> | array | Primary key fields | | <code>$fields</code> | array | All table fields with types | | <code>$mapping</code> | array | Field mapping for aliases | | <code>$limit</code> | int | Query limit | | <code>$page</code> | int | Current page (for pagination) | | <code>$offset</code> | int | Query offset | | <code>$order</code> | string | ORDER BY clause | | <code>$debug</code> | bool | Debug mode (auto-enabled in development) | | <code>$default_time_zone_to_read</code> | string | Timezone for reading dates (default: 'UTC') | | <code>$default_time_zone_to_write</code> | string | Timezone for writing dates (default: 'UTC') |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$version</code></td>
+<td>string</td>
+<td>Class version</td>
+</tr>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 instance</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>bool</td>
+<td>Error flag</td>
+</tr>
+<tr>
+<td><code>$errorMsg</code></td>
+<td>string</td>
+<td>Error message</td>
+</tr>
+<tr>
+<td><code>$entity_schema</code></td>
+<td>array</td>
+<td>Table schema definition</td>
+</tr>
+<tr>
+<td><code>$entity_name</code></td>
+<td>string</td>
+<td>Table name</td>
+</tr>
+<tr>
+<td><code>$keys</code></td>
+<td>array</td>
+<td>Primary key fields</td>
+</tr>
+<tr>
+<td><code>$fields</code></td>
+<td>array</td>
+<td>All table fields with types</td>
+</tr>
+<tr>
+<td><code>$mapping</code></td>
+<td>array</td>
+<td>Field mapping for aliases</td>
+</tr>
+<tr>
+<td><code>$limit</code></td>
+<td>int</td>
+<td>Query limit</td>
+</tr>
+<tr>
+<td><code>$page</code></td>
+<td>int</td>
+<td>Current page (for pagination)</td>
+</tr>
+<tr>
+<td><code>$offset</code></td>
+<td>int</td>
+<td>Query offset</td>
+</tr>
+<tr>
+<td><code>$order</code></td>
+<td>string</td>
+<td>ORDER BY clause</td>
+</tr>
+<tr>
+<td><code>$debug</code></td>
+<td>bool</td>
+<td>Debug mode (auto-enabled in development)</td>
+</tr>
+<tr>
+<td><code>$default_time_zone_to_read</code></td>
+<td>string</td>
+<td>Timezone for reading dates (default: 'UTC')</td>
+</tr>
+<tr>
+<td><code>$default_time_zone_to_write</code></td>
+<td>string</td>
+<td>Timezone for writing dates (default: 'UTC')</td>
+</tr>
+</tbody>
+</table>
 
 <p>---</p>
 
@@ -80,7 +249,13 @@
 
 <strong>Schema Structure:</strong>
 <pre><code class="language-php">[
-<p>'model' => [ 'field_name' => ['type', 'attributes'] ], 'mapping' => [  // Optional 'db_field' => 'api_field' ] ]</p>
+    'model' => [
+        'field_name' => ['type', 'attributes']
+    ],
+    'mapping' => [  // Optional
+        'db_field' => 'api_field'
+    ]
+]
 </code></pre>
 
 <strong>Field Types:</strong>
@@ -102,9 +277,19 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$model = [
-<p>'model' => [ 'user_id' => ['int', 'isKey'], 'username' => ['varchar(100)', 'index'], 'email' => ['varchar(255)', 'index'], 'password_hash' => ['varchar(255)'], 'is_active' => ['tinyint', 'index'], 'metadata' => ['json', 'allownull'], 'created_at' => ['datetime'], 'updated_at' => ['timestamp'] ] ];</p>
+    'model' => [
+        'user_id' => ['int', 'isKey'],
+        'username' => ['varchar(100)', 'index'],
+        'email' => ['varchar(255)', 'index'],
+        'password_hash' => ['varchar(255)'],
+        'is_active' => ['tinyint', 'index'],
+        'metadata' => ['json', 'allownull'],
+        'created_at' => ['datetime'],
+        'updated_at' => ['timestamp']
+    ]
+];
 
-<p>$userSQL = $this->core->loadClass('DataSQL', ['users', $model]);</p>
+$userSQL = $this->core->loadClass('DataSQL', ['users', $model]);
 </code></pre>
 
 <p>---</p>
@@ -128,9 +313,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch user by ID
-<p>$user = $sql->fetchOneByKey(123); // Returns: ['id' => 123, 'name' => 'John', 'email' => 'john@example.com', ...]</p>
+$user = $sql->fetchOneByKey(123);
+// Returns: ['id' => 123, 'name' => 'John', 'email' => 'john@example.com', ...]
 
-<p>// Fetch specific fields only $user = $sql->fetchOneByKey(123, 'id,name,email'); // Returns: ['id' => 123, 'name' => 'John', 'email' => 'john@example.com']</p>
+// Fetch specific fields only
+$user = $sql->fetchOneByKey(123, 'id,name,email');
+// Returns: ['id' => 123, 'name' => 'John', 'email' => 'john@example.com']
 </code></pre>
 
 <p>---</p>
@@ -152,9 +340,15 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch multiple users by IDs
-<p>$users = $sql->fetchByKeys([123, 456, 789]); // Returns: [ //   ['id' => 123, 'name' => 'John', ...], //   ['id' => 456, 'name' => 'Jane', ...], //   ['id' => 789, 'name' => 'Bob', ...] // ]</p>
+$users = $sql->fetchByKeys([123, 456, 789]);
+// Returns: [
+//   ['id' => 123, 'name' => 'John', ...],
+//   ['id' => 456, 'name' => 'Jane', ...],
+//   ['id' => 789, 'name' => 'Bob', ...]
+// ]
 
-<p>// Fetch specific fields $users = $sql->fetchByKeys([123, 456], 'id,name');</p>
+// Fetch specific fields
+$users = $sql->fetchByKeys([123, 456], 'id,name');
 </code></pre>
 
 <p>---</p>
@@ -177,28 +371,42 @@
 
 <strong>WHERE Condition Formats:</strong>
 <pre><code class="language-php">// Simple equals
-<p>['status' => 1]</p>
+['status' => 1]
 
-<p>// Special values ['deleted_at' => '__null__']        // IS NULL ['deleted_at' => '__notnull__']     // IS NOT NULL ['name' => '__empty__']             // = '' ['name' => '__notempty__']          // != ''</p>
+// Special values
+['deleted_at' => '__null__']        // IS NULL
+['deleted_at' => '__notnull__']     // IS NOT NULL
+['name' => '__empty__']             // = ''
+['name' => '__notempty__']          // != ''
 
-<p>// Multiple conditions (AND) ['status' => 1, 'is_active' => 1]</p>
+// Multiple conditions (AND)
+['status' => 1, 'is_active' => 1]
 
-<p>// Array for IN clause ['status' => [1, 2, 3]]  // status IN (1, 2, 3)</p>
+// Array for IN clause
+['status' => [1, 2, 3]]  // status IN (1, 2, 3)
 </code></pre>
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch all active users
-<p>$users = $sql->fetch(['status' => 1]);</p>
+$users = $sql->fetch(['status' => 1]);
 
-<p>// Fetch with multiple conditions $users = $sql->fetch([ 'status' => 1, 'is_verified' => 1 ]);</p>
+// Fetch with multiple conditions
+$users = $sql->fetch([
+    'status' => 1,
+    'is_verified' => 1
+]);
 
-<p>// Fetch specific fields $users = $sql->fetch(['status' => 1], 'id,name,email');</p>
+// Fetch specific fields
+$users = $sql->fetch(['status' => 1], 'id,name,email');
 
-<p>// Fetch with IN condition $users = $sql->fetch(['role' => ['admin', 'editor']]);</p>
+// Fetch with IN condition
+$users = $sql->fetch(['role' => ['admin', 'editor']]);
 
-<p>// Fetch where field is NULL $deletedUsers = $sql->fetch(['deleted_at' => '__notnull__']);</p>
+// Fetch where field is NULL
+$deletedUsers = $sql->fetch(['deleted_at' => '__notnull__']);
 
-<p>// Fetch where field is NOT NULL $activeUsers = $sql->fetch(['deleted_at' => '__null__']);</p>
+// Fetch where field is NOT NULL
+$activeUsers = $sql->fetch(['deleted_at' => '__null__']);
 </code></pre>
 
 <p>---</p>
@@ -221,11 +429,16 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Fetch user by email
-<p>$user = $sql->fetchOne(['email' => 'john@example.com']);</p>
+$user = $sql->fetchOne(['email' => 'john@example.com']);
 
-<p>// Fetch with multiple conditions $user = $sql->fetchOne([ 'email' => 'john@example.com', 'status' => 1 ]);</p>
+// Fetch with multiple conditions
+$user = $sql->fetchOne([
+    'email' => 'john@example.com',
+    'status' => 1
+]);
 
-<p>// Fetch specific fields $user = $sql->fetchOne(['email' => 'john@example.com'], 'id,name');</p>
+// Fetch specific fields
+$user = $sql->fetchOne(['email' => 'john@example.com'], 'id,name');
 </code></pre>
 
 <p>---</p>
@@ -248,13 +461,19 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Count all users
-<p>$totalUsers = $sql->count();</p>
+$totalUsers = $sql->count();
 
-<p>// Count active users $activeUsers = $sql->count('*', ['status' => 1]);</p>
+// Count active users
+$activeUsers = $sql->count('*', ['status' => 1]);
 
-<p>// Count distinct emails $uniqueEmails = $sql->count('DISTINCT email');</p>
+// Count distinct emails
+$uniqueEmails = $sql->count('DISTINCT email');
 
-<p>// Count with complex condition $verifiedUsers = $sql->count('*', [ 'status' => 1, 'is_verified' => 1 ]);</p>
+// Count with complex condition
+$verifiedUsers = $sql->count('*', [
+    'status' => 1,
+    'is_verified' => 1
+]);
 </code></pre>
 
 <p>---</p>
@@ -277,9 +496,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Sum all order totals
-<p>$total = $sql->sum('total');</p>
+$total = $sql->sum('total');
 
-<p>// Sum for specific status $completedTotal = $sql->sum('total', ['status' => 'completed']);</p>
+// Sum for specific status
+$completedTotal = $sql->sum('total', ['status' => 'completed']);
 </code></pre>
 
 <p>---</p>
@@ -302,9 +522,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Average order amount
-<p>$avgAmount = $sql->avg('amount');</p>
+$avgAmount = $sql->avg('amount');
 
-<p>// Average rating for product $avgRating = $sql->avg('rating', ['product_id' => 123]);</p>
+// Average rating for product
+$avgRating = $sql->avg('rating', ['product_id' => 123]);
 </code></pre>
 
 <p>---</p>
@@ -320,7 +541,8 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setLimit(10);
-<p>$users = $sql->fetch(['status' => 1]); // Returns up to 10 records</p>
+$users = $sql->fetch(['status' => 1]);
+// Returns up to 10 records
 </code></pre>
 
 <p>---</p>
@@ -334,7 +556,8 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setLimit(25);  // 25 per page
-<p>$sql->setPage(2);    // Page 2 (records 26-50) $users = $sql->fetch();</p>
+$sql->setPage(2);    // Page 2 (records 26-50)
+$users = $sql->fetch();
 </code></pre>
 
 <p>---</p>
@@ -348,7 +571,8 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setLimit(10);
-<p>$sql->setOffset(20);  // Skip first 20 records $users = $sql->fetch();</p>
+$sql->setOffset(20);  // Skip first 20 records
+$users = $sql->fetch();
 </code></pre>
 
 <p>---</p>
@@ -368,9 +592,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Order by name ascending
-<p>$sql->setOrder('name', 'ASC'); $users = $sql->fetch();</p>
+$sql->setOrder('name', 'ASC');
+$users = $sql->fetch();
 
-<p>// Order by created_at descending $sql->setOrder('created_at', 'DESC'); $users = $sql->fetch();</p>
+// Order by created_at descending
+$sql->setOrder('created_at', 'DESC');
+$users = $sql->fetch();
 </code></pre>
 
 <p>---</p>
@@ -384,7 +611,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Order by status, then by name
-<p>$sql->setOrder('status', 'ASC'); $sql->addOrder('name', 'ASC'); $users = $sql->fetch(); // ORDER BY status ASC, name ASC</p>
+$sql->setOrder('status', 'ASC');
+$sql->addOrder('name', 'ASC');
+$users = $sql->fetch();
+// ORDER BY status ASC, name ASC
 </code></pre>
 
 <p>---</p>
@@ -407,7 +637,8 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setQueryFields('id,name,email');
-<p>$users = $sql->fetch(['status' => 1]); // Returns only id, name, email</p>
+$users = $sql->fetch(['status' => 1]);
+// Returns only id, name, email
 </code></pre>
 
 <p>---</p>
@@ -421,7 +652,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setQueryWhere(['status' => 1, 'role' => 'admin']);
-<p>$users = $sql->fetch();</p>
+$users = $sql->fetch();
 </code></pre>
 
 <p>---</p>
@@ -435,7 +666,9 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setQueryWhere(['status' => 1]);
-<p>$sql->addQueryWhere(['is_verified' => 1]); $users = $sql->fetch(); // WHERE status = 1 AND is_verified = 1</p>
+$sql->addQueryWhere(['is_verified' => 1]);
+$users = $sql->fetch();
+// WHERE status = 1 AND is_verified = 1
 </code></pre>
 
 <p>---</p>
@@ -449,7 +682,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setExtraWhere("DATE(created_at) >= '2024-01-01'");
-<p>$users = $sql->fetch();</p>
+$users = $sql->fetch();
 </code></pre>
 
 <p>---</p>
@@ -463,7 +696,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$sql->setQueryFields('status, COUNT(*) as count');
-<p>$sql->setGroupBy('status'); $stats = $sql->fetch(); // Returns: [ //   ['status' => 1, 'count' => 50], //   ['status' => 0, 'count' => 10] // ]</p>
+$sql->setGroupBy('status');
+$stats = $sql->fetch();
+// Returns: [
+//   ['status' => 1, 'count' => 50],
+//   ['status' => 0, 'count' => 10]
+// ]
 </code></pre>
 
 <p>---</p>
@@ -486,9 +724,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Join users with orders
-<p>$userSQL = $this->core->loadClass('DataSQL', ['users', $userModel]); $orderSQL = $this->core->loadClass('DataSQL', ['orders', $orderModel]);</p>
+$userSQL = $this->core->loadClass('DataSQL', ['users', $userModel]);
+$orderSQL = $this->core->loadClass('DataSQL', ['orders', $orderModel]);
 
-<p>$userSQL->join('LEFT', $orderSQL, 'user_id', 'user_id'); $userSQL->setQueryFields('users.*, orders.total'); $results = $userSQL->fetch();</p>
+$userSQL->join('LEFT', $orderSQL, 'user_id', 'user_id');
+$userSQL->setQueryFields('users.*, orders.total');
+$results = $userSQL->fetch();
 </code></pre>
 
 <p>---</p>
@@ -519,7 +760,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$fields = $sql->getFields();
-<p>// Returns: ['id', 'name', 'email', 'status', 'created_at']</p>
+// Returns: ['id', 'name', 'email', 'status', 'created_at']
 </code></pre>
 
 <p>---</p>
@@ -529,71 +770,134 @@
 <h3>Pagination</h3>
 
 <pre><code class="language-php">class API extends RESTful
-<p>{ public function ENDPOINT_users() { $page = (int)($this->formParams['page'] ?? 1); $perPage = 25;</p>
+{
+    public function ENDPOINT_users()
+    {
+        $page = (int)($this->formParams['page'] ?? 1);
+        $perPage = 25;
 
-<p>$sql = $this->core->loadClass('DataSQL', ['users', $model]); $sql->setLimit($perPage); $sql->setPage($page); $sql->setOrder('created_at', 'DESC');</p>
+        $sql = $this->core->loadClass('DataSQL', ['users', $model]);
+        $sql->setLimit($perPage);
+        $sql->setPage($page);
+        $sql->setOrder('created_at', 'DESC');
 
-<p>$users = $sql->fetch(['status' => 1]); $total = $sql->count('*', ['status' => 1]);</p>
+        $users = $sql->fetch(['status' => 1]);
+        $total = $sql->count('*', ['status' => 1]);
 
-<p>$this->addReturnData([ 'users' => $users, 'pagination' => [ 'page' => $page, 'per_page' => $perPage, 'total' => $total, 'total_pages' => ceil($total / $perPage) ] ]); } }</p>
+        $this->addReturnData([
+            'users' => $users,
+            'pagination' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'total_pages' => ceil($total / $perPage)
+            ]
+        ]);
+    }
+}
 </code></pre>
 
 <h3>Search and Filter</h3>
 
 <pre><code class="language-php">public function ENDPOINT_search()
-<p>{ $search = $this->formParams['search'] ?? ''; $status = $this->formParams['status'] ?? null;</p>
+{
+    $search = $this->formParams['search'] ?? '';
+    $status = $this->formParams['status'] ?? null;
 
-<p>$sql = $this->core->loadClass('DataSQL', ['users', $model]);</p>
+    $sql = $this->core->loadClass('DataSQL', ['users', $model]);
 
-<p>// Build WHERE $where = []; if($status !== null) { $where['status'] = (int)$status; }</p>
+    // Build WHERE
+    $where = [];
+    if($status !== null) {
+        $where['status'] = (int)$status;
+    }
 
-<p>// Add search condition if($search) { $sql->setExtraWhere("(name LIKE '%{$search}%' OR email LIKE '%{$search}%')"); }</p>
+    // Add search condition
+    if($search) {
+        $sql->setExtraWhere("(name LIKE '%{$search}%' OR email LIKE '%{$search}%')");
+    }
 
-<p>$sql->setOrder('name', 'ASC'); $users = $sql->fetch($where);</p>
+    $sql->setOrder('name', 'ASC');
+    $users = $sql->fetch($where);
 
-<p>$this->addReturnData($users); }</p>
+    $this->addReturnData($users);
+}
 </code></pre>
 
 <h3>Aggregations</h3>
 
 <pre><code class="language-php">public function ENDPOINT_stats()
-<p>{ $sql = $this->core->loadClass('DataSQL', ['orders', $model]);</p>
+{
+    $sql = $this->core->loadClass('DataSQL', ['orders', $model]);
 
-<p>// Total orders $totalOrders = $sql->count();</p>
+    // Total orders
+    $totalOrders = $sql->count();
 
-<p>// Total revenue $totalRevenue = $sql->sum('total', ['status' => 'completed']);</p>
+    // Total revenue
+    $totalRevenue = $sql->sum('total', ['status' => 'completed']);
 
-<p>// Average order value $avgOrderValue = $sql->avg('total', ['status' => 'completed']);</p>
+    // Average order value
+    $avgOrderValue = $sql->avg('total', ['status' => 'completed']);
 
-<p>// Orders by status $sql->reset(); $sql->setQueryFields('status, COUNT(*) as count, SUM(total) as total'); $sql->setGroupBy('status'); $byStatus = $sql->fetch();</p>
+    // Orders by status
+    $sql->reset();
+    $sql->setQueryFields('status, COUNT(*) as count, SUM(total) as total');
+    $sql->setGroupBy('status');
+    $byStatus = $sql->fetch();
 
-<p>$this->addReturnData([ 'total_orders' => $totalOrders, 'total_revenue' => $totalRevenue, 'avg_order_value' => $avgOrderValue, 'by_status' => $byStatus ]); }</p>
+    $this->addReturnData([
+        'total_orders' => $totalOrders,
+        'total_revenue' => $totalRevenue,
+        'avg_order_value' => $avgOrderValue,
+        'by_status' => $byStatus
+    ]);
+}
 </code></pre>
 
 <h3>Complex Queries with JOINs</h3>
 
 <pre><code class="language-php">public function ENDPOINT_user_orders()
-<p>{ $userId = $this->params[0] ?? null; if(!$userId) { return $this->setErrorFromCodelib('params-error', 'User ID required'); }</p>
+{
+    $userId = $this->params[0] ?? null;
+    if(!$userId) {
+        return $this->setErrorFromCodelib('params-error', 'User ID required');
+    }
 
-<p>// Create SQL objects $userSQL = $this->core->loadClass('DataSQL', ['users', $userModel]); $orderSQL = $this->core->loadClass('DataSQL', ['orders', $orderModel]);</p>
+    // Create SQL objects
+    $userSQL = $this->core->loadClass('DataSQL', ['users', $userModel]);
+    $orderSQL = $this->core->loadClass('DataSQL', ['orders', $orderModel]);
 
-<p>// Join users with orders $userSQL->join('LEFT', $orderSQL, 'id', 'user_id'); $userSQL->setQueryFields('users.*, orders.id as order_id, orders.total, orders.created_at as order_date'); $userSQL->setQueryWhere(['users.id' => $userId]); $userSQL->setOrder('orders.created_at', 'DESC');</p>
+    // Join users with orders
+    $userSQL->join('LEFT', $orderSQL, 'id', 'user_id');
+    $userSQL->setQueryFields('users.*, orders.id as order_id, orders.total, orders.created_at as order_date');
+    $userSQL->setQueryWhere(['users.id' => $userId]);
+    $userSQL->setOrder('orders.created_at', 'DESC');
 
-<p>$results = $userSQL->fetch();</p>
+    $results = $userSQL->fetch();
 
-<p>$this->addReturnData($results); }</p>
+    $this->addReturnData($results);
+}
 </code></pre>
 
 <h3>Date Range Queries</h3>
 
 <pre><code class="language-php">public function ENDPOINT_recent()
-<p>{ $days = (int)($this->formParams['days'] ?? 7); $date = date('Y-m-d H:i:s', strtotime("-{$days} days"));</p>
+{
+    $days = (int)($this->formParams['days'] ?? 7);
+    $date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
 
-<p>$sql = $this->core->loadClass('DataSQL', ['users', $model]); $sql->setExtraWhere("created_at >= '{$date}'"); $sql->setOrder('created_at', 'DESC');</p>
+    $sql = $this->core->loadClass('DataSQL', ['users', $model]);
+    $sql->setExtraWhere("created_at >= '{$date}'");
+    $sql->setOrder('created_at', 'DESC');
 
-<p>$recentUsers = $sql->fetch();</p>
+    $recentUsers = $sql->fetch();
 
-<p>$this->addReturnData([ 'days' => $days, 'count' => count($recentUsers), 'users' => $recentUsers ]); }</p>
+    $this->addReturnData([
+        'days' => $days,
+        'count' => count($recentUsers),
+        'users' => $recentUsers
+    ]);
+}
 </code></pre>
 
 <p>---</p>
@@ -603,38 +907,49 @@
 <h3>1. Select Only Needed Fields</h3>
 
 <pre><code class="language-php">// Bad: Fetches all fields
-<p>$users = $sql->fetch();</p>
+$users = $sql->fetch();
 
-<p>// Good: Fetch only what you need $users = $sql->fetch([], 'id,name,email');</p>
+// Good: Fetch only what you need
+$users = $sql->fetch([], 'id,name,email');
 </code></pre>
 
 <h3>2. Use Indexes</h3>
 
 <pre><code class="language-php">// Define indexes in schema
-<p>$model = [ 'model' => [ 'id' => ['int', 'isKey'], 'email' => ['varchar(255)', 'index'],  // Indexed 'status' => ['int', 'index'],         // Indexed ] ];</p>
+$model = [
+    'model' => [
+        'id' => ['int', 'isKey'],
+        'email' => ['varchar(255)', 'index'],  // Indexed
+        'status' => ['int', 'index'],         // Indexed
+    ]
+];
 </code></pre>
 
 <h3>3. Use Limits</h3>
 
 <pre><code class="language-php">// Always use limits for lists
-<p>$sql->setLimit(100); $users = $sql->fetch();</p>
+$sql->setLimit(100);
+$users = $sql->fetch();
 </code></pre>
 
 <h3>4. Reset Between Queries</h3>
 
 <pre><code class="language-php">// Reset to avoid carrying over settings
-<p>$sql->reset(); $sql->setLimit(10); $users = $sql->fetch();</p>
+$sql->reset();
+$sql->setLimit(10);
+$users = $sql->fetch();
 </code></pre>
 
 <p>---</p>
 
 <h2>Debug Mode</h2>
 
-<p>Debug mode logs all SQL queries:</p>
+Debug mode logs all SQL queries:
 
 <pre><code class="language-php">$sql->debug = true;
 
-<p>$users = $sql->fetch(['status' => 1]); // Logs: SELECT * FROM users WHERE status = 1</p>
+$users = $sql->fetch(['status' => 1]);
+// Logs: SELECT * FROM users WHERE status = 1
 </code></pre>
 
 <p>Auto-enabled in development environment.</p>
@@ -644,9 +959,12 @@
 <h2>Error Handling</h2>
 
 <pre><code class="language-php">$sql = $this->core->loadClass('DataSQL', ['users', $model]);
-<p>$users = $sql->fetch(['status' => 1]);</p>
+$users = $sql->fetch(['status' => 1]);
 
-<p>if($sql->error) { $this->core->logs->add('SQL Error: ' . $sql->errorMsg); return $this->setErrorFromCodelib('database-error', 'Failed to fetch users'); }</p>
+if($sql->error) {
+    $this->core->logs->add('SQL Error: ' . $sql->errorMsg);
+    return $this->setErrorFromCodelib('database-error', 'Failed to fetch users');
+}
 </code></pre>
 
 <p>---</p>
@@ -662,6 +980,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

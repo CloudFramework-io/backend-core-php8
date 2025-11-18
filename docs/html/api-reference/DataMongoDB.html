@@ -4,48 +4,120 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DataMongoDB Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="DataMongoDB Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html" class="active">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link active">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>DataMongoDB Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>DataMongoDB</code> class provides integration with MongoDB for NoSQL document storage. It offers methods for connecting to MongoDB, performing CRUD operations, and querying collections.</p>
+The <code>DataMongoDB</code> class provides integration with MongoDB for NoSQL document storage. It offers methods for connecting to MongoDB, performing CRUD operations, and querying collections.
 
 <h2>Loading the Class</h2>
 
@@ -54,7 +126,47 @@
 
 <h2>Properties</h2>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$core</code> | Core7 | Reference to Core7 instance | | <code>$error</code> | bool | Error flag | | <code>$errorMsg</code> | array | Error messages | | <code>$connection</code> | MongoDB\Client | MongoDB client connection | | <code>$db</code> | MongoDB\Database | Current database | | <code>$collection</code> | MongoDB\Collection | Current collection |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 instance</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>bool</td>
+<td>Error flag</td>
+</tr>
+<tr>
+<td><code>$errorMsg</code></td>
+<td>array</td>
+<td>Error messages</td>
+</tr>
+<tr>
+<td><code>$connection</code></td>
+<td>MongoDB\Client</td>
+<td>MongoDB client connection</td>
+</tr>
+<tr>
+<td><code>$db</code></td>
+<td>MongoDB\Database</td>
+<td>Current database</td>
+</tr>
+<tr>
+<td><code>$collection</code></td>
+<td>MongoDB\Collection</td>
+<td>Current collection</td>
+</tr>
+</tbody>
+</table>
 
 <p>---</p>
 
@@ -77,9 +189,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$mongo = $this->core->loadClass('DataMongoDB');
-<p>$connected = $mongo->connect('mongodb://localhost:27017', 'myapp');</p>
+$connected = $mongo->connect('mongodb://localhost:27017', 'myapp');
 
-<p>if(!$connected) { // Handle connection error }</p>
+if(!$connected) {
+    // Handle connection error
+}
 </code></pre>
 
 <p>---</p>
@@ -115,7 +229,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$mongo->selectCollection('users');
-<p>$userId = $mongo->insert([ 'name' => 'John Doe', 'email' => 'john@example.com', 'created_at' => new MongoDB\BSON\UTCDateTime() ]);</p>
+$userId = $mongo->insert([
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'created_at' => new MongoDB\BSON\UTCDateTime()
+]);
 </code></pre>
 
 <p>---</p>
@@ -137,11 +255,19 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Find all active users
-<p>$users = $mongo->find(['status' => 'active']);</p>
+$users = $mongo->find(['status' => 'active']);
 
-<p>// Find with options $users = $mongo->find( ['age' => ['$gte' => 18]], ['limit' => 10, 'sort' => ['name' => 1]] );</p>
+// Find with options
+$users = $mongo->find(
+    ['age' => ['$gte' => 18]],
+    ['limit' => 10, 'sort' => ['name' => 1]]
+);
 
-<p>// Find with projection $users = $mongo->find( ['status' => 'active'], ['projection' => ['name' => 1, 'email' => 1]] );</p>
+// Find with projection
+$users = $mongo->find(
+    ['status' => 'active'],
+    ['projection' => ['name' => 1, 'email' => 1]]
+);
 </code></pre>
 
 <p>---</p>
@@ -177,9 +303,17 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Update single document
-<p>$mongo->update( ['email' => 'john@example.com'], ['$set' => ['status' => 'verified']] );</p>
+$mongo->update(
+    ['email' => 'john@example.com'],
+    ['$set' => ['status' => 'verified']]
+);
 
-<p>// Update multiple $mongo->update( ['status' => 'pending'], ['$set' => ['status' => 'active']], ['multi' => true] );</p>
+// Update multiple
+$mongo->update(
+    ['status' => 'pending'],
+    ['$set' => ['status' => 'active']],
+    ['multi' => true]
+);
 </code></pre>
 
 <p>---</p>
@@ -195,9 +329,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Delete single document
-<p>$deleted = $mongo->delete(['email' => 'john@example.com']);</p>
+$deleted = $mongo->delete(['email' => 'john@example.com']);
 
-<p>// Delete multiple $deleted = $mongo->delete(['status' => 'inactive']);</p>
+// Delete multiple
+$deleted = $mongo->delete(['status' => 'inactive']);
 </code></pre>
 
 <p>---</p>
@@ -220,61 +355,124 @@
 <h3>User Management</h3>
 
 <pre><code class="language-php">class API extends RESTful
-<p>{ private $mongo;</p>
+{
+    private $mongo;
 
-<p>function main() { $this->mongo = $this->core->loadClass('DataMongoDB'); $this->mongo->connect('mongodb://localhost:27017', 'myapp'); $this->mongo->selectCollection('users');</p>
+    function main()
+    {
+        $this->mongo = $this->core->loadClass('DataMongoDB');
+        $this->mongo->connect('mongodb://localhost:27017', 'myapp');
+        $this->mongo->selectCollection('users');
 
-<p>if(!$this->useFunction('ENDPOINT_' . ($this->params[0] ?? 'list'))) { return $this->setErrorFromCodelib('params-error', 'Endpoint not found'); } }</p>
+        if(!$this->useFunction('ENDPOINT_' . ($this->params[0] ?? 'list'))) {
+            return $this->setErrorFromCodelib('params-error', 'Endpoint not found');
+        }
+    }
 
-<p>public function ENDPOINT_create() { if(!$this->checkMethod('POST')) return;</p>
+    public function ENDPOINT_create()
+    {
+        if(!$this->checkMethod('POST')) return;
 
-<p>$userId = $this->mongo->insert([ 'name' => $this->formParams['name'], 'email' => $this->formParams['email'], 'status' => 'active', 'created_at' => new MongoDB\BSON\UTCDateTime() ]);</p>
+        $userId = $this->mongo->insert([
+            'name' => $this->formParams['name'],
+            'email' => $this->formParams['email'],
+            'status' => 'active',
+            'created_at' => new MongoDB\BSON\UTCDateTime()
+        ]);
 
-<p>$this->addReturnData(['user_id' => $userId]); }</p>
+        $this->addReturnData(['user_id' => $userId]);
+    }
 
-<p>public function ENDPOINT_list() { $users = $this->mongo->find( ['status' => 'active'], ['limit' => 50, 'sort' => ['created_at' => -1]] );</p>
+    public function ENDPOINT_list()
+    {
+        $users = $this->mongo->find(
+            ['status' => 'active'],
+            ['limit' => 50, 'sort' => ['created_at' => -1]]
+        );
 
-<p>$this->addReturnData($users); }</p>
+        $this->addReturnData($users);
+    }
 
-<p>public function ENDPOINT_get() { $userId = $this->params[1] ?? null;</p>
+    public function ENDPOINT_get()
+    {
+        $userId = $this->params[1] ?? null;
 
-<p>$user = $this->mongo->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);</p>
+        $user = $this->mongo->findOne(['_id' => new MongoDB\BSON\ObjectId($userId)]);
 
-<p>if($user) { $this->addReturnData($user); } else { return $this->setErrorFromCodelib('not-found', 'User not found'); } }</p>
+        if($user) {
+            $this->addReturnData($user);
+        } else {
+            return $this->setErrorFromCodelib('not-found', 'User not found');
+        }
+    }
 
-<p>public function ENDPOINT_update() { if(!$this->checkMethod('PUT')) return;</p>
+    public function ENDPOINT_update()
+    {
+        if(!$this->checkMethod('PUT')) return;
 
-<p>$userId = $this->params[1] ?? null;</p>
+        $userId = $this->params[1] ?? null;
 
-<p>$this->mongo->update( ['_id' => new MongoDB\BSON\ObjectId($userId)], ['$set' => [ 'name' => $this->formParams['name'], 'email' => $this->formParams['email'], 'updated_at' => new MongoDB\BSON\UTCDateTime() ]] );</p>
+        $this->mongo->update(
+            ['_id' => new MongoDB\BSON\ObjectId($userId)],
+            ['$set' => [
+                'name' => $this->formParams['name'],
+                'email' => $this->formParams['email'],
+                'updated_at' => new MongoDB\BSON\UTCDateTime()
+            ]]
+        );
 
-<p>$this->addReturnData(['status' => 'updated']); }</p>
+        $this->addReturnData(['status' => 'updated']);
+    }
 
-<p>public function ENDPOINT_delete() { if(!$this->checkMethod('DELETE')) return;</p>
+    public function ENDPOINT_delete()
+    {
+        if(!$this->checkMethod('DELETE')) return;
 
-<p>$userId = $this->params[1] ?? null;</p>
+        $userId = $this->params[1] ?? null;
 
-<p>$this->mongo->delete(['_id' => new MongoDB\BSON\ObjectId($userId)]);</p>
+        $this->mongo->delete(['_id' => new MongoDB\BSON\ObjectId($userId)]);
 
-<p>$this->addReturnData(['status' => 'deleted']); } }</p>
+        $this->addReturnData(['status' => 'deleted']);
+    }
+}
 </code></pre>
 
 <h3>Search and Filter</h3>
 
 <pre><code class="language-php">// Complex queries
-<p>$users = $mongo->find([ 'age' => ['$gte' => 18, '$lte' => 65], 'status' => 'active', '$or' => [ ['city' => 'New York'], ['city' => 'Los Angeles'] ] ]);</p>
+$users = $mongo->find([
+    'age' => ['$gte' => 18, '$lte' => 65],
+    'status' => 'active',
+    '$or' => [
+        ['city' => 'New York'],
+        ['city' => 'Los Angeles']
+    ]
+]);
 
-<p>// Text search $results = $mongo->find([ '$text' => ['$search' => 'developer'] ]);</p>
+// Text search
+$results = $mongo->find([
+    '$text' => ['$search' => 'developer']
+]);
 
-<p>// Array contains $users = $mongo->find([ 'tags' => ['$in' => ['premium', 'vip']] ]);</p>
+// Array contains
+$users = $mongo->find([
+    'tags' => ['$in' => ['premium', 'vip']]
+]);
 </code></pre>
 
 <h3>Aggregation</h3>
 
 <pre><code class="language-php">$pipeline = [
-<p>['$match' => ['status' => 'active']], ['$group' => [ '_id' => '$city', 'count' => ['$sum' => 1], 'avg_age' => ['$avg' => '$age'] ]], ['$sort' => ['count' => -1]] ];</p>
+    ['$match' => ['status' => 'active']],
+    ['$group' => [
+        '_id' => '$city',
+        'count' => ['$sum' => 1],
+        'avg_age' => ['$avg' => '$age']
+    ]],
+    ['$sort' => ['count' => -1]]
+];
 
-<p>$results = $mongo->aggregate($pipeline);</p>
+$results = $mongo->aggregate($pipeline);
 </code></pre>
 
 <p>---</p>
@@ -325,6 +523,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

@@ -4,81 +4,227 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scripts2020 Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Scripts2020 Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html" class="active">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link active">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>Scripts2020 Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>Scripts2020</code> class is the base class for all CLI scripts in CloudFramework. It provides utilities for terminal output, user prompts, parameter handling, caching, and error management.</p>
+The <code>Scripts2020</code> class is the base class for all CLI scripts in CloudFramework. It provides utilities for terminal output, user prompts, parameter handling, caching, and error management.
 
 <h2>Basic Usage</h2>
 
 <pre><code class="language-php"><?php
-<p>/** * My Script */ class Script extends Scripts2020 { function main() { // Your script logic here $this->sendTerminal("Hello from script!");</p>
+/**
+ * My Script
+ */
+class Script extends Scripts2020
+{
+    function main()
+    {
+        // Your script logic here
+        $this->sendTerminal("Hello from script!");
 
-<p>// Access core framework $config = $this->core->config->get('my_setting');</p>
+        // Access core framework
+        $config = $this->core->config->get('my_setting');
 
-<p>// Use script utilities $answer = $this->prompt("Enter your name: "); $this->sendTerminal("Hello, {$answer}!"); } }</p>
+        // Use script utilities
+        $answer = $this->prompt("Enter your name: ");
+        $this->sendTerminal("Hello, {$answer}!");
+    }
+}
 </code></pre>
 
 <h2>Running Scripts</h2>
 
-<p>Scripts are executed via composer command:</p>
+Scripts are executed via composer command:
 
 <pre><code class="language-shell"># Run script
-<p>composer script myscript</p>
+composer script myscript
 
 <h1>Run script with method</h1>
-<p>composer script myscript/methodname</p>
+composer script myscript/methodname
 
 <h1>Run with parameters</h1>
-<p>composer script myscript/process/param1/param2</p>
+composer script myscript/process/param1/param2
 
 <h1>Run with options</h1>
-<p>composer script myscript --option1 --option2=value</p>
+composer script myscript --option1 --option2=value
 </code></pre>
 
 <h2>Properties</h2>
 
 <h3>Public Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$core</code> | Core7 | Reference to Core7 framework instance | | <code>$params</code> | array | URL path parameters (script/param0/param1/...) | | <code>$formParams</code> | array | Form parameters from GET/POST | | <code>$method</code> | string | HTTP method (GET, POST, etc.) | | <code>$error</code> | bool | Indicates if an error occurred | | <code>$errorCode</code> | string\|int | Error code | | <code>$errorMsg</code> | array | Error messages | | <code>$argv</code> | array | Command-line arguments | | <code>$vars</code> | array | Command-line variables (--var=value) | | <code>$cache</code> | CoreCache | Reference to cache system |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 framework instance</td>
+</tr>
+<tr>
+<td><code>$params</code></td>
+<td>array</td>
+<td>URL path parameters (script/param0/param1/...)</td>
+</tr>
+<tr>
+<td><code>$formParams</code></td>
+<td>array</td>
+<td>Form parameters from GET/POST</td>
+</tr>
+<tr>
+<td><code>$method</code></td>
+<td>string</td>
+<td>HTTP method (GET, POST, etc.)</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>bool</td>
+<td>Indicates if an error occurred</td>
+</tr>
+<tr>
+<td><code>$errorCode</code></td>
+<td>string\</td>
+<td>int</td>
+<td>Error code</td>
+</tr>
+<tr>
+<td><code>$errorMsg</code></td>
+<td>array</td>
+<td>Error messages</td>
+</tr>
+<tr>
+<td><code>$argv</code></td>
+<td>array</td>
+<td>Command-line arguments</td>
+</tr>
+<tr>
+<td><code>$vars</code></td>
+<td>array</td>
+<td>Command-line variables (--var=value)</td>
+</tr>
+<tr>
+<td><code>$cache</code></td>
+<td>CoreCache</td>
+<td>Reference to cache system</td>
+</tr>
+</tbody>
+</table>
 
 <p>---</p>
 
@@ -86,26 +232,52 @@
 
 <h3>main()</h3>
 
-<p>The <code>main()</code> method is the entry point of your script.</p>
+The <code>main()</code> method is the entry point of your script.
 
 <pre><code class="language-php">function main()
-<p>{ // Your script logic }</p>
+{
+    // Your script logic
+}
 </code></pre>
 
 <h3>METHOD_xxx()</h3>
 
-<p>Methods prefixed with <code>METHOD_</code> can be called from the command line:</p>
+Methods prefixed with <code>METHOD_</code> can be called from the command line:
 
 <pre><code class="language-php"><?php
-<p>class Script extends Scripts2020 { function main() { // Get method from parameters $method = $this->params[0] ?? 'default';</p>
+class Script extends Scripts2020
+{
+    function main()
+    {
+        // Get method from parameters
+        $method = $this->params[0] ?? 'default';
 
-<p>// Call METHOD_{name} function if (!$this->useFunction('METHOD_' . $method)) { return $this->setErrorFromCodelib('params-error', ": Method {$method} not found"); } }</p>
+        // Call METHOD_{name} function
+        if (!$this->useFunction('METHOD_' . $method)) {
+            return $this->setErrorFromCodelib('params-error',
+                ": Method {$method} not found");
+        }
+    }
 
-<p>// composer script myscript function METHOD_default() { $this->sendTerminal("Default method"); }</p>
+    // composer script myscript
+    function METHOD_default()
+    {
+        $this->sendTerminal("Default method");
+    }
 
-<p>// composer script myscript/hello function METHOD_hello() { $this->sendTerminal("Hello World!"); }</p>
+    // composer script myscript/hello
+    function METHOD_hello()
+    {
+        $this->sendTerminal("Hello World!");
+    }
 
-<p>// composer script myscript/process function METHOD_process() { $this->sendTerminal("Processing..."); // Your processing logic } }</p>
+    // composer script myscript/process
+    function METHOD_process()
+    {
+        $this->sendTerminal("Processing...");
+        // Your processing logic
+    }
+}
 </code></pre>
 
 <p>---</p>
@@ -126,13 +298,19 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Simple message
-<p>$this->sendTerminal("Processing complete");</p>
+$this->sendTerminal("Processing complete");
 
-<p>// Multiple lines $this->sendTerminal("Line 1", "Line 2", "Line 3");</p>
+// Multiple lines
+$this->sendTerminal("Line 1", "Line 2", "Line 3");
 
-<p>// Arrays and objects $this->sendTerminal("Users:", $usersArray);</p>
+// Arrays and objects
+$this->sendTerminal("Users:", $usersArray);
 
-<p>// Formatted output $this->sendTerminal("=== Report ==="); $this->sendTerminal("Total users: " . count($users)); $this->sendTerminal("Active: {$active}"); $this->sendTerminal("Inactive: {$inactive}");</p>
+// Formatted output
+$this->sendTerminal("=== Report ===");
+$this->sendTerminal("Total users: " . count($users));
+$this->sendTerminal("Active: {$active}");
+$this->sendTerminal("Inactive: {$inactive}");
 </code></pre>
 
 <p>---</p>
@@ -157,13 +335,19 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Simple prompt
-<p>$name = $this->prompt("Enter your name: ");</p>
+$name = $this->prompt("Enter your name: ");
 
-<p>// With default value $email = $this->prompt("Enter email: ", "user@example.com");</p>
+// With default value
+$email = $this->prompt("Enter email: ", "user@example.com");
 
-<p>// With cache (remembers last input) $apiKey = $this->prompt("Enter API key: ", null, 'api_key'); // Next time it runs, the last API key will be the default</p>
+// With cache (remembers last input)
+$apiKey = $this->prompt("Enter API key: ", null, 'api_key');
+// Next time it runs, the last API key will be the default
 
-<p>// Configuration prompts $dbHost = $this->prompt("Database host: ", "localhost", 'db_host'); $dbName = $this->prompt("Database name: ", "mydb", 'db_name'); $dbUser = $this->prompt("Database user: ", "root", 'db_user');</p>
+// Configuration prompts
+$dbHost = $this->prompt("Database host: ", "localhost", 'db_host');
+$dbName = $this->prompt("Database name: ", "mydb", 'db_name');
+$dbUser = $this->prompt("Database user: ", "root", 'db_user');
 </code></pre>
 
 <h3>promptOptions()</h3>
@@ -185,11 +369,21 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Select environment
-<p>$env = $this->promptOptions( "Select environment:", ['development', 'staging', 'production'], 'development', 'environment' );</p>
+$env = $this->promptOptions(
+    "Select environment:",
+    ['development', 'staging', 'production'],
+    'development',
+    'environment'
+);
 
-<p>// Select action $action = $this->promptOptions( "What do you want to do?", ['create', 'update', 'delete', 'list'], 'list' );</p>
+// Select action
+$action = $this->promptOptions(
+    "What do you want to do?",
+    ['create', 'update', 'delete', 'list'],
+    'list'
+);
 
-<p>$this->sendTerminal("You selected: {$action}");</p>
+$this->sendTerminal("You selected: {$action}");
 </code></pre>
 
 <p>---</p>
@@ -205,13 +399,17 @@
 
 <strong>Example:</strong>
 <pre><code class="language-shell"># Run with options
-<p>composer script myscript --verbose --force</p>
+composer script myscript --verbose --force
 </code></pre>
 
 <pre><code class="language-php">// Check options
-<p>if($this->hasOption('verbose')) { $this->sendTerminal("Verbose mode enabled"); }</p>
+if($this->hasOption('verbose')) {
+    $this->sendTerminal("Verbose mode enabled");
+}
 
-<p>if($this->hasOption('force')) { $this->sendTerminal("Force mode enabled"); }</p>
+if($this->hasOption('force')) {
+    $this->sendTerminal("Force mode enabled");
+}
 </code></pre>
 
 <h3>getOptionVar()</h3>
@@ -223,13 +421,15 @@
 
 <strong>Example:</strong>
 <pre><code class="language-shell"># Run with option variables
-<p>composer script myscript --limit=100 --output=csv</p>
+composer script myscript --limit=100 --output=csv
 </code></pre>
 
 <pre><code class="language-php">// Get option values
-<p>$limit = $this->getOptionVar('limit') ?? 10; $output = $this->getOptionVar('output') ?? 'json';</p>
+$limit = $this->getOptionVar('limit') ?? 10;
+$output = $this->getOptionVar('output') ?? 'json';
 
-<p>$this->sendTerminal("Limit: {$limit}"); $this->sendTerminal("Output format: {$output}");</p>
+$this->sendTerminal("Limit: {$limit}");
+$this->sendTerminal("Output format: {$output}");
 </code></pre>
 
 <p>---</p>
@@ -246,7 +446,9 @@
 <strong>Example:</strong>
 <pre><code class="language-php">$lastRun = $this->getCacheVar('last_run_timestamp');
 
-<p>if($lastRun) { $this->sendTerminal("Last run: " . date('Y-m-d H:i:s', $lastRun)); }</p>
+if($lastRun) {
+    $this->sendTerminal("Last run: " . date('Y-m-d H:i:s', $lastRun));
+}
 </code></pre>
 
 <h3>setCacheVar()</h3>
@@ -258,11 +460,13 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Save last run timestamp
-<p>$this->setCacheVar('last_run_timestamp', time());</p>
+$this->setCacheVar('last_run_timestamp', time());
 
-<p>// Save processed count $this->setCacheVar('processed_count', $count);</p>
+// Save processed count
+$this->setCacheVar('processed_count', $count);
 
-<p>// Save configuration $this->setCacheVar('config', $config);</p>
+// Save configuration
+$this->setCacheVar('config', $config);
 </code></pre>
 
 <h3>readCache()</h3>
@@ -281,7 +485,8 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Clean cache
-<p>$this->cleanCache(); $this->sendTerminal("Cache cleared");</p>
+$this->cleanCache();
+$this->sendTerminal("Cache cleared");
 </code></pre>
 
 <p>---</p>
@@ -297,7 +502,9 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">if(!file_exists($file)) {
-<p>$this->setError("File not found: {$file}", 404); return; }</p>
+    $this->setError("File not found: {$file}", 404);
+    return;
+}
 </code></pre>
 
 <h3>addError()</h3>
@@ -309,9 +516,12 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->addError("Failed to connect to database");
-<p>$this->addError("Invalid configuration");</p>
+$this->addError("Invalid configuration");
 
-<p>if($this->error) { $this->sendTerminal("Errors:"); $this->sendTerminal($this->errorMsg); }</p>
+if($this->error) {
+    $this->sendTerminal("Errors:");
+    $this->sendTerminal($this->errorMsg);
+}
 </code></pre>
 
 <p>---</p>
@@ -321,137 +531,327 @@
 <h3>Data Processing Script</h3>
 
 <pre><code class="language-php"><?php
-<p>/** * Data Processing Script */ class Script extends Scripts2020 { function main() { $method = $this->params[0] ?? 'default';</p>
+/**
+ * Data Processing Script
+ */
+class Script extends Scripts2020
+{
+    function main()
+    {
+        $method = $this->params[0] ?? 'default';
 
-<p>if (!$this->useFunction('METHOD_' . $method)) { return $this->setError("Method {$method} not found"); } }</p>
+        if (!$this->useFunction('METHOD_' . $method)) {
+            return $this->setError("Method {$method} not found");
+        }
+    }
 
-<p>// composer script process function METHOD_default() { $this->sendTerminal("=== Data Processor ==="); $this->sendTerminal("Available methods:"); $this->sendTerminal("  - composer script process/import"); $this->sendTerminal("  - composer script process/export"); $this->sendTerminal("  - composer script process/clean"); }</p>
+    // composer script process
+    function METHOD_default()
+    {
+        $this->sendTerminal("=== Data Processor ===");
+        $this->sendTerminal("Available methods:");
+        $this->sendTerminal("  - composer script process/import");
+        $this->sendTerminal("  - composer script process/export");
+        $this->sendTerminal("  - composer script process/clean");
+    }
 
-<p>// composer script process/import --source=file.csv function METHOD_import() { $this->sendTerminal("=== Import Data ===");</p>
+    // composer script process/import --source=file.csv
+    function METHOD_import()
+    {
+        $this->sendTerminal("=== Import Data ===");
 
-<p>// Get options $source = $this->getOptionVar('source'); $verbose = $this->hasOption('verbose');</p>
+        // Get options
+        $source = $this->getOptionVar('source');
+        $verbose = $this->hasOption('verbose');
 
-<p>if(!$source) { $source = $this->prompt("Source file: ", "data.csv", 'import_source'); }</p>
+        if(!$source) {
+            $source = $this->prompt("Source file: ", "data.csv", 'import_source');
+        }
 
-<p>if(!file_exists($source)) { $this->setError("Source file not found: {$source}"); return; }</p>
+        if(!file_exists($source)) {
+            $this->setError("Source file not found: {$source}");
+            return;
+        }
 
-<p>$this->sendTerminal("Importing from: {$source}");</p>
+        $this->sendTerminal("Importing from: {$source}");
 
-<p>// Process file $data = array_map('str_getcsv', file($source)); $headers = array_shift($data); $count = 0;</p>
+        // Process file
+        $data = array_map('str_getcsv', file($source));
+        $headers = array_shift($data);
+        $count = 0;
 
-<p>foreach($data as $row) { $record = array_combine($headers, $row);</p>
+        foreach($data as $row) {
+            $record = array_combine($headers, $row);
 
-<p>// Insert into database $ds = $this->core->loadClass('DataStore', ['ImportedData']); $ds->createEntity($record);</p>
+            // Insert into database
+            $ds = $this->core->loadClass('DataStore', ['ImportedData']);
+            $ds->createEntity($record);
 
-<p>$count++;</p>
+            $count++;
 
-<p>if($verbose) { $this->sendTerminal("Imported: {$record['id']}"); } }</p>
+            if($verbose) {
+                $this->sendTerminal("Imported: {$record['id']}");
+            }
+        }
 
-<p>$this->sendTerminal("Import complete: {$count} records"); $this->setCacheVar('last_import_count', $count); $this->setCacheVar('last_import_time', time()); }</p>
+        $this->sendTerminal("Import complete: {$count} records");
+        $this->setCacheVar('last_import_count', $count);
+        $this->setCacheVar('last_import_time', time());
+    }
 
-<p>// composer script process/export --format=csv --limit=100 function METHOD_export() { $this->sendTerminal("=== Export Data ===");</p>
+    // composer script process/export --format=csv --limit=100
+    function METHOD_export()
+    {
+        $this->sendTerminal("=== Export Data ===");
 
-<p>// Get options $format = $this->getOptionVar('format') ?? 'csv'; $limit = (int)($this->getOptionVar('limit') ?? 1000);</p>
+        // Get options
+        $format = $this->getOptionVar('format') ?? 'csv';
+        $limit = (int)($this->getOptionVar('limit') ?? 1000);
 
-<p>$this->sendTerminal("Format: {$format}"); $this->sendTerminal("Limit: {$limit}");</p>
+        $this->sendTerminal("Format: {$format}");
+        $this->sendTerminal("Limit: {$limit}");
 
-<p>// Fetch data $ds = $this->core->loadClass('DataStore', ['Users']); $ds->setLimit($limit); $users = $ds->fetchAll();</p>
+        // Fetch data
+        $ds = $this->core->loadClass('DataStore', ['Users']);
+        $ds->setLimit($limit);
+        $users = $ds->fetchAll();
 
-<p>if($format === 'csv') { $filename = 'export_' . date('Y-m-d_His') . '.csv'; $fp = fopen($filename, 'w');</p>
+        if($format === 'csv') {
+            $filename = 'export_' . date('Y-m-d_His') . '.csv';
+            $fp = fopen($filename, 'w');
 
-<p>// Headers fputcsv($fp, ['ID', 'Name', 'Email', 'Created']);</p>
+            // Headers
+            fputcsv($fp, ['ID', 'Name', 'Email', 'Created']);
 
-<p>// Data foreach($users as $user) { fputcsv($fp, [ $user['KeyId'], $user['name'], $user['email'], $user['created_at'] ]); }</p>
+            // Data
+            foreach($users as $user) {
+                fputcsv($fp, [
+                    $user['KeyId'],
+                    $user['name'],
+                    $user['email'],
+                    $user['created_at']
+                ]);
+            }
 
-<p>fclose($fp); $this->sendTerminal("Exported to: {$filename}"); } }</p>
+            fclose($fp);
+            $this->sendTerminal("Exported to: {$filename}");
+        }
+    }
 
-<p>// composer script process/clean --confirm function METHOD_clean() { $this->sendTerminal("=== Clean Old Data ===");</p>
+    // composer script process/clean --confirm
+    function METHOD_clean()
+    {
+        $this->sendTerminal("=== Clean Old Data ===");
 
-<p>if(!$this->hasOption('confirm')) { $confirm = $this->prompt("This will delete old data. Continue? (yes/no): ", "no");</p>
+        if(!$this->hasOption('confirm')) {
+            $confirm = $this->prompt("This will delete old data. Continue? (yes/no): ", "no");
 
-<p>if($confirm !== 'yes') { $this->sendTerminal("Cancelled"); return; } }</p>
+            if($confirm !== 'yes') {
+                $this->sendTerminal("Cancelled");
+                return;
+            }
+        }
 
-<p>// Delete old records $ds = $this->core->loadClass('DataStore', ['Logs']); $cutoff = date('Y-m-d', strtotime('-30 days'));</p>
+        // Delete old records
+        $ds = $this->core->loadClass('DataStore', ['Logs']);
+        $cutoff = date('Y-m-d', strtotime('-30 days'));
 
-<p>$deleted = $ds->delete(['created_at' => ['<' => $cutoff]]);</p>
+        $deleted = $ds->delete(['created_at' => ['<' => $cutoff]]);
 
-<p>$this->sendTerminal("Cleaned records older than: {$cutoff}"); $this->sendTerminal("Deleted: {$deleted} records"); } }</p>
+        $this->sendTerminal("Cleaned records older than: {$cutoff}");
+        $this->sendTerminal("Deleted: {$deleted} records");
+    }
+}
 </code></pre>
 
 <h3>Database Migration Script</h3>
 
 <pre><code class="language-php"><?php
-<p>/** * Database Migration Script */ class Script extends Scripts2020 { function main() { $method = $this->params[0] ?? 'status';</p>
+/**
+ * Database Migration Script
+ */
+class Script extends Scripts2020
+{
+    function main()
+    {
+        $method = $this->params[0] ?? 'status';
 
-<p>if (!$this->useFunction('METHOD_' . $method)) { return $this->setError("Method {$method} not found"); } }</p>
+        if (!$this->useFunction('METHOD_' . $method)) {
+            return $this->setError("Method {$method} not found");
+        }
+    }
 
-<p>// composer script migrate/status function METHOD_status() { $this->sendTerminal("=== Migration Status ===");</p>
+    // composer script migrate/status
+    function METHOD_status()
+    {
+        $this->sendTerminal("=== Migration Status ===");
 
-<p>$lastMigration = $this->getCacheVar('last_migration');</p>
+        $lastMigration = $this->getCacheVar('last_migration');
 
-<p>if($lastMigration) { $this->sendTerminal("Last migration: {$lastMigration}"); $this->sendTerminal("Date: " . date('Y-m-d H:i:s', $this->getCacheVar('last_migration_time'))); } else { $this->sendTerminal("No migrations run yet"); } }</p>
+        if($lastMigration) {
+            $this->sendTerminal("Last migration: {$lastMigration}");
+            $this->sendTerminal("Date: " . date('Y-m-d H:i:s',
+                $this->getCacheVar('last_migration_time')));
+        } else {
+            $this->sendTerminal("No migrations run yet");
+        }
+    }
 
-<p>// composer script migrate/up function METHOD_up() { $this->sendTerminal("=== Running Migrations ===");</p>
+    // composer script migrate/up
+    function METHOD_up()
+    {
+        $this->sendTerminal("=== Running Migrations ===");
 
-<p>$migrations = ['001_create_users', '002_create_orders', '003_add_indexes'];</p>
+        $migrations = ['001_create_users', '002_create_orders', '003_add_indexes'];
 
-<p>$lastMigration = $this->getCacheVar('last_migration') ?? '';</p>
+        $lastMigration = $this->getCacheVar('last_migration') ?? '';
 
-<p>foreach($migrations as $migration) { if($migration <= $lastMigration) { $this->sendTerminal("[SKIP] {$migration}"); continue; }</p>
+        foreach($migrations as $migration) {
+            if($migration <= $lastMigration) {
+                $this->sendTerminal("[SKIP] {$migration}");
+                continue;
+            }
 
-<p>$this->sendTerminal("[RUN]  {$migration}");</p>
+            $this->sendTerminal("[RUN]  {$migration}");
 
-<p>// Run migration $method = 'migrate_' . $migration; if(method_exists($this, $method)) { $this->$method(); $this->sendTerminal("[OK]   {$migration}");</p>
+            // Run migration
+            $method = 'migrate_' . $migration;
+            if(method_exists($this, $method)) {
+                $this->$method();
+                $this->sendTerminal("[OK]   {$migration}");
 
-<p>$this->setCacheVar('last_migration', $migration); $this->setCacheVar('last_migration_time', time()); } else { $this->sendTerminal("[ERR]  Method {$method} not found"); } }</p>
+                $this->setCacheVar('last_migration', $migration);
+                $this->setCacheVar('last_migration_time', time());
+            } else {
+                $this->sendTerminal("[ERR]  Method {$method} not found");
+            }
+        }
 
-<p>$this->sendTerminal("Migrations complete"); }</p>
+        $this->sendTerminal("Migrations complete");
+    }
 
-<p>private function migrate_001_create_users() { $sql = $this->core->loadClass('CloudSQL'); $sql->command(" CREATE TABLE IF NOT EXISTS users ( id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), email VARCHAR(255) UNIQUE, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ) "); }</p>
+    private function migrate_001_create_users()
+    {
+        $sql = $this->core->loadClass('CloudSQL');
+        $sql->command("
+            CREATE TABLE IF NOT EXISTS users (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255),
+                email VARCHAR(255) UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+    }
 
-<p>private function migrate_002_create_orders() { $sql = $this->core->loadClass('CloudSQL'); $sql->command(" CREATE TABLE IF NOT EXISTS orders ( id INT AUTO_INCREMENT PRIMARY KEY, user_id INT, total DECIMAL(10, 2), status VARCHAR(50), created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, FOREIGN KEY (user_id) REFERENCES users(id) ) "); }</p>
+    private function migrate_002_create_orders()
+    {
+        $sql = $this->core->loadClass('CloudSQL');
+        $sql->command("
+            CREATE TABLE IF NOT EXISTS orders (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT,
+                total DECIMAL(10, 2),
+                status VARCHAR(50),
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        ");
+    }
 
-<p>private function migrate_003_add_indexes() { $sql = $this->core->loadClass('CloudSQL'); $sql->command("CREATE INDEX idx_users_email ON users(email)"); $sql->command("CREATE INDEX idx_orders_user ON orders(user_id)"); $sql->command("CREATE INDEX idx_orders_status ON orders(status)"); } }</p>
+    private function migrate_003_add_indexes()
+    {
+        $sql = $this->core->loadClass('CloudSQL');
+        $sql->command("CREATE INDEX idx_users_email ON users(email)");
+        $sql->command("CREATE INDEX idx_orders_user ON orders(user_id)");
+        $sql->command("CREATE INDEX idx_orders_status ON orders(status)");
+    }
+}
 </code></pre>
 
 <h3>Scheduled Task Script</h3>
 
 <pre><code class="language-php"><?php
-<p>/** * Scheduled Tasks Script */ class Script extends Scripts2020 { function main() { $this->sendTerminal("=== Scheduled Tasks ==="); $this->sendTerminal("Started: " . date('Y-m-d H:i:s'));</p>
+/**
+ * Scheduled Tasks Script
+ */
+class Script extends Scripts2020
+{
+    function main()
+    {
+        $this->sendTerminal("=== Scheduled Tasks ===");
+        $this->sendTerminal("Started: " . date('Y-m-d H:i:s'));
 
-<p>// Daily cleanup $this->cleanOldLogs();</p>
+        // Daily cleanup
+        $this->cleanOldLogs();
 
-<p>// Send daily report $this->sendDailyReport();</p>
+        // Send daily report
+        $this->sendDailyReport();
 
-<p>// Sync external data $this->syncExternalData();</p>
+        // Sync external data
+        $this->syncExternalData();
 
-<p>$this->sendTerminal("Completed: " . date('Y-m-d H:i:s')); }</p>
+        $this->sendTerminal("Completed: " . date('Y-m-d H:i:s'));
+    }
 
-<p>private function cleanOldLogs() { $this->sendTerminal("Cleaning old logs...");</p>
+    private function cleanOldLogs()
+    {
+        $this->sendTerminal("Cleaning old logs...");
 
-<p>$ds = $this->core->loadClass('DataStore', ['Logs']); $cutoff = date('Y-m-d', strtotime('-7 days'));</p>
+        $ds = $this->core->loadClass('DataStore', ['Logs']);
+        $cutoff = date('Y-m-d', strtotime('-7 days'));
 
-<p>$count = $ds->delete(['created_at' => ['<' => $cutoff]]);</p>
+        $count = $ds->delete(['created_at' => ['<' => $cutoff]]);
 
-<p>$this->sendTerminal("Deleted {$count} old log entries"); }</p>
+        $this->sendTerminal("Deleted {$count} old log entries");
+    }
 
-<p>private function sendDailyReport() { $this->sendTerminal("Generating daily report...");</p>
+    private function sendDailyReport()
+    {
+        $this->sendTerminal("Generating daily report...");
 
-<p>// Get statistics $bq = $this->core->loadClass('DataBQ'); $stats = $bq->query('Daily Stats', " SELECT COUNT(*) as total_orders, SUM(total) as revenue FROM <code>project.dataset.orders</code> WHERE DATE(created_at) = CURRENT_DATE() ");</p>
+        // Get statistics
+        $bq = $this->core->loadClass('DataBQ');
+        $stats = $bq->query('Daily Stats', "
+            SELECT
+                COUNT(*) as total_orders,
+                SUM(total) as revenue
+            FROM <code>project.dataset.orders</code>
+            WHERE DATE(created_at) = CURRENT_DATE()
+        ");
 
-<p>// Send email $email = $this->core->loadClass('Email'); $email->send([ 'to' => 'admin@example.com', 'subject' => 'Daily Report - ' . date('Y-m-d'), 'body' => "Orders: {$stats[0]['total_orders']}\nRevenue: $" . number_format($stats[0]['revenue'], 2) ]);</p>
+        // Send email
+        $email = $this->core->loadClass('Email');
+        $email->send([
+            'to' => 'admin@example.com',
+            'subject' => 'Daily Report - ' . date('Y-m-d'),
+            'body' => "Orders: {$stats[0]['total_orders']}\nRevenue: $" . number_format($stats[0]['revenue'], 2)
+        ]);
 
-<p>$this->sendTerminal("Daily report sent"); }</p>
+        $this->sendTerminal("Daily report sent");
+    }
 
-<p>private function syncExternalData() { $this->sendTerminal("Syncing external data...");</p>
+    private function syncExternalData()
+    {
+        $this->sendTerminal("Syncing external data...");
 
-<p>// Fetch from external API $response = $this->core->request->get('https://api.example.com/data'); $data = json_decode($response, true);</p>
+        // Fetch from external API
+        $response = $this->core->request->get('https://api.example.com/data');
+        $data = json_decode($response, true);
 
-<p>// Update local database $sql = $this->core->loadClass('CloudSQL');</p>
+        // Update local database
+        $sql = $this->core->loadClass('CloudSQL');
 
-<p>foreach($data as $item) { $sql->command(" INSERT INTO external_data (id, data, updated_at) VALUES (?, ?, NOW()) ON DUPLICATE KEY UPDATE data = ?, updated_at = NOW() ", [$item['id'], json_encode($item), json_encode($item)]); }</p>
+        foreach($data as $item) {
+            $sql->command("
+                INSERT INTO external_data (id, data, updated_at)
+                VALUES (?, ?, NOW())
+                ON DUPLICATE KEY UPDATE data = ?, updated_at = NOW()
+            ", [$item['id'], json_encode($item), json_encode($item)]);
+        }
 
-<p>$this->sendTerminal("Synced " . count($data) . " items"); } }</p>
+        $this->sendTerminal("Synced " . count($data) . " items");
+    }
+}
 </code></pre>
 
 <p>---</p>
@@ -461,33 +861,38 @@
 <h3>1. Use Clear Output</h3>
 
 <pre><code class="language-php">$this->sendTerminal("=== Section Title ===");
-<p>$this->sendTerminal("Processing..."); $this->sendTerminal("Complete");</p>
+$this->sendTerminal("Processing...");
+$this->sendTerminal("Complete");
 </code></pre>
 
 <h3>2. Save State in Cache</h3>
 
 <pre><code class="language-php">// Save progress
-<p>$this->setCacheVar('processed_items', $count);</p>
+$this->setCacheVar('processed_items', $count);
 
-<p>// Resume from last state $lastProcessed = $this->getCacheVar('processed_items') ?? 0;</p>
+// Resume from last state
+$lastProcessed = $this->getCacheVar('processed_items') ?? 0;
 </code></pre>
 
 <h3>3. Use Options for Flexibility</h3>
 
 <pre><code class="language-php">$dryRun = $this->hasOption('dry-run');
-<p>$verbose = $this->hasOption('verbose'); $limit = $this->getOptionVar('limit') ?? 100;</p>
+$verbose = $this->hasOption('verbose');
+$limit = $this->getOptionVar('limit') ?? 100;
 </code></pre>
 
 <h3>4. Provide Interactive Prompts</h3>
 
 <pre><code class="language-php">$apiKey = $this->prompt("Enter API key: ", null, 'api_key');
-<p>$env = $this->promptOptions("Environment:", ['dev', 'prod'], 'dev');</p>
+$env = $this->promptOptions("Environment:", ['dev', 'prod'], 'dev');
 </code></pre>
 
 <h3>5. Handle Errors Gracefully</h3>
 
 <pre><code class="language-php">if(!$data) {
-<p>$this->setError("Failed to fetch data"); return; }</p>
+    $this->setError("Failed to fetch data");
+    return;
+}
 </code></pre>
 
 <p>---</p>
@@ -503,6 +908,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>

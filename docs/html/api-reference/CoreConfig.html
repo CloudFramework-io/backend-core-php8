@@ -4,66 +4,189 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CoreConfig Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="CoreConfig Class - CloudFramework Backend Core PHP8 API Reference">
     <link rel="stylesheet" href="../css/styles.css">
 </head>
 <body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
     <div class="container">
+        <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="logo">
-                <h2>CloudFramework</h2>
-                <p>Backend Core PHP8</p>
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
             </div>
-            <nav>
-                <a href="../index.html">Home</a>
-                <h3>Core Classes</h3>
-                <a href="Core7.html">Core7</a>
-                <a href="RESTful.html">RESTful</a>
-                <a href="Scripts2020.html">Scripts2020</a>
-                <h3>Configuration & Security</h3>
-                <a href="CoreConfig.html" class="active">CoreConfig</a>
-                <a href="CoreCache.html">CoreCache</a>
-                <a href="CoreSession.html">CoreSession</a>
-                <a href="CoreSecurity.html">CoreSecurity</a>
-                <h3>Data Storage</h3>
-                <a href="DataStore.html">DataStore</a>
-                <a href="Buckets.html">Buckets</a>
-                <a href="DataBQ.html">DataBQ</a>
-                <a href="CloudSQL.html">CloudSQL</a>
-                <a href="DataSQL.html">DataSQL</a>
-                <a href="DataMongoDB.html">DataMongoDB</a>
-                <h3>Utilities</h3>
-                <a href="Email.html">Email</a>
-                <a href="DataValidation.html">DataValidation</a>
-                <a href="WorkFlows.html">WorkFlows</a>
-                <h3>GCP Integration</h3>
-                <a href="GoogleSecrets.html">GoogleSecrets</a>
-                <a href="PubSub.html">PubSub</a>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link active">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
             </nav>
         </aside>
-        <main class="content">
+
+        <!-- Main Content -->
+        <main class="main-content">
 <h1>CoreConfig Class</h1>
 
 <h2>Overview</h2>
 
-<p>The <code>CoreConfig</code> class manages application configuration in CloudFramework. It provides a powerful configuration system with support for JSON config files, environment-specific settings, conditional configuration, tag conversion, GCP Secrets integration, and caching.</p>
+The <code>CoreConfig</code> class manages application configuration in CloudFramework. It provides a powerful configuration system with support for JSON config files, environment-specific settings, conditional configuration, tag conversion, GCP Secrets integration, and caching.
 
 <h2>Inheritance</h2>
 
-<p>Access CoreConfig through the Core7 instance:</p>
+Access CoreConfig through the Core7 instance:
 
 <pre><code class="language-php">$configValue = $this->core->config->get('my.config.var');
-<p>$this->core->config->set('my.config.var', 'value');</p>
+$this->core->config->set('my.config.var', 'value');
 </code></pre>
 
 <h2>Properties</h2>
 
 <h3>Public Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$data</code> | array | Configuration data loaded from config files | | <code>$menu</code> | array | Menu configuration items | | <code>$cache</code> | array\|null | Cache storage for configuration data | | <code>$cache_secret_key</code> | string | Encryption key for cached data | | <code>$cache_secret_iv</code> | string | Encryption IV for cached data |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$data</code></td>
+<td>array</td>
+<td>Configuration data loaded from config files</td>
+</tr>
+<tr>
+<td><code>$menu</code></td>
+<td>array</td>
+<td>Menu configuration items</td>
+</tr>
+<tr>
+<td><code>$cache</code></td>
+<td>array\</td>
+<td>null</td>
+<td>Cache storage for configuration data</td>
+</tr>
+<tr>
+<td><code>$cache_secret_key</code></td>
+<td>string</td>
+<td>Encryption key for cached data</td>
+</tr>
+<tr>
+<td><code>$cache_secret_iv</code></td>
+<td>string</td>
+<td>Encryption IV for cached data</td>
+</tr>
+</tbody>
+</table>
 
 <h3>Protected Properties</h3>
 
-<p>| Property | Type | Description | |----------|------|-------------| | <code>$lang</code> | string | Current language code (default: 'en') |</p>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$lang</code></td>
+<td>string</td>
+<td>Current language code (default: 'en')</td>
+</tr>
+</tbody>
+</table>
 
 <p>---</p>
 
@@ -85,11 +208,15 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Get specific config value
-<p>$projectId = $this->core->config->get('core.gcp.project_id');</p>
+$projectId = $this->core->config->get('core.gcp.project_id');
 
-<p>// Get all config data $allConfig = $this->core->config->get();</p>
+// Get all config data
+$allConfig = $this->core->config->get();
 
-<p>// Check if a value exists if($this->core->config->get('core.datastore.on')) { // Datastore is enabled }</p>
+// Check if a value exists
+if($this->core->config->get('core.datastore.on')) {
+    // Datastore is enabled
+}
 </code></pre>
 
 <p>---</p>
@@ -109,7 +236,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->core->config->set('my.custom.var', 'my value');
-<p>$this->core->config->set('feature.enabled', true);</p>
+$this->core->config->set('feature.enabled', true);
 </code></pre>
 
 <p>---</p>
@@ -128,7 +255,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$this->core->config->bulkSet([
-<p>'api.rate_limit' => 100, 'api.timeout' => 30, 'features.beta' => true ]);</p>
+    'api.rate_limit' => 100,
+    'api.timeout' => 30,
+    'features.beta' => true
+]);
 </code></pre>
 
 <p>---</p>
@@ -151,12 +281,23 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$loaded = $this->core->config->readConfigJSONFile('/path/to/config.json');
-<p>if(!$loaded) { // Handle error }</p>
+if(!$loaded) {
+    // Handle error
+}
 </code></pre>
 
 <strong>Config File Structure:</strong>
 <pre><code class="language-json">{
-<p>"core.gcp.project_id": "my-project", "core.datastore.on": true, "development: { "core.cache.cache_path": "{{rootPath}}/local_data/cache", "debug.enabled": true }, "production: { "debug.enabled": false } }</p>
+  "core.gcp.project_id": "my-project",
+  "core.datastore.on": true,
+  "development: {
+    "core.cache.cache_path": "{{rootPath}}/local_data/cache",
+    "debug.enabled": true
+  },
+  "production: {
+    "debug.enabled": false
+  }
+}
 </code></pre>
 
 <p>---</p>
@@ -208,9 +349,11 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">if($this->core->config->setLang('es')) {
-<p>// Language changed to Spanish }</p>
+    // Language changed to Spanish
+}
 
-<p>// Only allowed languages can be set (if configured) // core.localization.allowed_langs: "en,es,fr"</p>
+// Only allowed languages can be set (if configured)
+// core.localization.allowed_langs: "en,es,fr"
 </code></pre>
 
 <p>---</p>
@@ -241,9 +384,14 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// In config.json
-<p>{ "cache.path": "{{rootPath}}/local_data/cache", "uploads.path": "{{rootPath}}/uploads/{{lang}}" }</p>
+{
+  "cache.path": "{{rootPath}}/local_data/cache",
+  "uploads.path": "{{rootPath}}/uploads/{{lang}}"
+}
 
-<p>// After conversion $cachePath = $this->core->config->get('cache.path'); // Result: "/var/www/myapp/local_data/cache"</p>
+// After conversion
+$cachePath = $this->core->config->get('cache.path');
+// Result: "/var/www/myapp/local_data/cache"
 </code></pre>
 
 <p>---</p>
@@ -271,9 +419,10 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Get database password from environment or GCP Secrets
-<p>$dbPassword = $this->core->config->getEnvVar('DB_PASSWORD');</p>
+$dbPassword = $this->core->config->getEnvVar('DB_PASSWORD');
 
-<p>// Get from specific GCP secret $apiKey = $this->core->config->getEnvVar('API_KEY', 'my-project', 'api-secrets');</p>
+// Get from specific GCP secret
+$apiKey = $this->core->config->getEnvVar('API_KEY', 'my-project', 'api-secrets');
 </code></pre>
 
 <p>---</p>
@@ -296,17 +445,29 @@
 
 <strong>Required Config:</strong>
 <pre><code class="language-json">{
-<p>"core.gcp.secrets.project_id": "my-project", "core.gcp.secrets.env_vars": "my-env-vars-secret", "core.gcp.secrets.cache_encrypt_key": "base64-encoded-key", "core.gcp.secrets.cache_encrypt_iv": "base64-encoded-iv" }</p>
+  "core.gcp.secrets.project_id": "my-project",
+  "core.gcp.secrets.env_vars": "my-env-vars-secret",
+  "core.gcp.secrets.cache_encrypt_key": "base64-encoded-key",
+  "core.gcp.secrets.cache_encrypt_iv": "base64-encoded-iv"
+}
 </code></pre>
 
 <strong>Secret JSON Structure:</strong>
 <pre><code class="language-json">{
-<p>"env_vars:": { "DB_HOST": "localhost", "DB_PASSWORD": "secret123", "API_KEY": "sk_test_..." } }</p>
+  "env_vars:": {
+    "DB_HOST": "localhost",
+    "DB_PASSWORD": "secret123",
+    "API_KEY": "sk_test_..."
+  }
+}
 </code></pre>
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Load environment variables from GCP Secrets
-<p>$loaded = $this->core->config->readEnvVarsFromGCPSecrets(); if($loaded) { $dbHost = $this->core->config->getEnvVar('DB_HOST'); }</p>
+$loaded = $this->core->config->readEnvVarsFromGCPSecrets();
+if($loaded) {
+    $dbHost = $this->core->config->getEnvVar('DB_HOST');
+}
 </code></pre>
 
 <strong>Development Mode:</strong>
@@ -350,7 +511,7 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">// Clear configuration cache
-<p>$this->core->config->resetCache();</p>
+$this->core->config->resetCache();
 </code></pre>
 
 <p>---</p>
@@ -406,7 +567,19 @@
 
 <strong>Example in config.json:</strong>
 <pre><code class="language-json">{
-<p>"menu:": [ { "path": "/dashboard", "title": "Dashboard", "icon": "dashboard" }, { "path": "/users/{*}", "title": "Users", "icon": "users" } ] }</p>
+  "menu:": [
+    {
+      "path": "/dashboard",
+      "title": "Dashboard",
+      "icon": "dashboard"
+    },
+    {
+      "path": "/users/{*}",
+      "title": "Users",
+      "icon": "users"
+    }
+  ]
+}
 </code></pre>
 
 <p>---</p>
@@ -435,57 +608,110 @@
 
 <strong>Example:</strong>
 <pre><code class="language-php">$loadedFiles = $this->core->config->getConfigLoaded();
-<p>// Returns: ['/config.json', '/local_config.json']</p>
+// Returns: ['/config.json', '/local_config.json']
 </code></pre>
 
 <p>---</p>
 
 <h2>Conditional Tags</h2>
 
-<p>Configuration files support conditional tags to load different settings based on environment:</p>
+Configuration files support conditional tags to load different settings based on environment:
 
 <h3>Environment Conditionals</h3>
 
 <pre><code class="language-json">{
-<p>"development:": { "core.cache.cache_path": "{{rootPath}}/local_data/cache", "debug.enabled": true }, "production:": { "debug.enabled": false, "core.cache.cache_path": "/tmp/cache" }, "local:": { "api.base_url": "http://localhost:8080" } }</p>
+  "development:": {
+    "core.cache.cache_path": "{{rootPath}}/local_data/cache",
+    "debug.enabled": true
+  },
+  "production:": {
+    "debug.enabled": false,
+    "core.cache.cache_path": "/tmp/cache"
+  },
+  "local:": {
+    "api.base_url": "http://localhost:8080"
+  }
+}
 </code></pre>
 
 <h3>Domain/Host Conditionals</h3>
 
 <pre><code class="language-json">{
-<p>"domain: example.com": { "site.name": "Example Site" }, "indomain: staging": { "debug.enabled": true }, "host: api.example.com": { "api.mode": "production" } }</p>
+  "domain: example.com": {
+    "site.name": "Example Site"
+  },
+  "indomain: staging": {
+    "debug.enabled": true
+  },
+  "host: api.example.com": {
+    "api.mode": "production"
+  }
+}
 </code></pre>
 
 <h3>URL Conditionals</h3>
 
 <pre><code class="language-json">{
-<p>"url: /admin": { "theme": "admin" }, "inurl: /api/": { "cors.enabled": true }, "beginurl: /dashboard": { "auth.required": true }, "noturl: /public": { "auth.required": true } }</p>
+  "url: /admin": {
+    "theme": "admin"
+  },
+  "inurl: /api/": {
+    "cors.enabled": true
+  },
+  "beginurl: /dashboard": {
+    "auth.required": true
+  },
+  "noturl: /public": {
+    "auth.required": true
+  }
+}
 </code></pre>
 
 <h3>Variable Conditionals</h3>
 
 <pre><code class="language-json">{
-<p>"confvar: feature.beta=true": { "ui.new_design": true }, "sessionvar: user_type=admin": { "admin.enabled": true }, "servervar: HTTP_HOST=localhost": { "debug.enabled": true } }</p>
+  "confvar: feature.beta=true": {
+    "ui.new_design": true
+  },
+  "sessionvar: user_type=admin": {
+    "admin.enabled": true
+  },
+  "servervar: HTTP_HOST=localhost": {
+    "debug.enabled": true
+  }
+}
 </code></pre>
 
 <h3>Authentication Conditionals</h3>
 
 <pre><code class="language-json">{
-<p>"auth:": { "show.user_menu": true }, "noauth:": { "show.login_form": true } }</p>
+  "auth:": {
+    "show.user_menu": true
+  },
+  "noauth:": {
+    "show.login_form": true
+  }
+}
 </code></pre>
 
 <h3>Terminal Conditional</h3>
 
 <pre><code class="language-json">{
-<p>"interminal:": { "output.format": "text" } }</p>
+  "interminal:": {
+    "output.format": "text"
+  }
+}
 </code></pre>
 
 <h3>Combined Conditionals</h3>
 
-<p>You can combine multiple conditions with <code>|</code>:</p>
+You can combine multiple conditions with <code>|</code>:
 
 <pre><code class="language-json">{
-<p>"development: | domain: localhost": { "debug.enabled": true } }</p>
+  "development: | domain: localhost": {
+    "debug.enabled": true
+  }
+}
 </code></pre>
 
 <p>---</p>
@@ -495,25 +721,38 @@
 <h3>Set Variables</h3>
 
 <pre><code class="language-json">{
-<p>"set: my.custom.var": "value", "set: another.var": 123 }</p>
+  "set: my.custom.var": "value",
+  "set: another.var": 123
+}
 </code></pre>
 
 <h3>Include Files</h3>
 
 <pre><code class="language-json">{
-<p>"include:": "/path/to/another-config.json" }</p>
+  "include:": "/path/to/another-config.json"
+}
 </code></pre>
 
 <h3>Redirects</h3>
 
 <pre><code class="language-json">{
-<p>"redirect:": [ { "/old-path": "/new-path" }, { "/legacy/*": "/new-section" }, { "*": "/default" } ] }</p>
+  "redirect:": [
+    { "/old-path": "/new-path" },
+    { "/legacy/*": "/new-section" },
+    { "*": "/default" }
+  ]
+}
 </code></pre>
 
 <h3>Environment Variables</h3>
 
 <pre><code class="language-json">{
-<p>"env_vars:": { "DB_HOST": "localhost", "DB_NAME": "myapp", "API_KEY": "secret" } }</p>
+  "env_vars:": {
+    "DB_HOST": "localhost",
+    "DB_NAME": "myapp",
+    "API_KEY": "secret"
+  }
+}
 </code></pre>
 
 <p>---</p>
@@ -523,42 +762,63 @@
 <h3>Basic Configuration</h3>
 
 <pre><code class="language-php">// Get configuration value
-<p>$projectId = $this->core->config->get('core.gcp.project_id');</p>
+$projectId = $this->core->config->get('core.gcp.project_id');
 
-<p>// Set configuration value $this->core->config->set('api.version', 'v2');</p>
+// Set configuration value
+$this->core->config->set('api.version', 'v2');
 
-<p>// Check if feature is enabled if($this->core->config->get('feature.enabled')) { // Feature is enabled }</p>
+// Check if feature is enabled
+if($this->core->config->get('feature.enabled')) {
+    // Feature is enabled
+}
 </code></pre>
 
 <h3>Multi-Environment Setup</h3>
 
 <strong>config.json:</strong>
 <pre><code class="language-json">{
-<p>"app.name": "My Application", "core.gcp.project_id": "production-project",</p>
+  "app.name": "My Application",
+  "core.gcp.project_id": "production-project",
 
-<p>"development:": { "core.gcp.project_id": "dev-project", "core.cache.cache_path": "{{rootPath}}/local_data/cache", "debug.enabled": true },</p>
+  "development:": {
+    "core.gcp.project_id": "dev-project",
+    "core.cache.cache_path": "{{rootPath}}/local_data/cache",
+    "debug.enabled": true
+  },
 
-<p>"production:": { "debug.enabled": false, "core.cache.cache_path": "/tmp/cache" } }</p>
+  "production:": {
+    "debug.enabled": false,
+    "core.cache.cache_path": "/tmp/cache"
+  }
+}
 </code></pre>
 
 <h3>Working with Secrets</h3>
 
 <pre><code class="language-php">// Load secrets from GCP
-<p>$this->core->config->readEnvVarsFromGCPSecrets();</p>
+$this->core->config->readEnvVarsFromGCPSecrets();
 
-<p>// Access secret values $dbPassword = $this->core->config->getEnvVar('DB_PASSWORD'); $apiKey = $this->core->config->getEnvVar('API_KEY');</p>
+// Access secret values
+$dbPassword = $this->core->config->getEnvVar('DB_PASSWORD');
+$apiKey = $this->core->config->getEnvVar('API_KEY');
 
-<p>// Use in database connection $host = $this->core->config->getEnvVar('DB_HOST'); $db = new PDO("mysql:host=$host", $user, $dbPassword);</p>
+// Use in database connection
+$host = $this->core->config->getEnvVar('DB_HOST');
+$db = new PDO("mysql:host=$host", $user, $dbPassword);
 </code></pre>
 
 <h3>Language Support</h3>
 
 <pre><code class="language-php">// Get current language
-<p>$lang = $this->core->config->getLang(); // 'en'</p>
+$lang = $this->core->config->getLang(); // 'en'
 
-<p>// Change language if($this->core->config->setLang('es')) { // Now using Spanish }</p>
+// Change language
+if($this->core->config->setLang('es')) {
+    // Now using Spanish
+}
 
-<p>// Use in config with tag // "welcome.message.{{lang}}": "Welcome" (en) or "Bienvenido" (es)</p>
+// Use in config with tag
+// "welcome.message.{{lang}}": "Welcome" (en) or "Bienvenido" (es)
 </code></pre>
 
 <p>---</p>
@@ -568,35 +828,50 @@
 <h3>1. Organize by Namespace</h3>
 
 <pre><code class="language-json">{
-<p>"core.gcp.project_id": "my-project", "core.gcp.datastore.project_id": "my-project", "core.cache.cache_path": "/tmp/cache",</p>
+  "core.gcp.project_id": "my-project",
+  "core.gcp.datastore.project_id": "my-project",
+  "core.cache.cache_path": "/tmp/cache",
 
-<p>"app.name": "My App", "app.version": "1.0.0",</p>
+  "app.name": "My App",
+  "app.version": "1.0.0",
 
-<p>"features.beta": false, "features.maintenance": false }</p>
+  "features.beta": false,
+  "features.maintenance": false
+}
 </code></pre>
 
 <h3>2. Use Environment-Specific Overrides</h3>
 
 <pre><code class="language-json">{
-<p>"api.base_url": "https://api.example.com",</p>
+  "api.base_url": "https://api.example.com",
 
-<p>"local:": { "api.base_url": "http://localhost:8080" },</p>
+  "local:": {
+    "api.base_url": "http://localhost:8080"
+  },
 
-<p>"development:": { "api.base_url": "https://dev-api.example.com" } }</p>
+  "development:": {
+    "api.base_url": "https://dev-api.example.com"
+  }
+}
 </code></pre>
 
 <h3>3. Use Tags for Path Resolution</h3>
 
 <pre><code class="language-json">{
-<p>"core.cache.cache_path": "{{rootPath}}/local_data/cache", "uploads.path": "{{rootPath}}/uploads", "templates.path": "{{appPath}}/templates" }</p>
+  "core.cache.cache_path": "{{rootPath}}/local_data/cache",
+  "uploads.path": "{{rootPath}}/uploads",
+  "templates.path": "{{appPath}}/templates"
+}
 </code></pre>
 
 <h3>4. Keep Secrets Out of Config Files</h3>
 
 <pre><code class="language-json">{
-<p>"core.gcp.secrets.env_vars": "my-app-secrets", "core.gcp.secrets.project_id": "my-project",</p>
+  "core.gcp.secrets.env_vars": "my-app-secrets",
+  "core.gcp.secrets.project_id": "my-project",
 
-<p>"env_vars:": {} }</p>
+  "env_vars:": {}
+}
 </code></pre>
 
 <p>Then access via:</p>
@@ -616,6 +891,7 @@
 
         </main>
     </div>
+
     <script src="../js/main.js"></script>
 </body>
 </html>
