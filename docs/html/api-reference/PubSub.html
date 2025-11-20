@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PubSub Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="PubSub Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link active">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>PubSub Class</h1>
+
+<h2>Overview</h2>
+
+The <code>PubSub</code> class provides integration with Google Cloud Pub/Sub for asynchronous messaging between services. It allows publishing and subscribing to messages, enabling event-driven architectures and microservice communication.
+
+<h2>Loading the Class</h2>
+
+<pre><code class="language-php">$pubsub = $this->core->loadClass('PubSub');
+</code></pre>
+
+<h2>Methods</h2>
+
+<h3>getTopics()</h3>
+
+<pre><code class="language-php">public function getTopics(): array
+</code></pre>
+
+<p>Lists all Pub/Sub topics in the project.</p>
+
+<strong>Returns:</strong> Array of topic names
+
+<strong>Example:</strong>
+<pre><code class="language-php">$pubsub = $this->core->loadClass('PubSub');
+$topics = $pubsub->getTopics();
+// Returns: ['projects/my-project/topics/user-events', ...]
+</code></pre>
+
+<p>---</p>
+
+<h3>getSubscriptions()</h3>
+
+<pre><code class="language-php">public function getSubscriptions(): array
+</code></pre>
+
+<p>Lists all Pub/Sub subscriptions in the project.</p>
+
+<strong>Returns:</strong> Array of subscription names
+
+<p>---</p>
+
+<h3>getSubscription()</h3>
+
+<pre><code class="language-php">public function getSubscription($subscription, $topic = null): array
+</code></pre>
+
+<p>Gets information about a specific subscription.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$subscription</code> (string): Subscription name</li>
+<li><code>$topic</code> (string|null): Optional topic name</li>
+</ul>
+
+<strong>Returns:</strong> Subscription details array
+
+<p>---</p>
+
+<h3>subscribeTo()</h3>
+
+<pre><code class="language-php">public function subscribeTo($subscriptionName, $topicName): bool
+</code></pre>
+
+<p>Creates a subscription to a topic.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$subscriptionName</code> (string): Name for the subscription</li>
+<li><code>$topicName</code> (string): Topic to subscribe to</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success
+
+<strong>Example:</strong>
+<pre><code class="language-php">$pubsub = $this->core->loadClass('PubSub');
+$success = $pubsub->subscribeTo('my-subscription', 'user-events');
+if($success) {
+    // Subscription created
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>unsubscribeTo()</h3>
+
+<pre><code class="language-php">public function unsubscribeTo($subscriptionName, $topicName): bool
+</code></pre>
+
+<p>Deletes a subscription.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$subscriptionName</code> (string): Subscription to delete</li>
+<li><code>$topicName</code> (string): Topic name</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success
+
+<p>---</p>
+
+<h3>pushMessage()</h3>
+
+<pre><code class="language-php">public function pushMessage($message, $attributes = [], $topicName = null): bool
+</code></pre>
+
+<p>Publishes a message to a topic.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$message</code> (string): Message content</li>
+<li><code>$attributes</code> (array): Optional message attributes (metadata)</li>
+<li><code>$topicName</code> (string|null): Topic name</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success
+
+<strong>Example:</strong>
+<pre><code class="language-php">$pubsub = $this->core->loadClass('PubSub');
+
+// Simple message
+$pubsub->pushMessage('User registered', [], 'user-events');
+
+// Message with attributes
+$pubsub->pushMessage(
+    json_encode(['user_id' => 123, 'email' => 'user@example.com']),
+    ['event' => 'registration', 'source' => 'api'],
+    'user-events'
+);
+</code></pre>
+
+<p>---</p>
+
+<h3>pullMessages()</h3>
+
+<pre><code class="language-php">public function pullMessages($subscriptionName, $topicName = null, $acknowledge = false): array
+</code></pre>
+
+<p>Pulls messages from a subscription.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$subscriptionName</code> (string): Subscription to pull from</li>
+<li><code>$topicName</code> (string|null): Optional topic name</li>
+<li><code>$acknowledge</code> (bool): Auto-acknowledge messages (default: false)</li>
+</ul>
+
+<strong>Returns:</strong> Array of messages
+
+<strong>Example:</strong>
+<pre><code class="language-php">$pubsub = $this->core->loadClass('PubSub');
+
+// Pull messages
+$messages = $pubsub->pullMessages('my-subscription');
+
+foreach($messages as $message) {
+    $data = $message['message']['data'];
+    $attributes = $message['message']['attributes'];
+
+    // Process message
+    processEvent($data);
+}
+
+// Acknowledge if not auto-acknowledged
+if(!$acknowledge) {
+    $pubsub->acknowledgeLastMessages();
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>acknowledgeLastMessages()</h3>
+
+<pre><code class="language-php">public function acknowledgeLastMessages($id = null): bool
+</code></pre>
+
+<p>Acknowledges received messages to prevent redelivery.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$id</code> (string|null): Optional specific message ID</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>Publishing Events</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_register()
+    {
+        // Create user
+        $userId = $this->createUser($this->formParams);
+
+        // Publish event
+        $pubsub = $this->core->loadClass('PubSub');
+        $pubsub->pushMessage(
+            json_encode([
+                'user_id' => $userId,
+                'email' => $this->formParams['email'],
+                'timestamp' => time()
+            ]),
+            ['event_type' => 'user_registered'],
+            'user-events'
+        );
+
+        $this->addReturnData(['user_id' => $userId]);
+    }
+}
+</code></pre>
+
+<h3>Processing Messages (Script)</h3>
+
+<pre><code class="language-php">class Script extends Scripts2020
+{
+    function main()
+    {
+        $pubsub = $this->core->loadClass('PubSub');
+
+        while(true) {
+            // Pull messages
+            $messages = $pubsub->pullMessages('user-events-subscription');
+
+            foreach($messages as $msg) {
+                $data = json_decode($msg['message']['data'], true);
+
+                // Process event
+                $this->sendWelcomeEmail($data['user_id'], $data['email']);
+
+                // Acknowledge
+                $pubsub->acknowledgeLastMessages($msg['ackId']);
+            }
+
+            // Wait before next pull
+            sleep(5);
+        }
+    }
+}
+</code></pre>
+
+<h3>Event-Driven Architecture</h3>
+
+<pre><code class="language-php">// Order Service: Publish order created event
+$pubsub->pushMessage(
+    json_encode(['order_id' => $orderId, 'user_id' => $userId, 'total' => $total]),
+    ['event' => 'order_created'],
+    'orders'
+);
+
+// Inventory Service: Subscribe to order events
+$messages = $pubsub->pullMessages('inventory-subscription');
+foreach($messages as $msg) {
+    $order = json_decode($msg['message']['data'], true);
+    $this->updateInventory($order);
+}
+
+// Email Service: Subscribe to order events
+$messages = $pubsub->pullMessages('email-subscription');
+foreach($messages as $msg) {
+    $order = json_decode($msg['message']['data'], true);
+    $this->sendOrderConfirmation($order);
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

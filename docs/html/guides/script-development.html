@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Development - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Create background scripts and CLI tools">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link active">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Script Development Guide</h1>
+
+<p>This guide covers everything you need to know about developing CLI scripts with CloudFramework Backend Core.</p>
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#script-basics">Script Basics</a></li>
+<li><a href="#script-structure">Script Structure</a></li>
+<li><a href="#terminal-output">Terminal Output</a></li>
+<li><a href="#user-input">User Input</a></li>
+<li><a href="#command-line-arguments">Command-Line Arguments</a></li>
+<li><a href="#working-with-data">Working with Data</a></li>
+<li><a href="#caching">Caching</a></li>
+<li><a href="#error-handling">Error Handling</a></li>
+<li><a href="#scheduled-tasks">Scheduled Tasks</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ul>
+
+<h2>Introduction</h2>
+
+<p>Scripts in CloudFramework are CLI programs that extend the <code>Scripts2020</code> base class. They're perfect for:</p>
+
+<ul>
+<li>Background processing</li>
+<li>Data migrations</li>
+<li>Database maintenance</li>
+<li>Scheduled tasks (cron jobs)</li>
+<li>Administrative tools</li>
+<li>Batch operations</li>
+<li>System utilities</li>
+</ul>
+
+<h2>Script Basics</h2>
+
+<h3>Creating Your First Script</h3>
+
+<ol>
+<li>Create a file in the <code>scripts/</code> directory:</li>
+</ol>
+
+<pre><code><?php
+<p>/**</p>
+<ul>
+<li>My First Script</li>
+<li>scripts/hello.php</li>
+</ul>
+<p> */</p>
+<p>class Script extends Scripts2020</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Hello from my script!");</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<ol>
+<li>Run it:</li>
+</ol>
+
+<pre><code>composer script hello</code></pre>
+
+<h3>Script Naming Convention</h3>
+
+<ul>
+<li>Script files go in <code>scripts/</code> directory</li>
+<li>Can be organized in subdirectories: <code>scripts/admin/users.php</code></li>
+<li>Class name must be <code>Script</code></li>
+<li>Extends <code>Scripts2020</code></li>
+</ul>
+
+<h2>Script Structure</h2>
+
+<h3>Basic Structure</h3>
+
+<pre><code><?php
+<p>class Script extends Scripts2020</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Entry point - always called first</p>
+<p>        $this->sendTerminal("Script started");</p>
+
+<p>        // Your logic here</p>
+
+<p>        $this->sendTerminal("Script completed");</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Multi-Method Structure</h3>
+
+<pre><code><?php
+<p>class Script extends Scripts2020</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Get method from parameters</p>
+<p>        $method = $this->params[0] ?? 'default';</p>
+
+<p>        // Route to METHOD_{name}</p>
+<p>        if (!$this->useFunction('METHOD_' . $method)) {</p>
+<p>            return $this->setError("Method {$method} not found");</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    // composer script myscript</p>
+<p>    function METHOD_default()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Available methods:");</p>
+<p>        $this->sendTerminal("  - composer script myscript/process");</p>
+<p>        $this->sendTerminal("  - composer script myscript/cleanup");</p>
+<p>    }</p>
+
+<p>    // composer script myscript/process</p>
+<p>    function METHOD_process()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Processing...");</p>
+<p>        // Your processing logic</p>
+<p>    }</p>
+
+<p>    // composer script myscript/cleanup</p>
+<p>    function METHOD_cleanup()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Cleaning up...");</p>
+<p>        // Your cleanup logic</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>Terminal Output</h2>
+
+<h3>Basic Output</h3>
+
+<pre><code>// Simple message
+<p>$this->sendTerminal("Processing complete");</p>
+
+<p>// Multiple arguments</p>
+<p>$this->sendTerminal("User:", $userName, "Email:", $email);</p>
+
+<p>// Arrays and objects</p>
+<p>$this->sendTerminal($dataArray);</p>
+
+<p>// Formatted output</p>
+<p>$this->sendTerminal("===================");</p>
+<p>$this->sendTerminal("=== My Report ===");</p>
+<p>$this->sendTerminal("===================");</code></pre></p>
+
+<h3>Progress Indicators</h3>
+
+<pre><code>function METHOD_process()
+<p>{</p>
+<p>    $items = range(1, 100);</p>
+<p>    $total = count($items);</p>
+
+<p>    foreach($items as $index => $item) {</p>
+<p>        // Process item</p>
+<p>        sleep(0.1);</p>
+
+<p>        // Show progress</p>
+<p>        $progress = round(($index + 1) / $total * 100);</p>
+<p>        $this->sendTerminal("Progress: {$progress}% ({$index + 1}/{$total})");</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Formatted Tables</h3>
+
+<pre><code>function METHOD_report()
+<p>{</p>
+<p>    $this->sendTerminal(str_repeat("-", 60));</p>
+<p>    $this->sendTerminal(sprintf("%-20s %-20s %-15s", "Name", "Email", "Status"));</p>
+<p>    $this->sendTerminal(str_repeat("-", 60));</p>
+
+<p>    foreach($users as $user) {</p>
+<p>        $this->sendTerminal(sprintf(</p>
+<p>            "%-20s %-20s %-15s",</p>
+<p>            $user['name'],</p>
+<p>            $user['email'],</p>
+<p>            $user['status']</p>
+<p>        ));</p>
+<p>    }</p>
+
+<p>    $this->sendTerminal(str_repeat("-", 60));</p>
+<p>    $this->sendTerminal("Total: " . count($users) . " users");</p>
+<p>}</code></pre></p>
+
+<h3>Color Output (ANSI)</h3>
+
+<pre><code>function METHOD_colorful()
+<p>{</p>
+<p>    // Colors</p>
+<p>    $red = "\033[31m";</p>
+<p>    $green = "\033[32m";</p>
+<p>    $yellow = "\033[33m";</p>
+<p>    $blue = "\033[34m";</p>
+<p>    $reset = "\033[0m";</p>
+
+<p>    $this->sendTerminal("{$green}✓{$reset} Success message");</p>
+<p>    $this->sendTerminal("{$red}✗{$reset} Error message");</p>
+<p>    $this->sendTerminal("{$yellow}⚠{$reset} Warning message");</p>
+<p>    $this->sendTerminal("{$blue}ℹ{$reset} Info message");</p>
+<p>}</code></pre></p>
+
+<h2>User Input</h2>
+
+<h3>Simple Prompts</h3>
+
+<pre><code>// Basic prompt
+<p>$name = $this->prompt("Enter your name: ");</p>
+
+<p>// With default value</p>
+<p>$port = $this->prompt("Port number: ", "3306");</p>
+
+<p>// With cache (remembers last input)</p>
+<p>$apiKey = $this->prompt("API Key: ", null, 'api_key');</code></pre></p>
+
+<h3>Option Selection</h3>
+
+<pre><code>// Select from options
+<p>$environment = $this->promptOptions(</p>
+<p>    "Select environment:",</p>
+<p>    ['development', 'staging', 'production'],</p>
+<p>    'development',</p>
+<p>    'environment'</p>
+<p>);</p>
+
+<p>// Yes/No confirmation</p>
+<p>$confirm = $this->prompt("Are you sure? (yes/no): ", "no");</p>
+<p>if($confirm !== 'yes') {</p>
+<p>    $this->sendTerminal("Operation cancelled");</p>
+<p>    return;</p>
+<p>}</code></pre></p>
+
+<h3>Interactive Configuration</h3>
+
+<pre><code>function METHOD_configure()
+<p>{</p>
+<p>    $this->sendTerminal("=== Database Configuration ===");</p>
+
+<p>    $config = [];</p>
+<p>    $config['host'] = $this->prompt("Database host: ", "localhost", 'db_host');</p>
+<p>    $config['port'] = $this->prompt("Port: ", "3306", 'db_port');</p>
+<p>    $config['database'] = $this->prompt("Database name: ", null, 'db_name');</p>
+<p>    $config['username'] = $this->prompt("Username: ", "root", 'db_user');</p>
+<p>    $config['password'] = $this->prompt("Password: ", null, 'db_password');</p>
+
+<p>    // Save configuration</p>
+<p>    $this->core->config->set('database', $config);</p>
+
+<p>    $this->sendTerminal("Configuration saved");</p>
+<p>}</code></pre></p>
+
+<h2>Command-Line Arguments</h2>
+
+<h3>URL Parameters</h3>
+
+<pre><code><h1>composer script myscript/action/param1/param2</h1></code></pre>
+
+<pre><code>function main()
+<p>{</p>
+<p>    $action = $this->params[0] ?? 'default';  // 'action'</p>
+<p>    $param1 = $this->params[1] ?? null;        // 'param1'</p>
+<p>    $param2 = $this->params[2] ?? null;        // 'param2'</p>
+<p>}</code></pre></p>
+
+<h3>Option Flags</h3>
+
+<pre><code><h1>composer script myscript --verbose --force --dry-run</h1></code></pre>
+
+<pre><code>function METHOD_process()
+<p>{</p>
+<p>    $verbose = $this->hasOption('verbose');</p>
+<p>    $force = $this->hasOption('force');</p>
+<p>    $dryRun = $this->hasOption('dry-run');</p>
+
+<p>    if($verbose) {</p>
+<p>        $this->sendTerminal("Verbose mode enabled");</p>
+<p>    }</p>
+
+<p>    if($dryRun) {</p>
+<p>        $this->sendTerminal("DRY RUN - No changes will be made");</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Option Variables</h3>
+
+<pre><code><h1>composer script myscript --limit=100 --format=csv --output=/tmp/export.csv</h1></code></pre>
+
+<pre><code>function METHOD_export()
+<p>{</p>
+<p>    $limit = (int)($this->getOptionVar('limit') ?? 1000);</p>
+<p>    $format = $this->getOptionVar('format') ?? 'json';</p>
+<p>    $output = $this->getOptionVar('output') ?? 'export.csv';</p>
+
+<p>    $this->sendTerminal("Limit: {$limit}");</p>
+<p>    $this->sendTerminal("Format: {$format}");</p>
+<p>    $this->sendTerminal("Output: {$output}");</p>
+<p>}</code></pre></p>
+
+<h2>Working with Data</h2>
+
+<h3>Loading Data from Datastore</h3>
+
+<pre><code>function METHOD_export_users()
+<p>{</p>
+<p>    $this->sendTerminal("Exporting users...");</p>
+
+<p>    // Load DataStore</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+
+<p>    // Fetch users</p>
+<p>    $users = $ds->fetchAll('*', ['active' => true]);</p>
+
+<p>    $this->sendTerminal("Found " . count($users) . " users");</p>
+
+<p>    // Export to CSV</p>
+<p>    $fp = fopen('users.csv', 'w');</p>
+<p>    fputcsv($fp, ['ID', 'Name', 'Email', 'Created']);</p>
+
+<p>    foreach($users as $user) {</p>
+<p>        fputcsv($fp, [</p>
+<p>            $user['KeyId'],</p>
+<p>            $user['name'],</p>
+<p>            $user['email'],</p>
+<p>            $user['created_at']</p>
+<p>        ]);</p>
+<p>    }</p>
+
+<p>    fclose($fp);</p>
+<p>    $this->sendTerminal("Exported to users.csv");</p>
+<p>}</code></pre></p>
+
+<h3>Batch Processing</h3>
+
+<pre><code>function METHOD_process_orders()
+<p>{</p>
+<p>    $this->sendTerminal("Processing orders...");</p>
+
+<p>    $ds = $this->core->loadClass('DataStore', ['Orders']);</p>
+
+<p>    // Process in batches</p>
+<p>    $batchSize = 100;</p>
+<p>    $offset = 0;</p>
+<p>    $processed = 0;</p>
+
+<p>    do {</p>
+<p>        // Fetch batch</p>
+<p>        $ds->setLimit($batchSize);</p>
+<p>        $ds->setOffset($offset);</p>
+<p>        $orders = $ds->fetchAll('*', ['status' => 'pending']);</p>
+
+<p>        foreach($orders as $order) {</p>
+<p>            // Process order</p>
+<p>            $this->processOrder($order);</p>
+<p>            $processed++;</p>
+
+<p>            if($processed % 10 == 0) {</p>
+<p>                $this->sendTerminal("Processed: {$processed}");</p>
+<p>            }</p>
+<p>        }</p>
+
+<p>        $offset += $batchSize;</p>
+
+<p>    } while(count($orders) == $batchSize);</p>
+
+<p>    $this->sendTerminal("Total processed: {$processed}");</p>
+<p>}</code></pre></p>
+
+<h3>Database Operations</h3>
+
+<pre><code>function METHOD_migrate_data()
+<p>{</p>
+<p>    $sql = $this->core->loadClass('CloudSQL');</p>
+
+<p>    $this->sendTerminal("Starting migration...");</p>
+
+<p>    // Start transaction</p>
+<p>    $sql->command("START TRANSACTION");</p>
+
+<p>    try {</p>
+<p>        // Read from old table</p>
+<p>        $oldData = $sql->command("SELECT * FROM old_table");</p>
+
+<p>        // Insert into new table</p>
+<p>        foreach($oldData as $row) {</p>
+<p>            $sql->command("</p>
+<p>                INSERT INTO new_table (id, name, email)</p>
+<p>                VALUES (?, ?, ?)</p>
+<p>            ", [$row['id'], $row['name'], $row['email']]);</p>
+<p>        }</p>
+
+<p>        // Commit</p>
+<p>        $sql->command("COMMIT");</p>
+<p>        $this->sendTerminal("Migration completed: " . count($oldData) . " records");</p>
+
+<p>    } catch(Exception $e) {</p>
+<p>        $sql->command("ROLLBACK");</p>
+<p>        $this->setError("Migration failed: " . $e->getMessage());</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>Caching</h2>
+
+<h3>Saving Script State</h3>
+
+<pre><code>function METHOD_long_process()
+<p>{</p>
+<p>    // Check if we have a saved state</p>
+<p>    $lastProcessed = $this->getCacheVar('last_processed_id');</p>
+
+<p>    if($lastProcessed) {</p>
+<p>        $this->sendTerminal("Resuming from ID: {$lastProcessed}");</p>
+<p>    } else {</p>
+<p>        $this->sendTerminal("Starting fresh");</p>
+<p>        $lastProcessed = 0;</p>
+<p>    }</p>
+
+<p>    // Process items</p>
+<p>    $ds = $this->core->loadClass('DataStore', ['Items']);</p>
+<p>    $items = $ds->fetchAll('*', ['id' => ['>' => $lastProcessed]]);</p>
+
+<p>    foreach($items as $item) {</p>
+<p>        // Process item</p>
+<p>        $this->processItem($item);</p>
+
+<p>        // Save progress</p>
+<p>        $this->setCacheVar('last_processed_id', $item['KeyId']);</p>
+<p>    }</p>
+
+<p>    $this->sendTerminal("Process completed");</p>
+<p>    $this->setCacheVar('last_run_time', time());</p>
+<p>}</code></pre></p>
+
+<h3>Caching Configuration</h3>
+
+<pre><code>function METHOD_setup()
+<p>{</p>
+<p>    // Get cached values</p>
+<p>    $apiKey = $this->getCacheVar('api_key');</p>
+<p>    $apiUrl = $this->getCacheVar('api_url');</p>
+
+<p>    if(!$apiKey) {</p>
+<p>        $apiKey = $this->prompt("API Key: ", null, 'api_key');</p>
+<p>        $this->setCacheVar('api_key', $apiKey);</p>
+<p>    }</p>
+
+<p>    if(!$apiUrl) {</p>
+<p>        $apiUrl = $this->prompt("API URL: ", "https://api.example.com", 'api_url');</p>
+<p>        $this->setCacheVar('api_url', $apiUrl);</p>
+<p>    }</p>
+
+<p>    $this->sendTerminal("Configuration ready");</p>
+<p>}</code></pre></p>
+
+<h3>Clearing Cache</h3>
+
+<pre><code>function METHOD_reset()
+<p>{</p>
+<p>    $this->cleanCache();</p>
+<p>    $this->sendTerminal("Cache cleared");</p>
+<p>}</code></pre></p>
+
+<h2>Error Handling</h2>
+
+<h3>Basic Error Handling</h3>
+
+<pre><code>function METHOD_risky_operation()
+<p>{</p>
+<p>    if(!file_exists($file)) {</p>
+<p>        $this->setError("File not found: {$file}");</p>
+<p>        return;</p>
+<p>    }</p>
+
+<p>    if(!is_writable($directory)) {</p>
+<p>        $this->setError("Directory not writable: {$directory}");</p>
+<p>        return;</p>
+<p>    }</p>
+
+<p>    // Continue with operation</p>
+<p>}</code></pre></p>
+
+<h3>Try-Catch Error Handling</h3>
+
+<pre><code>function METHOD_safe_process()
+<p>{</p>
+<p>    try {</p>
+<p>        $this->sendTerminal("Processing...");</p>
+
+<p>        // Risky operation</p>
+<p>        $result = $this->riskyOperation();</p>
+
+<p>        $this->sendTerminal("Success: " . $result);</p>
+
+<p>    } catch(Exception $e) {</p>
+<p>        $this->setError("Error: " . $e->getMessage());</p>
+<p>        $this->core->logs->add($e->getMessage(), 'script-error', 'error');</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Multiple Error Collection</h3>
+
+<pre><code>function METHOD_validate()
+<p>{</p>
+<p>    $errors = [];</p>
+
+<p>    if(!$condition1) {</p>
+<p>        $errors[] = "Condition 1 failed";</p>
+<p>    }</p>
+
+<p>    if(!$condition2) {</p>
+<p>        $errors[] = "Condition 2 failed";</p>
+<p>    }</p>
+
+<p>    if($errors) {</p>
+<p>        $this->sendTerminal("Validation errors:");</p>
+<p>        foreach($errors as $error) {</p>
+<p>            $this->sendTerminal("  - {$error}");</p>
+<p>        }</p>
+<p>        return;</p>
+<p>    }</p>
+
+<p>    $this->sendTerminal("Validation passed");</p>
+<p>}</code></pre></p>
+
+<h2>Scheduled Tasks</h2>
+
+<h3>Cron Job Script</h3>
+
+<pre><code><?php
+<p>/**</p>
+<ul>
+<li>Daily Maintenance Script</li>
+<li>Run via cron: 0 2 * * * cd /path/to/project && composer script maintenance</li>
+</ul>
+<p> */</p>
+<p>class Script extends Scripts2020</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("=== Daily Maintenance ===");</p>
+<p>        $this->sendTerminal("Started: " . date('Y-m-d H:i:s'));</p>
+
+<p>        // Clean old logs</p>
+<p>        $this->cleanOldLogs();</p>
+
+<p>        // Backup database</p>
+<p>        $this->backupDatabase();</p>
+
+<p>        // Send report</p>
+<p>        $this->sendDailyReport();</p>
+
+<p>        $this->sendTerminal("Completed: " . date('Y-m-d H:i:s'));</p>
+<p>    }</p>
+
+<p>    private function cleanOldLogs()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Cleaning old logs...");</p>
+
+<p>        $ds = $this->core->loadClass('DataStore', ['Logs']);</p>
+<p>        $cutoff = date('Y-m-d', strtotime('-30 days'));</p>
+
+<p>        $count = $ds->delete(['created_at' => ['<' => $cutoff]]);</p>
+
+<p>        $this->sendTerminal("Deleted {$count} old logs");</p>
+<p>    }</p>
+
+<p>    private function backupDatabase()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Backing up database...");</p>
+
+<p>        $sql = $this->core->loadClass('CloudSQL');</p>
+<p>        $tables = ['users', 'orders', 'products'];</p>
+
+<p>        foreach($tables as $table) {</p>
+<p>            $data = $sql->command("SELECT * FROM {$table}");</p>
+<p>            file_put_contents(</p>
+<p>                "backup_{$table}_" . date('Y-m-d') . ".json",</p>
+<p>                json_encode($data)</p>
+<p>            );</p>
+<p>        }</p>
+
+<p>        $this->sendTerminal("Backup completed");</p>
+<p>    }</p>
+
+<p>    private function sendDailyReport()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("Sending daily report...");</p>
+
+<p>        // Get statistics</p>
+<p>        $sql = $this->core->loadClass('CloudSQL');</p>
+<p>        $stats = $sql->command("</p>
+<p>            SELECT</p>
+<p>                COUNT(*) as total_orders,</p>
+<p>                SUM(total) as revenue</p>
+<p>            FROM orders</p>
+<p>            WHERE DATE(created_at) = CURDATE()</p>
+<p>        ");</p>
+
+<p>        // Send email</p>
+<p>        $email = $this->core->loadClass('Email');</p>
+<p>        $email->send([</p>
+<p>            'to' => 'admin@example.com',</p>
+<p>            'subject' => 'Daily Report - ' . date('Y-m-d'),</p>
+<p>            'body' => "Orders: {$stats[0]['total_orders']}\nRevenue: $" .</p>
+<p>                      number_format($stats[0]['revenue'], 2)</p>
+<p>        ]);</p>
+
+<p>        $this->sendTerminal("Report sent");</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>Rate-Limited Script</h3>
+
+<pre><code>function METHOD_sync()
+<p>{</p>
+<p>    // Check last run time</p>
+<p>    $lastRun = $this->getCacheVar('last_sync_time');</p>
+<p>    $now = time();</p>
+
+<p>    // Minimum 1 hour between runs</p>
+<p>    if($lastRun && ($now - $lastRun) < 3600) {</p>
+<p>        $nextRun = date('H:i:s', $lastRun + 3600);</p>
+<p>        $this->sendTerminal("Too soon. Next run available at: {$nextRun}");</p>
+<p>        return;</p>
+<p>    }</p>
+
+<p>    // Run sync</p>
+<p>    $this->sendTerminal("Starting sync...");</p>
+<p>    // ... sync logic ...</p>
+
+<p>    // Save last run time</p>
+<p>    $this->setCacheVar('last_sync_time', $now);</p>
+<p>}</code></pre></p>
+
+<h2>Best Practices</h2>
+
+<h3>1. Clear Output Messages</h3>
+
+<pre><code>// Good
+<p>$this->sendTerminal("=== Starting Data Import ===");</p>
+<p>$this->sendTerminal("Source: {$file}");</p>
+<p>$this->sendTerminal("Processed: {$count} records");</p>
+<p>$this->sendTerminal("Completed successfully");</p>
+
+<p>// Bad</p>
+<p>$this->sendTerminal("Starting");</p>
+<p>$this->sendTerminal($count);</code></pre></p>
+
+<h3>2. Save Progress for Long Operations</h3>
+
+<pre><code>// Save state periodically
+<p>foreach($items as $index => $item) {</p>
+<p>    $this->processItem($item);</p>
+
+<p>    if($index % 100 == 0) {</p>
+<p>        $this->setCacheVar('last_index', $index);</p>
+<p>        $this->sendTerminal("Progress saved at: {$index}");</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h3>3. Use Options for Flexibility</h3>
+
+<pre><code>// Support different modes
+<p>$dryRun = $this->hasOption('dry-run');</p>
+<p>$verbose = $this->hasOption('verbose');</p>
+<p>$force = $this->hasOption('force');</p>
+
+<p>if($dryRun) {</p>
+<p>    $this->sendTerminal("DRY RUN - No changes will be made");</p>
+<p>}</code></pre></p>
+
+<h3>4. Handle Interruptions Gracefully</h3>
+
+<pre><code>// Register shutdown handler
+<p>register_shutdown_function(function() {</p>
+<p>    $this->sendTerminal("Script interrupted - saving state");</p>
+<p>    $this->setCacheVar('interrupted', true);</p>
+<p>});</p>
+
+<p>// Check if previous run was interrupted</p>
+<p>if($this->getCacheVar('interrupted')) {</p>
+<p>    $this->sendTerminal("Previous run was interrupted - resuming");</p>
+<p>    $this->setCacheVar('interrupted', false);</p>
+<p>}</code></pre></p>
+
+<h3>5. Log Important Operations</h3>
+
+<pre><code>// Log to file
+<p>$this->core->logs->add("Started import from {$file}", 'import');</p>
+<p>$this->core->logs->add("Processed {$count} records", 'import');</p>
+
+<p>// Log errors</p>
+<p>if($error) {</p>
+<p>    $this->core->errors->add($error, 'import', 'error');</p>
+<p>}</code></pre></p>
+
+<h3>6. Provide Help Messages</h3>
+
+<pre><code>function METHOD_default()
+<p>{</p>
+<p>    $this->sendTerminal("=== Data Manager ===");</p>
+<p>    $this->sendTerminal("");</p>
+<p>    $this->sendTerminal("Usage:");</p>
+<p>    $this->sendTerminal("  composer script manager/import --source=file.csv");</p>
+<p>    $this->sendTerminal("  composer script manager/export --format=json");</p>
+<p>    $this->sendTerminal("  composer script manager/clean --confirm");</p>
+<p>    $this->sendTerminal("");</p>
+<p>    $this->sendTerminal("Options:");</p>
+<p>    $this->sendTerminal("  --dry-run     Simulate without making changes");</p>
+<p>    $this->sendTerminal("  --verbose     Show detailed output");</p>
+<p>    $this->sendTerminal("  --force       Skip confirmations");</p>
+<p>}</code></pre></p>
+
+<h3>7. Use Transactions for Database Operations</h3>
+
+<pre><code>$sql = $this->core->loadClass('CloudSQL');
+<p>$sql->command("START TRANSACTION");</p>
+
+<p>try {</p>
+<p>    // Multiple operations</p>
+<p>    $sql->command("UPDATE ...");</p>
+<p>    $sql->command("INSERT ...");</p>
+<p>    $sql->command("DELETE ...");</p>
+
+<p>    $sql->command("COMMIT");</p>
+<p>    $this->sendTerminal("All changes committed");</p>
+
+<p>} catch(Exception $e) {</p>
+<p>    $sql->command("ROLLBACK");</p>
+<p>    $this->setError("Transaction failed: " . $e->getMessage());</p>
+<p>}</code></pre></p>
+
+<h3>8. Time Execution</h3>
+
+<pre><code>function METHOD_benchmark()
+<p>{</p>
+<p>    $start = microtime(true);</p>
+
+<p>    // Your operation</p>
+<p>    $this->heavyOperation();</p>
+
+<p>    $duration = round(microtime(true) - $start, 2);</p>
+<p>    $this->sendTerminal("Completed in {$duration} seconds");</p>
+<p>}</code></pre></p>
+
+<h2>Complete Example</h2>
+
+<p>Here's a comprehensive script example:</p>
+
+<pre><code><?php
+<p>/**</p>
+<ul>
+<li>User Management Script</li>
+</ul>
+<p> */</p>
+<p>class Script extends Scripts2020</p>
+<p>{</p>
+<p>    function main()</p>
+<p>    {</p>
+<p>        $method = $this->params[0] ?? 'help';</p>
+
+<p>        if (!$this->useFunction('METHOD_' . $method)) {</p>
+<p>            return $this->METHOD_help();</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    function METHOD_help()</p>
+<p>    {</p>
+<p>        $this->sendTerminal("=== User Management Script ===");</p>
+<p>        $this->sendTerminal("");</p>
+<p>        $this->sendTerminal("Commands:");</p>
+<p>        $this->sendTerminal("  list                  List all users");</p>
+<p>        $this->sendTerminal("  import --file=x.csv   Import users from CSV");</p>
+<p>        $this->sendTerminal("  export --format=csv   Export users");</p>
+<p>        $this->sendTerminal("  cleanup --days=30     Remove inactive users");</p>
+<p>        $this->sendTerminal("");</p>
+<p>        $this->sendTerminal("Options:");</p>
+<p>        $this->sendTerminal("  --verbose             Show detailed output");</p>
+<p>        $this->sendTerminal("  --dry-run             Simulate without changes");</p>
+<p>    }</p>
+
+<p>    function METHOD_list()</p>
+<p>    {</p>
+<p>        $verbose = $this->hasOption('verbose');</p>
+
+<p>        $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $users = $ds->fetchAll();</p>
+
+<p>        $this->sendTerminal("Total users: " . count($users));</p>
+
+<p>        if($verbose) {</p>
+<p>            foreach($users as $user) {</p>
+<p>                $this->sendTerminal("  {$user['KeyId']}: {$user['name']} ({$user['email']})");</p>
+<p>            }</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    function METHOD_import()</p>
+<p>    {</p>
+<p>        $file = $this->getOptionVar('file');</p>
+<p>        $dryRun = $this->hasOption('dry-run');</p>
+
+<p>        if(!$file) {</p>
+<p>            $file = $this->prompt("CSV file path: ", "users.csv");</p>
+<p>        }</p>
+
+<p>        if(!file_exists($file)) {</p>
+<p>            return $this->setError("File not found: {$file}");</p>
+<p>        }</p>
+
+<p>        $this->sendTerminal("Importing from: {$file}");</p>
+
+<p>        if($dryRun) {</p>
+<p>            $this->sendTerminal("DRY RUN - No changes will be made");</p>
+<p>        }</p>
+
+<p>        $data = array_map('str_getcsv', file($file));</p>
+<p>        $headers = array_shift($data);</p>
+
+<p>        $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $imported = 0;</p>
+
+<p>        foreach($data as $row) {</p>
+<p>            $user = array_combine($headers, $row);</p>
+
+<p>            if(!$dryRun) {</p>
+<p>                $ds->createEntity($user);</p>
+<p>            }</p>
+
+<p>            $imported++;</p>
+
+<p>            if($imported % 100 == 0) {</p>
+<p>                $this->sendTerminal("Imported: {$imported}");</p>
+<p>            }</p>
+<p>        }</p>
+
+<p>        $this->sendTerminal("Total imported: {$imported}");</p>
+<p>    }</p>
+
+<p>    function METHOD_export()</p>
+<p>    {</p>
+<p>        $format = $this->getOptionVar('format') ?? 'csv';</p>
+
+<p>        $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $users = $ds->fetchAll();</p>
+
+<p>        $filename = "users_export_" . date('Y-m-d_His') . ".{$format}";</p>
+
+<p>        if($format === 'csv') {</p>
+<p>            $fp = fopen($filename, 'w');</p>
+<p>            fputcsv($fp, ['ID', 'Name', 'Email', 'Created']);</p>
+
+<p>            foreach($users as $user) {</p>
+<p>                fputcsv($fp, [</p>
+<p>                    $user['KeyId'],</p>
+<p>                    $user['name'],</p>
+<p>                    $user['email'],</p>
+<p>                    $user['created_at']</p>
+<p>                ]);</p>
+<p>            }</p>
+
+<p>            fclose($fp);</p>
+<p>        } else {</p>
+<p>            file_put_contents($filename, json_encode($users, JSON_PRETTY_PRINT));</p>
+<p>        }</p>
+
+<p>        $this->sendTerminal("Exported to: {$filename}");</p>
+<p>    }</p>
+
+<p>    function METHOD_cleanup()</p>
+<p>    {</p>
+<p>        $days = (int)($this->getOptionVar('days') ?? 90);</p>
+<p>        $dryRun = $this->hasOption('dry-run');</p>
+
+<p>        $this->sendTerminal("Cleaning up inactive users (>{$days} days)");</p>
+
+<p>        $ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $cutoff = date('Y-m-d', strtotime("-{$days} days"));</p>
+
+<p>        $inactive = $ds->fetchAll('*', [</p>
+<p>            'last_login' => ['<' => $cutoff],</p>
+<p>            'active' => false</p>
+<p>        ]);</p>
+
+<p>        $this->sendTerminal("Found " . count($inactive) . " inactive users");</p>
+
+<p>        if(!$dryRun) {</p>
+<p>            $confirm = $this->prompt("Delete these users? (yes/no): ", "no");</p>
+
+<p>            if($confirm === 'yes') {</p>
+<p>                foreach($inactive as $user) {</p>
+<p>                    $ds->delete(['KeyId' => $user['KeyId']]);</p>
+<p>                }</p>
+<p>                $this->sendTerminal("Deleted " . count($inactive) . " users");</p>
+<p>            } else {</p>
+<p>                $this->sendTerminal("Cancelled");</p>
+<p>            }</p>
+<p>        } else {</p>
+<p>            $this->sendTerminal("DRY RUN - No users deleted");</p>
+<p>        }</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="getting-started.html">Getting Started Guide</a></li>
+<li><a href="../api-reference/Scripts2020.html">Scripts2020 Class Reference</a></li>
+<li><a href="../api-reference/Core7.html">Core7 Class Reference</a></li>
+<li><a href="api-development.html">API Development Guide</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

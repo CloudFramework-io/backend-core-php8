@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreSecurity Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="CoreSecurity Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link active">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>CoreSecurity Class</h1>
+
+<h2>Overview</h2>
+
+The <code>CoreSecurity</code> class provides comprehensive security features for CloudFramework including authentication, encryption, token management, Google Cloud identity verification, and API key validation.
+
+<h2>Inheritance</h2>
+
+Access CoreSecurity through the Core7 instance:
+
+<pre><code class="language-php">// Basic auth
+$this->core->security->checkBasicAuth($user, $password);
+
+// Encryption
+$encrypted = $this->core->security->encrypt($data);
+$decrypted = $this->core->security->decrypt($encrypted);
+
+// Web key validation
+if($this->core->security->checkWebKey()) {
+    // Valid web key
+}
+</code></pre>
+
+<h2>Properties</h2>
+
+<h3>Public Properties</h3>
+
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$error</code></td>
+<td>bool</td>
+<td>Error flag</td>
+</tr>
+<tr>
+<td><code>$errorMsg</code></td>
+<td>array</td>
+<td>Error messages</td>
+</tr>
+<tr>
+<td><code>$cache_key</code></td>
+<td>string</td>
+<td>Encryption key for cache (from config)</td>
+</tr>
+<tr>
+<td><code>$cache_iv</code></td>
+<td>string</td>
+<td>Encryption IV for cache (from config)</td>
+</tr>
+<tr>
+<td><code>$platform</code></td>
+<td>string\</td>
+<td>null</td>
+<td>Platform ID for ERP integration</td>
+</tr>
+<tr>
+<td><code>$secret_vars</code></td>
+<td>array\</td>
+<td>null</td>
+<td>Cached secret variables</td>
+</tr>
+</tbody>
+</table>
+
+<p>---</p>
+
+<h2>Basic Authentication</h2>
+
+<h3>existBasicAuth()</h3>
+
+<pre><code class="language-php">function existBasicAuth(): bool
+</code></pre>
+
+<p>Checks if Basic Authentication headers are present.</p>
+
+<strong>Returns:</strong> <code>true</code> if Basic Auth headers exist
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($this->core->security->existBasicAuth()) {
+    // Basic Auth headers present
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getBasicAuth()</h3>
+
+<pre><code class="language-php">function getBasicAuth(): array
+</code></pre>
+
+<p>Retrieves Basic Authentication credentials.</p>
+
+<strong>Returns:</strong> Array <code>[$username, $password]</code>
+
+<strong>Example:</strong>
+<pre><code class="language-php">list($username, $password) = $this->core->security->getBasicAuth();
+if($username && $password) {
+    // Process credentials
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>checkBasicAuth()</h3>
+
+<pre><code class="language-php">function checkBasicAuth($user, $passw): bool
+</code></pre>
+
+<p>Validates Basic Authentication credentials.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$user</code> (string): Expected username</li>
+<li><code>$passw</code> (string): Expected password</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if credentials match
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($this->core->security->checkBasicAuth('admin', 'secret123')) {
+    // Valid credentials
+} else {
+    // Invalid credentials
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>checkBasicAuthWithConfig()</h3>
+
+<pre><code class="language-php">function checkBasicAuthWithConfig(): array|false
+</code></pre>
+
+<p>Validates Basic Auth against configuration with IP restrictions.</p>
+
+<strong>Returns:</strong> User configuration array if valid, <code>false</code> otherwise
+
+<strong>Configuration:</strong>
+<pre><code class="language-json">{
+  "core.system.authorizations": {
+    "api_user": {
+      "password": "encrypted_password_hash",
+      "ips": "192.168.1.100,10.0.0.*",
+      "roles": ["admin", "api"]
+    }
+  }
+}
+</code></pre>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$auth = $this->core->security->checkBasicAuthWithConfig();
+if($auth) {
+    $username = $auth['_BasicAuthUser_'];
+    $roles = $auth['roles'] ?? [];
+    // User authenticated
+} else {
+    return $this->setErrorFromCodelib('auth-error', 'Unauthorized');
+}
+</code></pre>
+
+<strong>Features:</strong>
+<ul>
+<li>Validates username/password against config</li>
+<li>Checks IP restrictions</li>
+<li>Uses encrypted passwords</li>
+<li>Returns user configuration on success</li>
+</ul>
+
+<p>---</p>
+
+<h2>API Keys</h2>
+
+<h3>existWebKey()</h3>
+
+<pre><code class="language-php">function existWebKey(): bool
+</code></pre>
+
+<p>Checks if a web key is present in GET, POST, or headers.</p>
+
+<strong>Returns:</strong> <code>true</code> if web key exists
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($this->core->security->existWebKey()) {
+    // Web key present
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getWebKey()</h3>
+
+<pre><code class="language-php">function getWebKey(): string
+</code></pre>
+
+<p>Retrieves web key from <code>$_GET['web_key']</code>, <code>$_POST['web_key']</code>, or <code>X-WEB-KEY</code> header.</p>
+
+<strong>Returns:</strong> Web key string, or empty string if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">$webKey = $this->core->security->getWebKey();
+if($webKey) {
+    // Process web key
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>checkWebKey()</h3>
+
+<pre><code class="language-php">function checkWebKey($keys = null): array|false
+</code></pre>
+
+<p>Validates web key against allowed keys with origin restrictions.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$keys</code> (array\|null): Array of allowed keys, or <code>null</code> to use <code>CLOUDFRAMEWORK-WEB-KEYS</code> config</li>
+</ul>
+
+<strong>Returns:</strong> Key configuration array if valid, <code>false</code> otherwise
+
+<strong>Key Format:</strong>
+<pre><code class="language-php">$keys = [
+    ['key123', '*'],  // Allow from any origin
+    ['key456', 'example.com,api.example.com'],  // Specific origins only
+];
+</code></pre>
+
+<strong>Configuration:</strong>
+<pre><code class="language-json">{
+  "CLOUDFRAMEWORK-WEB-KEYS": [
+    ["pub_key_1234567890", "*"],
+    ["pub_key_0987654321", "myapp.com"]
+  ]
+}
+</code></pre>
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($this->core->security->checkWebKey()) {
+    // Valid web key
+} else {
+    return $this->setErrorFromCodelib('auth-error', 'Invalid web key');
+}
+
+// With custom keys
+$allowedKeys = [['my_secret_key', '*']];
+if($this->core->security->checkWebKey($allowedKeys)) {
+    // Valid
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>existServerKey()</h3>
+
+<pre><code class="language-php">function existServerKey(): bool
+</code></pre>
+
+<p>Checks if X-SERVER-KEY header exists.</p>
+
+<strong>Returns:</strong> <code>true</code> if server key header present
+
+<p>---</p>
+
+<h3>getServerKey()</h3>
+
+<pre><code class="language-php">function getServerKey(): string
+</code></pre>
+
+<p>Retrieves server key from X-SERVER-KEY header.</p>
+
+<strong>Returns:</strong> Server key string
+
+<p>---</p>
+
+<h3>checkServerKey()</h3>
+
+<pre><code class="language-php">function checkServerKey($keys = null): array|false
+</code></pre>
+
+<p>Validates server key with IP restrictions.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$keys</code> (array\|null): Array of allowed keys with IP restrictions</li>
+</ul>
+
+<strong>Returns:</strong> Key configuration if valid, <code>false</code> otherwise
+
+<strong>Configuration:</strong>
+<pre><code class="language-json">{
+  "CLOUDFRAMEWORK-SERVER-KEYS": [
+    ["server_key_123", "192.168.1.0/24"],
+    ["server_key_456", "*"]
+  ]
+}
+</code></pre>
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($this->core->security->checkServerKey()) {
+    // Valid server key from allowed IP
+} else {
+    return $this->setErrorFromCodelib('auth-error', 'Invalid server key or IP');
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Encryption & Hashing</h2>
+
+<h3>encrypt()</h3>
+
+<pre><code class="language-php">function encrypt($text, $secret_key = '', $secret_iv = ''): string
+</code></pre>
+
+<p>Encrypts text using AES-256-CBC.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$text</code> (string): Text to encrypt</li>
+<li><code>$secret_key</code> (string): Encryption key (optional, uses <code>core.security.encrypt_key</code> from config)</li>
+<li><code>$secret_iv</code> (string): Encryption IV (optional, uses <code>core.security.encrypt_secret</code> from config)</li>
+</ul>
+
+<strong>Returns:</strong> Encrypted base64 string
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Using default keys from config
+$encrypted = $this->core->security->encrypt('sensitive data');
+
+// Using custom keys
+$key = 'my-secret-key-32-chars-long!!!';
+$iv = 'my-secret-iv-24-chars!!';
+$encrypted = $this->core->security->encrypt('sensitive data', $key, $iv);
+
+// Store encrypted data
+$this->core->cache->set('sensitive_key', $encrypted);
+</code></pre>
+
+<strong>Configuration:</strong>
+<pre><code class="language-json">{
+  "core.security.encrypt_key": "your-secret-key-minimum-32-chars",
+  "core.security.encrypt_secret": "your-secret-iv-minimum-24-chars"
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>decrypt()</h3>
+
+<pre><code class="language-php">function decrypt($encrypted_text, $secret_key = '', $secret_iv = ''): string
+</code></pre>
+
+<p>Decrypts AES-256-CBC encrypted text.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$encrypted_text</code> (string): Encrypted base64 string</li>
+<li><code>$secret_key</code> (string): Decryption key (same as encryption)</li>
+<li><code>$secret_iv</code> (string): Decryption IV (same as encryption)</li>
+</ul>
+
+<strong>Returns:</strong> Decrypted plaintext
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Using default keys from config
+$decrypted = $this->core->security->decrypt($encrypted);
+
+// Using custom keys
+$decrypted = $this->core->security->decrypt($encrypted, $key, $iv);
+
+// Decrypt from cache
+$encrypted = $this->core->cache->get('sensitive_key');
+$data = $this->core->security->decrypt($encrypted);
+</code></pre>
+
+<strong>Important:</strong> Must use the same key and IV used for encryption.
+
+<p>---</p>
+
+<h3>crypt()</h3>
+
+<pre><code class="language-php">function crypt($input, $rounds = 7): string
+</code></pre>
+
+<p>Creates a one-way password hash using bcrypt.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$input</code> (string): Password to hash</li>
+<li><code>$rounds</code> (int): Cost parameter (4-31, default: 7)</li>
+</ul>
+
+<strong>Returns:</strong> Hashed password
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Hash password for storage
+$password = 'user_password123';
+$hashedPassword = $this->core->security->crypt($password);
+
+// Store in database
+$userData['password'] = $hashedPassword;
+
+// With higher security (more rounds = slower but more secure)
+$hashedPassword = $this->core->security->crypt($password, 10);
+</code></pre>
+
+<strong>Security Notes:</strong>
+<ul>
+<li>Higher rounds = more secure but slower</li>
+<li>Recommended: 7-10 for normal use, 10-12 for high security</li>
+<li>Never store plaintext passwords</li>
+</ul>
+
+<p>---</p>
+
+<h3>checkCrypt()</h3>
+
+<pre><code class="language-php">function checkCrypt($input, $input_encrypted = null): bool
+</code></pre>
+
+<p>Verifies a password against a bcrypt hash.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$input</code> (string): Password to check</li>
+<li><code>$input_encrypted</code> (string): Hashed password to compare against</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if password matches
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Validate user login
+$userInputPassword = $_POST['password'];
+$storedHash = $userData['password'];
+
+if($this->core->security->checkCrypt($userInputPassword, $storedHash)) {
+    // Password correct - login successful
+} else {
+    // Password incorrect
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Google Cloud Authentication</h2>
+
+<h3>getGoogleEmailAccount()</h3>
+
+<pre><code class="language-php">function getGoogleEmailAccount(): string
+</code></pre>
+
+<p>Gets the Google service account email of the current environment.</p>
+
+<strong>Returns:</strong> Service account email
+
+<strong>Behavior:</strong>
+<ul>
+<li><strong>Development</strong>: Uses <code>gcloud auth list</code> to get active user</li>
+<li><strong>Production</strong>: Uses GCP metadata service to get instance service account</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$serviceAccount = $this->core->security->getGoogleEmailAccount();
+// Development: user@example.com
+// Production: my-project@appspot.gserviceaccount.com
+</code></pre>
+
+<p>---</p>
+
+<h3>getGoogleAccessToken()</h3>
+
+<pre><code class="language-php">function getGoogleAccessToken(string $user = ''): array
+</code></pre>
+
+<p>Retrieves a Google Cloud access token.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$user</code> (string): User account (for development)</li>
+</ul>
+
+<strong>Returns:</strong> Token array with <code>access_token</code>, <code>token_type</code>, <code>expires_in</code>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$token = $this->core->security->getGoogleAccessToken();
+if($token) {
+    $accessToken = $token['access_token'];
+    // Use to call Google APIs
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getGoogleIdentityToken()</h3>
+
+<pre><code class="language-php">function getGoogleIdentityToken($user = '', $audience = 'https://api.cloudframework.io'): string
+</code></pre>
+
+<p>Retrieves a Google Cloud identity token (JWT).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$user</code> (string): User account (for development)</li>
+<li><code>$audience</code> (string): Token audience</li>
+</ul>
+
+<strong>Returns:</strong> JWT token string
+
+<strong>Example:</strong>
+<pre><code class="language-php">$token = $this->core->security->getGoogleIdentityToken();
+// Use for service-to-service authentication
+</code></pre>
+
+<p>---</p>
+
+<h3>getGoogleTokenInfo()</h3>
+
+<pre><code class="language-php">function getGoogleTokenInfo($token): array
+</code></pre>
+
+<p>Validates and retrieves information from a Google token.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Access token or identity token</li>
+</ul>
+
+<strong>Returns:</strong> Token info array
+
+<strong>Example:</strong>
+<pre><code class="language-php">$tokenInfo = $this->core->security->getGoogleTokenInfo($token);
+if(isset($tokenInfo['email'])) {
+    $userEmail = $tokenInfo['email'];
+    $emailVerified = $tokenInfo['email_verified'] ?? false;
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getGoogleAccessTokenInfo()</h3>
+
+<pre><code class="language-php">function getGoogleAccessTokenInfo($token): array
+</code></pre>
+
+<p>Retrieves information about a Google access token.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Access token (starts with <code>ya29.</code>)</li>
+</ul>
+
+<strong>Returns:</strong> Token information array
+
+<strong>Response Example:</strong>
+<pre><code class="language-php">[
+    'email' => 'user@example.com',
+    'verified_email' => true,
+    'expires_in' => 3599,
+    'scope' => 'https://www.googleapis.com/auth/userinfo.email...'
+]
+</code></pre>
+
+<p>---</p>
+
+<h3>getGoogleIdentityTokenInfo()</h3>
+
+<pre><code class="language-php">function getGoogleIdentityTokenInfo($token): array|false
+</code></pre>
+
+<p>Validates and decodes a Google identity token (JWT).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Identity token (JWT format)</li>
+</ul>
+
+<strong>Returns:</strong> Token payload array if valid, <code>false</code> otherwise
+
+<strong>Response Example:</strong>
+<pre><code class="language-php">[
+    'iss' => 'https://accounts.google.com',
+    'email' => 'user@example.com',
+    'email_verified' => true,
+    'sub' => '1234567890',
+    'exp' => 1638615498,
+    'iat' => 1638611898
+]
+</code></pre>
+
+<p>---</p>
+
+<h2>Platform Secrets (CloudFramework ERP)</h2>
+
+<h3>getPlatformSecretVar()</h3>
+
+<pre><code class="language-php">public function getPlatformSecretVar($var, string $erp_secret_id = '', string $erp_platform_id = '', string $erp_user = ''): mixed
+</code></pre>
+
+<p>Retrieves a specific secret variable from CloudFramework Platform.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$var</code> (string): Secret variable name</li>
+<li><code>$erp_secret_id</code> (string): Secret ID (optional, uses config)</li>
+<li><code>$erp_platform_id</code> (string): Platform ID (optional, uses config)</li>
+<li><code>$erp_user</code> (string): User email (optional, auto-detected)</li>
+</ul>
+
+<strong>Returns:</strong> Secret value, or <code>null</code> if not found
+
+<strong>Configuration:</strong>
+<pre><code class="language-json">{
+  "core.erp.platform_id": "my-platform-id",
+  "core.erp.secrets.secret_id": "my-secrets"
+}
+</code></pre>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Get API key from platform secrets
+$apiKey = $this->core->security->getPlatformSecretVar('STRIPE_API_KEY');
+
+// Get database password
+$dbPassword = $this->core->security->getPlatformSecretVar('DB_PASSWORD');
+
+// Use in configuration
+if($apiKey) {
+    // Initialize API with secret key
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>readPlatformSecretVars()</h3>
+
+<pre><code class="language-php">public function readPlatformSecretVars($erp_secret_id = '', $erp_platform_id = '', $erp_user = ''): bool
+</code></pre>
+
+<p>Loads all secret variables from CloudFramework Platform.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$erp_secret_id</code> (string): Secret ID</li>
+<li><code>$erp_platform_id</code> (string): Platform ID</li>
+<li><code>$erp_user</code> (string): User email</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Load all secrets
+if($this->core->security->readPlatformSecretVars()) {
+    $apiKey = $this->core->security->getPlatformSecretVar('API_KEY');
+    $dbPass = $this->core->security->getPlatformSecretVar('DB_PASSWORD');
+}
+</code></pre>
+
+<strong>Features:</strong>
+<ul>
+<li>Caches secrets for performance</li>
+<li>Auto-detects service account in production</li>
+<li>Validates tokens for security</li>
+<li>Encrypts cached secrets</li>
+</ul>
+
+<p>---</p>
+
+<h3>setSecretVar()</h3>
+
+<pre><code class="language-php">public function setSecretVar($secret_key, $secret_value): void
+</code></pre>
+
+<p>Sets a secret variable manually.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$secret_key</code> (string): Secret key</li>
+<li><code>$secret_value</code> (mixed): Secret value</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->core->security->setSecretVar('API_KEY', 'sk_test_1234567890');
+</code></pre>
+
+<p>---</p>
+
+<h3>getSecretVar()</h3>
+
+<pre><code class="language-php">public function getSecretVar($secret_key): mixed
+</code></pre>
+
+<p>Gets a manually set secret variable.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$secret_key</code> (string): Secret key</li>
+</ul>
+
+<strong>Returns:</strong> Secret value, or <code>null</code> if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">$apiKey = $this->core->security->getSecretVar('API_KEY');
+</code></pre>
+
+<p>---</p>
+
+<h2>Datastore Tokens</h2>
+
+<h3>getDSToken()</h3>
+
+<pre><code class="language-php">function getDSToken($token, $prefixStarts = '', $time = 0, $fingerprint_hash = '', $use_fingerprint_security = true): array|null
+</code></pre>
+
+<p>Retrieves and validates a token from Google Cloud Datastore.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Token ID</li>
+<li><code>$prefixStarts</code> (string): Expected token prefix</li>
+<li><code>$time</code> (int): Max age in seconds (0 = no expiration)</li>
+<li><code>$fingerprint_hash</code> (string): Request fingerprint for validation</li>
+<li><code>$use_fingerprint_security</code> (bool): Enable fingerprint validation</li>
+</ul>
+
+<strong>Returns:</strong> Token data array, or <code>null</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Retrieve token
+$token = $_GET['reset_token'] ?? '';
+$data = $this->core->security->getDSToken($token, 'reset_', 3600);
+
+if($data) {
+    $userId = $data['user_id'];
+    // Process password reset
+} else {
+    // Token invalid or expired
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getDSTokenInfo()</h3>
+
+<pre><code class="language-php">function getDSTokenInfo($token): array|null
+</code></pre>
+
+<p>Retrieves token information without validation.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Token ID</li>
+</ul>
+
+<strong>Returns:</strong> Token entity array
+
+<p>---</p>
+
+<h3>deleteDSToken()</h3>
+
+<pre><code class="language-php">function deleteDSToken($token): array|bool
+</code></pre>
+
+<p>Deletes a token from Datastore.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Token ID</li>
+</ul>
+
+<strong>Returns:</strong> Deleted entity array on success
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Delete used token
+$this->core->security->deleteDSToken($resetToken);
+</code></pre>
+
+<p>---</p>
+
+<h3>updateDSToken()</h3>
+
+<pre><code class="language-php">function updateDSToken($token, $data): array
+</code></pre>
+
+<p>Updates token data.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$token</code> (string): Token ID</li>
+<li><code>$data</code> (mixed): New data</li>
+</ul>
+
+<strong>Returns:</strong> Updated data array
+
+<p>---</p>
+
+<h2>JWT Tokens</h2>
+
+<h3>jwt_encode()</h3>
+
+<pre><code class="language-php">public function jwt_encode($payload, $key, $keyId = null, $head = null, $algorithm = 'RS256'): string|false
+</code></pre>
+
+<p>Encodes a JWT token.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$payload</code> (mixed): Data to encode</li>
+<li><code>$key</code> (string): Private key (minimum 10 characters)</li>
+<li><code>$keyId</code> (string\|null): Key ID for header</li>
+<li><code>$head</code> (array\|null): Additional headers</li>
+<li><code>$algorithm</code> (string): Algorithm ('RS256', 'HS256', etc.)</li>
+</ul>
+
+<strong>Returns:</strong> JWT string, or <code>false</code> on error
+
+<strong>Supported Algorithms:</strong>
+<ul>
+<li>RS256, RS384, RS512 (RSA with SHA)</li>
+<li>HS256, HS384, HS512 (HMAC with SHA)</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$payload = [
+    'user_id' => 123,
+    'email' => 'user@example.com',
+    'exp' => time() + 3600  // Expires in 1 hour
+];
+
+$privateKey = file_get_contents('/path/to/private.pem');
+$jwt = $this->core->security->jwt_encode($payload, $privateKey);
+
+// Send to client
+header('Authorization: Bearer ' . $jwt);
+</code></pre>
+
+<p>---</p>
+
+<h2>Utility Methods</h2>
+
+<h3>getHeader()</h3>
+
+<pre><code class="language-php">function getHeader($str): string
+</code></pre>
+
+<p>Gets an HTTP header value.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$str</code> (string): Header name (case-insensitive, with or without 'HTTP_' prefix)</li>
+</ul>
+
+<strong>Returns:</strong> Header value
+
+<strong>Example:</strong>
+<pre><code class="language-php">$contentType = $this->core->security->getHeader('Content-Type');
+$authHeader = $this->core->security->getHeader('Authorization');
+$customHeader = $this->core->security->getHeader('X-Custom-Header');
+</code></pre>
+
+<p>---</p>
+
+<h3>isCron()</h3>
+
+<pre><code class="language-php">function isCron(): bool
+</code></pre>
+
+<p>Checks if the request is from App Engine Cron.</p>
+
+<strong>Returns:</strong> <code>true</code> if request is from cron
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($this->core->security->isCron()) {
+    // Allow cron-only operations
+} else {
+    return $this->setErrorFromCodelib('auth-error', 'Cron only');
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>generateRandomString()</h3>
+
+<pre><code class="language-php">public function generateRandomString($pref = ''): string
+</code></pre>
+
+<p>Generates a random unique string.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$pref</code> (string): Optional prefix for uniqueness</li>
+</ul>
+
+<strong>Returns:</strong> Random base64 string (32 characters)
+
+<strong>Example:</strong>
+<pre><code class="language-php">$token = $this->core->security->generateRandomString();
+// Store as password reset token
+
+$sessionId = $this->core->security->generateRandomString('session_');
+</code></pre>
+
+<p>---</p>
+
+<h3>prompt()</h3>
+
+<pre><code class="language-php">function prompt($title, $default = null): string
+</code></pre>
+
+<p>Prompts user for terminal input (scripts only).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$title</code> (string): Prompt message</li>
+<li><code>$default</code> (mixed): Default value</li>
+</ul>
+
+<strong>Returns:</strong> User input or default
+
+<strong>Example:</strong>
+<pre><code class="language-php">// In a script
+$email = $this->core->security->prompt('Enter email address: ', 'user@example.com');
+$confirm = $this->core->security->prompt('Are you sure? (yes/no): ', 'no');
+</code></pre>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>API Key Authentication</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    function main()
+    {
+        // Validate web key
+        if(!$this->core->security->checkWebKey()) {
+            return $this->setErrorFromCodelib('auth-error', 'Invalid API key');
+        }
+
+        // Continue with API logic
+        if(!$this->useFunction('ENDPOINT_' . ($this->params[0] ?? 'default'))) {
+            return $this->setErrorFromCodelib('params-error', 'Endpoint not found');
+        }
+    }
+}
+</code></pre>
+
+<h3>Basic Auth Protection</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    function main()
+    {
+        // Require Basic Auth
+        $auth = $this->core->security->checkBasicAuthWithConfig();
+        if(!$auth) {
+            header('WWW-Authenticate: Basic realm="API Access"');
+            return $this->setErrorFromCodelib('auth-error', 'Authentication required');
+        }
+
+        // Check user roles
+        $roles = $auth['roles'] ?? [];
+        if(!in_array('admin', $roles)) {
+            return $this->setErrorFromCodelib('auth-error', 'Admin access required');
+        }
+
+        // Continue
+    }
+}
+</code></pre>
+
+<h3>Password Storage and Verification</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_register()
+    {
+        $password = $this->formParams['password'] ?? '';
+
+        // Hash password before storing
+        $hashedPassword = $this->core->security->crypt($password, 10);
+
+        // Store in database
+        $ds = $this->core->loadClass('DataStore', ['Users']);
+        $ds->createEntity([
+            'email' => $email,
+            'password' => $hashedPassword
+        ]);
+    }
+
+    public function ENDPOINT_login()
+    {
+        $email = $this->formParams['email'] ?? '';
+        $password = $this->formParams['password'] ?? '';
+
+        // Get user from database
+        $ds = $this->core->loadClass('DataStore', ['Users']);
+        $users = $ds->fetchAll([['email', '=', $email]], null, 1);
+
+        if(empty($users)) {
+            return $this->setErrorFromCodelib('auth-error', 'Invalid credentials');
+        }
+
+        $user = $users[0];
+
+        // Verify password
+        if($this->core->security->checkCrypt($password, $user['password'])) {
+            // Login successful
+            $this->core->session->set('user_id', $user['KeyId']);
+            $this->addReturnData(['message' => 'Login successful']);
+        } else {
+            return $this->setErrorFromCodelib('auth-error', 'Invalid credentials');
+        }
+    }
+}
+</code></pre>
+
+<h3>Encrypting Sensitive Data</h3>
+
+<pre><code class="language-php">// Store encrypted data in database
+$creditCard = '4111-1111-1111-1111';
+$encrypted = $this->core->security->encrypt($creditCard);
+
+$ds->createEntity([
+    'user_id' => $userId,
+    'credit_card' => $encrypted
+]);
+
+// Retrieve and decrypt
+$userData = $ds->fetchOne($userId);
+$creditCard = $this->core->security->decrypt($userData['credit_card']);
+</code></pre>
+
+<h3>Using Platform Secrets</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    function main()
+    {
+        // Load secrets from platform
+        $this->core->security->readPlatformSecretVars();
+
+        // Get API keys from secrets
+        $stripeKey = $this->core->security->getPlatformSecretVar('STRIPE_API_KEY');
+        $dbPassword = $this->core->security->getPlatformSecretVar('DB_PASSWORD');
+
+        // Use secrets
+        if($stripeKey) {
+            // Initialize Stripe
+        }
+    }
+}
+</code></pre>
+
+<h3>Password Reset Tokens</h3>
+
+<pre><code class="language-php">// Generate reset token
+$token = $this->core->security->generateRandomString('reset_');
+$this->core->security->setDSToken($token, 'reset_', [
+    'user_id' => $userId,
+    'email' => $userEmail
+], 3600); // 1 hour expiration
+
+// Send email with reset link
+$resetLink = 'https://myapp.com/reset?token=' . $token;
+
+// Later, validate token
+$data = $this->core->security->getDSToken($token, 'reset_', 3600);
+if($data) {
+    $userId = $data['user_id'];
+    // Allow password reset
+    $this->core->security->deleteDSToken($token);
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Security Best Practices</h2>
+
+<h3>1. Always Use HTTPS</h3>
+
+<pre><code class="language-php">if(!$this->core->is->https() && !$this->core->is->development()) {
+    return $this->setErrorFromCodelib('security-error', 'HTTPS required');
+}
+</code></pre>
+
+<h3>2. Validate API Keys from Config</h3>
+
+<pre><code class="language-php">// In config.json
+{
+  "CLOUDFRAMEWORK-WEB-KEYS": [
+    ["pub_key_production", "myapp.com"],
+    ["pub_key_staging", "staging.myapp.com"]
+  ]
+}
+</code></pre>
+
+<h3>3. Use Strong Password Hashing</h3>
+
+<pre><code class="language-php">// Use higher rounds for better security
+$hash = $this->core->security->crypt($password, 12);
+</code></pre>
+
+<h3>4. Encrypt Sensitive Data</h3>
+
+<pre><code class="language-php">// Always encrypt PII, credit cards, etc.
+$encrypted = $this->core->security->encrypt($sensitiveData);
+</code></pre>
+
+<h3>5. Implement IP Restrictions</h3>
+
+<pre><code class="language-json">{
+  "core.system.authorizations": {
+    "admin_user": {
+      "password": "hash",
+      "ips": "192.168.1.0/24,10.0.0.1"
+    }
+  }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+<li><a href="CoreSession.html">CoreSession Class Reference</a></li>
+<li><a href="../guides/security.html">Security Guide</a></li>
+<li><a href="../examples/api-examples.md#authentication">Authentication Examples</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

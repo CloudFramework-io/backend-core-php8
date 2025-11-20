@@ -1,0 +1,1055 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RESTful Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="RESTful Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link active">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>RESTful Class</h1>
+
+<h2>Overview</h2>
+
+The <code>RESTful</code> class is the base class for all API endpoints in CloudFramework. It provides comprehensive functionality for handling HTTP requests, responses, validation, error handling, and CORS support.
+
+<h2>Inheritance</h2>
+
+All your API classes should extend <code>RESTful</code>:
+
+<pre><code class="language-php"><?php
+class API extends RESTful
+{
+    function main()
+    {
+        // Your API logic here
+    }
+}
+</code></pre>
+
+<h2>Properties</h2>
+
+<h3>Public Properties</h3>
+
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$formParams</code></td>
+<td>array</td>
+<td>Form parameters from GET/POST requests</td>
+</tr>
+<tr>
+<td><code>$params</code></td>
+<td>array</td>
+<td>URL path parameters</td>
+</tr>
+<tr>
+<td><code>$method</code></td>
+<td>string</td>
+<td>HTTP method (GET, POST, PUT, DELETE, etc.)</td>
+</tr>
+<tr>
+<td><code>$service</code></td>
+<td>string</td>
+<td>Service name from URL</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>int</td>
+<td>Error code (0 if no error)</td>
+</tr>
+<tr>
+<td><code>$code</code></td>
+<td>string\</td>
+<td>null</td>
+<td>Response code identifier</td>
+</tr>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 framework instance</td>
+</tr>
+</tbody>
+</table>
+
+<h3>Protected Properties</h3>
+
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$version</code></td>
+<td>string</td>
+<td>RESTful class version</td>
+</tr>
+<tr>
+<td><code>$returnData</code></td>
+<td>mixed</td>
+<td>Data to be returned in the response</td>
+</tr>
+<tr>
+<td><code>$requestHeaders</code></td>
+<td>array</td>
+<td>Request headers</td>
+</tr>
+<tr>
+<td><code>$extra_headers</code></td>
+<td>array</td>
+<td>Additional response headers</td>
+</tr>
+</tbody>
+</table>
+
+<h2>Main Methods</h2>
+
+<h3>Constructor</h3>
+
+<pre><code class="language-php">function __construct(Core7 &$core, $apiUrl = '/h/api')
+</code></pre>
+
+<p>Initializes the RESTful instance, processes request parameters, and sets up default response codes.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$core</code> (Core7): Reference to the Core7 framework instance</li>
+<li><code>$apiUrl</code> (string): API base URL (default: '/h/api')</li>
+</ul>
+
+<strong>Automatic Processing:</strong>
+<ul>
+<li>Extracts URL parameters</li>
+<li>Parses form parameters (GET/POST)</li>
+<li>Reads raw input (JSON)</li>
+<li>Trims string values</li>
+<li>Initializes default code library (ok, error, etc.)</li>
+</ul>
+
+<p>---</p>
+
+<h2>Request Handling Methods</h2>
+
+<h3>checkMethod()</h3>
+
+<pre><code class="language-php">public function checkMethod(string $methods, $error_msg = ''): bool
+</code></pre>
+
+<p>Validates that the current HTTP method is allowed.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$methods</code> (string): Comma-separated list of allowed methods (e.g., 'GET,POST,PUT')</li>
+<li><code>$error_msg</code> (string): Custom error message (optional)</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if method is allowed, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Only allow GET and POST
+if(!$this->checkMethod('GET,POST')) return;
+
+// With custom error message
+if(!$this->checkMethod('GET', 'Only GET requests allowed')) return;
+</code></pre>
+
+<p>---</p>
+
+<h3>sendCorsHeaders()</h3>
+
+<pre><code class="language-php">public function sendCorsHeaders($methods = 'GET,POST,PUT', $allow_origins = '', $allow_extra_headers = '')
+</code></pre>
+
+<p>Sends CORS headers to allow cross-origin requests.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$methods</code> (string): Allowed HTTP methods</li>
+<li><code>$allow_origins</code> (string): Allowed origins ('*' for all, or comma-separated domains)</li>
+<li><code>$allow_extra_headers</code> (string): Additional allowed headers</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Allow all origins
+$this->sendCorsHeaders('GET,POST,PUT,DELETE');
+
+// Allow specific origins
+$this->sendCorsHeaders('GET,POST', 'https://example.com,https://app.example.com');
+
+// Allow extra headers
+$this->sendCorsHeaders('GET,POST', '*', 'X-Custom-Header,X-Api-Key');
+</code></pre>
+
+<p>---</p>
+
+<h2>Parameter Validation Methods</h2>
+
+<h3>checkMandatoryParam()</h3>
+
+<pre><code class="language-php">public function checkMandatoryParam($pos, $msg = '', $validation = [], $code = null): mixed
+</code></pre>
+
+<p>Validates a URL parameter at a specific position.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$pos</code> (int): Parameter position (0-indexed)</li>
+<li><code>$msg</code> (string): Error message if validation fails</li>
+<li><code>$validation</code> (array): Validation rules (optional)</li>
+<li><code>$code</code> (string): Error code (optional)</li>
+</ul>
+
+<strong>Returns:</strong> Parameter value if valid, sets error and returns <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Check if parameter exists at position 0
+$userId = $this->checkMandatoryParam(0, 'User ID is required');
+if(!$userId) return;
+
+// With validation
+$userId = $this->checkMandatoryParam(0, 'Invalid user ID', ['type' => 'integer']);
+if(!$userId) return;
+</code></pre>
+
+<p>---</p>
+
+<h3>checkMandatoryFormParam()</h3>
+
+<pre><code class="language-php">public function checkMandatoryFormParam(string $key, $error_msg = '', $values = [], $min_length = 1, $code = null): mixed
+</code></pre>
+
+<p>Validates a required form parameter.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$key</code> (string): Parameter key name</li>
+<li><code>$error_msg</code> (string): Error message if validation fails</li>
+<li><code>$values</code> (array): Allowed values (optional, empty array = any value)</li>
+<li><code>$min_length</code> (int): Minimum string length (default: 1)</li>
+<li><code>$code</code> (string): Error code (optional)</li>
+</ul>
+
+<strong>Returns:</strong> Parameter value if valid, sets error and returns <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Check required parameter
+$email = $this->checkMandatoryFormParam('email', 'Email is required');
+if(!$email) return;
+
+// Check with allowed values
+$status = $this->checkMandatoryFormParam('status', 'Invalid status', ['active', 'inactive']);
+if(!$status) return;
+
+// Check with minimum length
+$password = $this->checkMandatoryFormParam('password', 'Password too short', [], 8);
+if(!$password) return;
+</code></pre>
+
+<p>---</p>
+
+<h3>checkMandatoryFormParams()</h3>
+
+<pre><code class="language-php">public function checkMandatoryFormParams($keys): bool|array
+</code></pre>
+
+<p>Validates multiple required form parameters.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$keys</code> (array): Array of parameter keys or key => config arrays</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if all valid, array of missing parameters otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Simple validation
+$required = ['email', 'password', 'name'];
+if(!$this->checkMandatoryFormParams($required)) return;
+
+// With configurations
+$required = [
+    'email' => ['error' => 'Email required'],
+    'status' => ['values' => ['active', 'inactive'], 'error' => 'Invalid status']
+];
+if(!$this->checkMandatoryFormParams($required)) return;
+</code></pre>
+
+<p>---</p>
+
+<h3>validateValue()</h3>
+
+<pre><code class="language-php">public function validateValue($field, $value, $type, $validation = '', $msg_error = ''): bool
+</code></pre>
+
+<p>Validates a value against a specific type and rules.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$field</code> (string): Field name (for error messages)</li>
+<li><code>$value</code> (mixed): Value to validate</li>
+<li><code>$type</code> (string): Data type (string, integer, email, url, etc.)</li>
+<li><code>$validation</code> (string): Additional validation rules</li>
+<li><code>$msg_error</code> (string): Custom error message</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if valid, <code>false</code> otherwise (sets error)
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Validate email
+if(!$this->validateValue('email', $email, 'email')) return;
+
+// Validate integer
+if(!$this->validateValue('age', $age, 'integer')) return;
+
+// Validate with custom message
+if(!$this->validateValue('url', $url, 'url', '', 'Invalid URL format')) return;
+</code></pre>
+
+<p>---</p>
+
+<h2>Model Validation Methods</h2>
+
+<h3>validatePostData()</h3>
+
+<pre><code class="language-php">public function validatePostData($model, $codelibbase = 'error-form-params', &$data = null, &$dictionaries = []): bool
+</code></pre>
+
+<p>Validates POST data against a model definition.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$model</code> (array): Model definition with field rules</li>
+<li><code>$codelibbase</code> (string): Base code for errors</li>
+<li><code>$data</code> (array): Reference to store validated data</li>
+<li><code>$dictionaries</code> (array): Reference to store dictionary data</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if valid, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">$model = [
+    'name' => ['type' => 'string', 'required' => true],
+    'email' => ['type' => 'email', 'required' => true],
+    'age' => ['type' => 'integer', 'min' => 18]
+];
+
+$data = [];
+if(!$this->validatePostData($model, 'user-validation-error', $data)) return;
+</code></pre>
+
+<p>---</p>
+
+<h3>validatePutData()</h3>
+
+<pre><code class="language-php">public function validatePutData($model, $codelibbase = 'error-form-params', &$data = null, &$dictionaries = []): bool
+</code></pre>
+
+<p>Validates PUT data against a model definition (similar to validatePostData but for updates).</p>
+
+<p>---</p>
+
+<h2>Response Methods</h2>
+
+<h3>addReturnData()</h3>
+
+<pre><code class="language-php">public function addReturnData($value): true
+</code></pre>
+
+<p>Adds data to the response. If data already exists, it merges or appends.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$value</code> (mixed): Data to add to the response</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Add simple data
+$this->addReturnData('Hello World');
+
+// Add array data
+$this->addReturnData(['users' => $users, 'total' => $total]);
+
+// Add multiple times (will merge/append)
+$this->addReturnData(['name' => 'John']);
+$this->addReturnData(['age' => 30]);
+</code></pre>
+
+<p>---</p>
+
+<h3>setReturnData()</h3>
+
+<pre><code class="language-php">public function setReturnData($data): true
+</code></pre>
+
+<p>Sets the response data (replaces existing data).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$data</code> (mixed): Data to return</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->setReturnData(['status' => 'success', 'data' => $result]);
+</code></pre>
+
+<p>---</p>
+
+<h3>setReturnResponse()</h3>
+
+<pre><code class="language-php">public function setReturnResponse($response): void
+</code></pre>
+
+<p>Sets a complete response object.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$response</code> (array): Complete response structure</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->setReturnResponse([
+    'success' => true,
+    'status' => 200,
+    'data' => $data,
+    'message' => 'Operation successful'
+]);
+</code></pre>
+
+<p>---</p>
+
+<h3>updateReturnResponse()</h3>
+
+<pre><code class="language-php">public function updateReturnResponse($response): void
+</code></pre>
+
+<p>Updates specific fields in the response.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$response</code> (array): Fields to update in the response</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->updateReturnResponse(['extra_info' => 'Additional data']);
+</code></pre>
+
+<p>---</p>
+
+<h2>Error Handling Methods</h2>
+
+<h3>setError()</h3>
+
+<pre><code class="language-php">public function setError($error, int $returnStatus = 400, $returnCode = null, $message = ''): void
+</code></pre>
+
+<p>Sets an error response.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$error</code> (string|array): Error message or error array</li>
+<li><code>$returnStatus</code> (int): HTTP status code (default: 400)</li>
+<li><code>$returnCode</code> (string): Error code identifier</li>
+<li><code>$message</code> (string): Additional message</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Simple error
+$this->setError('Invalid user ID', 400);
+
+// With code
+$this->setError('User not found', 404, 'user-not-found');
+
+// With array
+$this->setError(['field' => 'email', 'message' => 'Email already exists'], 409);
+</code></pre>
+
+<p>---</p>
+
+<h3>addCodeLib()</h3>
+
+<pre><code class="language-php">public function addCodeLib($code, $msg, $error = 400, ?array $model = null): void
+</code></pre>
+
+<p>Adds a reusable error code to the code library.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$code</code> (string): Code identifier</li>
+<li><code>$msg</code> (string): Error message</li>
+<li><code>$error</code> (int): HTTP status code</li>
+<li><code>$model</code> (array): Model structure (optional)</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Define custom error codes
+$this->addCodeLib('user-not-found', 'User not found', 404);
+$this->addCodeLib('invalid-token', 'Invalid authentication token', 401);
+$this->addCodeLib('rate-limit', 'Rate limit exceeded', 429);
+</code></pre>
+
+<p>---</p>
+
+<h3>setErrorFromCodelib()</h3>
+
+<pre><code class="language-php">public function setErrorFromCodelib(string $code, $extramsg = ''): void
+</code></pre>
+
+<p>Sets an error using a code from the code library.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$code</code> (string): Code identifier from code library</li>
+<li><code>$extramsg</code> (string): Additional message to append</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Use predefined error code
+$this->setErrorFromCodelib('user-not-found');
+
+// With extra message
+$this->setErrorFromCodelib('params-error', ': user_id is required');
+</code></pre>
+
+<p>---</p>
+
+<h3>getCodeLib()</h3>
+
+<pre><code class="language-php">public function getCodeLib($code): array|null
+</code></pre>
+
+<p>Gets a code definition from the code library.</p>
+
+<strong>Returns:</strong> Code definition array or <code>null</code> if not found
+
+<p>---</p>
+
+<h2>Status and Code Methods</h2>
+
+<h3>setReturnCode()</h3>
+
+<pre><code class="language-php">public function setReturnCode($code): void
+</code></pre>
+
+<p>Sets the response code.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$code</code> (string): Code identifier</li>
+</ul>
+
+<p>---</p>
+
+<h3>getReturnCode()</h3>
+
+<pre><code class="language-php">public function getReturnCode(): string|null
+</code></pre>
+
+<p>Gets the current response code.</p>
+
+<strong>Returns:</strong> Code identifier or <code>null</code>
+
+<p>---</p>
+
+<h3>setReturnStatus()</h3>
+
+<pre><code class="language-php">public function setReturnStatus(int $status): void
+</code></pre>
+
+<p>Sets the HTTP status code for the response.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$status</code> (int): HTTP status code (200, 404, 500, etc.)</li>
+</ul>
+
+<p>---</p>
+
+<h3>getReturnStatus()</h3>
+
+<pre><code class="language-php">public function getReturnStatus(): int
+</code></pre>
+
+<p>Gets the current HTTP status code.</p>
+
+<strong>Returns:</strong> HTTP status code
+
+<p>---</p>
+
+<h2>Header Methods</h2>
+
+<h3>addHeader()</h3>
+
+<pre><code class="language-php">public function addHeader($key, $value): void
+</code></pre>
+
+<p>Adds a custom HTTP header to the response.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$key</code> (string): Header name</li>
+<li><code>$value</code> (string): Header value</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->addHeader('X-Custom-Header', 'CustomValue');
+$this->addHeader('X-Rate-Limit-Remaining', '100');
+</code></pre>
+
+<p>---</p>
+
+<h3>getRequestHeader()</h3>
+
+<pre><code class="language-php">public function getRequestHeader($str): string|null
+</code></pre>
+
+<p>Gets a request header value.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$str</code> (string): Header name</li>
+</ul>
+
+<strong>Returns:</strong> Header value or <code>null</code> if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">$auth = $this->getRequestHeader('Authorization');
+$contentType = $this->getRequestHeader('Content-Type');
+</code></pre>
+
+<p>---</p>
+
+<h3>getHeaderAuthorization()</h3>
+
+<pre><code class="language-php">public function getHeaderAuthorization(): string|null
+</code></pre>
+
+<p>Gets the Authorization header value.</p>
+
+<strong>Returns:</strong> Authorization header value or <code>null</code>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$token = $this->getHeaderAuthorization();
+if($token) {
+    // Validate token
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Message Methods</h2>
+
+<h3>setMessage()</h3>
+
+<pre><code class="language-php">public function setMessage(string $message, string $type = 'success', string $description = '', int $time = 5, string $url = ''): bool
+</code></pre>
+
+<p>Sets a user-facing message in the response.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$message</code> (string): Message text</li>
+<li><code>$type</code> (string): Message type (success, error, warning, info)</li>
+<li><code>$description</code> (string): Detailed description</li>
+<li><code>$time</code> (int): Display time in seconds</li>
+<li><code>$url</code> (string): Related URL</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->setMessage('User created successfully', 'success');
+$this->setMessage('Operation completed', 'info', 'Your data has been saved', 3);
+</code></pre>
+
+<p>---</p>
+
+<h3>addMessage()</h3>
+
+<pre><code class="language-php">public function addMessage(string $message, string $type = 'success', string $description = '', int $time = 5, string $url = ''): bool
+</code></pre>
+
+<p>Adds a message to the response (allows multiple messages).</p>
+
+<p>---</p>
+
+<h2>Utility Methods</h2>
+
+<h3>setReturnFormat()</h3>
+
+<pre><code class="language-php">public function setReturnFormat($method): void
+</code></pre>
+
+<p>Sets the return format for the response.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$method</code> (string): Format type (JSON, XML, HTML, etc.)</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$this->setReturnFormat('JSON'); // Default
+$this->setReturnFormat('XML');
+</code></pre>
+
+<p>---</p>
+
+<h3>useFunction()</h3>
+
+<pre><code class="language-php">protected function useFunction(string $functionName): bool
+</code></pre>
+
+<p>Calls a method if it exists (used for routing to endpoints).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$functionName</code> (string): Method name to call</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if method exists and was called, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Route to ENDPOINT_xxx methods
+$endpoint = $this->params[0] ?? 'default';
+if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+    return $this->setErrorFromCodelib('not-found');
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Default Code Library</h2>
+
+The RESTful class includes these predefined error codes:
+
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Message</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ok</code></td>
+<td>OK</td>
+<td>200</td>
+</tr>
+<tr>
+<td><code>inserted</code></td>
+<td>Inserted successfully</td>
+<td>201</td>
+</tr>
+<tr>
+<td><code>no-content</code></td>
+<td>No content</td>
+<td>204</td>
+</tr>
+<tr>
+<td><code>form-params-error</code></td>
+<td>Wrong form parameters</td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>params-error</code></td>
+<td>Wrong parameters</td>
+<td>400</td>
+</tr>
+<tr>
+<td><code>security-error</code></td>
+<td>You don't have right credentials</td>
+<td>401</td>
+</tr>
+<tr>
+<td><code>not-allowed</code></td>
+<td>You are not allowed</td>
+<td>403</td>
+</tr>
+<tr>
+<td><code>not-found</code></td>
+<td>Not Found</td>
+<td>404</td>
+</tr>
+<tr>
+<td><code>method-error</code></td>
+<td>Wrong method</td>
+<td>405</td>
+</tr>
+<tr>
+<td><code>conflict</code></td>
+<td>There are conflicts</td>
+<td>409</td>
+</tr>
+<tr>
+<td><code>gone</code></td>
+<td>The resource is not longer available</td>
+<td>410</td>
+</tr>
+<tr>
+<td><code>unsupported-media</code></td>
+<td>Unsupported Media Type</td>
+<td>415</td>
+</tr>
+<tr>
+<td><code>server-error</code></td>
+<td>Generic server error</td>
+<td>500</td>
+</tr>
+<tr>
+<td><code>not-implemented</code></td>
+<td>Not implemented yet</td>
+<td>501</td>
+</tr>
+<tr>
+<td><code>service-unavailable</code></td>
+<td>The service is unavailable</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>system-error</code></td>
+<td>Problem in the platform</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>datastore-error</code></td>
+<td>Problem with Datastore</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>database-error</code></td>
+<td>Problem with Database</td>
+<td>503</td>
+</tr>
+<tr>
+<td><code>bigquery-error</code></td>
+<td>Problem with BigQuery</td>
+<td>503</td>
+</tr>
+</tbody>
+</table>
+
+<p>---</p>
+
+<h2>Complete API Example</h2>
+
+<pre><code class="language-php"><?php
+class API extends RESTful
+{
+    function main()
+    {
+        // Enable CORS
+        $this->sendCorsHeaders('GET,POST,PUT,DELETE');
+
+        // Check authentication
+        $token = $this->getHeaderAuthorization();
+        if(!$token) {
+            return $this->setErrorFromCodelib('security-error');
+        }
+
+        // Route to endpoints
+        $endpoint = str_replace('-', '_', $this->params[0] ?? 'default');
+        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+            return $this->setErrorFromCodelib('not-found');
+        }
+    }
+
+    public function ENDPOINT_default()
+    {
+        $this->addReturnData([
+            'api' => 'My API',
+            'version' => '1.0',
+            'endpoints' => ['/users', '/products', '/orders']
+        ]);
+    }
+
+    public function ENDPOINT_users()
+    {
+        // Only allow GET and POST
+        if(!$this->checkMethod('GET,POST')) return;
+
+        if($this->method == 'GET') {
+            // Get user ID from URL
+            $userId = $this->params[1] ?? null;
+
+            if($userId) {
+                // Get specific user
+                $user = $this->getUser($userId);
+                if(!$user) {
+                    return $this->setErrorFromCodelib('not-found', ': User not found');
+                }
+                $this->addReturnData($user);
+            } else {
+                // Get all users
+                $users = $this->getAllUsers();
+                $this->addReturnData(['users' => $users]);
+            }
+        } else {
+            // POST - Create user
+            // Validate required fields
+            if(!$this->checkMandatoryFormParams(['email', 'name', 'password'])) {
+                return;
+            }
+
+            // Create user
+            $user = $this->createUser($this->formParams);
+            $this->setReturnStatus(201);
+            $this->setReturnCode('inserted');
+            $this->addReturnData($user);
+        }
+    }
+
+    private function getUser($id)
+    {
+        // Your logic to get user
+        return ['id' => $id, 'name' => 'John Doe', 'email' => 'john@example.com'];
+    }
+
+    private function getAllUsers()
+    {
+        // Your logic to get all users
+        return [
+            ['id' => 1, 'name' => 'John Doe'],
+            ['id' => 2, 'name' => 'Jane Smith']
+        ];
+    }
+
+    private function createUser($data)
+    {
+        // Your logic to create user
+        return ['id' => 123, 'name' => $data['name'], 'email' => $data['email']];
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+<li><a href="../guides/getting-started.html">Getting Started</a></li>
+<li><a href="DataValidation.html">DataValidation Class</a></li>
+<li><a href="Core7.html">Core7 Class</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

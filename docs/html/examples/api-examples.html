@@ -1,0 +1,4352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Examples - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Comprehensive documentation for CloudFramework Backend Core PHP8 - A powerful framework for building scalable backend APIs with Google Cloud Platform integration">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="examples/api-examples.html" class="sidebar-nav-link active">API Examples</a></li>
+                        <li><a href="examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>API Examples</h1>
+
+<h2>Overview</h2>
+
+<p>This document provides complete, production-ready examples of CloudFramework APIs for common use cases. Each example includes:</p>
+<ul>
+<li>Complete source code</li>
+<li>Authentication and authorization</li>
+<li>Input validation</li>
+<li>Error handling</li>
+<li>Best practices</li>
+</ul>
+
+<hr>
+
+<h2>Table of Contents</h2>
+
+<p>1. <a href="#user-management-api">User Management API</a></p>
+<p>2. <a href="#e-commerce-products-api">E-commerce Products API</a></p>
+<p>3. <a href="#blog-posts-api">Blog Posts API</a></p>
+<p>4. <a href="#file-upload-api">File Upload API</a></p>
+<p>5. <a href="#authentication-api">Authentication API</a></p>
+<p>6. <a href="#webhook-handler-api">Webhook Handler API</a></p>
+<p>7. <a href="#analytics-api">Analytics API</a></p>
+<p>8. <a href="#multi-tenant-api">Multi-tenant API</a></p>
+
+<hr>
+
+<h2>User Management API</h2>
+
+<p>Complete CRUD API for user management with authentication and authorization.</p>
+
+<p><strong>File:</strong> <code>app/api/users.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * User Management API
+ *
+ * Endpoints:
+ * GET    /users/list          - List all users (admin only)
+ * GET    /users/profile/{id}  - Get user profile
+ * POST   /users/create        - Create new user
+ * PUT    /users/update/{id}   - Update user
+ * DELETE /users/delete/{id}   - Delete user
+ * POST   /users/search        - Search users
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $currentUser;
+    private $ds;
+
+    function main()
+    {
+        // Initialize DataStore
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+
+        // Authenticate user
+        if(!$this-&gt;authenticate()) {
+            return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+        }
+
+        // Route to endpoint
+        $endpoint = $this-&gt;params[0] ?? &#x27;list&#x27;;
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * GET /users/list
+     * List all users with pagination
+     */
+    public function ENDPOINT_list()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        // Only admins can list all users
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+            return $this-&gt;setError(&#x27;Admin access required&#x27;, 403);
+        }
+
+        // Get pagination parameters
+        $page = (int)($this-&gt;formParams[&#x27;page&#x27;] ?? 1);
+        $limit = (int)($this-&gt;formParams[&#x27;limit&#x27;] ?? 20);
+        $limit = min($limit, 100); // Max 100 per page
+
+        // Cache key
+        $cacheKey = &quot;users_list_page_{$page}_limit_{$limit}&quot;;
+        $cached = $this-&gt;core-&gt;cache-&gt;get($cacheKey);
+
+        if($cached !== null) {
+            return $this-&gt;addReturnData($cached);
+        }
+
+        // Fetch users
+        $users = $this-&gt;ds-&gt;fetchAll([], [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;], $limit, null, $page);
+
+        // Get total count
+        $total = $this-&gt;ds-&gt;count();
+
+        // Remove sensitive data
+        foreach($users as &amp;$user) {
+            unset($user[&#x27;password&#x27;]);
+            unset($user[&#x27;api_key&#x27;]);
+        }
+
+        $result = [
+            &#x27;users&#x27; =&gt; $users,
+            &#x27;pagination&#x27; =&gt; [
+                &#x27;page&#x27; =&gt; $page,
+                &#x27;limit&#x27; =&gt; $limit,
+                &#x27;total&#x27; =&gt; $total,
+                &#x27;pages&#x27; =&gt; ceil($total / $limit)
+            ]
+        ];
+
+        // Cache for 5 minutes
+        $this-&gt;core-&gt;cache-&gt;set($cacheKey, $result, 300);
+
+        $this-&gt;addReturnData($result);
+    }
+
+    /**
+     * GET /users/profile/{id}
+     * Get user profile by ID
+     */
+    public function ENDPOINT_profile()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $userId = $this-&gt;params[1] ?? null;
+        if(!$userId) {
+            return $this-&gt;setError(&#x27;User ID required&#x27;, 400);
+        }
+
+        // Users can only view their own profile unless admin
+        if($userId !== $this-&gt;currentUser[&#x27;id&#x27;] &amp;&amp; $this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+            return $this-&gt;setError(&#x27;Access denied&#x27;, 403);
+        }
+
+        // Fetch user
+        $user = $this-&gt;ds-&gt;fetchOne($userId);
+
+        if(!$user) {
+            return $this-&gt;setError(&#x27;User not found&#x27;, 404);
+        }
+
+        // Remove sensitive data
+        unset($user[&#x27;password&#x27;]);
+        unset($user[&#x27;api_key&#x27;]);
+
+        $this-&gt;addReturnData($user);
+    }
+
+    /**
+     * POST /users/create
+     * Create new user
+     */
+    public function ENDPOINT_create()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Validate input
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;name&#x27;, &#x27;email&#x27;, &#x27;password&#x27;])) return;
+
+        // Validate email
+        if(!filter_var($this-&gt;formParams[&#x27;email&#x27;], FILTER_VALIDATE_EMAIL)) {
+            return $this-&gt;setError(&#x27;Invalid email format&#x27;, 400);
+        }
+
+        // Validate password strength
+        if(strlen($this-&gt;formParams[&#x27;password&#x27;]) &lt; 8) {
+            return $this-&gt;setError(&#x27;Password must be at least 8 characters&#x27;, 400);
+        }
+
+        // Check if email already exists
+        $existing = $this-&gt;ds-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $this-&gt;formParams[&#x27;email&#x27;]]], null, 1);
+        if(!empty($existing)) {
+            return $this-&gt;setError(&#x27;Email already registered&#x27;, 409);
+        }
+
+        // Hash password
+        $hashedPassword = password_hash($this-&gt;formParams[&#x27;password&#x27;], PASSWORD_ARGON2ID);
+
+        // Create user
+        $userData = [
+            &#x27;name&#x27; =&gt; trim($this-&gt;formParams[&#x27;name&#x27;]),
+            &#x27;email&#x27; =&gt; strtolower(trim($this-&gt;formParams[&#x27;email&#x27;])),
+            &#x27;password&#x27; =&gt; $hashedPassword,
+            &#x27;role&#x27; =&gt; &#x27;user&#x27;, // Default role
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ];
+
+        $userId = $this-&gt;ds-&gt;createEntity($userData);
+
+        if($this-&gt;ds-&gt;error()) {
+            $this-&gt;core-&gt;errors-&gt;add($this-&gt;ds-&gt;getError(), &#x27;user_creation&#x27;, &#x27;error&#x27;);
+            return $this-&gt;setError(&#x27;Failed to create user&#x27;, 500);
+        }
+
+        // Invalidate cache
+        $this-&gt;core-&gt;cache-&gt;delete(&#x27;users_list_page_1_limit_20&#x27;);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_created&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;created_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;audit&#x27;);
+
+        // Return created user (without password)
+        $user = $this-&gt;ds-&gt;fetchOne($userId);
+        unset($user[&#x27;password&#x27;]);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData($user);
+    }
+
+    /**
+     * PUT /users/update/{id}
+     * Update user
+     */
+    public function ENDPOINT_update()
+    {
+        if(!$this-&gt;checkMethod(&#x27;PUT&#x27;)) return;
+
+        $userId = $this-&gt;params[1] ?? null;
+        if(!$userId) {
+            return $this-&gt;setError(&#x27;User ID required&#x27;, 400);
+        }
+
+        // Users can only update their own profile unless admin
+        if($userId !== $this-&gt;currentUser[&#x27;id&#x27;] &amp;&amp; $this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+            return $this-&gt;setError(&#x27;Access denied&#x27;, 403);
+        }
+
+        // Check if user exists
+        $user = $this-&gt;ds-&gt;fetchOne($userId);
+        if(!$user) {
+            return $this-&gt;setError(&#x27;User not found&#x27;, 404);
+        }
+
+        // Prepare update data
+        $updateData = [&#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)];
+
+        // Allowed fields for regular users
+        $allowedFields = [&#x27;name&#x27;, &#x27;bio&#x27;, &#x27;phone&#x27;];
+
+        // Admins can update role and status
+        if($this-&gt;currentUser[&#x27;role&#x27;] === &#x27;admin&#x27;) {
+            $allowedFields[] = &#x27;role&#x27;;
+            $allowedFields[] = &#x27;status&#x27;;
+        }
+
+        foreach($allowedFields as $field) {
+            if(isset($this-&gt;formParams[$field])) {
+                $updateData[$field] = $this-&gt;formParams[$field];
+            }
+        }
+
+        // Special handling for email
+        if(isset($this-&gt;formParams[&#x27;email&#x27;])) {
+            $email = strtolower(trim($this-&gt;formParams[&#x27;email&#x27;]));
+
+            if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                return $this-&gt;setError(&#x27;Invalid email format&#x27;, 400);
+            }
+
+            // Check if email is already taken
+            $existing = $this-&gt;ds-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $email]], null, 1);
+            if(!empty($existing) &amp;&amp; $existing[0][&#x27;KeyId&#x27;] !== $userId) {
+                return $this-&gt;setError(&#x27;Email already in use&#x27;, 409);
+            }
+
+            $updateData[&#x27;email&#x27;] = $email;
+        }
+
+        // Special handling for password
+        if(isset($this-&gt;formParams[&#x27;password&#x27;])) {
+            if(strlen($this-&gt;formParams[&#x27;password&#x27;]) &lt; 8) {
+                return $this-&gt;setError(&#x27;Password must be at least 8 characters&#x27;, 400);
+            }
+            $updateData[&#x27;password&#x27;] = password_hash($this-&gt;formParams[&#x27;password&#x27;], PASSWORD_ARGON2ID);
+        }
+
+        // Update user
+        $this-&gt;ds-&gt;updateEntity($userId, $updateData);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to update user&#x27;, 500);
+        }
+
+        // Invalidate cache
+        $this-&gt;core-&gt;cache-&gt;delete(&#x27;users_list_page_1_limit_20&#x27;);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_updated&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;updated_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;audit&#x27;);
+
+        // Return updated user
+        $updatedUser = $this-&gt;ds-&gt;fetchOne($userId);
+        unset($updatedUser[&#x27;password&#x27;]);
+
+        $this-&gt;addReturnData($updatedUser);
+    }
+
+    /**
+     * DELETE /users/delete/{id}
+     * Delete user (soft delete)
+     */
+    public function ENDPOINT_delete()
+    {
+        if(!$this-&gt;checkMethod(&#x27;DELETE&#x27;)) return;
+
+        // Only admins can delete users
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+            return $this-&gt;setError(&#x27;Admin access required&#x27;, 403);
+        }
+
+        $userId = $this-&gt;params[1] ?? null;
+        if(!$userId) {
+            return $this-&gt;setError(&#x27;User ID required&#x27;, 400);
+        }
+
+        // Check if user exists
+        $user = $this-&gt;ds-&gt;fetchOne($userId);
+        if(!$user) {
+            return $this-&gt;setError(&#x27;User not found&#x27;, 404);
+        }
+
+        // Prevent self-deletion
+        if($userId === $this-&gt;currentUser[&#x27;id&#x27;]) {
+            return $this-&gt;setError(&#x27;Cannot delete your own account&#x27;, 400);
+        }
+
+        // Soft delete (set status to deleted)
+        $this-&gt;ds-&gt;updateEntity($userId, [
+            &#x27;status&#x27; =&gt; &#x27;deleted&#x27;,
+            &#x27;deleted_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;deleted_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ]);
+
+        // Or hard delete:
+        // $this-&gt;ds-&gt;delete($userId);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to delete user&#x27;, 500);
+        }
+
+        // Invalidate cache
+        $this-&gt;core-&gt;cache-&gt;delete(&#x27;users_list_page_1_limit_20&#x27;);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_deleted&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;deleted_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;audit&#x27;);
+
+        $this-&gt;setReturnStatus(204);
+    }
+
+    /**
+     * POST /users/search
+     * Search users
+     */
+    public function ENDPOINT_search()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Only admins can search users
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+            return $this-&gt;setError(&#x27;Admin access required&#x27;, 403);
+        }
+
+        $query = $this-&gt;formParams[&#x27;query&#x27;] ?? &#x27;&#x27;;
+
+        if(strlen($query) &lt; 2) {
+            return $this-&gt;setError(&#x27;Search query must be at least 2 characters&#x27;, 400);
+        }
+
+        // Search in name and email
+        // Note: Datastore doesn&#x27;t support LIKE queries, so we fetch all and filter
+        $allUsers = $this-&gt;ds-&gt;fetchAll();
+
+        $results = array_filter($allUsers, function($user) use ($query) {
+            $searchIn = strtolower($user[&#x27;name&#x27;] . &#x27; &#x27; . $user[&#x27;email&#x27;]);
+            return strpos($searchIn, strtolower($query)) !== false;
+        });
+
+        // Remove sensitive data
+        foreach($results as &amp;$user) {
+            unset($user[&#x27;password&#x27;]);
+            unset($user[&#x27;api_key&#x27;]);
+        }
+
+        $this-&gt;addReturnData([
+            &#x27;query&#x27; =&gt; $query,
+            &#x27;count&#x27; =&gt; count($results),
+            &#x27;results&#x27; =&gt; array_values($results)
+        ]);
+    }
+
+    /**
+     * Authenticate user using JWT token
+     */
+    private function authenticate(): bool
+    {
+        $authHeader = $_SERVER[&#x27;HTTP_AUTHORIZATION&#x27;] ?? &#x27;&#x27;;
+
+        if(!preg_match(&#x27;/Bearer\s+(.*)$/i&#x27;, $authHeader, $matches)) {
+            return false;
+        }
+
+        $token = $matches[1];
+        $payload = $this-&gt;validateJWT($token);
+
+        if(!$payload) {
+            return false;
+        }
+
+        $this-&gt;currentUser = $payload;
+        return true;
+    }
+
+    /**
+     * Validate JWT token
+     */
+    private function validateJWT(string $token): array|false
+    {
+        $secret = $this-&gt;core-&gt;config-&gt;get(&#x27;security.jwt.secret&#x27;);
+
+        $parts = explode(&#x27;.&#x27;, $token);
+        if(count($parts) !== 3) {
+            return false;
+        }
+
+        [$header, $payload, $signature] = $parts;
+
+        // Verify signature
+        $expectedSignature = base64_encode(hash_hmac(&#x27;sha256&#x27;, &quot;$header.$payload&quot;, $secret, true));
+        if($signature !== $expectedSignature) {
+            return false;
+        }
+
+        // Decode payload
+        $payloadData = json_decode(base64_decode($payload), true);
+
+        // Check expiration
+        if(isset($payloadData[&#x27;exp&#x27;]) &amp;&amp; $payloadData[&#x27;exp&#x27;] &lt; time()) {
+            return false;
+        }
+
+        return $payloadData;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>E-commerce Products API</h2>
+
+<p>Complete product catalog API with categories, search, and inventory management.</p>
+
+<p><strong>File:</strong> <code>app/api/products.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * E-commerce Products API
+ *
+ * Endpoints:
+ * GET    /products/list            - List products
+ * GET    /products/view/{id}       - Get product details
+ * POST   /products/create          - Create product (admin)
+ * PUT    /products/update/{id}     - Update product (admin)
+ * DELETE /products/delete/{id}     - Delete product (admin)
+ * GET    /products/category/{slug} - Get products by category
+ * POST   /products/search          - Search products
+ * GET    /products/featured        - Get featured products
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $ds;
+    private $buckets;
+    private $currentUser;
+
+    function main()
+    {
+        // Initialize services
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Products&#x27;]);
+        $this-&gt;buckets = $this-&gt;core-&gt;loadClass(&#x27;Buckets&#x27;, [&#x27;gs://my-products-bucket&#x27;]);
+
+        // CORS
+        $this-&gt;sendCorsHeaders();
+
+        // Handle preflight
+        if($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;OPTIONS&#x27;) {
+            http_response_code(204);
+            exit;
+        }
+
+        // Authenticate for protected endpoints
+        $protectedEndpoints = [&#x27;create&#x27;, &#x27;update&#x27;, &#x27;delete&#x27;];
+        $endpoint = $this-&gt;params[0] ?? &#x27;list&#x27;;
+
+        if(in_array($endpoint, $protectedEndpoints)) {
+            if(!$this-&gt;authenticate()) {
+                return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+            }
+
+            if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+                return $this-&gt;setError(&#x27;Admin access required&#x27;, 403);
+            }
+        }
+
+        // Route to endpoint
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * GET /products/list
+     */
+    public function ENDPOINT_list()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $page = (int)($this-&gt;formParams[&#x27;page&#x27;] ?? 1);
+        $limit = (int)($this-&gt;formParams[&#x27;limit&#x27;] ?? 20);
+        $category = $this-&gt;formParams[&#x27;category&#x27;] ?? null;
+
+        // Build WHERE clause
+        $where = [[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;]];
+
+        if($category) {
+            $where[] = [&#x27;category&#x27;, &#x27;=&#x27;, $category];
+        }
+
+        // Cache key
+        $cacheKey = &quot;products_list_{$page}_{$limit}_{$category}&quot;;
+        $cached = $this-&gt;core-&gt;cache-&gt;get($cacheKey);
+
+        if($cached !== null) {
+            return $this-&gt;addReturnData($cached);
+        }
+
+        // Fetch products
+        $products = $this-&gt;ds-&gt;fetchAll($where, [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;], $limit, null, $page);
+
+        // Get total count
+        $total = $this-&gt;ds-&gt;count($where);
+
+        $result = [
+            &#x27;products&#x27; =&gt; $products,
+            &#x27;pagination&#x27; =&gt; [
+                &#x27;page&#x27; =&gt; $page,
+                &#x27;limit&#x27; =&gt; $limit,
+                &#x27;total&#x27; =&gt; $total,
+                &#x27;pages&#x27; =&gt; ceil($total / $limit)
+            ]
+        ];
+
+        // Cache for 10 minutes
+        $this-&gt;core-&gt;cache-&gt;set($cacheKey, $result, 600);
+
+        $this-&gt;addReturnData($result);
+    }
+
+    /**
+     * GET /products/view/{id}
+     */
+    public function ENDPOINT_view()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $productId = $this-&gt;params[1] ?? null;
+        if(!$productId) {
+            return $this-&gt;setError(&#x27;Product ID required&#x27;, 400);
+        }
+
+        // Try cache first
+        $cacheKey = &quot;product_{$productId}&quot;;
+        $cached = $this-&gt;core-&gt;cache-&gt;get($cacheKey);
+
+        if($cached !== null) {
+            return $this-&gt;addReturnData($cached);
+        }
+
+        // Fetch product
+        $product = $this-&gt;ds-&gt;fetchOne($productId);
+
+        if(!$product || $product[&#x27;status&#x27;] !== &#x27;active&#x27;) {
+            return $this-&gt;setError(&#x27;Product not found&#x27;, 404);
+        }
+
+        // Increment view count
+        $this-&gt;ds-&gt;updateEntity($productId, [
+            &#x27;views&#x27; =&gt; ($product[&#x27;views&#x27;] ?? 0) + 1
+        ]);
+
+        // Cache for 5 minutes
+        $this-&gt;core-&gt;cache-&gt;set($cacheKey, $product, 300);
+
+        $this-&gt;addReturnData($product);
+    }
+
+    /**
+     * POST /products/create
+     */
+    public function ENDPOINT_create()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Validate input
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;name&#x27;, &#x27;price&#x27;, &#x27;category&#x27;])) return;
+
+        // Validate price
+        $price = (float)$this-&gt;formParams[&#x27;price&#x27;];
+        if($price &lt;= 0) {
+            return $this-&gt;setError(&#x27;Price must be greater than 0&#x27;, 400);
+        }
+
+        // Validate stock
+        $stock = (int)($this-&gt;formParams[&#x27;stock&#x27;] ?? 0);
+        if($stock &lt; 0) {
+            return $this-&gt;setError(&#x27;Stock cannot be negative&#x27;, 400);
+        }
+
+        // Handle image upload
+        $imageUrl = null;
+        if(!empty($_FILES[&#x27;image&#x27;])) {
+            $result = $this-&gt;buckets-&gt;manageUploadFiles(&#x27;image&#x27;, &#x27;products/&#x27;);
+
+            if($this-&gt;buckets-&gt;error()) {
+                return $this-&gt;setError(&#x27;Failed to upload image&#x27;, 400);
+            }
+
+            $imageUrl = $result[&#x27;data&#x27;][0][&#x27;url&#x27;] ?? null;
+        }
+
+        // Generate slug
+        $slug = $this-&gt;generateSlug($this-&gt;formParams[&#x27;name&#x27;]);
+
+        // Create product
+        $productData = [
+            &#x27;name&#x27; =&gt; trim($this-&gt;formParams[&#x27;name&#x27;]),
+            &#x27;slug&#x27; =&gt; $slug,
+            &#x27;description&#x27; =&gt; $this-&gt;formParams[&#x27;description&#x27;] ?? &#x27;&#x27;,
+            &#x27;price&#x27; =&gt; $price,
+            &#x27;category&#x27; =&gt; $this-&gt;formParams[&#x27;category&#x27;],
+            &#x27;stock&#x27; =&gt; $stock,
+            &#x27;image&#x27; =&gt; $imageUrl,
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;featured&#x27; =&gt; (bool)($this-&gt;formParams[&#x27;featured&#x27;] ?? false),
+            &#x27;views&#x27; =&gt; 0,
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;created_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ];
+
+        $productId = $this-&gt;ds-&gt;createEntity($productData);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to create product&#x27;, 500);
+        }
+
+        // Invalidate cache
+        $this-&gt;invalidateProductCache();
+
+        $product = $this-&gt;ds-&gt;fetchOne($productId);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData($product);
+    }
+
+    /**
+     * PUT /products/update/{id}
+     */
+    public function ENDPOINT_update()
+    {
+        if(!$this-&gt;checkMethod(&#x27;PUT&#x27;)) return;
+
+        $productId = $this-&gt;params[1] ?? null;
+        if(!$productId) {
+            return $this-&gt;setError(&#x27;Product ID required&#x27;, 400);
+        }
+
+        // Check if product exists
+        $product = $this-&gt;ds-&gt;fetchOne($productId);
+        if(!$product) {
+            return $this-&gt;setError(&#x27;Product not found&#x27;, 404);
+        }
+
+        // Prepare update data
+        $updateData = [&#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)];
+
+        $allowedFields = [&#x27;name&#x27;, &#x27;description&#x27;, &#x27;price&#x27;, &#x27;category&#x27;, &#x27;stock&#x27;, &#x27;status&#x27;, &#x27;featured&#x27;];
+
+        foreach($allowedFields as $field) {
+            if(isset($this-&gt;formParams[$field])) {
+                $updateData[$field] = $this-&gt;formParams[$field];
+            }
+        }
+
+        // Update slug if name changed
+        if(isset($updateData[&#x27;name&#x27;])) {
+            $updateData[&#x27;slug&#x27;] = $this-&gt;generateSlug($updateData[&#x27;name&#x27;]);
+        }
+
+        // Handle image upload
+        if(!empty($_FILES[&#x27;image&#x27;])) {
+            // Delete old image
+            if(!empty($product[&#x27;image&#x27;])) {
+                $oldImagePath = str_replace(&#x27;https://storage.googleapis.com/my-products-bucket/&#x27;, &#x27;&#x27;, $product[&#x27;image&#x27;]);
+                $this-&gt;buckets-&gt;delete($oldImagePath);
+            }
+
+            // Upload new image
+            $result = $this-&gt;buckets-&gt;manageUploadFiles(&#x27;image&#x27;, &#x27;products/&#x27;);
+
+            if(!$this-&gt;buckets-&gt;error()) {
+                $updateData[&#x27;image&#x27;] = $result[&#x27;data&#x27;][0][&#x27;url&#x27;] ?? null;
+            }
+        }
+
+        // Update product
+        $this-&gt;ds-&gt;updateEntity($productId, $updateData);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to update product&#x27;, 500);
+        }
+
+        // Invalidate cache
+        $this-&gt;invalidateProductCache();
+        $this-&gt;core-&gt;cache-&gt;delete(&quot;product_{$productId}&quot;);
+
+        $updatedProduct = $this-&gt;ds-&gt;fetchOne($productId);
+        $this-&gt;addReturnData($updatedProduct);
+    }
+
+    /**
+     * DELETE /products/delete/{id}
+     */
+    public function ENDPOINT_delete()
+    {
+        if(!$this-&gt;checkMethod(&#x27;DELETE&#x27;)) return;
+
+        $productId = $this-&gt;params[1] ?? null;
+        if(!$productId) {
+            return $this-&gt;setError(&#x27;Product ID required&#x27;, 400);
+        }
+
+        $product = $this-&gt;ds-&gt;fetchOne($productId);
+        if(!$product) {
+            return $this-&gt;setError(&#x27;Product not found&#x27;, 404);
+        }
+
+        // Soft delete
+        $this-&gt;ds-&gt;updateEntity($productId, [
+            &#x27;status&#x27; =&gt; &#x27;deleted&#x27;,
+            &#x27;deleted_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        // Delete product image
+        if(!empty($product[&#x27;image&#x27;])) {
+            $imagePath = str_replace(&#x27;https://storage.googleapis.com/my-products-bucket/&#x27;, &#x27;&#x27;, $product[&#x27;image&#x27;]);
+            $this-&gt;buckets-&gt;delete($imagePath);
+        }
+
+        // Invalidate cache
+        $this-&gt;invalidateProductCache();
+        $this-&gt;core-&gt;cache-&gt;delete(&quot;product_{$productId}&quot;);
+
+        $this-&gt;setReturnStatus(204);
+    }
+
+    /**
+     * POST /products/search
+     */
+    public function ENDPOINT_search()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        $query = $this-&gt;formParams[&#x27;query&#x27;] ?? &#x27;&#x27;;
+
+        if(strlen($query) &lt; 2) {
+            return $this-&gt;setError(&#x27;Search query must be at least 2 characters&#x27;, 400);
+        }
+
+        // Fetch all active products
+        $allProducts = $this-&gt;ds-&gt;fetchAll([[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;]]);
+
+        // Filter by search query
+        $results = array_filter($allProducts, function($product) use ($query) {
+            $searchIn = strtolower($product[&#x27;name&#x27;] . &#x27; &#x27; . $product[&#x27;description&#x27;] . &#x27; &#x27; . $product[&#x27;category&#x27;]);
+            return strpos($searchIn, strtolower($query)) !== false;
+        });
+
+        $this-&gt;addReturnData([
+            &#x27;query&#x27; =&gt; $query,
+            &#x27;count&#x27; =&gt; count($results),
+            &#x27;results&#x27; =&gt; array_values($results)
+        ]);
+    }
+
+    /**
+     * GET /products/featured
+     */
+    public function ENDPOINT_featured()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $cacheKey = &#x27;products_featured&#x27;;
+        $cached = $this-&gt;core-&gt;cache-&gt;get($cacheKey);
+
+        if($cached !== null) {
+            return $this-&gt;addReturnData($cached);
+        }
+
+        $products = $this-&gt;ds-&gt;fetchAll([
+            [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;],
+            [&#x27;featured&#x27;, &#x27;=&#x27;, true]
+        ], [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;], 10);
+
+        // Cache for 1 hour
+        $this-&gt;core-&gt;cache-&gt;set($cacheKey, $products, 3600);
+
+        $this-&gt;addReturnData($products);
+    }
+
+    /**
+     * GET /products/category/{slug}
+     */
+    public function ENDPOINT_category()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $categorySlug = $this-&gt;params[1] ?? null;
+        if(!$categorySlug) {
+            return $this-&gt;setError(&#x27;Category slug required&#x27;, 400);
+        }
+
+        $page = (int)($this-&gt;formParams[&#x27;page&#x27;] ?? 1);
+        $limit = (int)($this-&gt;formParams[&#x27;limit&#x27;] ?? 20);
+
+        $products = $this-&gt;ds-&gt;fetchAll([
+            [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;],
+            [&#x27;category&#x27;, &#x27;=&#x27;, $categorySlug]
+        ], [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;], $limit, null, $page);
+
+        $total = $this-&gt;ds-&gt;count([
+            [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;],
+            [&#x27;category&#x27;, &#x27;=&#x27;, $categorySlug]
+        ]);
+
+        $this-&gt;addReturnData([
+            &#x27;category&#x27; =&gt; $categorySlug,
+            &#x27;products&#x27; =&gt; $products,
+            &#x27;pagination&#x27; =&gt; [
+                &#x27;page&#x27; =&gt; $page,
+                &#x27;limit&#x27; =&gt; $limit,
+                &#x27;total&#x27; =&gt; $total,
+                &#x27;pages&#x27; =&gt; ceil($total / $limit)
+            ]
+        ]);
+    }
+
+    // Helper methods
+
+    private function authenticate(): bool
+    {
+        $apiKey = $_SERVER[&#x27;HTTP_X_API_KEY&#x27;] ?? &#x27;&#x27;;
+        $validKeys = $this-&gt;core-&gt;config-&gt;get(&#x27;security.api_keys.valid_keys&#x27;, []);
+
+        if(in_array($apiKey, $validKeys)) {
+            $this-&gt;currentUser = [&#x27;id&#x27; =&gt; &#x27;admin&#x27;, &#x27;role&#x27; =&gt; &#x27;admin&#x27;];
+            return true;
+        }
+
+        return false;
+    }
+
+    private function generateSlug(string $text): string
+    {
+        $text = strtolower($text);
+        $text = preg_replace(&#x27;/[^a-z0-9-]/&#x27;, &#x27;-&#x27;, $text);
+        $text = preg_replace(&#x27;/-+/&#x27;, &#x27;-&#x27;, $text);
+        return trim($text, &#x27;-&#x27;);
+    }
+
+    private function invalidateProductCache()
+    {
+        $this-&gt;core-&gt;cache-&gt;delete(&#x27;products_list_1_20_&#x27;);
+        $this-&gt;core-&gt;cache-&gt;delete(&#x27;products_featured&#x27;);
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Blog Posts API</h2>
+
+<p>Content management API with posts, categories, tags, and comments.</p>
+
+<p><strong>File:</strong> <code>app/api/blog.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Blog Posts API
+ *
+ * Endpoints:
+ * GET    /blog/posts              - List posts
+ * GET    /blog/post/{slug}        - Get post by slug
+ * POST   /blog/create             - Create post (admin)
+ * PUT    /blog/update/{id}        - Update post (admin)
+ * DELETE /blog/delete/{id}        - Delete post (admin)
+ * POST   /blog/comment/{id}       - Add comment to post
+ * GET    /blog/comments/{id}      - Get post comments
+ * GET    /blog/tag/{tag}          - Get posts by tag
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $postsDS;
+    private $commentsDS;
+    private $currentUser;
+
+    function main()
+    {
+        $this-&gt;postsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;BlogPosts&#x27;]);
+        $this-&gt;commentsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;BlogComments&#x27;]);
+
+        $this-&gt;sendCorsHeaders();
+
+        if($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;OPTIONS&#x27;) {
+            http_response_code(204);
+            exit;
+        }
+
+        $endpoint = $this-&gt;params[0] ?? &#x27;posts&#x27;;
+
+        // Authenticate for admin endpoints
+        $adminEndpoints = [&#x27;create&#x27;, &#x27;update&#x27;, &#x27;delete&#x27;];
+        if(in_array($endpoint, $adminEndpoints)) {
+            if(!$this-&gt;authenticate()) {
+                return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+            }
+        }
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * GET /blog/posts
+     */
+    public function ENDPOINT_posts()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $page = (int)($this-&gt;formParams[&#x27;page&#x27;] ?? 1);
+        $limit = (int)($this-&gt;formParams[&#x27;limit&#x27;] ?? 10);
+
+        $posts = $this-&gt;postsDS-&gt;fetchAll(
+            [[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;published&#x27;]],
+            [&#x27;published_at&#x27; =&gt; &#x27;DESC&#x27;],
+            $limit,
+            null,
+            $page
+        );
+
+        // Add comment count to each post
+        foreach($posts as &amp;$post) {
+            $post[&#x27;comment_count&#x27;] = $this-&gt;commentsDS-&gt;count([
+                [&#x27;post_id&#x27;, &#x27;=&#x27;, $post[&#x27;KeyId&#x27;]],
+                [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;approved&#x27;]
+            ]);
+        }
+
+        $total = $this-&gt;postsDS-&gt;count([[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;published&#x27;]]);
+
+        $this-&gt;addReturnData([
+            &#x27;posts&#x27; =&gt; $posts,
+            &#x27;pagination&#x27; =&gt; [
+                &#x27;page&#x27; =&gt; $page,
+                &#x27;limit&#x27; =&gt; $limit,
+                &#x27;total&#x27; =&gt; $total,
+                &#x27;pages&#x27; =&gt; ceil($total / $limit)
+            ]
+        ]);
+    }
+
+    /**
+     * GET /blog/post/{slug}
+     */
+    public function ENDPOINT_post()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $slug = $this-&gt;params[1] ?? null;
+        if(!$slug) {
+            return $this-&gt;setError(&#x27;Post slug required&#x27;, 400);
+        }
+
+        // Try cache
+        $cacheKey = &quot;blog_post_{$slug}&quot;;
+        $cached = $this-&gt;core-&gt;cache-&gt;get($cacheKey);
+
+        if($cached !== null) {
+            return $this-&gt;addReturnData($cached);
+        }
+
+        // Fetch post
+        $posts = $this-&gt;postsDS-&gt;fetchAll([
+            [&#x27;slug&#x27;, &#x27;=&#x27;, $slug],
+            [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;published&#x27;]
+        ], null, 1);
+
+        if(empty($posts)) {
+            return $this-&gt;setError(&#x27;Post not found&#x27;, 404);
+        }
+
+        $post = $posts[0];
+
+        // Increment views
+        $this-&gt;postsDS-&gt;updateEntity($post[&#x27;KeyId&#x27;], [
+            &#x27;views&#x27; =&gt; ($post[&#x27;views&#x27;] ?? 0) + 1
+        ]);
+
+        // Get approved comments
+        $comments = $this-&gt;commentsDS-&gt;fetchAll([
+            [&#x27;post_id&#x27;, &#x27;=&#x27;, $post[&#x27;KeyId&#x27;]],
+            [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;approved&#x27;]
+        ], [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;]);
+
+        $post[&#x27;comments&#x27;] = $comments;
+        $post[&#x27;comment_count&#x27;] = count($comments);
+
+        // Cache for 10 minutes
+        $this-&gt;core-&gt;cache-&gt;set($cacheKey, $post, 600);
+
+        $this-&gt;addReturnData($post);
+    }
+
+    /**
+     * POST /blog/create
+     */
+    public function ENDPOINT_create()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;title&#x27;, &#x27;content&#x27;])) return;
+
+        $slug = $this-&gt;generateSlug($this-&gt;formParams[&#x27;title&#x27;]);
+
+        // Check if slug exists
+        $existing = $this-&gt;postsDS-&gt;fetchAll([[&#x27;slug&#x27;, &#x27;=&#x27;, $slug]], null, 1);
+        if(!empty($existing)) {
+            $slug = $slug . &#x27;-&#x27; . time();
+        }
+
+        $postData = [
+            &#x27;title&#x27; =&gt; trim($this-&gt;formParams[&#x27;title&#x27;]),
+            &#x27;slug&#x27; =&gt; $slug,
+            &#x27;content&#x27; =&gt; $this-&gt;formParams[&#x27;content&#x27;],
+            &#x27;excerpt&#x27; =&gt; $this-&gt;formParams[&#x27;excerpt&#x27;] ?? substr(strip_tags($this-&gt;formParams[&#x27;content&#x27;]), 0, 200),
+            &#x27;author_id&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;],
+            &#x27;author_name&#x27; =&gt; $this-&gt;currentUser[&#x27;name&#x27;],
+            &#x27;category&#x27; =&gt; $this-&gt;formParams[&#x27;category&#x27;] ?? &#x27;general&#x27;,
+            &#x27;tags&#x27; =&gt; $this-&gt;formParams[&#x27;tags&#x27;] ?? [],
+            &#x27;featured_image&#x27; =&gt; $this-&gt;formParams[&#x27;featured_image&#x27;] ?? null,
+            &#x27;status&#x27; =&gt; $this-&gt;formParams[&#x27;status&#x27;] ?? &#x27;draft&#x27;,
+            &#x27;views&#x27; =&gt; 0,
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ];
+
+        if($postData[&#x27;status&#x27;] === &#x27;published&#x27;) {
+            $postData[&#x27;published_at&#x27;] = date(&#x27;c&#x27;);
+        }
+
+        $postId = $this-&gt;postsDS-&gt;createEntity($postData);
+
+        $post = $this-&gt;postsDS-&gt;fetchOne($postId);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData($post);
+    }
+
+    /**
+     * POST /blog/comment/{id}
+     */
+    public function ENDPOINT_comment()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        $postId = $this-&gt;params[1] ?? null;
+        if(!$postId) {
+            return $this-&gt;setError(&#x27;Post ID required&#x27;, 400);
+        }
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;name&#x27;, &#x27;email&#x27;, &#x27;comment&#x27;])) return;
+
+        // Validate email
+        if(!filter_var($this-&gt;formParams[&#x27;email&#x27;], FILTER_VALIDATE_EMAIL)) {
+            return $this-&gt;setError(&#x27;Invalid email format&#x27;, 400);
+        }
+
+        // Check if post exists
+        $post = $this-&gt;postsDS-&gt;fetchOne($postId);
+        if(!$post) {
+            return $this-&gt;setError(&#x27;Post not found&#x27;, 404);
+        }
+
+        $commentData = [
+            &#x27;post_id&#x27; =&gt; $postId,
+            &#x27;name&#x27; =&gt; htmlspecialchars(trim($this-&gt;formParams[&#x27;name&#x27;]), ENT_QUOTES, &#x27;UTF-8&#x27;),
+            &#x27;email&#x27; =&gt; $this-&gt;formParams[&#x27;email&#x27;],
+            &#x27;comment&#x27; =&gt; htmlspecialchars(trim($this-&gt;formParams[&#x27;comment&#x27;]), ENT_QUOTES, &#x27;UTF-8&#x27;),
+            &#x27;status&#x27; =&gt; &#x27;pending&#x27;, // Require approval
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;
+        ];
+
+        $commentId = $this-&gt;commentsDS-&gt;createEntity($commentData);
+
+        // Invalidate cache
+        $this-&gt;core-&gt;cache-&gt;delete(&quot;blog_post_{$post[&#x27;slug&#x27;]}&quot;);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData([
+            &#x27;message&#x27; =&gt; &#x27;Comment submitted and awaiting approval&#x27;,
+            &#x27;comment_id&#x27; =&gt; $commentId
+        ]);
+    }
+
+    /**
+     * GET /blog/tag/{tag}
+     */
+    public function ENDPOINT_tag()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $tag = $this-&gt;params[1] ?? null;
+        if(!$tag) {
+            return $this-&gt;setError(&#x27;Tag required&#x27;, 400);
+        }
+
+        // Fetch all published posts
+        $allPosts = $this-&gt;postsDS-&gt;fetchAll([[&#x27;status&#x27;, &#x27;=&#x27;, &#x27;published&#x27;]]);
+
+        // Filter by tag
+        $posts = array_filter($allPosts, function($post) use ($tag) {
+            return in_array($tag, $post[&#x27;tags&#x27;] ?? []);
+        });
+
+        $this-&gt;addReturnData([
+            &#x27;tag&#x27; =&gt; $tag,
+            &#x27;count&#x27; =&gt; count($posts),
+            &#x27;posts&#x27; =&gt; array_values($posts)
+        ]);
+    }
+
+    private function authenticate(): bool
+    {
+        $apiKey = $_SERVER[&#x27;HTTP_X_API_KEY&#x27;] ?? &#x27;&#x27;;
+        $validKeys = $this-&gt;core-&gt;config-&gt;get(&#x27;security.api_keys.valid_keys&#x27;, []);
+
+        if(in_array($apiKey, $validKeys)) {
+            $this-&gt;currentUser = [
+                &#x27;id&#x27; =&gt; &#x27;admin&#x27;,
+                &#x27;name&#x27; =&gt; &#x27;Administrator&#x27;,
+                &#x27;role&#x27; =&gt; &#x27;admin&#x27;
+            ];
+            return true;
+        }
+
+        return false;
+    }
+
+    private function generateSlug(string $text): string
+    {
+        $text = strtolower($text);
+        $text = preg_replace(&#x27;/[^a-z0-9-]/&#x27;, &#x27;-&#x27;, $text);
+        $text = preg_replace(&#x27;/-+/&#x27;, &#x27;-&#x27;, $text);
+        return trim($text, &#x27;-&#x27;);
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>File Upload API</h2>
+
+<p>Secure file upload with validation and Cloud Storage integration.</p>
+
+<p><strong>File:</strong> <code>app/api/upload.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * File Upload API
+ *
+ * Endpoints:
+ * POST /upload/file      - Upload single file
+ * POST /upload/multiple  - Upload multiple files
+ * GET  /upload/list      - List uploaded files
+ * DELETE /upload/delete/{filename} - Delete file
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $buckets;
+    private $maxFileSize = 10485760; // 10MB
+    private $allowedTypes = [
+        &#x27;image/jpeg&#x27;,
+        &#x27;image/png&#x27;,
+        &#x27;image/gif&#x27;,
+        &#x27;application/pdf&#x27;,
+        &#x27;application/msword&#x27;,
+        &#x27;application/vnd.openxmlformats-officedocument.wordprocessingml.document&#x27;
+    ];
+
+    function main()
+    {
+        // Authenticate
+        if(!$this-&gt;authenticate()) {
+            return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+        }
+
+        $this-&gt;buckets = $this-&gt;core-&gt;loadClass(&#x27;Buckets&#x27;, [&#x27;gs://my-uploads-bucket&#x27;]);
+
+        $endpoint = $this-&gt;params[0] ?? &#x27;file&#x27;;
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * POST /upload/file
+     */
+    public function ENDPOINT_file()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(empty($_FILES[&#x27;file&#x27;])) {
+            return $this-&gt;setError(&#x27;No file uploaded&#x27;, 400);
+        }
+
+        $file = $_FILES[&#x27;file&#x27;];
+
+        // Validate file
+        $validation = $this-&gt;validateFile($file);
+        if($validation !== true) {
+            return $this-&gt;setError($validation, 400);
+        }
+
+        // Generate safe filename
+        $extension = strtolower(pathinfo($file[&#x27;name&#x27;], PATHINFO_EXTENSION));
+        $filename = bin2hex(random_bytes(16)) . &#x27;.&#x27; . $extension;
+        $uploadPath = &#x27;uploads/&#x27; . date(&#x27;Y/m/&#x27;) . $filename;
+
+        // Upload to Cloud Storage
+        $result = $this-&gt;buckets-&gt;uploadFile($file[&#x27;tmp_name&#x27;], $uploadPath);
+
+        if($this-&gt;buckets-&gt;error()) {
+            return $this-&gt;setError(&#x27;Upload failed&#x27;, 500);
+        }
+
+        // Make file public (optional)
+        $this-&gt;buckets-&gt;setFilePublic($uploadPath);
+
+        // Get public URL
+        $publicUrl = &quot;https://storage.googleapis.com/my-uploads-bucket/{$uploadPath}&quot;;
+
+        // Log upload
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;file_uploaded&#x27;,
+            &#x27;filename&#x27; =&gt; $filename,
+            &#x27;size&#x27; =&gt; $file[&#x27;size&#x27;],
+            &#x27;type&#x27; =&gt; $file[&#x27;type&#x27;],
+            &#x27;user_id&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;uploads&#x27;);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData([
+            &#x27;filename&#x27; =&gt; $filename,
+            &#x27;url&#x27; =&gt; $publicUrl,
+            &#x27;size&#x27; =&gt; $file[&#x27;size&#x27;],
+            &#x27;type&#x27; =&gt; $file[&#x27;type&#x27;]
+        ]);
+    }
+
+    /**
+     * POST /upload/multiple
+     */
+    public function ENDPOINT_multiple()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(empty($_FILES[&#x27;files&#x27;])) {
+            return $this-&gt;setError(&#x27;No files uploaded&#x27;, 400);
+        }
+
+        $files = $_FILES[&#x27;files&#x27;];
+        $uploadedFiles = [];
+        $errors = [];
+
+        // Handle multiple files
+        $fileCount = count($files[&#x27;name&#x27;]);
+
+        for($i = 0; $i &lt; $fileCount; $i++) {
+            $file = [
+                &#x27;name&#x27; =&gt; $files[&#x27;name&#x27;][$i],
+                &#x27;type&#x27; =&gt; $files[&#x27;type&#x27;][$i],
+                &#x27;tmp_name&#x27; =&gt; $files[&#x27;tmp_name&#x27;][$i],
+                &#x27;error&#x27; =&gt; $files[&#x27;error&#x27;][$i],
+                &#x27;size&#x27; =&gt; $files[&#x27;size&#x27;][$i]
+            ];
+
+            // Validate
+            $validation = $this-&gt;validateFile($file);
+            if($validation !== true) {
+                $errors[] = [
+                    &#x27;filename&#x27; =&gt; $file[&#x27;name&#x27;],
+                    &#x27;error&#x27; =&gt; $validation
+                ];
+                continue;
+            }
+
+            // Generate filename and upload
+            $extension = strtolower(pathinfo($file[&#x27;name&#x27;], PATHINFO_EXTENSION));
+            $filename = bin2hex(random_bytes(16)) . &#x27;.&#x27; . $extension;
+            $uploadPath = &#x27;uploads/&#x27; . date(&#x27;Y/m/&#x27;) . $filename;
+
+            $result = $this-&gt;buckets-&gt;uploadFile($file[&#x27;tmp_name&#x27;], $uploadPath);
+
+            if(!$this-&gt;buckets-&gt;error()) {
+                $this-&gt;buckets-&gt;setFilePublic($uploadPath);
+
+                $uploadedFiles[] = [
+                    &#x27;filename&#x27; =&gt; $filename,
+                    &#x27;url&#x27; =&gt; &quot;https://storage.googleapis.com/my-uploads-bucket/{$uploadPath}&quot;,
+                    &#x27;size&#x27; =&gt; $file[&#x27;size&#x27;],
+                    &#x27;type&#x27; =&gt; $file[&#x27;type&#x27;]
+                ];
+            } else {
+                $errors[] = [
+                    &#x27;filename&#x27; =&gt; $file[&#x27;name&#x27;],
+                    &#x27;error&#x27; =&gt; &#x27;Upload failed&#x27;
+                ];
+            }
+        }
+
+        $this-&gt;addReturnData([
+            &#x27;uploaded&#x27; =&gt; $uploadedFiles,
+            &#x27;errors&#x27; =&gt; $errors,
+            &#x27;total&#x27; =&gt; $fileCount,
+            &#x27;successful&#x27; =&gt; count($uploadedFiles),
+            &#x27;failed&#x27; =&gt; count($errors)
+        ]);
+    }
+
+    /**
+     * GET /upload/list
+     */
+    public function ENDPOINT_list()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $prefix = &#x27;uploads/&#x27;;
+        $files = $this-&gt;buckets-&gt;scan($prefix);
+
+        if($this-&gt;buckets-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to list files&#x27;, 500);
+        }
+
+        $fileList = [];
+        foreach($files as $file) {
+            $fileList[] = [
+                &#x27;filename&#x27; =&gt; basename($file),
+                &#x27;path&#x27; =&gt; $file,
+                &#x27;url&#x27; =&gt; &quot;https://storage.googleapis.com/my-uploads-bucket/{$file}&quot;
+            ];
+        }
+
+        $this-&gt;addReturnData([
+            &#x27;count&#x27; =&gt; count($fileList),
+            &#x27;files&#x27; =&gt; $fileList
+        ]);
+    }
+
+    /**
+     * DELETE /upload/delete/{filename}
+     */
+    public function ENDPOINT_delete()
+    {
+        if(!$this-&gt;checkMethod(&#x27;DELETE&#x27;)) return;
+
+        $filename = $this-&gt;params[1] ?? null;
+        if(!$filename) {
+            return $this-&gt;setError(&#x27;Filename required&#x27;, 400);
+        }
+
+        // Find file (search in uploads directory)
+        $files = $this-&gt;buckets-&gt;scan(&#x27;uploads/&#x27;);
+        $filePath = null;
+
+        foreach($files as $file) {
+            if(basename($file) === $filename) {
+                $filePath = $file;
+                break;
+            }
+        }
+
+        if(!$filePath) {
+            return $this-&gt;setError(&#x27;File not found&#x27;, 404);
+        }
+
+        // Delete file
+        $result = $this-&gt;buckets-&gt;delete($filePath);
+
+        if($this-&gt;buckets-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to delete file&#x27;, 500);
+        }
+
+        // Log deletion
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;file_deleted&#x27;,
+            &#x27;filename&#x27; =&gt; $filename,
+            &#x27;user_id&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;uploads&#x27;);
+
+        $this-&gt;setReturnStatus(204);
+    }
+
+    private function validateFile(array $file): string|true
+    {
+        // Check for upload errors
+        if($file[&#x27;error&#x27;] !== UPLOAD_ERR_OK) {
+            return &#x27;Upload error occurred&#x27;;
+        }
+
+        // Check file size
+        if($file[&#x27;size&#x27;] &gt; $this-&gt;maxFileSize) {
+            return &#x27;File too large (max 10MB)&#x27;;
+        }
+
+        // Check file type
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mimeType = finfo_file($finfo, $file[&#x27;tmp_name&#x27;]);
+        finfo_close($finfo);
+
+        if(!in_array($mimeType, $this-&gt;allowedTypes)) {
+            return &#x27;File type not allowed&#x27;;
+        }
+
+        // Check extension
+        $allowedExtensions = [&#x27;jpg&#x27;, &#x27;jpeg&#x27;, &#x27;png&#x27;, &#x27;gif&#x27;, &#x27;pdf&#x27;, &#x27;doc&#x27;, &#x27;docx&#x27;];
+        $extension = strtolower(pathinfo($file[&#x27;name&#x27;], PATHINFO_EXTENSION));
+
+        if(!in_array($extension, $allowedExtensions)) {
+            return &#x27;File extension not allowed&#x27;;
+        }
+
+        return true;
+    }
+
+    private function authenticate(): bool
+    {
+        $apiKey = $_SERVER[&#x27;HTTP_X_API_KEY&#x27;] ?? &#x27;&#x27;;
+        $validKeys = $this-&gt;core-&gt;config-&gt;get(&#x27;security.api_keys.valid_keys&#x27;, []);
+
+        if(in_array($apiKey, $validKeys)) {
+            $this-&gt;currentUser = [&#x27;id&#x27; =&gt; &#x27;user123&#x27;, &#x27;role&#x27; =&gt; &#x27;user&#x27;];
+            return true;
+        }
+
+        return false;
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Authentication API</h2>
+
+<p>Complete authentication system with JWT tokens, refresh tokens, and session management.</p>
+
+<p><strong>File:</strong> <code>app/api/auth.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Authentication API
+ *
+ * Endpoints:
+ * POST /auth/register        - Register new user
+ * POST /auth/login           - Login user
+ * POST /auth/logout          - Logout user
+ * POST /auth/refresh         - Refresh access token
+ * POST /auth/forgot-password - Request password reset
+ * POST /auth/reset-password  - Reset password
+ * GET  /auth/verify-email    - Verify email address
+ * GET  /auth/me              - Get current user info
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $ds;
+    private $jwtSecret;
+    private $accessTokenExpiry = 3600; // 1 hour
+    private $refreshTokenExpiry = 2592000; // 30 days
+
+    function main()
+    {
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+        $this-&gt;jwtSecret = $this-&gt;core-&gt;config-&gt;get(&#x27;security.jwt.secret&#x27;);
+
+        $this-&gt;sendCorsHeaders();
+
+        if($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;OPTIONS&#x27;) {
+            http_response_code(204);
+            exit;
+        }
+
+        $endpoint = $this-&gt;params[0] ?? &#x27;login&#x27;;
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * POST /auth/register
+     */
+    public function ENDPOINT_register()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Validate input
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;name&#x27;, &#x27;email&#x27;, &#x27;password&#x27;])) return;
+
+        // Validate email
+        $email = strtolower(trim($this-&gt;formParams[&#x27;email&#x27;]));
+        if(!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return $this-&gt;setError(&#x27;Invalid email format&#x27;, 400);
+        }
+
+        // Validate password strength
+        $password = $this-&gt;formParams[&#x27;password&#x27;];
+        if(strlen($password) &lt; 8) {
+            return $this-&gt;setError(&#x27;Password must be at least 8 characters&#x27;, 400);
+        }
+
+        if(!preg_match(&#x27;/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/&#x27;, $password)) {
+            return $this-&gt;setError(&#x27;Password must contain uppercase, lowercase, and numbers&#x27;, 400);
+        }
+
+        // Check if user exists
+        $existing = $this-&gt;ds-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $email]], null, 1);
+        if(!empty($existing)) {
+            return $this-&gt;setError(&#x27;Email already registered&#x27;, 409);
+        }
+
+        // Hash password
+        $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);
+
+        // Generate email verification token
+        $verificationToken = bin2hex(random_bytes(32));
+
+        // Create user
+        $userData = [
+            &#x27;name&#x27; =&gt; trim($this-&gt;formParams[&#x27;name&#x27;]),
+            &#x27;email&#x27; =&gt; $email,
+            &#x27;password&#x27; =&gt; $hashedPassword,
+            &#x27;role&#x27; =&gt; &#x27;user&#x27;,
+            &#x27;status&#x27; =&gt; &#x27;pending&#x27;, // Pending email verification
+            &#x27;email_verified&#x27; =&gt; false,
+            &#x27;verification_token&#x27; =&gt; $verificationToken,
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ];
+
+        $userId = $this-&gt;ds-&gt;createEntity($userData);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to create user&#x27;, 500);
+        }
+
+        // Send verification email
+        $this-&gt;sendVerificationEmail($email, $verificationToken);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_registered&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;email&#x27; =&gt; $email
+        ], &#x27;auth&#x27;);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData([
+            &#x27;message&#x27; =&gt; &#x27;Registration successful. Please check your email to verify your account.&#x27;,
+            &#x27;user_id&#x27; =&gt; $userId
+        ]);
+    }
+
+    /**
+     * POST /auth/login
+     */
+    public function ENDPOINT_login()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;email&#x27;, &#x27;password&#x27;])) return;
+
+        $email = strtolower(trim($this-&gt;formParams[&#x27;email&#x27;]));
+
+        // Find user
+        $users = $this-&gt;ds-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $email]], null, 1);
+
+        if(empty($users)) {
+            // Prevent user enumeration
+            sleep(1);
+            return $this-&gt;setError(&#x27;Invalid credentials&#x27;, 401);
+        }
+
+        $user = $users[0];
+
+        // Verify password
+        if(!password_verify($this-&gt;formParams[&#x27;password&#x27;], $user[&#x27;password&#x27;])) {
+            // Log failed attempt
+            $this-&gt;core-&gt;logs-&gt;add([
+                &#x27;event&#x27; =&gt; &#x27;login_failed&#x27;,
+                &#x27;email&#x27; =&gt; $email,
+                &#x27;ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;
+            ], &#x27;auth&#x27;);
+
+            sleep(1);
+            return $this-&gt;setError(&#x27;Invalid credentials&#x27;, 401);
+        }
+
+        // Check if email is verified
+        if(!$user[&#x27;email_verified&#x27;]) {
+            return $this-&gt;setError(&#x27;Please verify your email address&#x27;, 403);
+        }
+
+        // Check account status
+        if($user[&#x27;status&#x27;] !== &#x27;active&#x27;) {
+            return $this-&gt;setError(&#x27;Account is not active&#x27;, 403);
+        }
+
+        // Generate tokens
+        $accessToken = $this-&gt;generateAccessToken($user);
+        $refreshToken = $this-&gt;generateRefreshToken($user);
+
+        // Save refresh token
+        $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+            &#x27;refresh_token&#x27; =&gt; password_hash($refreshToken, PASSWORD_BCRYPT),
+            &#x27;last_login&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;last_login_ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;
+        ]);
+
+        // Log successful login
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;login_success&#x27;,
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+            &#x27;ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;
+        ], &#x27;auth&#x27;);
+
+        $this-&gt;addReturnData([
+            &#x27;access_token&#x27; =&gt; $accessToken,
+            &#x27;refresh_token&#x27; =&gt; $refreshToken,
+            &#x27;token_type&#x27; =&gt; &#x27;Bearer&#x27;,
+            &#x27;expires_in&#x27; =&gt; $this-&gt;accessTokenExpiry,
+            &#x27;user&#x27; =&gt; [
+                &#x27;id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+                &#x27;name&#x27; =&gt; $user[&#x27;name&#x27;],
+                &#x27;email&#x27; =&gt; $user[&#x27;email&#x27;],
+                &#x27;role&#x27; =&gt; $user[&#x27;role&#x27;]
+            ]
+        ]);
+    }
+
+    /**
+     * POST /auth/logout
+     */
+    public function ENDPOINT_logout()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        $user = $this-&gt;authenticateRequest();
+        if(!$user) {
+            return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+        }
+
+        // Invalidate refresh token
+        $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+            &#x27;refresh_token&#x27; =&gt; null,
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        // Log logout
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;logout&#x27;,
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;]
+        ], &#x27;auth&#x27;);
+
+        $this-&gt;addReturnData([&#x27;message&#x27; =&gt; &#x27;Logged out successfully&#x27;]);
+    }
+
+    /**
+     * POST /auth/refresh
+     */
+    public function ENDPOINT_refresh()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;refresh_token&#x27;])) return;
+
+        $refreshToken = $this-&gt;formParams[&#x27;refresh_token&#x27;];
+
+        // Decode refresh token
+        $payload = $this-&gt;verifyToken($refreshToken);
+        if(!$payload) {
+            return $this-&gt;setError(&#x27;Invalid refresh token&#x27;, 401);
+        }
+
+        // Get user
+        $user = $this-&gt;ds-&gt;fetchOne($payload[&#x27;user_id&#x27;]);
+        if(!$user) {
+            return $this-&gt;setError(&#x27;User not found&#x27;, 404);
+        }
+
+        // Verify stored refresh token
+        if(!isset($user[&#x27;refresh_token&#x27;]) || !password_verify($refreshToken, $user[&#x27;refresh_token&#x27;])) {
+            return $this-&gt;setError(&#x27;Invalid refresh token&#x27;, 401);
+        }
+
+        // Generate new tokens
+        $newAccessToken = $this-&gt;generateAccessToken($user);
+        $newRefreshToken = $this-&gt;generateRefreshToken($user);
+
+        // Update refresh token
+        $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+            &#x27;refresh_token&#x27; =&gt; password_hash($newRefreshToken, PASSWORD_BCRYPT),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        $this-&gt;addReturnData([
+            &#x27;access_token&#x27; =&gt; $newAccessToken,
+            &#x27;refresh_token&#x27; =&gt; $newRefreshToken,
+            &#x27;token_type&#x27; =&gt; &#x27;Bearer&#x27;,
+            &#x27;expires_in&#x27; =&gt; $this-&gt;accessTokenExpiry
+        ]);
+    }
+
+    /**
+     * POST /auth/forgot-password
+     */
+    public function ENDPOINT_forgot_password()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;email&#x27;])) return;
+
+        $email = strtolower(trim($this-&gt;formParams[&#x27;email&#x27;]));
+
+        // Find user (don&#x27;t reveal if user exists)
+        $users = $this-&gt;ds-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $email]], null, 1);
+
+        if(!empty($users)) {
+            $user = $users[0];
+
+            // Generate reset token
+            $resetToken = bin2hex(random_bytes(32));
+            $resetExpiry = date(&#x27;c&#x27;, strtotime(&#x27;+1 hour&#x27;));
+
+            // Save token
+            $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+                &#x27;password_reset_token&#x27; =&gt; $resetToken,
+                &#x27;password_reset_expiry&#x27; =&gt; $resetExpiry
+            ]);
+
+            // Send reset email
+            $this-&gt;sendPasswordResetEmail($email, $resetToken);
+
+            // Log event
+            $this-&gt;core-&gt;logs-&gt;add([
+                &#x27;event&#x27; =&gt; &#x27;password_reset_requested&#x27;,
+                &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;]
+            ], &#x27;auth&#x27;);
+        }
+
+        // Always return success (prevent user enumeration)
+        $this-&gt;addReturnData([
+            &#x27;message&#x27; =&gt; &#x27;If the email exists, a password reset link has been sent&#x27;
+        ]);
+    }
+
+    /**
+     * POST /auth/reset-password
+     */
+    public function ENDPOINT_reset_password()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;token&#x27;, &#x27;password&#x27;])) return;
+
+        $token = $this-&gt;formParams[&#x27;token&#x27;];
+        $newPassword = $this-&gt;formParams[&#x27;password&#x27;];
+
+        // Validate password
+        if(strlen($newPassword) &lt; 8) {
+            return $this-&gt;setError(&#x27;Password must be at least 8 characters&#x27;, 400);
+        }
+
+        // Find user with token
+        $users = $this-&gt;ds-&gt;fetchAll([[&#x27;password_reset_token&#x27;, &#x27;=&#x27;, $token]], null, 1);
+
+        if(empty($users)) {
+            return $this-&gt;setError(&#x27;Invalid or expired reset token&#x27;, 400);
+        }
+
+        $user = $users[0];
+
+        // Check expiry
+        if(strtotime($user[&#x27;password_reset_expiry&#x27;]) &lt; time()) {
+            return $this-&gt;setError(&#x27;Reset token has expired&#x27;, 400);
+        }
+
+        // Update password
+        $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+            &#x27;password&#x27; =&gt; password_hash($newPassword, PASSWORD_ARGON2ID),
+            &#x27;password_reset_token&#x27; =&gt; null,
+            &#x27;password_reset_expiry&#x27; =&gt; null,
+            &#x27;refresh_token&#x27; =&gt; null, // Invalidate all sessions
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;password_reset_completed&#x27;,
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;]
+        ], &#x27;auth&#x27;);
+
+        $this-&gt;addReturnData([&#x27;message&#x27; =&gt; &#x27;Password reset successfully&#x27;]);
+    }
+
+    /**
+     * GET /auth/verify-email
+     */
+    public function ENDPOINT_verify_email()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $token = $this-&gt;formParams[&#x27;token&#x27;] ?? null;
+
+        if(!$token) {
+            return $this-&gt;setError(&#x27;Verification token required&#x27;, 400);
+        }
+
+        // Find user with token
+        $users = $this-&gt;ds-&gt;fetchAll([[&#x27;verification_token&#x27;, &#x27;=&#x27;, $token]], null, 1);
+
+        if(empty($users)) {
+            return $this-&gt;setError(&#x27;Invalid verification token&#x27;, 400);
+        }
+
+        $user = $users[0];
+
+        // Update user
+        $this-&gt;ds-&gt;updateEntity($user[&#x27;KeyId&#x27;], [
+            &#x27;email_verified&#x27; =&gt; true,
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;verification_token&#x27; =&gt; null,
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;email_verified&#x27;,
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;]
+        ], &#x27;auth&#x27;);
+
+        $this-&gt;addReturnData([&#x27;message&#x27; =&gt; &#x27;Email verified successfully&#x27;]);
+    }
+
+    /**
+     * GET /auth/me
+     */
+    public function ENDPOINT_me()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $user = $this-&gt;authenticateRequest();
+        if(!$user) {
+            return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+        }
+
+        // Return user info (without sensitive data)
+        $this-&gt;addReturnData([
+            &#x27;id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+            &#x27;name&#x27; =&gt; $user[&#x27;name&#x27;],
+            &#x27;email&#x27; =&gt; $user[&#x27;email&#x27;],
+            &#x27;role&#x27; =&gt; $user[&#x27;role&#x27;],
+            &#x27;status&#x27; =&gt; $user[&#x27;status&#x27;],
+            &#x27;email_verified&#x27; =&gt; $user[&#x27;email_verified&#x27;],
+            &#x27;created_at&#x27; =&gt; $user[&#x27;created_at&#x27;]
+        ]);
+    }
+
+    // Helper methods
+
+    private function generateAccessToken(array $user): string
+    {
+        $payload = [
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+            &#x27;email&#x27; =&gt; $user[&#x27;email&#x27;],
+            &#x27;role&#x27; =&gt; $user[&#x27;role&#x27;],
+            &#x27;type&#x27; =&gt; &#x27;access&#x27;,
+            &#x27;iat&#x27; =&gt; time(),
+            &#x27;exp&#x27; =&gt; time() + $this-&gt;accessTokenExpiry
+        ];
+
+        return $this-&gt;createToken($payload);
+    }
+
+    private function generateRefreshToken(array $user): string
+    {
+        $payload = [
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+            &#x27;type&#x27; =&gt; &#x27;refresh&#x27;,
+            &#x27;iat&#x27; =&gt; time(),
+            &#x27;exp&#x27; =&gt; time() + $this-&gt;refreshTokenExpiry
+        ];
+
+        return $this-&gt;createToken($payload);
+    }
+
+    private function createToken(array $payload): string
+    {
+        $header = json_encode([&#x27;typ&#x27; =&gt; &#x27;JWT&#x27;, &#x27;alg&#x27; =&gt; &#x27;HS256&#x27;]);
+        $payload = json_encode($payload);
+
+        $base64UrlHeader = $this-&gt;base64UrlEncode($header);
+        $base64UrlPayload = $this-&gt;base64UrlEncode($payload);
+
+        $signature = hash_hmac(&#x27;sha256&#x27;, $base64UrlHeader . &quot;.&quot; . $base64UrlPayload, $this-&gt;jwtSecret, true);
+        $base64UrlSignature = $this-&gt;base64UrlEncode($signature);
+
+        return $base64UrlHeader . &quot;.&quot; . $base64UrlPayload . &quot;.&quot; . $base64UrlSignature;
+    }
+
+    private function verifyToken(string $token): array|false
+    {
+        $parts = explode(&#x27;.&#x27;, $token);
+        if(count($parts) !== 3) {
+            return false;
+        }
+
+        [$header, $payload, $signature] = $parts;
+
+        // Verify signature
+        $expectedSignature = $this-&gt;base64UrlEncode(
+            hash_hmac(&#x27;sha256&#x27;, $header . &quot;.&quot; . $payload, $this-&gt;jwtSecret, true)
+        );
+
+        if($signature !== $expectedSignature) {
+            return false;
+        }
+
+        // Decode payload
+        $payloadData = json_decode($this-&gt;base64UrlDecode($payload), true);
+
+        // Check expiration
+        if(isset($payloadData[&#x27;exp&#x27;]) &amp;&amp; $payloadData[&#x27;exp&#x27;] &lt; time()) {
+            return false;
+        }
+
+        return $payloadData;
+    }
+
+    private function authenticateRequest(): array|false
+    {
+        $authHeader = $_SERVER[&#x27;HTTP_AUTHORIZATION&#x27;] ?? &#x27;&#x27;;
+
+        if(!preg_match(&#x27;/Bearer\s+(.*)$/i&#x27;, $authHeader, $matches)) {
+            return false;
+        }
+
+        $token = $matches[1];
+        $payload = $this-&gt;verifyToken($token);
+
+        if(!$payload || $payload[&#x27;type&#x27;] !== &#x27;access&#x27;) {
+            return false;
+        }
+
+        // Get user
+        $user = $this-&gt;ds-&gt;fetchOne($payload[&#x27;user_id&#x27;]);
+
+        return $user ?: false;
+    }
+
+    private function base64UrlEncode(string $data): string
+    {
+        return rtrim(strtr(base64_encode($data), &#x27;+/&#x27;, &#x27;-_&#x27;), &#x27;=&#x27;);
+    }
+
+    private function base64UrlDecode(string $data): string
+    {
+        return base64_decode(strtr($data, &#x27;-_&#x27;, &#x27;+/&#x27;));
+    }
+
+    private function sendVerificationEmail(string $email, string $token)
+    {
+        $verificationUrl = $this-&gt;core-&gt;config-&gt;get(&#x27;app.url&#x27;) . &quot;/auth/verify-email?token={$token}&quot;;
+
+        $emailService = $this-&gt;core-&gt;loadClass(&#x27;Email&#x27;);
+        $emailService-&gt;setTo($email);
+        $emailService-&gt;setSubject(&#x27;Verify Your Email Address&#x27;);
+        $emailService-&gt;setBodyHTML(&quot;
+            &lt;h1&gt;Welcome!&lt;/h1&gt;
+            &lt;p&gt;Please click the link below to verify your email address:&lt;/p&gt;
+            &lt;p&gt;&lt;a href=&#x27;{$verificationUrl}&#x27;&gt;{$verificationUrl}&lt;/a&gt;&lt;/p&gt;
+        &quot;);
+        $emailService-&gt;send();
+    }
+
+    private function sendPasswordResetEmail(string $email, string $token)
+    {
+        $resetUrl = $this-&gt;core-&gt;config-&gt;get(&#x27;app.url&#x27;) . &quot;/auth/reset-password?token={$token}&quot;;
+
+        $emailService = $this-&gt;core-&gt;loadClass(&#x27;Email&#x27;);
+        $emailService-&gt;setTo($email);
+        $emailService-&gt;setSubject(&#x27;Password Reset Request&#x27;);
+        $emailService-&gt;setBodyHTML(&quot;
+            &lt;h1&gt;Password Reset&lt;/h1&gt;
+            &lt;p&gt;Click the link below to reset your password:&lt;/p&gt;
+            &lt;p&gt;&lt;a href=&#x27;{$resetUrl}&#x27;&gt;{$resetUrl}&lt;/a&gt;&lt;/p&gt;
+            &lt;p&gt;This link will expire in 1 hour.&lt;/p&gt;
+        &quot;);
+        $emailService-&gt;send();
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Webhook Handler API</h2>
+
+<p>Process webhooks from external services like Stripe, GitHub, or custom integrations.</p>
+
+<p><strong>File:</strong> <code>app/api/webhooks.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Webhook Handler API
+ *
+ * Endpoints:
+ * POST /webhooks/stripe       - Handle Stripe webhooks
+ * POST /webhooks/github       - Handle GitHub webhooks
+ * POST /webhooks/sendgrid     - Handle SendGrid webhooks
+ * POST /webhooks/custom       - Handle custom webhooks
+ * GET  /webhooks/logs         - View webhook logs (admin)
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $ds;
+    private $webhookSecret;
+
+    function main()
+    {
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;WebhookLogs&#x27;]);
+
+        $endpoint = $this-&gt;params[0] ?? &#x27;stripe&#x27;;
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * POST /webhooks/stripe
+     */
+    public function ENDPOINT_stripe()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Get raw body
+        $payload = file_get_contents(&#x27;php://input&#x27;);
+        $signature = $_SERVER[&#x27;HTTP_STRIPE_SIGNATURE&#x27;] ?? &#x27;&#x27;;
+
+        // Verify signature
+        $secret = $this-&gt;core-&gt;config-&gt;get(&#x27;webhooks.stripe.secret&#x27;);
+        if(!$this-&gt;verifyStripeSignature($payload, $signature, $secret)) {
+            $this-&gt;logWebhook(&#x27;stripe&#x27;, &#x27;failed&#x27;, &#x27;Invalid signature&#x27;);
+            return $this-&gt;setError(&#x27;Invalid signature&#x27;, 401);
+        }
+
+        // Parse event
+        $event = json_decode($payload, true);
+
+        if(!$event || !isset($event[&#x27;type&#x27;])) {
+            $this-&gt;logWebhook(&#x27;stripe&#x27;, &#x27;failed&#x27;, &#x27;Invalid payload&#x27;);
+            return $this-&gt;setError(&#x27;Invalid payload&#x27;, 400);
+        }
+
+        // Log webhook
+        $this-&gt;logWebhook(&#x27;stripe&#x27;, &#x27;received&#x27;, $event[&#x27;type&#x27;], $event);
+
+        // Handle event types
+        $handled = false;
+
+        switch($event[&#x27;type&#x27;]) {
+            case &#x27;payment_intent.succeeded&#x27;:
+                $handled = $this-&gt;handlePaymentSuccess($event[&#x27;data&#x27;][&#x27;object&#x27;]);
+                break;
+
+            case &#x27;payment_intent.payment_failed&#x27;:
+                $handled = $this-&gt;handlePaymentFailed($event[&#x27;data&#x27;][&#x27;object&#x27;]);
+                break;
+
+            case &#x27;customer.subscription.created&#x27;:
+                $handled = $this-&gt;handleSubscriptionCreated($event[&#x27;data&#x27;][&#x27;object&#x27;]);
+                break;
+
+            case &#x27;customer.subscription.updated&#x27;:
+                $handled = $this-&gt;handleSubscriptionUpdated($event[&#x27;data&#x27;][&#x27;object&#x27;]);
+                break;
+
+            case &#x27;customer.subscription.deleted&#x27;:
+                $handled = $this-&gt;handleSubscriptionCancelled($event[&#x27;data&#x27;][&#x27;object&#x27;]);
+                break;
+
+            case &#x27;invoice.payment_succeeded&#x27;:
+                $handled = $this-&gt;handleInvoicePaid($event[&#x27;data&#x27;][&#x27;object&#x27;]);
+                break;
+
+            default:
+                $this-&gt;core-&gt;logs-&gt;add([
+                    &#x27;event&#x27; =&gt; &#x27;webhook_unhandled&#x27;,
+                    &#x27;service&#x27; =&gt; &#x27;stripe&#x27;,
+                    &#x27;type&#x27; =&gt; $event[&#x27;type&#x27;]
+                ], &#x27;webhooks&#x27;);
+        }
+
+        if($handled) {
+            $this-&gt;logWebhook(&#x27;stripe&#x27;, &#x27;processed&#x27;, $event[&#x27;type&#x27;]);
+        }
+
+        // Always return 200 to acknowledge receipt
+        $this-&gt;addReturnData([&#x27;received&#x27; =&gt; true]);
+    }
+
+    /**
+     * POST /webhooks/github
+     */
+    public function ENDPOINT_github()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        $payload = file_get_contents(&#x27;php://input&#x27;);
+        $signature = $_SERVER[&#x27;HTTP_X_HUB_SIGNATURE_256&#x27;] ?? &#x27;&#x27;;
+
+        // Verify signature
+        $secret = $this-&gt;core-&gt;config-&gt;get(&#x27;webhooks.github.secret&#x27;);
+        if(!$this-&gt;verifyGitHubSignature($payload, $signature, $secret)) {
+            $this-&gt;logWebhook(&#x27;github&#x27;, &#x27;failed&#x27;, &#x27;Invalid signature&#x27;);
+            return $this-&gt;setError(&#x27;Invalid signature&#x27;, 401);
+        }
+
+        $event = json_decode($payload, true);
+        $eventType = $_SERVER[&#x27;HTTP_X_GITHUB_EVENT&#x27;] ?? &#x27;unknown&#x27;;
+
+        $this-&gt;logWebhook(&#x27;github&#x27;, &#x27;received&#x27;, $eventType, $event);
+
+        // Handle different event types
+        switch($eventType) {
+            case &#x27;push&#x27;:
+                $this-&gt;handleGitHubPush($event);
+                break;
+
+            case &#x27;pull_request&#x27;:
+                $this-&gt;handleGitHubPullRequest($event);
+                break;
+
+            case &#x27;issues&#x27;:
+                $this-&gt;handleGitHubIssue($event);
+                break;
+
+            case &#x27;release&#x27;:
+                $this-&gt;handleGitHubRelease($event);
+                break;
+
+            default:
+                $this-&gt;core-&gt;logs-&gt;add([
+                    &#x27;event&#x27; =&gt; &#x27;webhook_unhandled&#x27;,
+                    &#x27;service&#x27; =&gt; &#x27;github&#x27;,
+                    &#x27;type&#x27; =&gt; $eventType
+                ], &#x27;webhooks&#x27;);
+        }
+
+        $this-&gt;logWebhook(&#x27;github&#x27;, &#x27;processed&#x27;, $eventType);
+        $this-&gt;addReturnData([&#x27;received&#x27; =&gt; true]);
+    }
+
+    /**
+     * POST /webhooks/sendgrid
+     */
+    public function ENDPOINT_sendgrid()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        $payload = file_get_contents(&#x27;php://input&#x27;);
+        $events = json_decode($payload, true);
+
+        if(!is_array($events)) {
+            return $this-&gt;setError(&#x27;Invalid payload&#x27;, 400);
+        }
+
+        $this-&gt;logWebhook(&#x27;sendgrid&#x27;, &#x27;received&#x27;, &#x27;email_events&#x27;, [&#x27;count&#x27; =&gt; count($events)]);
+
+        // Process each event
+        foreach($events as $event) {
+            $eventType = $event[&#x27;event&#x27;] ?? &#x27;unknown&#x27;;
+            $email = $event[&#x27;email&#x27;] ?? &#x27;unknown&#x27;;
+
+            switch($eventType) {
+                case &#x27;delivered&#x27;:
+                    $this-&gt;handleEmailDelivered($event);
+                    break;
+
+                case &#x27;open&#x27;:
+                    $this-&gt;handleEmailOpened($event);
+                    break;
+
+                case &#x27;click&#x27;:
+                    $this-&gt;handleEmailClicked($event);
+                    break;
+
+                case &#x27;bounce&#x27;:
+                    $this-&gt;handleEmailBounced($event);
+                    break;
+
+                case &#x27;dropped&#x27;:
+                    $this-&gt;handleEmailDropped($event);
+                    break;
+
+                case &#x27;spam&#x27;:
+                    $this-&gt;handleEmailSpam($event);
+                    break;
+
+                case &#x27;unsubscribe&#x27;:
+                    $this-&gt;handleEmailUnsubscribe($event);
+                    break;
+            }
+
+            $this-&gt;core-&gt;logs-&gt;add([
+                &#x27;event&#x27; =&gt; &#x27;email_event&#x27;,
+                &#x27;type&#x27; =&gt; $eventType,
+                &#x27;email&#x27; =&gt; $email,
+                &#x27;timestamp&#x27; =&gt; $event[&#x27;timestamp&#x27;] ?? time()
+            ], &#x27;email_tracking&#x27;);
+        }
+
+        $this-&gt;logWebhook(&#x27;sendgrid&#x27;, &#x27;processed&#x27;, &#x27;email_events&#x27;);
+        $this-&gt;addReturnData([&#x27;received&#x27; =&gt; true]);
+    }
+
+    /**
+     * POST /webhooks/custom
+     */
+    public function ENDPOINT_custom()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Verify API key
+        $apiKey = $_SERVER[&#x27;HTTP_X_API_KEY&#x27;] ?? &#x27;&#x27;;
+        $validKeys = $this-&gt;core-&gt;config-&gt;get(&#x27;webhooks.custom.api_keys&#x27;, []);
+
+        if(!in_array($apiKey, $validKeys)) {
+            $this-&gt;logWebhook(&#x27;custom&#x27;, &#x27;failed&#x27;, &#x27;Invalid API key&#x27;);
+            return $this-&gt;setError(&#x27;Invalid API key&#x27;, 401);
+        }
+
+        $payload = file_get_contents(&#x27;php://input&#x27;);
+        $data = json_decode($payload, true);
+
+        if(!$data) {
+            return $this-&gt;setError(&#x27;Invalid JSON&#x27;, 400);
+        }
+
+        $eventType = $data[&#x27;event&#x27;] ?? &#x27;unknown&#x27;;
+
+        $this-&gt;logWebhook(&#x27;custom&#x27;, &#x27;received&#x27;, $eventType, $data);
+
+        // Store webhook data
+        $webhookDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;CustomWebhooks&#x27;]);
+        $webhookDS-&gt;createEntity([
+            &#x27;event_type&#x27; =&gt; $eventType,
+            &#x27;data&#x27; =&gt; $data,
+            &#x27;source_ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;,
+            &#x27;received_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        // Trigger custom processing
+        if(isset($data[&#x27;action&#x27;])) {
+            $this-&gt;processCustomAction($data[&#x27;action&#x27;], $data);
+        }
+
+        $this-&gt;logWebhook(&#x27;custom&#x27;, &#x27;processed&#x27;, $eventType);
+        $this-&gt;addReturnData([&#x27;received&#x27; =&gt; true, &#x27;event&#x27; =&gt; $eventType]);
+    }
+
+    /**
+     * GET /webhooks/logs
+     */
+    public function ENDPOINT_logs()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        // Admin authentication required
+        if(!$this-&gt;authenticateAdmin()) {
+            return $this-&gt;setError(&#x27;Admin access required&#x27;, 403);
+        }
+
+        $service = $this-&gt;formParams[&#x27;service&#x27;] ?? null;
+        $limit = (int)($this-&gt;formParams[&#x27;limit&#x27;] ?? 50);
+
+        $where = [];
+        if($service) {
+            $where[] = [&#x27;service&#x27;, &#x27;=&#x27;, $service];
+        }
+
+        $logs = $this-&gt;ds-&gt;fetchAll($where, [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;], $limit);
+
+        $this-&gt;addReturnData([
+            &#x27;count&#x27; =&gt; count($logs),
+            &#x27;logs&#x27; =&gt; $logs
+        ]);
+    }
+
+    // Stripe handlers
+
+    private function handlePaymentSuccess(array $paymentIntent): bool
+    {
+        $ordersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Orders&#x27;]);
+
+        // Find order by payment intent ID
+        $orders = $ordersDS-&gt;fetchAll([[&#x27;payment_intent_id&#x27;, &#x27;=&#x27;, $paymentIntent[&#x27;id&#x27;]]], null, 1);
+
+        if(!empty($orders)) {
+            $order = $orders[0];
+
+            // Update order status
+            $ordersDS-&gt;updateEntity($order[&#x27;KeyId&#x27;], [
+                &#x27;status&#x27; =&gt; &#x27;paid&#x27;,
+                &#x27;paid_at&#x27; =&gt; date(&#x27;c&#x27;),
+                &#x27;payment_method&#x27; =&gt; $paymentIntent[&#x27;payment_method&#x27;] ?? null
+            ]);
+
+            // Send confirmation email
+            $this-&gt;sendOrderConfirmation($order);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function handlePaymentFailed(array $paymentIntent): bool
+    {
+        $ordersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Orders&#x27;]);
+
+        $orders = $ordersDS-&gt;fetchAll([[&#x27;payment_intent_id&#x27;, &#x27;=&#x27;, $paymentIntent[&#x27;id&#x27;]]], null, 1);
+
+        if(!empty($orders)) {
+            $order = $orders[0];
+
+            $ordersDS-&gt;updateEntity($order[&#x27;KeyId&#x27;], [
+                &#x27;status&#x27; =&gt; &#x27;payment_failed&#x27;,
+                &#x27;failure_reason&#x27; =&gt; $paymentIntent[&#x27;last_payment_error&#x27;][&#x27;message&#x27;] ?? &#x27;Unknown&#x27;
+            ]);
+
+            // Notify customer
+            $this-&gt;sendPaymentFailedEmail($order);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function handleSubscriptionCreated(array $subscription): bool
+    {
+        $subsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Subscriptions&#x27;]);
+
+        $subsDS-&gt;createEntity([
+            &#x27;stripe_subscription_id&#x27; =&gt; $subscription[&#x27;id&#x27;],
+            &#x27;customer_id&#x27; =&gt; $subscription[&#x27;customer&#x27;],
+            &#x27;status&#x27; =&gt; $subscription[&#x27;status&#x27;],
+            &#x27;plan_id&#x27; =&gt; $subscription[&#x27;items&#x27;][&#x27;data&#x27;][0][&#x27;price&#x27;][&#x27;id&#x27;] ?? null,
+            &#x27;current_period_start&#x27; =&gt; date(&#x27;c&#x27;, $subscription[&#x27;current_period_start&#x27;]),
+            &#x27;current_period_end&#x27; =&gt; date(&#x27;c&#x27;, $subscription[&#x27;current_period_end&#x27;]),
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        return true;
+    }
+
+    private function handleSubscriptionUpdated(array $subscription): bool
+    {
+        $subsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Subscriptions&#x27;]);
+
+        $subs = $subsDS-&gt;fetchAll([[&#x27;stripe_subscription_id&#x27;, &#x27;=&#x27;, $subscription[&#x27;id&#x27;]]], null, 1);
+
+        if(!empty($subs)) {
+            $subsDS-&gt;updateEntity($subs[0][&#x27;KeyId&#x27;], [
+                &#x27;status&#x27; =&gt; $subscription[&#x27;status&#x27;],
+                &#x27;current_period_start&#x27; =&gt; date(&#x27;c&#x27;, $subscription[&#x27;current_period_start&#x27;]),
+                &#x27;current_period_end&#x27; =&gt; date(&#x27;c&#x27;, $subscription[&#x27;current_period_end&#x27;]),
+                &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function handleSubscriptionCancelled(array $subscription): bool
+    {
+        $subsDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Subscriptions&#x27;]);
+
+        $subs = $subsDS-&gt;fetchAll([[&#x27;stripe_subscription_id&#x27;, &#x27;=&#x27;, $subscription[&#x27;id&#x27;]]], null, 1);
+
+        if(!empty($subs)) {
+            $subsDS-&gt;updateEntity($subs[0][&#x27;KeyId&#x27;], [
+                &#x27;status&#x27; =&gt; &#x27;cancelled&#x27;,
+                &#x27;cancelled_at&#x27; =&gt; date(&#x27;c&#x27;)
+            ]);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private function handleInvoicePaid(array $invoice): bool
+    {
+        // Log invoice payment
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;invoice_paid&#x27;,
+            &#x27;invoice_id&#x27; =&gt; $invoice[&#x27;id&#x27;],
+            &#x27;amount&#x27; =&gt; $invoice[&#x27;amount_paid&#x27;],
+            &#x27;customer&#x27; =&gt; $invoice[&#x27;customer&#x27;]
+        ], &#x27;payments&#x27;);
+
+        return true;
+    }
+
+    // GitHub handlers
+
+    private function handleGitHubPush(array $event)
+    {
+        $branch = str_replace(&#x27;refs/heads/&#x27;, &#x27;&#x27;, $event[&#x27;ref&#x27;]);
+        $commits = count($event[&#x27;commits&#x27;]);
+
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;github_push&#x27;,
+            &#x27;repository&#x27; =&gt; $event[&#x27;repository&#x27;][&#x27;full_name&#x27;],
+            &#x27;branch&#x27; =&gt; $branch,
+            &#x27;commits&#x27; =&gt; $commits,
+            &#x27;pusher&#x27; =&gt; $event[&#x27;pusher&#x27;][&#x27;name&#x27;]
+        ], &#x27;github&#x27;);
+
+        // Trigger deployment if push to main
+        if($branch === &#x27;main&#x27;) {
+            $this-&gt;triggerDeployment($event[&#x27;repository&#x27;][&#x27;name&#x27;]);
+        }
+    }
+
+    private function handleGitHubPullRequest(array $event)
+    {
+        $action = $event[&#x27;action&#x27;];
+        $pr = $event[&#x27;pull_request&#x27;];
+
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;github_pull_request&#x27;,
+            &#x27;action&#x27; =&gt; $action,
+            &#x27;pr_number&#x27; =&gt; $pr[&#x27;number&#x27;],
+            &#x27;title&#x27; =&gt; $pr[&#x27;title&#x27;],
+            &#x27;author&#x27; =&gt; $pr[&#x27;user&#x27;][&#x27;login&#x27;]
+        ], &#x27;github&#x27;);
+    }
+
+    private function handleGitHubIssue(array $event)
+    {
+        $action = $event[&#x27;action&#x27;];
+        $issue = $event[&#x27;issue&#x27;];
+
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;github_issue&#x27;,
+            &#x27;action&#x27; =&gt; $action,
+            &#x27;issue_number&#x27; =&gt; $issue[&#x27;number&#x27;],
+            &#x27;title&#x27; =&gt; $issue[&#x27;title&#x27;]
+        ], &#x27;github&#x27;);
+    }
+
+    private function handleGitHubRelease(array $event)
+    {
+        $release = $event[&#x27;release&#x27;];
+
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;github_release&#x27;,
+            &#x27;tag&#x27; =&gt; $release[&#x27;tag_name&#x27;],
+            &#x27;name&#x27; =&gt; $release[&#x27;name&#x27;],
+            &#x27;published&#x27; =&gt; $release[&#x27;published_at&#x27;]
+        ], &#x27;github&#x27;);
+    }
+
+    // SendGrid handlers
+
+    private function handleEmailDelivered(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;delivered&#x27;, $event);
+    }
+
+    private function handleEmailOpened(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;opened&#x27;, $event);
+    }
+
+    private function handleEmailClicked(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;clicked&#x27;, $event);
+    }
+
+    private function handleEmailBounced(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;bounced&#x27;, $event);
+        // Mark email as invalid
+        $this-&gt;markEmailInvalid($event[&#x27;email&#x27;], &#x27;bounced&#x27;);
+    }
+
+    private function handleEmailDropped(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;dropped&#x27;, $event);
+    }
+
+    private function handleEmailSpam(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;spam&#x27;, $event);
+        $this-&gt;markEmailInvalid($event[&#x27;email&#x27;], &#x27;spam&#x27;);
+    }
+
+    private function handleEmailUnsubscribe(array $event)
+    {
+        $this-&gt;updateEmailStatus($event[&#x27;email&#x27;], &#x27;unsubscribed&#x27;, $event);
+        // Add to unsubscribe list
+        $this-&gt;addToUnsubscribeList($event[&#x27;email&#x27;]);
+    }
+
+    // Helper methods
+
+    private function verifyStripeSignature(string $payload, string $signature, string $secret): bool
+    {
+        $elements = explode(&#x27;,&#x27;, $signature);
+        $timestamp = null;
+        $sig = null;
+
+        foreach($elements as $element) {
+            [$key, $value] = explode(&#x27;=&#x27;, $element, 2);
+            if($key === &#x27;t&#x27;) $timestamp = $value;
+            if($key === &#x27;v1&#x27;) $sig = $value;
+        }
+
+        if(!$timestamp || !$sig) {
+            return false;
+        }
+
+        // Check timestamp tolerance (5 minutes)
+        if(abs(time() - $timestamp) &gt; 300) {
+            return false;
+        }
+
+        $signedPayload = $timestamp . &#x27;.&#x27; . $payload;
+        $expectedSignature = hash_hmac(&#x27;sha256&#x27;, $signedPayload, $secret);
+
+        return hash_equals($expectedSignature, $sig);
+    }
+
+    private function verifyGitHubSignature(string $payload, string $signature, string $secret): bool
+    {
+        if(!preg_match(&#x27;/^sha256=(.+)$/&#x27;, $signature, $matches)) {
+            return false;
+        }
+
+        $expected = hash_hmac(&#x27;sha256&#x27;, $payload, $secret);
+        return hash_equals($expected, $matches[1]);
+    }
+
+    private function logWebhook(string $service, string $status, string $eventType, ?array $data = null)
+    {
+        $this-&gt;ds-&gt;createEntity([
+            &#x27;service&#x27; =&gt; $service,
+            &#x27;status&#x27; =&gt; $status,
+            &#x27;event_type&#x27; =&gt; $eventType,
+            &#x27;data&#x27; =&gt; $data,
+            &#x27;ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;,
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+    }
+
+    private function authenticateAdmin(): bool
+    {
+        $apiKey = $_SERVER[&#x27;HTTP_X_API_KEY&#x27;] ?? &#x27;&#x27;;
+        $adminKeys = $this-&gt;core-&gt;config-&gt;get(&#x27;security.admin_keys&#x27;, []);
+
+        return in_array($apiKey, $adminKeys);
+    }
+
+    private function sendOrderConfirmation(array $order)
+    {
+        // Implementation
+    }
+
+    private function sendPaymentFailedEmail(array $order)
+    {
+        // Implementation
+    }
+
+    private function triggerDeployment(string $repository)
+    {
+        // Implementation
+    }
+
+    private function updateEmailStatus(string $email, string $status, array $event)
+    {
+        // Implementation
+    }
+
+    private function markEmailInvalid(string $email, string $reason)
+    {
+        // Implementation
+    }
+
+    private function addToUnsubscribeList(string $email)
+    {
+        // Implementation
+    }
+
+    private function processCustomAction(string $action, array $data)
+    {
+        // Implementation
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Analytics API</h2>
+
+<p>Real-time analytics data retrieval from BigQuery with aggregations and metrics.</p>
+
+<p><strong>File:</strong> <code>app/api/analytics.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Analytics API
+ *
+ * Endpoints:
+ * GET /analytics/dashboard      - Get dashboard metrics
+ * GET /analytics/users          - User analytics
+ * GET /analytics/revenue        - Revenue analytics
+ * GET /analytics/products       - Product analytics
+ * GET /analytics/traffic        - Traffic analytics
+ * POST /analytics/custom-query  - Run custom query (admin)
+ * POST /analytics/track-event   - Track custom event
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $bq;
+    private $dataset = &#x27;analytics&#x27;;
+    private $currentUser;
+
+    function main()
+    {
+        // Authenticate
+        if(!$this-&gt;authenticate()) {
+            return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+        }
+
+        $this-&gt;bq = $this-&gt;core-&gt;loadClass(&#x27;DataBQ&#x27;, [$this-&gt;dataset]);
+
+        $this-&gt;sendCorsHeaders();
+
+        if($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;OPTIONS&#x27;) {
+            http_response_code(204);
+            exit;
+        }
+
+        $endpoint = $this-&gt;params[0] ?? &#x27;dashboard&#x27;;
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * GET /analytics/dashboard
+     */
+    public function ENDPOINT_dashboard()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $period = $this-&gt;formParams[&#x27;period&#x27;] ?? &#x27;7d&#x27;; // 7d, 30d, 90d, 1y
+        $dateRange = $this-&gt;getDateRange($period);
+
+        // Cache key
+        $cacheKey = &quot;analytics_dashboard_{$period}&quot;;
+        $cached = $this-&gt;core-&gt;cache-&gt;get($cacheKey);
+
+        if($cached !== null) {
+            return $this-&gt;addReturnData($cached);
+        }
+
+        $dashboard = [
+            &#x27;period&#x27; =&gt; $period,
+            &#x27;date_range&#x27; =&gt; $dateRange,
+            &#x27;metrics&#x27; =&gt; []
+        ];
+
+        // Total users
+        $dashboard[&#x27;metrics&#x27;][&#x27;total_users&#x27;] = $this-&gt;getTotalUsers($dateRange);
+
+        // Active users
+        $dashboard[&#x27;metrics&#x27;][&#x27;active_users&#x27;] = $this-&gt;getActiveUsers($dateRange);
+
+        // New users
+        $dashboard[&#x27;metrics&#x27;][&#x27;new_users&#x27;] = $this-&gt;getNewUsers($dateRange);
+
+        // Total revenue
+        $dashboard[&#x27;metrics&#x27;][&#x27;revenue&#x27;] = $this-&gt;getRevenue($dateRange);
+
+        // Total orders
+        $dashboard[&#x27;metrics&#x27;][&#x27;orders&#x27;] = $this-&gt;getOrders($dateRange);
+
+        // Average order value
+        $dashboard[&#x27;metrics&#x27;][&#x27;avg_order_value&#x27;] = $this-&gt;getAverageOrderValue($dateRange);
+
+        // Page views
+        $dashboard[&#x27;metrics&#x27;][&#x27;page_views&#x27;] = $this-&gt;getPageViews($dateRange);
+
+        // Conversion rate
+        $dashboard[&#x27;metrics&#x27;][&#x27;conversion_rate&#x27;] = $this-&gt;getConversionRate($dateRange);
+
+        // Top products
+        $dashboard[&#x27;top_products&#x27;] = $this-&gt;getTopProducts($dateRange, 5);
+
+        // Traffic sources
+        $dashboard[&#x27;traffic_sources&#x27;] = $this-&gt;getTrafficSources($dateRange);
+
+        // User growth (daily)
+        $dashboard[&#x27;user_growth&#x27;] = $this-&gt;getUserGrowth($dateRange);
+
+        // Revenue by day
+        $dashboard[&#x27;revenue_by_day&#x27;] = $this-&gt;getRevenueByDay($dateRange);
+
+        // Cache for 10 minutes
+        $this-&gt;core-&gt;cache-&gt;set($cacheKey, $dashboard, 600);
+
+        $this-&gt;addReturnData($dashboard);
+    }
+
+    /**
+     * GET /analytics/users
+     */
+    public function ENDPOINT_users()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $period = $this-&gt;formParams[&#x27;period&#x27;] ?? &#x27;30d&#x27;;
+        $dateRange = $this-&gt;getDateRange($period);
+
+        $analytics = [
+            &#x27;period&#x27; =&gt; $period,
+            &#x27;metrics&#x27; =&gt; [
+                &#x27;total&#x27; =&gt; $this-&gt;getTotalUsers($dateRange),
+                &#x27;active&#x27; =&gt; $this-&gt;getActiveUsers($dateRange),
+                &#x27;new&#x27; =&gt; $this-&gt;getNewUsers($dateRange),
+                &#x27;returning&#x27; =&gt; $this-&gt;getReturningUsers($dateRange)
+            ],
+            &#x27;by_country&#x27; =&gt; $this-&gt;getUsersByCountry($dateRange),
+            &#x27;by_device&#x27; =&gt; $this-&gt;getUsersByDevice($dateRange),
+            &#x27;by_browser&#x27; =&gt; $this-&gt;getUsersByBrowser($dateRange),
+            &#x27;retention&#x27; =&gt; $this-&gt;getUserRetention($dateRange),
+            &#x27;cohort_analysis&#x27; =&gt; $this-&gt;getCohortAnalysis($dateRange)
+        ];
+
+        $this-&gt;addReturnData($analytics);
+    }
+
+    /**
+     * GET /analytics/revenue
+     */
+    public function ENDPOINT_revenue()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $period = $this-&gt;formParams[&#x27;period&#x27;] ?? &#x27;30d&#x27;;
+        $dateRange = $this-&gt;getDateRange($period);
+
+        $analytics = [
+            &#x27;period&#x27; =&gt; $period,
+            &#x27;metrics&#x27; =&gt; [
+                &#x27;total_revenue&#x27; =&gt; $this-&gt;getRevenue($dateRange),
+                &#x27;total_orders&#x27; =&gt; $this-&gt;getOrders($dateRange),
+                &#x27;avg_order_value&#x27; =&gt; $this-&gt;getAverageOrderValue($dateRange),
+                &#x27;revenue_per_user&#x27; =&gt; $this-&gt;getRevenuePerUser($dateRange)
+            ],
+            &#x27;by_day&#x27; =&gt; $this-&gt;getRevenueByDay($dateRange),
+            &#x27;by_category&#x27; =&gt; $this-&gt;getRevenueByCategory($dateRange),
+            &#x27;by_product&#x27; =&gt; $this-&gt;getRevenueByProduct($dateRange),
+            &#x27;top_customers&#x27; =&gt; $this-&gt;getTopCustomers($dateRange, 10)
+        ];
+
+        $this-&gt;addReturnData($analytics);
+    }
+
+    /**
+     * GET /analytics/products
+     */
+    public function ENDPOINT_products()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $period = $this-&gt;formParams[&#x27;period&#x27;] ?? &#x27;30d&#x27;;
+        $dateRange = $this-&gt;getDateRange($period);
+
+        $analytics = [
+            &#x27;period&#x27; =&gt; $period,
+            &#x27;top_selling&#x27; =&gt; $this-&gt;getTopProducts($dateRange, 20),
+            &#x27;top_revenue&#x27; =&gt; $this-&gt;getTopRevenueProducts($dateRange, 20),
+            &#x27;most_viewed&#x27; =&gt; $this-&gt;getMostViewedProducts($dateRange, 20),
+            &#x27;conversion_rates&#x27; =&gt; $this-&gt;getProductConversionRates($dateRange),
+            &#x27;inventory_status&#x27; =&gt; $this-&gt;getInventoryStatus()
+        ];
+
+        $this-&gt;addReturnData($analytics);
+    }
+
+    /**
+     * GET /analytics/traffic
+     */
+    public function ENDPOINT_traffic()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $period = $this-&gt;formParams[&#x27;period&#x27;] ?? &#x27;30d&#x27;;
+        $dateRange = $this-&gt;getDateRange($period);
+
+        $analytics = [
+            &#x27;period&#x27; =&gt; $period,
+            &#x27;metrics&#x27; =&gt; [
+                &#x27;total_sessions&#x27; =&gt; $this-&gt;getTotalSessions($dateRange),
+                &#x27;page_views&#x27; =&gt; $this-&gt;getPageViews($dateRange),
+                &#x27;unique_visitors&#x27; =&gt; $this-&gt;getUniqueVisitors($dateRange),
+                &#x27;avg_session_duration&#x27; =&gt; $this-&gt;getAvgSessionDuration($dateRange),
+                &#x27;bounce_rate&#x27; =&gt; $this-&gt;getBounceRate($dateRange)
+            ],
+            &#x27;by_source&#x27; =&gt; $this-&gt;getTrafficSources($dateRange),
+            &#x27;by_page&#x27; =&gt; $this-&gt;getTopPages($dateRange, 20),
+            &#x27;by_hour&#x27; =&gt; $this-&gt;getTrafficByHour($dateRange),
+            &#x27;by_day_of_week&#x27; =&gt; $this-&gt;getTrafficByDayOfWeek($dateRange)
+        ];
+
+        $this-&gt;addReturnData($analytics);
+    }
+
+    /**
+     * POST /analytics/custom-query
+     */
+    public function ENDPOINT_custom_query()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Admin only
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;admin&#x27;) {
+            return $this-&gt;setError(&#x27;Admin access required&#x27;, 403);
+        }
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;query&#x27;])) return;
+
+        $query = $this-&gt;formParams[&#x27;query&#x27;];
+
+        // Validate query (prevent destructive operations)
+        if(preg_match(&#x27;/(DROP|DELETE|UPDATE|INSERT|TRUNCATE|ALTER)/i&#x27;, $query)) {
+            return $this-&gt;setError(&#x27;Only SELECT queries are allowed&#x27;, 400);
+        }
+
+        try {
+            $result = $this-&gt;bq-&gt;query($query);
+
+            if($this-&gt;bq-&gt;error()) {
+                return $this-&gt;setError(&#x27;Query failed: &#x27; . implode(&#x27;, &#x27;, $this-&gt;bq-&gt;getError()), 400);
+            }
+
+            $this-&gt;addReturnData([
+                &#x27;count&#x27; =&gt; count($result),
+                &#x27;results&#x27; =&gt; $result
+            ]);
+
+        } catch(Exception $e) {
+            return $this-&gt;setError(&#x27;Query error: &#x27; . $e-&gt;getMessage(), 500);
+        }
+    }
+
+    /**
+     * POST /analytics/track-event
+     */
+    public function ENDPOINT_track_event()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;event_name&#x27;])) return;
+
+        $eventData = [
+            &#x27;event_name&#x27; =&gt; $this-&gt;formParams[&#x27;event_name&#x27;],
+            &#x27;user_id&#x27; =&gt; $this-&gt;formParams[&#x27;user_id&#x27;] ?? null,
+            &#x27;session_id&#x27; =&gt; $this-&gt;formParams[&#x27;session_id&#x27;] ?? null,
+            &#x27;properties&#x27; =&gt; $this-&gt;formParams[&#x27;properties&#x27;] ?? [],
+            &#x27;timestamp&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;ip&#x27; =&gt; $_SERVER[&#x27;REMOTE_ADDR&#x27;] ?? &#x27;unknown&#x27;,
+            &#x27;user_agent&#x27; =&gt; $_SERVER[&#x27;HTTP_USER_AGENT&#x27;] ?? &#x27;unknown&#x27;
+        ];
+
+        // Insert into BigQuery
+        $tableName = &#x27;events&#x27;;
+        $result = $this-&gt;bq-&gt;insert($tableName, [$eventData]);
+
+        if($this-&gt;bq-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to track event&#x27;, 500);
+        }
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData([&#x27;tracked&#x27; =&gt; true, &#x27;event&#x27; =&gt; $eventData[&#x27;event_name&#x27;]]);
+    }
+
+    // Metric calculation methods
+
+    private function getTotalUsers(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(DISTINCT user_id) as total
+            FROM users
+            WHERE created_at &lt;= &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;total&#x27;] ?? 0;
+    }
+
+    private function getActiveUsers(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(DISTINCT user_id) as active
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;active&#x27;] ?? 0;
+    }
+
+    private function getNewUsers(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(DISTINCT user_id) as new_users
+            FROM users
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;new_users&#x27;] ?? 0;
+    }
+
+    private function getReturningUsers(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(DISTINCT user_id) as returning
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND user_id IN (
+                SELECT user_id FROM user_sessions
+                WHERE DATE(session_start) &lt; &#x27;{$dateRange[&#x27;start&#x27;]}&#x27;
+            )
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;returning&#x27;] ?? 0;
+    }
+
+    private function getRevenue(array $dateRange): float
+    {
+        $query = &quot;
+            SELECT COALESCE(SUM(amount), 0) as revenue
+            FROM orders
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND status = &#x27;completed&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return (float)($result[0][&#x27;revenue&#x27;] ?? 0);
+    }
+
+    private function getOrders(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(*) as orders
+            FROM orders
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND status = &#x27;completed&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;orders&#x27;] ?? 0;
+    }
+
+    private function getAverageOrderValue(array $dateRange): float
+    {
+        $query = &quot;
+            SELECT COALESCE(AVG(amount), 0) as avg_value
+            FROM orders
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND status = &#x27;completed&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return round((float)($result[0][&#x27;avg_value&#x27;] ?? 0), 2);
+    }
+
+    private function getPageViews(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(*) as views
+            FROM page_views
+            WHERE DATE(timestamp) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;views&#x27;] ?? 0;
+    }
+
+    private function getConversionRate(array $dateRange): float
+    {
+        $query = &quot;
+            SELECT
+                COUNT(DISTINCT CASE WHEN purchased = true THEN user_id END) * 100.0 /
+                NULLIF(COUNT(DISTINCT user_id), 0) as conversion_rate
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return round((float)($result[0][&#x27;conversion_rate&#x27;] ?? 0), 2);
+    }
+
+    private function getTopProducts(array $dateRange, int $limit): array
+    {
+        $query = &quot;
+            SELECT
+                product_id,
+                product_name,
+                COUNT(*) as orders,
+                SUM(quantity) as units_sold,
+                SUM(amount) as revenue
+            FROM order_items
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY product_id, product_name
+            ORDER BY units_sold DESC
+            LIMIT {$limit}
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getTrafficSources(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                source,
+                COUNT(*) as sessions,
+                COUNT(DISTINCT user_id) as users
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY source
+            ORDER BY sessions DESC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getUserGrowth(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                DATE(created_at) as date,
+                COUNT(*) as new_users
+            FROM users
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getRevenueByDay(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                DATE(created_at) as date,
+                COUNT(*) as orders,
+                SUM(amount) as revenue
+            FROM orders
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND status = &#x27;completed&#x27;
+            GROUP BY DATE(created_at)
+            ORDER BY date ASC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getUsersByCountry(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                country,
+                COUNT(DISTINCT user_id) as users
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY country
+            ORDER BY users DESC
+            LIMIT 10
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getUsersByDevice(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                device_type,
+                COUNT(DISTINCT user_id) as users
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY device_type
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getUsersByBrowser(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                browser,
+                COUNT(DISTINCT user_id) as users
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY browser
+            ORDER BY users DESC
+            LIMIT 10
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getUserRetention(array $dateRange): array
+    {
+        // Calculate week-over-week retention
+        $query = &quot;
+            WITH cohorts AS (
+                SELECT
+                    user_id,
+                    DATE_TRUNC(DATE(created_at), WEEK) as cohort_week
+                FROM users
+                WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            )
+            SELECT
+                cohort_week,
+                COUNT(DISTINCT c.user_id) as cohort_size,
+                COUNT(DISTINCT CASE WHEN DATE_DIFF(DATE(s.session_start), c.cohort_week, WEEK) = 1
+                    THEN c.user_id END) as week_1,
+                COUNT(DISTINCT CASE WHEN DATE_DIFF(DATE(s.session_start), c.cohort_week, WEEK) = 2
+                    THEN c.user_id END) as week_2,
+                COUNT(DISTINCT CASE WHEN DATE_DIFF(DATE(s.session_start), c.cohort_week, WEEK) = 3
+                    THEN c.user_id END) as week_3
+            FROM cohorts c
+            LEFT JOIN user_sessions s ON c.user_id = s.user_id
+            GROUP BY cohort_week
+            ORDER BY cohort_week DESC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getCohortAnalysis(array $dateRange): array
+    {
+        // Implementation similar to retention
+        return [];
+    }
+
+    private function getRevenuePerUser(array $dateRange): float
+    {
+        $totalRevenue = $this-&gt;getRevenue($dateRange);
+        $activeUsers = $this-&gt;getActiveUsers($dateRange);
+
+        return $activeUsers &gt; 0 ? round($totalRevenue / $activeUsers, 2) : 0;
+    }
+
+    private function getRevenueByCategory(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                category,
+                COUNT(*) as orders,
+                SUM(amount) as revenue
+            FROM order_items
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY category
+            ORDER BY revenue DESC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getRevenueByProduct(array $dateRange): array
+    {
+        return $this-&gt;getTopProducts($dateRange, 20);
+    }
+
+    private function getTopCustomers(array $dateRange, int $limit): array
+    {
+        $query = &quot;
+            SELECT
+                user_id,
+                user_name,
+                COUNT(*) as total_orders,
+                SUM(amount) as total_spent
+            FROM orders
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND status = &#x27;completed&#x27;
+            GROUP BY user_id, user_name
+            ORDER BY total_spent DESC
+            LIMIT {$limit}
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getTopRevenueProducts(array $dateRange, int $limit): array
+    {
+        $query = &quot;
+            SELECT
+                product_id,
+                product_name,
+                SUM(amount) as revenue,
+                SUM(quantity) as units_sold
+            FROM order_items
+            WHERE DATE(created_at) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY product_id, product_name
+            ORDER BY revenue DESC
+            LIMIT {$limit}
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getMostViewedProducts(array $dateRange, int $limit): array
+    {
+        $query = &quot;
+            SELECT
+                product_id,
+                product_name,
+                COUNT(*) as views
+            FROM product_views
+            WHERE DATE(timestamp) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY product_id, product_name
+            ORDER BY views DESC
+            LIMIT {$limit}
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getProductConversionRates(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                p.product_id,
+                p.product_name,
+                COUNT(DISTINCT pv.user_id) as viewers,
+                COUNT(DISTINCT oi.user_id) as buyers,
+                (COUNT(DISTINCT oi.user_id) * 100.0 / NULLIF(COUNT(DISTINCT pv.user_id), 0)) as conversion_rate
+            FROM product_views pv
+            LEFT JOIN order_items oi ON pv.product_id = oi.product_id AND pv.user_id = oi.user_id
+            LEFT JOIN products p ON pv.product_id = p.product_id
+            WHERE DATE(pv.timestamp) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY p.product_id, p.product_name
+            ORDER BY conversion_rate DESC
+            LIMIT 20
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getInventoryStatus(): array
+    {
+        $query = &quot;
+            SELECT
+                product_id,
+                product_name,
+                stock,
+                CASE
+                    WHEN stock = 0 THEN &#x27;out_of_stock&#x27;
+                    WHEN stock &lt; 10 THEN &#x27;low_stock&#x27;
+                    ELSE &#x27;in_stock&#x27;
+                END as status
+            FROM products
+            ORDER BY stock ASC
+            LIMIT 50
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getTotalSessions(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(*) as sessions
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;sessions&#x27;] ?? 0;
+    }
+
+    private function getUniqueVisitors(array $dateRange): int
+    {
+        $query = &quot;
+            SELECT COUNT(DISTINCT user_id) as visitors
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return $result[0][&#x27;visitors&#x27;] ?? 0;
+    }
+
+    private function getAvgSessionDuration(array $dateRange): float
+    {
+        $query = &quot;
+            SELECT AVG(session_duration) as avg_duration
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            AND session_duration IS NOT NULL
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return round((float)($result[0][&#x27;avg_duration&#x27;] ?? 0), 2);
+    }
+
+    private function getBounceRate(array $dateRange): float
+    {
+        $query = &quot;
+            SELECT
+                COUNT(CASE WHEN bounced = true THEN 1 END) * 100.0 /
+                NULLIF(COUNT(*), 0) as bounce_rate
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+        &quot;;
+
+        $result = $this-&gt;bq-&gt;query($query);
+        return round((float)($result[0][&#x27;bounce_rate&#x27;] ?? 0), 2);
+    }
+
+    private function getTopPages(array $dateRange, int $limit): array
+    {
+        $query = &quot;
+            SELECT
+                page_url,
+                COUNT(*) as views,
+                COUNT(DISTINCT user_id) as unique_visitors
+            FROM page_views
+            WHERE DATE(timestamp) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY page_url
+            ORDER BY views DESC
+            LIMIT {$limit}
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getTrafficByHour(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                EXTRACT(HOUR FROM timestamp) as hour,
+                COUNT(*) as sessions
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY hour
+            ORDER BY hour ASC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    private function getTrafficByDayOfWeek(array $dateRange): array
+    {
+        $query = &quot;
+            SELECT
+                EXTRACT(DAYOFWEEK FROM session_start) as day_of_week,
+                COUNT(*) as sessions
+            FROM user_sessions
+            WHERE DATE(session_start) BETWEEN &#x27;{$dateRange[&#x27;start&#x27;]}&#x27; AND &#x27;{$dateRange[&#x27;end&#x27;]}&#x27;
+            GROUP BY day_of_week
+            ORDER BY day_of_week ASC
+        &quot;;
+
+        return $this-&gt;bq-&gt;query($query);
+    }
+
+    // Helper methods
+
+    private function getDateRange(string $period): array
+    {
+        $end = date(&#x27;Y-m-d&#x27;);
+
+        switch($period) {
+            case &#x27;7d&#x27;:
+                $start = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-7 days&#x27;));
+                break;
+            case &#x27;30d&#x27;:
+                $start = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-30 days&#x27;));
+                break;
+            case &#x27;90d&#x27;:
+                $start = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-90 days&#x27;));
+                break;
+            case &#x27;1y&#x27;:
+                $start = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-1 year&#x27;));
+                break;
+            default:
+                $start = date(&#x27;Y-m-d&#x27;, strtotime(&#x27;-30 days&#x27;));
+        }
+
+        return [&#x27;start&#x27; =&gt; $start, &#x27;end&#x27; =&gt; $end];
+    }
+
+    private function authenticate(): bool
+    {
+        $authHeader = $_SERVER[&#x27;HTTP_AUTHORIZATION&#x27;] ?? &#x27;&#x27;;
+
+        if(!preg_match(&#x27;/Bearer\s+(.*)$/i&#x27;, $authHeader, $matches)) {
+            return false;
+        }
+
+        $token = $matches[1];
+        $payload = $this-&gt;validateJWT($token);
+
+        if(!$payload) {
+            return false;
+        }
+
+        $this-&gt;currentUser = $payload;
+        return true;
+    }
+
+    private function validateJWT(string $token): array|false
+    {
+        // JWT validation implementation
+        // Similar to Authentication API
+        return [&#x27;id&#x27; =&gt; &#x27;user123&#x27;, &#x27;role&#x27; =&gt; &#x27;admin&#x27;]; // Placeholder
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>Multi-tenant API</h2>
+
+<p>Multi-tenant SaaS platform with tenant isolation and management.</p>
+
+<p><strong>File:</strong> <code>app/api/tenants.php</code></p>
+
+<pre><code>
+&lt;?php
+/**
+ * Multi-tenant API
+ *
+ * Endpoints:
+ * GET    /tenants/list           - List all tenants (superadmin)
+ * GET    /tenants/info           - Get current tenant info
+ * POST   /tenants/create         - Create new tenant (superadmin)
+ * PUT    /tenants/update/{id}    - Update tenant
+ * DELETE /tenants/delete/{id}    - Delete tenant (superadmin)
+ * GET    /tenants/users          - List tenant users
+ * POST   /tenants/users/add      - Add user to tenant
+ * DELETE /tenants/users/remove   - Remove user from tenant
+ * GET    /tenants/settings       - Get tenant settings
+ * PUT    /tenants/settings       - Update tenant settings
+ * GET    /tenants/stats          - Get tenant statistics
+ */
+
+use CloudFramework\Patterns\RESTful;
+
+class API extends RESTful
+{
+    private $ds;
+    private $currentUser;
+    private $currentTenant;
+
+    function main()
+    {
+        $this-&gt;ds = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Tenants&#x27;]);
+
+        // Authenticate
+        if(!$this-&gt;authenticate()) {
+            return $this-&gt;setError(&#x27;Authentication required&#x27;, 401);
+        }
+
+        // Identify tenant from request
+        if(!$this-&gt;identifyTenant()) {
+            return $this-&gt;setError(&#x27;Tenant not found&#x27;, 404);
+        }
+
+        $this-&gt;sendCorsHeaders();
+
+        if($_SERVER[&#x27;REQUEST_METHOD&#x27;] === &#x27;OPTIONS&#x27;) {
+            http_response_code(204);
+            exit;
+        }
+
+        $endpoint = $this-&gt;params[0] ?? &#x27;info&#x27;;
+
+        if(!$this-&gt;useFunction(&#x27;ENDPOINT_&#x27; . $endpoint)) {
+            return $this-&gt;setErrorFromCodelib(&#x27;not-found&#x27;);
+        }
+    }
+
+    /**
+     * GET /tenants/list
+     */
+    public function ENDPOINT_list()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        // Superadmin only
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;superadmin&#x27;) {
+            return $this-&gt;setError(&#x27;Superadmin access required&#x27;, 403);
+        }
+
+        $page = (int)($this-&gt;formParams[&#x27;page&#x27;] ?? 1);
+        $limit = (int)($this-&gt;formParams[&#x27;limit&#x27;] ?? 20);
+        $status = $this-&gt;formParams[&#x27;status&#x27;] ?? null;
+
+        $where = [];
+        if($status) {
+            $where[] = [&#x27;status&#x27;, &#x27;=&#x27;, $status];
+        }
+
+        $tenants = $this-&gt;ds-&gt;fetchAll($where, [&#x27;created_at&#x27; =&gt; &#x27;DESC&#x27;], $limit, null, $page);
+        $total = $this-&gt;ds-&gt;count($where);
+
+        // Add statistics to each tenant
+        foreach($tenants as &amp;$tenant) {
+            $tenant[&#x27;stats&#x27;] = $this-&gt;getTenantStats($tenant[&#x27;KeyId&#x27;]);
+        }
+
+        $this-&gt;addReturnData([
+            &#x27;tenants&#x27; =&gt; $tenants,
+            &#x27;pagination&#x27; =&gt; [
+                &#x27;page&#x27; =&gt; $page,
+                &#x27;limit&#x27; =&gt; $limit,
+                &#x27;total&#x27; =&gt; $total,
+                &#x27;pages&#x27; =&gt; ceil($total / $limit)
+            ]
+        ]);
+    }
+
+    /**
+     * GET /tenants/info
+     */
+    public function ENDPOINT_info()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        $tenant = $this-&gt;currentTenant;
+
+        // Remove sensitive data
+        unset($tenant[&#x27;api_secret&#x27;]);
+        unset($tenant[&#x27;database_password&#x27;]);
+
+        // Add statistics
+        $tenant[&#x27;stats&#x27;] = $this-&gt;getTenantStats($tenant[&#x27;KeyId&#x27;]);
+
+        $this-&gt;addReturnData($tenant);
+    }
+
+    /**
+     * POST /tenants/create
+     */
+    public function ENDPOINT_create()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Superadmin only
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;superadmin&#x27;) {
+            return $this-&gt;setError(&#x27;Superadmin access required&#x27;, 403);
+        }
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;name&#x27;, &#x27;slug&#x27;, &#x27;admin_email&#x27;])) return;
+
+        $slug = $this-&gt;generateSlug($this-&gt;formParams[&#x27;slug&#x27;]);
+
+        // Check if slug exists
+        $existing = $this-&gt;ds-&gt;fetchAll([[&#x27;slug&#x27;, &#x27;=&#x27;, $slug]], null, 1);
+        if(!empty($existing)) {
+            return $this-&gt;setError(&#x27;Tenant slug already exists&#x27;, 409);
+        }
+
+        // Validate plan
+        $plan = $this-&gt;formParams[&#x27;plan&#x27;] ?? &#x27;basic&#x27;;
+        $validPlans = [&#x27;basic&#x27;, &#x27;professional&#x27;, &#x27;enterprise&#x27;];
+        if(!in_array($plan, $validPlans)) {
+            return $this-&gt;setError(&#x27;Invalid plan&#x27;, 400);
+        }
+
+        // Create tenant
+        $tenantData = [
+            &#x27;name&#x27; =&gt; trim($this-&gt;formParams[&#x27;name&#x27;]),
+            &#x27;slug&#x27; =&gt; $slug,
+            &#x27;domain&#x27; =&gt; $this-&gt;formParams[&#x27;domain&#x27;] ?? null,
+            &#x27;admin_email&#x27; =&gt; $this-&gt;formParams[&#x27;admin_email&#x27;],
+            &#x27;plan&#x27; =&gt; $plan,
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;settings&#x27; =&gt; [
+                &#x27;max_users&#x27; =&gt; $this-&gt;getPlanLimit($plan, &#x27;users&#x27;),
+                &#x27;max_storage&#x27; =&gt; $this-&gt;getPlanLimit($plan, &#x27;storage&#x27;),
+                &#x27;features&#x27; =&gt; $this-&gt;getPlanFeatures($plan)
+            ],
+            &#x27;api_key&#x27; =&gt; bin2hex(random_bytes(32)),
+            &#x27;api_secret&#x27; =&gt; bin2hex(random_bytes(32)),
+            &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;created_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ];
+
+        $tenantId = $this-&gt;ds-&gt;createEntity($tenantData);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to create tenant&#x27;, 500);
+        }
+
+        // Create tenant database/namespace (if using separate databases)
+        $this-&gt;provisionTenantResources($tenantId, $slug);
+
+        // Create admin user for tenant
+        $this-&gt;createTenantAdmin($tenantId, $this-&gt;formParams[&#x27;admin_email&#x27;]);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;tenant_created&#x27;,
+            &#x27;tenant_id&#x27; =&gt; $tenantId,
+            &#x27;created_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;tenants&#x27;);
+
+        $tenant = $this-&gt;ds-&gt;fetchOne($tenantId);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData($tenant);
+    }
+
+    /**
+     * PUT /tenants/update/{id}
+     */
+    public function ENDPOINT_update()
+    {
+        if(!$this-&gt;checkMethod(&#x27;PUT&#x27;)) return;
+
+        $tenantId = $this-&gt;params[1] ?? null;
+
+        if(!$tenantId) {
+            return $this-&gt;setError(&#x27;Tenant ID required&#x27;, 400);
+        }
+
+        // Check permissions
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;superadmin&#x27; &amp;&amp; $this-&gt;currentTenant[&#x27;KeyId&#x27;] !== $tenantId) {
+            return $this-&gt;setError(&#x27;Access denied&#x27;, 403);
+        }
+
+        $tenant = $this-&gt;ds-&gt;fetchOne($tenantId);
+        if(!$tenant) {
+            return $this-&gt;setError(&#x27;Tenant not found&#x27;, 404);
+        }
+
+        $updateData = [&#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)];
+
+        // Allowed fields
+        $allowedFields = [&#x27;name&#x27;, &#x27;domain&#x27;, &#x27;admin_email&#x27;];
+
+        // Superadmin can update plan and status
+        if($this-&gt;currentUser[&#x27;role&#x27;] === &#x27;superadmin&#x27;) {
+            $allowedFields[] = &#x27;plan&#x27;;
+            $allowedFields[] = &#x27;status&#x27;;
+        }
+
+        foreach($allowedFields as $field) {
+            if(isset($this-&gt;formParams[$field])) {
+                $updateData[$field] = $this-&gt;formParams[$field];
+            }
+        }
+
+        // Update plan limits if plan changed
+        if(isset($updateData[&#x27;plan&#x27;])) {
+            $updateData[&#x27;settings&#x27;] = [
+                &#x27;max_users&#x27; =&gt; $this-&gt;getPlanLimit($updateData[&#x27;plan&#x27;], &#x27;users&#x27;),
+                &#x27;max_storage&#x27; =&gt; $this-&gt;getPlanLimit($updateData[&#x27;plan&#x27;], &#x27;storage&#x27;),
+                &#x27;features&#x27; =&gt; $this-&gt;getPlanFeatures($updateData[&#x27;plan&#x27;])
+            ];
+        }
+
+        $this-&gt;ds-&gt;updateEntity($tenantId, $updateData);
+
+        if($this-&gt;ds-&gt;error()) {
+            return $this-&gt;setError(&#x27;Failed to update tenant&#x27;, 500);
+        }
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;tenant_updated&#x27;,
+            &#x27;tenant_id&#x27; =&gt; $tenantId,
+            &#x27;updated_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;tenants&#x27;);
+
+        $updatedTenant = $this-&gt;ds-&gt;fetchOne($tenantId);
+        $this-&gt;addReturnData($updatedTenant);
+    }
+
+    /**
+     * DELETE /tenants/delete/{id}
+     */
+    public function ENDPOINT_delete()
+    {
+        if(!$this-&gt;checkMethod(&#x27;DELETE&#x27;)) return;
+
+        // Superadmin only
+        if($this-&gt;currentUser[&#x27;role&#x27;] !== &#x27;superadmin&#x27;) {
+            return $this-&gt;setError(&#x27;Superadmin access required&#x27;, 403);
+        }
+
+        $tenantId = $this-&gt;params[1] ?? null;
+        if(!$tenantId) {
+            return $this-&gt;setError(&#x27;Tenant ID required&#x27;, 400);
+        }
+
+        $tenant = $this-&gt;ds-&gt;fetchOne($tenantId);
+        if(!$tenant) {
+            return $this-&gt;setError(&#x27;Tenant not found&#x27;, 404);
+        }
+
+        // Soft delete
+        $this-&gt;ds-&gt;updateEntity($tenantId, [
+            &#x27;status&#x27; =&gt; &#x27;deleted&#x27;,
+            &#x27;deleted_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;deleted_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ]);
+
+        // Deprovision resources (optional)
+        // $this-&gt;deprovisionTenantResources($tenantId);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;tenant_deleted&#x27;,
+            &#x27;tenant_id&#x27; =&gt; $tenantId,
+            &#x27;deleted_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;tenants&#x27;);
+
+        $this-&gt;setReturnStatus(204);
+    }
+
+    /**
+     * GET /tenants/users
+     */
+    public function ENDPOINT_users()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        // Check if user has access to tenant
+        if(!$this-&gt;canAccessTenant($this-&gt;currentTenant[&#x27;KeyId&#x27;])) {
+            return $this-&gt;setError(&#x27;Access denied&#x27;, 403);
+        }
+
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+
+        $users = $usersDS-&gt;fetchAll([
+            [&#x27;tenant_id&#x27;, &#x27;=&#x27;, $this-&gt;currentTenant[&#x27;KeyId&#x27;]]
+        ]);
+
+        // Get user details
+        $userDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+
+        foreach($users as &amp;$tenantUser) {
+            $user = $userDS-&gt;fetchOne($tenantUser[&#x27;user_id&#x27;]);
+            if($user) {
+                $tenantUser[&#x27;user&#x27;] = [
+                    &#x27;id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+                    &#x27;name&#x27; =&gt; $user[&#x27;name&#x27;],
+                    &#x27;email&#x27; =&gt; $user[&#x27;email&#x27;],
+                    &#x27;status&#x27; =&gt; $user[&#x27;status&#x27;]
+                ];
+            }
+        }
+
+        $this-&gt;addReturnData([
+            &#x27;count&#x27; =&gt; count($users),
+            &#x27;users&#x27; =&gt; $users
+        ]);
+    }
+
+    /**
+     * POST /tenants/users/add
+     */
+    public function ENDPOINT_users_add()
+    {
+        if(!$this-&gt;checkMethod(&#x27;POST&#x27;)) return;
+
+        // Admin only
+        if(!$this-&gt;isT enantAdmin()) {
+            return $this-&gt;setError(&#x27;Tenant admin access required&#x27;, 403);
+        }
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;user_email&#x27;, &#x27;role&#x27;])) return;
+
+        // Check user limit
+        $stats = $this-&gt;getTenantStats($this-&gt;currentTenant[&#x27;KeyId&#x27;]);
+        $maxUsers = $this-&gt;currentTenant[&#x27;settings&#x27;][&#x27;max_users&#x27;];
+
+        if($stats[&#x27;users&#x27;] &gt;= $maxUsers) {
+            return $this-&gt;setError(&#x27;User limit reached. Upgrade your plan.&#x27;, 403);
+        }
+
+        // Find user
+        $userDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+        $users = $userDS-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $this-&gt;formParams[&#x27;user_email&#x27;]]], null, 1);
+
+        if(empty($users)) {
+            return $this-&gt;setError(&#x27;User not found&#x27;, 404);
+        }
+
+        $user = $users[0];
+
+        // Check if already member
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+        $existing = $usersDS-&gt;fetchAll([
+            [&#x27;tenant_id&#x27;, &#x27;=&#x27;, $this-&gt;currentTenant[&#x27;KeyId&#x27;]],
+            [&#x27;user_id&#x27;, &#x27;=&#x27;, $user[&#x27;KeyId&#x27;]]
+        ], null, 1);
+
+        if(!empty($existing)) {
+            return $this-&gt;setError(&#x27;User already member of this tenant&#x27;, 409);
+        }
+
+        // Add user to tenant
+        $membershipId = $usersDS-&gt;createEntity([
+            &#x27;tenant_id&#x27; =&gt; $this-&gt;currentTenant[&#x27;KeyId&#x27;],
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+            &#x27;role&#x27; =&gt; $this-&gt;formParams[&#x27;role&#x27;],
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;added_at&#x27; =&gt; date(&#x27;c&#x27;),
+            &#x27;added_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ]);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_added_to_tenant&#x27;,
+            &#x27;tenant_id&#x27; =&gt; $this-&gt;currentTenant[&#x27;KeyId&#x27;],
+            &#x27;user_id&#x27; =&gt; $user[&#x27;KeyId&#x27;],
+            &#x27;added_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;tenants&#x27;);
+
+        $this-&gt;setReturnStatus(201);
+        $this-&gt;addReturnData([
+            &#x27;message&#x27; =&gt; &#x27;User added successfully&#x27;,
+            &#x27;membership_id&#x27; =&gt; $membershipId
+        ]);
+    }
+
+    /**
+     * DELETE /tenants/users/remove
+     */
+    public function ENDPOINT_users_remove()
+    {
+        if(!$this-&gt;checkMethod(&#x27;DELETE&#x27;)) return;
+
+        if(!$this-&gt;isTenantAdmin()) {
+            return $this-&gt;setError(&#x27;Tenant admin access required&#x27;, 403);
+        }
+
+        if(!$this-&gt;checkMandatoryFormParams([&#x27;user_id&#x27;])) return;
+
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+
+        $memberships = $usersDS-&gt;fetchAll([
+            [&#x27;tenant_id&#x27;, &#x27;=&#x27;, $this-&gt;currentTenant[&#x27;KeyId&#x27;]],
+            [&#x27;user_id&#x27;, &#x27;=&#x27;, $this-&gt;formParams[&#x27;user_id&#x27;]]
+        ], null, 1);
+
+        if(empty($memberships)) {
+            return $this-&gt;setError(&#x27;User not found in tenant&#x27;, 404);
+        }
+
+        $usersDS-&gt;delete($memberships[0][&#x27;KeyId&#x27;]);
+
+        // Log event
+        $this-&gt;core-&gt;logs-&gt;add([
+            &#x27;event&#x27; =&gt; &#x27;user_removed_from_tenant&#x27;,
+            &#x27;tenant_id&#x27; =&gt; $this-&gt;currentTenant[&#x27;KeyId&#x27;],
+            &#x27;user_id&#x27; =&gt; $this-&gt;formParams[&#x27;user_id&#x27;],
+            &#x27;removed_by&#x27; =&gt; $this-&gt;currentUser[&#x27;id&#x27;]
+        ], &#x27;tenants&#x27;);
+
+        $this-&gt;setReturnStatus(204);
+    }
+
+    /**
+     * GET /tenants/settings
+     */
+    public function ENDPOINT_settings()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        if(!$this-&gt;canAccessTenant($this-&gt;currentTenant[&#x27;KeyId&#x27;])) {
+            return $this-&gt;setError(&#x27;Access denied&#x27;, 403);
+        }
+
+        $settings = $this-&gt;currentTenant[&#x27;settings&#x27;] ?? [];
+
+        $this-&gt;addReturnData($settings);
+    }
+
+    /**
+     * PUT /tenants/settings
+     */
+    public function ENDPOINT_settings_update()
+    {
+        if(!$this-&gt;checkMethod(&#x27;PUT&#x27;)) return;
+
+        if(!$this-&gt;isTenantAdmin()) {
+            return $this-&gt;setError(&#x27;Tenant admin access required&#x27;, 403);
+        }
+
+        $currentSettings = $this-&gt;currentTenant[&#x27;settings&#x27;] ?? [];
+
+        // Merge with new settings (preserving plan limits)
+        $newSettings = array_merge($currentSettings, $this-&gt;formParams);
+
+        // Prevent modification of plan limits
+        $newSettings[&#x27;max_users&#x27;] = $currentSettings[&#x27;max_users&#x27;];
+        $newSettings[&#x27;max_storage&#x27;] = $currentSettings[&#x27;max_storage&#x27;];
+        $newSettings[&#x27;features&#x27;] = $currentSettings[&#x27;features&#x27;];
+
+        $this-&gt;ds-&gt;updateEntity($this-&gt;currentTenant[&#x27;KeyId&#x27;], [
+            &#x27;settings&#x27; =&gt; $newSettings,
+            &#x27;updated_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+
+        $this-&gt;addReturnData($newSettings);
+    }
+
+    /**
+     * GET /tenants/stats
+     */
+    public function ENDPOINT_stats()
+    {
+        if(!$this-&gt;checkMethod(&#x27;GET&#x27;)) return;
+
+        if(!$this-&gt;canAccessTenant($this-&gt;currentTenant[&#x27;KeyId&#x27;])) {
+            return $this-&gt;setError(&#x27;Access denied&#x27;, 403);
+        }
+
+        $stats = $this-&gt;getTenantStats($this-&gt;currentTenant[&#x27;KeyId&#x27;]);
+
+        $this-&gt;addReturnData($stats);
+    }
+
+    // Helper methods
+
+    private function identifyTenant(): bool
+    {
+        // Try to identify tenant from:
+        // 1. Subdomain
+        // 2. Custom domain
+        // 3. Header
+        // 4. User&#x27;s tenant
+
+        $tenantId = null;
+
+        // From header
+        $tenantSlug = $_SERVER[&#x27;HTTP_X_TENANT&#x27;] ?? null;
+
+        if($tenantSlug) {
+            $tenants = $this-&gt;ds-&gt;fetchAll([[&#x27;slug&#x27;, &#x27;=&#x27;, $tenantSlug]], null, 1);
+            if(!empty($tenants)) {
+                $this-&gt;currentTenant = $tenants[0];
+                return true;
+            }
+        }
+
+        // From subdomain
+        $host = $_SERVER[&#x27;HTTP_HOST&#x27;] ?? &#x27;&#x27;;
+        if(preg_match(&#x27;/^([a-z0-9-]+)\./i&#x27;, $host, $matches)) {
+            $subdomain = $matches[1];
+            $tenants = $this-&gt;ds-&gt;fetchAll([[&#x27;slug&#x27;, &#x27;=&#x27;, $subdomain]], null, 1);
+            if(!empty($tenants)) {
+                $this-&gt;currentTenant = $tenants[0];
+                return true;
+            }
+        }
+
+        // From user&#x27;s default tenant
+        if(isset($this-&gt;currentUser[&#x27;tenant_id&#x27;])) {
+            $tenant = $this-&gt;ds-&gt;fetchOne($this-&gt;currentUser[&#x27;tenant_id&#x27;]);
+            if($tenant) {
+                $this-&gt;currentTenant = $tenant;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function authenticate(): bool
+    {
+        $authHeader = $_SERVER[&#x27;HTTP_AUTHORIZATION&#x27;] ?? &#x27;&#x27;;
+
+        if(!preg_match(&#x27;/Bearer\s+(.*)$/i&#x27;, $authHeader, $matches)) {
+            return false;
+        }
+
+        $token = $matches[1];
+        // Validate JWT (simplified)
+        $this-&gt;currentUser = [
+            &#x27;id&#x27; =&gt; &#x27;user123&#x27;,
+            &#x27;email&#x27; =&gt; &#x27;user@example.com&#x27;,
+            &#x27;role&#x27; =&gt; &#x27;admin&#x27;,
+            &#x27;tenant_id&#x27; =&gt; &#x27;tenant123&#x27;
+        ];
+
+        return true;
+    }
+
+    private function canAccessTenant(string $tenantId): bool
+    {
+        if($this-&gt;currentUser[&#x27;role&#x27;] === &#x27;superadmin&#x27;) {
+            return true;
+        }
+
+        // Check if user belongs to tenant
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+        $memberships = $usersDS-&gt;fetchAll([
+            [&#x27;tenant_id&#x27;, &#x27;=&#x27;, $tenantId],
+            [&#x27;user_id&#x27;, &#x27;=&#x27;, $this-&gt;currentUser[&#x27;id&#x27;]],
+            [&#x27;status&#x27;, &#x27;=&#x27;, &#x27;active&#x27;]
+        ], null, 1);
+
+        return !empty($memberships);
+    }
+
+    private function isTenantAdmin(): bool
+    {
+        if($this-&gt;currentUser[&#x27;role&#x27;] === &#x27;superadmin&#x27;) {
+            return true;
+        }
+
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+        $memberships = $usersDS-&gt;fetchAll([
+            [&#x27;tenant_id&#x27;, &#x27;=&#x27;, $this-&gt;currentTenant[&#x27;KeyId&#x27;]],
+            [&#x27;user_id&#x27;, &#x27;=&#x27;, $this-&gt;currentUser[&#x27;id&#x27;]],
+            [&#x27;role&#x27;, &#x27;IN&#x27;, [&#x27;admin&#x27;, &#x27;owner&#x27;]]
+        ], null, 1);
+
+        return !empty($memberships);
+    }
+
+    private function getTenantStats(string $tenantId): array
+    {
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+        $users = $usersDS-&gt;count([[&#x27;tenant_id&#x27;, &#x27;=&#x27;, $tenantId]]);
+
+        // Calculate storage usage (simplified)
+        $storage = 0; // Would calculate actual storage
+
+        return [
+            &#x27;users&#x27; =&gt; $users,
+            &#x27;storage_used&#x27; =&gt; $storage,
+            &#x27;storage_limit&#x27; =&gt; $this-&gt;currentTenant[&#x27;settings&#x27;][&#x27;max_storage&#x27;] ?? 0,
+            &#x27;created_at&#x27; =&gt; $this-&gt;currentTenant[&#x27;created_at&#x27;] ?? null
+        ];
+    }
+
+    private function getPlanLimit(string $plan, string $type): int
+    {
+        $limits = [
+            &#x27;basic&#x27; =&gt; [&#x27;users&#x27; =&gt; 5, &#x27;storage&#x27; =&gt; 1073741824], // 1GB
+            &#x27;professional&#x27; =&gt; [&#x27;users&#x27; =&gt; 25, &#x27;storage&#x27; =&gt; 10737418240], // 10GB
+            &#x27;enterprise&#x27; =&gt; [&#x27;users&#x27; =&gt; 100, &#x27;storage&#x27; =&gt; 107374182400] // 100GB
+        ];
+
+        return $limits[$plan][$type] ?? 0;
+    }
+
+    private function getPlanFeatures(string $plan): array
+    {
+        $features = [
+            &#x27;basic&#x27; =&gt; [&#x27;basic_support&#x27;, &#x27;api_access&#x27;],
+            &#x27;professional&#x27; =&gt; [&#x27;basic_support&#x27;, &#x27;api_access&#x27;, &#x27;advanced_analytics&#x27;, &#x27;custom_branding&#x27;],
+            &#x27;enterprise&#x27; =&gt; [&#x27;basic_support&#x27;, &#x27;api_access&#x27;, &#x27;advanced_analytics&#x27;, &#x27;custom_branding&#x27;, &#x27;priority_support&#x27;, &#x27;sso&#x27;, &#x27;custom_integrations&#x27;]
+        ];
+
+        return $features[$plan] ?? [];
+    }
+
+    private function provisionTenantResources(string $tenantId, string $slug)
+    {
+        // Create tenant-specific resources
+        // - Database namespace
+        // - Storage bucket
+        // - etc.
+    }
+
+    private function createTenantAdmin(string $tenantId, string $email)
+    {
+        // Create or link admin user to tenant
+        $userDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;Users&#x27;]);
+        $users = $userDS-&gt;fetchAll([[&#x27;email&#x27;, &#x27;=&#x27;, $email]], null, 1);
+
+        if(empty($users)) {
+            // Create new user
+            $userId = $userDS-&gt;createEntity([
+                &#x27;email&#x27; =&gt; $email,
+                &#x27;name&#x27; =&gt; &#x27;Admin&#x27;,
+                &#x27;role&#x27; =&gt; &#x27;admin&#x27;,
+                &#x27;status&#x27; =&gt; &#x27;pending&#x27;,
+                &#x27;created_at&#x27; =&gt; date(&#x27;c&#x27;)
+            ]);
+        } else {
+            $userId = $users[0][&#x27;KeyId&#x27;];
+        }
+
+        // Link to tenant
+        $usersDS = $this-&gt;core-&gt;loadClass(&#x27;DataStore&#x27;, [&#x27;TenantUsers&#x27;]);
+        $usersDS-&gt;createEntity([
+            &#x27;tenant_id&#x27; =&gt; $tenantId,
+            &#x27;user_id&#x27; =&gt; $userId,
+            &#x27;role&#x27; =&gt; &#x27;owner&#x27;,
+            &#x27;status&#x27; =&gt; &#x27;active&#x27;,
+            &#x27;added_at&#x27; =&gt; date(&#x27;c&#x27;)
+        ]);
+    }
+
+    private function generateSlug(string $text): string
+    {
+        $text = strtolower($text);
+        $text = preg_replace(&#x27;/[^a-z0-9-]/&#x27;, &#x27;-&#x27;, $text);
+        $text = preg_replace(&#x27;/-+/&#x27;, &#x27;-&#x27;, $text);
+        return trim($text, &#x27;-&#x27;);
+    }
+}
+</code></pre>
+
+<hr>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+<li><a href="../api-reference/RESTful.html">RESTful Class Reference</a></li>
+<li><a href="../guides/security.html">Security Guide</a></li>
+<li><a href="script-examples.html">Script Examples</a></li>
+<li><a href="gcp-examples.html">GCP Examples</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>
