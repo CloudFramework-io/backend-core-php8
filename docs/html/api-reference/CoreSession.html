@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoreSession Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="CoreSession Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link active">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>CoreSession Class</h1>
+
+<h2>Overview</h2>
+
+The <code>CoreSession</code> class provides a simple and efficient session management system in CloudFramework. It wraps PHP's native session handling with automatic compression and serialization of session data.
+
+<h2>Inheritance</h2>
+
+Access CoreSession through the Core7 instance:
+
+<pre><code class="language-php">// Set session variable
+$this->core->session->set('user_id', 123);
+
+// Get session variable
+$userId = $this->core->session->get('user_id');
+
+// Delete session variable
+$this->core->session->delete('user_id');
+</code></pre>
+
+<h2>Properties</h2>
+
+<h3>Public Properties</h3>
+
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$start</code></td>
+<td>bool</td>
+<td>Whether session has been started</td>
+</tr>
+<tr>
+<td><code>$id</code></td>
+<td>string</td>
+<td>Current session ID</td>
+</tr>
+<tr>
+<td><code>$debug</code></td>
+<td>bool</td>
+<td>Debug mode flag (auto-enabled in development)</td>
+</tr>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 instance</td>
+</tr>
+</tbody>
+</table>
+
+<p>---</p>
+
+<h2>Constructor</h2>
+
+<pre><code class="language-php">function __construct(Core7 &$core, $debug = null)
+</code></pre>
+
+<p>Initializes the session manager.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$core</code> (Core7): Reference to Core7 instance</li>
+<li><code>$debug</code> (bool\|null): Enable debug mode (optional, auto-enabled in development)</li>
+</ul>
+
+<strong>Auto-initialization:</strong>
+<ul>
+<li>Detects if session is already active</li>
+<li>Automatically enables debug mode in development environment</li>
+<li>Stores session ID if session is active</li>
+</ul>
+
+<p>---</p>
+
+<h2>Session Methods</h2>
+
+<h3>init()</h3>
+
+<pre><code class="language-php">function init($id = ''): void
+</code></pre>
+
+<p>Initializes or resumes a session.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$id</code> (string): Optional session ID to use (useful for session restoration)</li>
+</ul>
+
+<strong>Behavior:</strong>
+<ul>
+<li>Starts a new session if none exists</li>
+<li>Resumes existing session if already active</li>
+<li>Can switch to a different session ID if provided</li>
+<li>Automatically called by <code>get()</code>, <code>set()</code>, and <code>delete()</code> if session not started</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Start session with default ID
+$this->core->session->init();
+
+// Start session with specific ID (useful for session restoration)
+$sessionId = $_COOKIE['custom_session_id'] ?? '';
+if($sessionId) {
+    $this->core->session->init($sessionId);
+}
+
+// Get session ID
+$currentSessionId = $this->core->session->id;
+</code></pre>
+
+<p>---</p>
+
+<h3>get()</h3>
+
+<pre><code class="language-php">function get($var): mixed
+</code></pre>
+
+<p>Retrieves a variable from the session.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$var</code> (string): Variable name</li>
+</ul>
+
+<strong>Returns:</strong> Variable value, or <code>null</code> if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Get simple value
+$userId = $this->core->session->get('user_id');
+
+// Get complex object
+$userData = $this->core->session->get('user_data');
+// Returns: ['name' => 'John', 'email' => 'john@example.com']
+
+// Check if variable exists
+$cart = $this->core->session->get('shopping_cart');
+if($cart === null) {
+    // Variable doesn't exist
+    $cart = [];
+}
+
+// Get with default
+$language = $this->core->session->get('language') ?? 'en';
+</code></pre>
+
+<strong>Data Handling:</strong>
+<ul>
+<li>Automatically initializes session if not started</li>
+<li>Uncompresses and unserializes stored data</li>
+<li>Returns <code>null</code> if variable doesn't exist</li>
+<li>Handles exceptions gracefully</li>
+</ul>
+
+<p>---</p>
+
+<h3>set()</h3>
+
+<pre><code class="language-php">function set($var, $value): void
+</code></pre>
+
+<p>Stores a variable in the session.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$var</code> (string): Variable name</li>
+<li><code>$value</code> (mixed): Variable value (any serializable type)</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Set simple value
+$this->core->session->set('user_id', 123);
+
+// Set complex object
+$this->core->session->set('user_data', [
+    'id' => 123,
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'roles' => ['user', 'admin']
+]);
+
+// Set array
+$this->core->session->set('shopping_cart', [
+    ['product_id' => 1, 'quantity' => 2],
+    ['product_id' => 5, 'quantity' => 1]
+]);
+
+// Update existing value
+$cart = $this->core->session->get('shopping_cart') ?? [];
+$cart[] = ['product_id' => 10, 'quantity' => 1];
+$this->core->session->set('shopping_cart', $cart);
+</code></pre>
+
+<strong>Data Handling:</strong>
+<ul>
+<li>Automatically initializes session if not started</li>
+<li>Serializes and compresses data before storing</li>
+<li>Supports any serializable PHP type (arrays, objects, etc.)</li>
+</ul>
+
+<p>---</p>
+
+<h3>delete()</h3>
+
+<pre><code class="language-php">function delete($var): void
+</code></pre>
+
+<p>Removes a variable from the session.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$var</code> (string): Variable name to delete</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Delete single variable
+$this->core->session->delete('user_id');
+
+// Clear user session on logout
+$this->core->session->delete('user_id');
+$this->core->session->delete('user_data');
+$this->core->session->delete('shopping_cart');
+
+// Or use a loop
+$sessionVars = ['user_id', 'user_data', 'shopping_cart', 'preferences'];
+foreach($sessionVars as $var) {
+    $this->core->session->delete($var);
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>User Authentication</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_login()
+    {
+        $email = $this->formParams['email'] ?? '';
+        $password = $this->formParams['password'] ?? '';
+
+        // Validate credentials
+        $user = $this->validateCredentials($email, $password);
+        if($user) {
+            // Store user in session
+            $this->core->session->set('user_id', $user['id']);
+            $this->core->session->set('user_data', $user);
+            $this->core->session->set('authenticated', true);
+
+            $this->addReturnData([
+                'message' => 'Login successful',
+                'user' => $user
+            ]);
+        } else {
+            $this->setErrorFromCodelib('auth-error', 'Invalid credentials');
+        }
+    }
+
+    public function ENDPOINT_logout()
+    {
+        // Clear session variables
+        $this->core->session->delete('user_id');
+        $this->core->session->delete('user_data');
+        $this->core->session->delete('authenticated');
+
+        $this->addReturnData('Logout successful');
+    }
+
+    protected function checkAuthentication(): bool
+    {
+        return $this->core->session->get('authenticated') === true;
+    }
+}
+</code></pre>
+
+<h3>Shopping Cart</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_cart_add()
+    {
+        $productId = $this->formParams['product_id'] ?? '';
+        $quantity = (int)($this->formParams['quantity'] ?? 1);
+
+        if(!$productId) {
+            return $this->setErrorFromCodelib('params-error', 'Product ID required');
+        }
+
+        // Get current cart
+        $cart = $this->core->session->get('shopping_cart') ?? [];
+
+        // Add or update product
+        $found = false;
+        foreach($cart as &$item) {
+            if($item['product_id'] == $productId) {
+                $item['quantity'] += $quantity;
+                $found = true;
+                break;
+            }
+        }
+
+        if(!$found) {
+            $cart[] = [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'added_at' => time()
+            ];
+        }
+
+        // Save cart
+        $this->core->session->set('shopping_cart', $cart);
+
+        $this->addReturnData([
+            'cart' => $cart,
+            'total_items' => count($cart)
+        ]);
+    }
+
+    public function ENDPOINT_cart_get()
+    {
+        $cart = $this->core->session->get('shopping_cart') ?? [];
+
+        $this->addReturnData([
+            'cart' => $cart,
+            'total_items' => count($cart)
+        ]);
+    }
+
+    public function ENDPOINT_cart_clear()
+    {
+        $this->core->session->delete('shopping_cart');
+        $this->addReturnData('Cart cleared');
+    }
+}
+</code></pre>
+
+<h3>Multi-step Forms (Wizard)</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_wizard_step1()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        $data = [
+            'company_name' => $this->formParams['company_name'] ?? '',
+            'industry' => $this->formParams['industry'] ?? ''
+        ];
+
+        // Validate
+        if(!$data['company_name']) {
+            return $this->setErrorFromCodelib('validation-error', 'Company name required');
+        }
+
+        // Store in session
+        $wizardData = $this->core->session->get('wizard_data') ?? [];
+        $wizardData['step1'] = $data;
+        $wizardData['current_step'] = 2;
+        $this->core->session->set('wizard_data', $wizardData);
+
+        $this->addReturnData([
+            'message' => 'Step 1 completed',
+            'next_step' => 2
+        ]);
+    }
+
+    public function ENDPOINT_wizard_step2()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Get previous data
+        $wizardData = $this->core->session->get('wizard_data') ?? [];
+        if(empty($wizardData['step1'])) {
+            return $this->setErrorFromCodelib('state-error', 'Please complete step 1 first');
+        }
+
+        // Store step 2 data
+        $wizardData['step2'] = [
+            'contact_name' => $this->formParams['contact_name'] ?? '',
+            'email' => $this->formParams['email'] ?? ''
+        ];
+        $wizardData['current_step'] = 3;
+        $this->core->session->set('wizard_data', $wizardData);
+
+        $this->addReturnData([
+            'message' => 'Step 2 completed',
+            'next_step' => 3
+        ]);
+    }
+
+    public function ENDPOINT_wizard_complete()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Get all wizard data
+        $wizardData = $this->core->session->get('wizard_data') ?? [];
+
+        if(empty($wizardData['step1']) || empty($wizardData['step2'])) {
+            return $this->setErrorFromCodelib('state-error', 'Please complete all steps');
+        }
+
+        // Process complete registration
+        $result = $this->processRegistration($wizardData);
+
+        // Clear wizard data
+        $this->core->session->delete('wizard_data');
+
+        $this->addReturnData([
+            'message' => 'Registration completed',
+            'result' => $result
+        ]);
+    }
+}
+</code></pre>
+
+<h3>User Preferences</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    function main()
+    {
+        // Load user preferences from session
+        $preferences = $this->core->session->get('user_preferences') ?? [
+            'language' => 'en',
+            'theme' => 'light',
+            'timezone' => 'UTC',
+            'items_per_page' => 25
+        ];
+
+        // Apply preferences
+        $this->core->config->setLang($preferences['language']);
+        date_default_timezone_set($preferences['timezone']);
+
+        // Route to endpoint
+        if(!$this->useFunction('ENDPOINT_' . ($this->params[0] ?? 'default'))) {
+            return $this->setErrorFromCodelib('params-error', 'Endpoint not found');
+        }
+    }
+
+    public function ENDPOINT_preferences_set()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Get current preferences
+        $preferences = $this->core->session->get('user_preferences') ?? [];
+
+        // Update preferences
+        if(isset($this->formParams['language'])) {
+            $preferences['language'] = $this->formParams['language'];
+        }
+        if(isset($this->formParams['theme'])) {
+            $preferences['theme'] = $this->formParams['theme'];
+        }
+        if(isset($this->formParams['timezone'])) {
+            $preferences['timezone'] = $this->formParams['timezone'];
+        }
+        if(isset($this->formParams['items_per_page'])) {
+            $preferences['items_per_page'] = (int)$this->formParams['items_per_page'];
+        }
+
+        // Save preferences
+        $this->core->session->set('user_preferences', $preferences);
+
+        $this->addReturnData([
+            'message' => 'Preferences updated',
+            'preferences' => $preferences
+        ]);
+    }
+}
+</code></pre>
+
+<h3>Flash Messages</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    protected function setFlashMessage($type, $message)
+    {
+        $this->core->session->set('flash_message', [
+            'type' => $type,
+            'message' => $message
+        ]);
+    }
+
+    protected function getFlashMessage()
+    {
+        $flash = $this->core->session->get('flash_message');
+        if($flash) {
+            $this->core->session->delete('flash_message');
+        }
+        return $flash;
+    }
+
+    public function ENDPOINT_save_data()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Process data
+        $success = $this->saveData($this->formParams);
+
+        if($success) {
+            $this->setFlashMessage('success', 'Data saved successfully');
+        } else {
+            $this->setFlashMessage('error', 'Failed to save data');
+        }
+
+        $this->addReturnData(['redirect' => '/dashboard']);
+    }
+
+    public function ENDPOINT_dashboard()
+    {
+        $flash = $this->getFlashMessage();
+
+        $this->addReturnData([
+            'dashboard_data' => $this->getDashboardData(),
+            'flash_message' => $flash
+        ]);
+    }
+}
+</code></pre>
+
+<h3>Session Recovery</h3>
+
+<pre><code class="language-php">// In a custom session handler or API endpoint
+class API extends RESTful
+{
+    public function ENDPOINT_session_restore()
+    {
+        $sessionId = $this->formParams['session_id'] ?? '';
+
+        if(!$sessionId) {
+            return $this->setErrorFromCodelib('params-error', 'Session ID required');
+        }
+
+        // Validate session ID format/security
+        if(!$this->isValidSessionId($sessionId)) {
+            return $this->setErrorFromCodelib('security-error', 'Invalid session ID');
+        }
+
+        // Restore session
+        $this->core->session->init($sessionId);
+
+        // Check if session has user data
+        $userId = $this->core->session->get('user_id');
+        if($userId) {
+            $userData = $this->core->session->get('user_data');
+            $this->addReturnData([
+                'message' => 'Session restored',
+                'user' => $userData
+            ]);
+        } else {
+            $this->setErrorFromCodelib('auth-error', 'No active session found');
+        }
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Session Security</h2>
+
+<h3>Session ID Management</h3>
+
+<pre><code class="language-php">// Get current session ID (for cookies, etc.)
+$sessionId = $this->core->session->id;
+
+// Store in secure cookie
+setcookie('app_session', $sessionId, [
+    'expires' => time() + 3600,
+    'path' => '/',
+    'secure' => true,
+    'httponly' => true,
+    'samesite' => 'Strict'
+]);
+</code></pre>
+
+<h3>Session Regeneration (Anti-Fixation)</h3>
+
+<pre><code class="language-php">// After successful login, regenerate session ID
+public function ENDPOINT_login()
+{
+    $user = $this->validateCredentials($email, $password);
+
+    if($user) {
+        // Regenerate session ID to prevent session fixation
+        session_regenerate_id(true);
+
+        // Update stored session ID
+        $this->core->session->id = session_id();
+
+        // Store user data
+        $this->core->session->set('user_id', $user['id']);
+        $this->core->session->set('authenticated', true);
+    }
+}
+</code></pre>
+
+<h3>Session Timeout</h3>
+
+<pre><code class="language-php">// Track last activity
+public function checkSessionTimeout()
+{
+    $lastActivity = $this->core->session->get('last_activity');
+    $timeout = 1800; // 30 minutes
+
+    if($lastActivity && (time() - $lastActivity) > $timeout) {
+        // Session expired
+        $this->core->session->delete('user_id');
+        $this->core->session->delete('authenticated');
+        $this->core->session->delete('last_activity');
+
+        return false;
+    }
+
+    // Update last activity
+    $this->core->session->set('last_activity', time());
+
+    return true;
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Debug Mode</h2>
+
+When debug mode is enabled, session operations are logged:
+
+<pre><code class="language-php">// Enable debug
+$this->core->session->debug = true;
+
+// Operations will be logged
+$this->core->session->set('test', 'value');
+// Log: "set('$var=test') ok"
+
+$value = $this->core->session->get('test');
+// Log: "get('$var=test') found"
+
+$this->core->session->delete('test');
+// Log: "delete('$var=test') ok"
+</code></pre>
+
+<p>Debug mode is automatically enabled in development environment.</p>
+
+<p>---</p>
+
+<h2>Performance Considerations</h2>
+
+<h3>Data Compression</h3>
+
+Session data is automatically compressed using gzip:
+
+<pre><code class="language-php">// Data is compressed before storing
+$this->core->session->set('large_data', $bigArray);
+// Stored as: gzcompress(serialize($bigArray))
+
+// And decompressed when retrieved
+$data = $this->core->session->get('large_data');
+// Returns: original $bigArray
+</code></pre>
+
+<p>This reduces session storage size significantly.</p>
+
+<h3>Avoid Storing Large Objects</h3>
+
+<pre><code class="language-php">// Bad: Storing huge datasets in session
+$allProducts = $this->getAllProducts(); // 10,000 products
+$this->core->session->set('products', $allProducts);
+
+// Good: Store only IDs or use cache
+$productIds = $this->getProductIds();
+$this->core->session->set('product_ids', $productIds);
+
+// Or use cache for large datasets
+$this->core->cache->set('products', $allProducts, 3600);
+</code></pre>
+
+<p>---</p>
+
+<h2>Important Notes</h2>
+
+<h3>Session Variable Naming</h3>
+
+Session variables are prefixed with <code>CloudSessionVar_</code> internally:
+
+<pre><code class="language-php">// You use
+$this->core->session->set('user_id', 123);
+
+// Actually stored as
+$_SESSION['CloudSessionVar_user_id']
+
+// This prevents conflicts with other session variables
+</code></pre>
+
+<h3>Serialization</h3>
+
+All session data is automatically serialized and unserialized:
+
+<pre><code class="language-php">// You can store any serializable type
+$this->core->session->set('user', $userObject);
+$this->core->session->set('array', ['a', 'b', 'c']);
+$this->core->session->set('number', 123);
+$this->core->session->set('bool', true);
+
+// Retrieved with original type
+$user = $this->core->session->get('user'); // object
+$array = $this->core->session->get('array'); // array
+$number = $this->core->session->get('number'); // int
+$bool = $this->core->session->get('bool'); // bool
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+<li><a href="CoreSecurity.html">CoreSecurity Class Reference</a></li>
+<li><a href="../guides/security.html">Security Guide</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

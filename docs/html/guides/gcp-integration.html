@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GCP Integration - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="Integrate with Google Cloud services">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="gcp-integration.html" class="sidebar-nav-link active">GCP Overview</a></li>
+                        <li><a href="security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="../api-reference/Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="../api-reference/RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="../api-reference/Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="../api-reference/CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="../api-reference/CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="../api-reference/CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="../api-reference/CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="../api-reference/DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="../api-reference/Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="../api-reference/DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="../api-reference/CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="../api-reference/DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="../api-reference/DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="../api-reference/Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="../api-reference/DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="../api-reference/WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="../api-reference/GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="../api-reference/PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <h1>Google Cloud Platform (GCP) Integration Guide</h1>
+
+<p>CloudFramework Backend Core provides native integration with Google Cloud Platform services, making it easy to build scalable applications using GCP infrastructure.</p>
+
+<h2>Table of Contents</h2>
+
+<ul>
+<li><a href="#prerequisites">Prerequisites</a></li>
+<li><a href="#configuration">Configuration</a></li>
+<li><a href="#service-account-setup">Service Account Setup</a></li>
+<li><a href="#available-services">Available Services</a></li>
+<li><a href="#cloud-datastore">Cloud Datastore</a></li>
+<li><a href="#cloud-storage">Cloud Storage</a></li>
+<li><a href="#bigquery">BigQuery</a></li>
+<li><a href="#cloud-sql">Cloud SQL</a></li>
+<li><a href="#secret-manager">Secret Manager</a></li>
+<li><a href="#pubsub">Pub/Sub</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ul>
+
+<h2>Prerequisites</h2>
+
+<h3>1. Google Cloud Account</h3>
+
+<p>Create a Google Cloud account at <a href="https://cloud.google.com">cloud.google.com</a></p>
+
+<h3>2. GCP Project</h3>
+
+<p>Create a project in <a href="https://console.cloud.google.com/projectcreate">GCP Console</a></p>
+
+<h3>3. Enable Required APIs</h3>
+
+<p>Enable the APIs you plan to use:</p>
+<ul>
+<li><a href="https://console.cloud.google.com/apis/library/datastore.googleapis.com">Cloud Datastore API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/storage-api.googleapis.com">Cloud Storage API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/bigquery.googleapis.com">BigQuery API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/sqladmin.googleapis.com">Cloud SQL Admin API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/secretmanager.googleapis.com">Secret Manager API</a></li>
+<li><a href="https://console.cloud.google.com/apis/library/pubsub.googleapis.com">Pub/Sub API</a></li>
+</ul>
+
+<h3>4. Install Google Cloud SDK (for local development)</h3>
+
+<pre><code><h1>macOS</h1>
+<p>brew install google-cloud-sdk</p>
+
+<h1>Or download from</h1>
+<p>https://cloud.google.com/sdk/docs/install</code></pre></p>
+
+<h2>Configuration</h2>
+
+<h3>1. Update config.json</h3>
+
+<p>Edit your project's <code>config.json</code>:</p>
+
+<pre><code>{
+<p>  "core.gcp.project_id": "your-project-id",</p>
+
+<p>  "core.datastore.on": true,</p>
+<p>  "core.gcp.datastore.project_id": "",</p>
+<p>  "core.gcp.datastore.transport": "rest",</p>
+
+<p>  "core.datastorage.on": true,</p>
+<p>  "core.gcp.datastorage.project_id": "",</p>
+
+<p>  "core.bigquery.on": true,</p>
+<p>  "core.gcp.bigquery.project_id": "",</p>
+
+<p>  "development": {</p>
+<p>    "core.cache.cache_path": "{{rootPath}}/local_data/cache"</p>
+<p>  }</p>
+<p>}</code></pre></p>
+
+<h3>2. Run Interactive Setup</h3>
+
+<pre><code>composer setup</code></pre>
+
+<p>This will guide you through:</p>
+<ul>
+<li>Setting GCP project ID</li>
+<li>Enabling/disabling services</li>
+<li>Configuring service accounts</li>
+<li>Setting up local credentials</li>
+</ul>
+
+<h2>Service Account Setup</h2>
+
+<h3>1. Create Service Account</h3>
+
+<p>In <a href="https://console.cloud.google.com/iam-admin/serviceaccounts">GCP Console</a>:</p>
+
+<ol>
+<li>Go to "IAM & Admin" > "Service Accounts"</li>
+<li>Click "Create Service Account"</li>
+<li>Name it (e.g., "backend-core-dev")</li>
+<li>Grant roles:</li>
+<ul>
+<li>Cloud Datastore User</li>
+<li>Storage Object Admin</li>
+<li>BigQuery Data Editor</li>
+<li>Cloud SQL Client</li>
+<li>Secret Manager Secret Accessor</li>
+<li>Pub/Sub Publisher/Subscriber</li>
+</ul>
+</ol>
+
+<h3>2. Create and Download Key</h3>
+
+<ol>
+<li>Click on your service account</li>
+<li>Go to "Keys" tab</li>
+<li>Click "Add Key" > "Create new key"</li>
+<li>Choose "JSON" format</li>
+<li>Download the key file</li>
+</ol>
+
+<h3>3. Configure Locally</h3>
+
+<pre><code><h1>Save the key file</h1>
+<p>mkdir -p local_data</p>
+<p>mv ~/Downloads/your-key-file.json local_data/service-account.json</p>
+
+<h1>Set environment variable</h1>
+<p>export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/local_data/service-account.json</p>
+
+<h1>Add to your shell profile (~/.zshrc or ~/.bashrc)</h1>
+<p>echo 'export GOOGLE_APPLICATION_CREDENTIALS="'$(pwd)'/local_data/service-account.json"' >> ~/.zshrc</p>
+
+<h1>Or use composer command</h1>
+<p>composer credentials</code></pre></p>
+
+<h3>4. Add to .gitignore</h3>
+
+<pre><code>echo "local_data/service-account.json" >> .gitignore</code></pre>
+
+<h2>Available Services</h2>
+
+<p>CloudFramework provides classes for the following GCP services:</p>
+
+<p>| Service | Class | Purpose |</p>
+<p>|---------|-------|---------|</p>
+<p>| Cloud Datastore | <code>DataStore</code> | NoSQL document database |</p>
+<p>| Cloud Storage | <code>Buckets</code> | Object/file storage |</p>
+<p>| BigQuery | <code>DataBQ</code> | Data warehouse and analytics |</p>
+<p>| Cloud SQL | <code>CloudSQL</code> | Managed MySQL/PostgreSQL |</p>
+<p>| Secret Manager | <code>GoogleSecrets</code> | Secure secret storage |</p>
+<p>| Pub/Sub | <code>PubSub</code> | Messaging and event streaming |</p>
+
+<h2>Cloud Datastore</h2>
+
+<p>NoSQL document database for web and mobile apps.</p>
+
+<h3>Basic Usage</h3>
+
+<pre><code>// Load DataStore class
+<p>$ds = $this->core->loadClass('DataStore', ['Users']);</p>
+
+<p>// Create entity</p>
+<p>$user = $ds->createEntity([</p>
+<p>    'name' => 'John Doe',</p>
+<p>    'email' => 'john@example.com',</p>
+<p>    'age' => 30</p>
+<p>]);</p>
+
+<p>// Fetch entities</p>
+<p>$users = $ds->fetchAll('*', ['age' => ['>' => 25]]);</p>
+
+<p>// Update entity</p>
+<p>$user['age'] = 31;</p>
+<p>$ds->createEntity($user);</p>
+
+<p>// Delete entity</p>
+<p>$ds->delete(['KeyId' => $user['KeyId']]);</p>
+
+<p>// Count entities</p>
+<p>$total = $ds->count(['active' => true]);</code></pre></p>
+
+<h3>Advanced Features</h3>
+
+<pre><code>// With schema validation
+<p>$schema = [</p>
+<p>    'props' => [</p>
+<p>        'name' => ['Name', 'string', 'required'],</p>
+<p>        'email' => ['Email', 'string', 'required|unique'],</p>
+<p>        'age' => ['Age', 'integer']</p>
+<p>    ]</p>
+<p>];</p>
+
+<p>$ds = $this->core->loadClass('DataStore', [</p>
+<p>    'Users',</p>
+<p>    'production',</p>
+<p>    $schema</p>
+<p>]);</p>
+
+<p>// With caching</p>
+<p>$ds->activateCache(true);</p>
+
+<p>// Pagination</p>
+<p>$ds->cursor = $savedCursor;</p>
+<p>$users = $ds->fetchLimit('*', null, ['created_at' => 'DESC'], 20);</p>
+<p>$nextCursor = $ds->cursor;</p>
+
+<p>// Aggregations</p>
+<p>$avgAge = $ds->avg('age');</p>
+<p>$totalAge = $ds->sum('age');</code></pre></p>
+
+<strong>See:</strong> <a href="../api-reference/DataStore.html">DataStore Class Reference</a>
+
+<p>---</p>
+
+<h2>Cloud Storage</h2>
+
+<p>Scalable object storage for files and media.</p>
+
+<h3>Basic Usage</h3>
+
+<pre><code>// Load Buckets class
+<p>$buckets = $this->core->loadClass('Buckets', ['my-bucket']);</p>
+
+<p>// Upload file</p>
+<p>$result = $buckets->upload(</p>
+<p>    '/local/path/file.pdf',</p>
+<p>    'gs://my-bucket/documents/file.pdf'</p>
+<p>);</p>
+
+<p>// Download file</p>
+<p>$buckets->download(</p>
+<p>    'gs://my-bucket/documents/file.pdf',</p>
+<p>    '/local/path/file.pdf'</p>
+<p>);</p>
+
+<p>// List files</p>
+<p>$files = $buckets->ls('gs://my-bucket/documents/');</p>
+
+<p>// Delete file</p>
+<p>$buckets->delete('gs://my-bucket/documents/file.pdf');</p>
+
+<p>// Check if file exists</p>
+<p>if($buckets->fileExist('gs://my-bucket/file.pdf')) {</p>
+<p>    // File exists</p>
+<p>}</code></pre></p>
+
+<h3>Working with Directories</h3>
+
+<pre><code>// Create directory
+<p>$buckets->mkdir('gs://my-bucket/new-folder/');</p>
+
+<p>// List directory</p>
+<p>$files = $buckets->ls('gs://my-bucket/new-folder/');</p>
+
+<p>// Check if directory exists</p>
+<p>if($buckets->isDir('gs://my-bucket/new-folder/')) {</p>
+<p>    // Directory exists</p>
+<p>}</p>
+
+<p>// Remove directory</p>
+<p>$buckets->rmdir('gs://my-bucket/new-folder/');</code></pre></p>
+
+<h3>Upload from API</h3>
+
+<pre><code>// In your API
+<p>public function ENDPOINT_upload()</p>
+<p>{</p>
+<p>    if(!$this->checkMethod('POST')) return;</p>
+
+<p>    // Check if file was uploaded</p>
+<p>    if(!isset($_FILES['file'])) {</p>
+<p>        return $this->setError('No file uploaded', 400);</p>
+<p>    }</p>
+
+<p>    $file = $_FILES['file'];</p>
+<p>    $buckets = $this->core->loadClass('Buckets', ['my-bucket']);</p>
+
+<p>    // Upload to Cloud Storage</p>
+<p>    $destination = 'gs://my-bucket/uploads/' . $file['name'];</p>
+<p>    $result = $buckets->upload($file['tmp_name'], $destination);</p>
+
+<p>    if(!$result) {</p>
+<p>        return $this->setError('Upload failed', 500);</p>
+<p>    }</p>
+
+<p>    $this->addReturnData([</p>
+<p>        'url' => $destination,</p>
+<p>        'size' => $file['size'],</p>
+<p>        'type' => $file['type']</p>
+<p>    ]);</p>
+<p>}</code></pre></p>
+
+<strong>See:</strong> <a href="../api-reference/Buckets.html">Buckets Class Reference</a>
+
+<p>---</p>
+
+<h2>BigQuery</h2>
+
+<p>Data warehouse for analytics and large-scale queries.</p>
+
+<h3>Basic Usage</h3>
+
+<pre><code>// Load DataBQ class
+<p>$bq = $this->core->loadClass('DataBQ', ['my_dataset']);</p>
+
+<p>// Run query</p>
+<p>$results = $bq->query("</p>
+<p>    SELECT</p>
+<p>        user_id,</p>
+<p>        COUNT(*) as order_count,</p>
+<p>        SUM(total) as total_revenue</p>
+<p>    FROM <code>{$this->core->gc_project_id}.my_dataset.orders</code></p>
+<p>    WHERE created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)</p>
+<p>    GROUP BY user_id</p>
+<p>    ORDER BY total_revenue DESC</p>
+<p>    LIMIT 10</p>
+<p>");</p>
+
+<p>if($bq->error) {</p>
+<p>    // Handle error</p>
+<p>    $this->core->logs->add($bq->errorMsg, 'bigquery', 'error');</p>
+<p>} else {</p>
+<p>    $this->addReturnData($results);</p>
+<p>}</code></pre></p>
+
+<h3>Insert Data</h3>
+
+<pre><code>$bq = $this->core->loadClass('DataBQ', ['my_dataset', 'events']);
+
+<p>// Insert single row</p>
+<p>$bq->insert([</p>
+<p>    'user_id' => 123,</p>
+<p>    'event' => 'page_view',</p>
+<p>    'timestamp' => new DateTime(),</p>
+<p>    'data' => json_encode(['page' => '/home'])</p>
+<p>]);</p>
+
+<p>// Insert multiple rows</p>
+<p>$bq->insertAll([</p>
+<p>    ['user_id' => 123, 'event' => 'click', 'timestamp' => new DateTime()],</p>
+<p>    ['user_id' => 456, 'event' => 'purchase', 'timestamp' => new DateTime()]</p>
+<p>]);</code></pre></p>
+
+<h3>Create Table</h3>
+
+<pre><code>$schema = [
+<p>    ['name' => 'user_id', 'type' => 'INTEGER', 'mode' => 'REQUIRED'],</p>
+<p>    ['name' => 'event', 'type' => 'STRING', 'mode' => 'REQUIRED'],</p>
+<p>    ['name' => 'timestamp', 'type' => 'TIMESTAMP', 'mode' => 'REQUIRED'],</p>
+<p>    ['name' => 'data', 'type' => 'JSON', 'mode' => 'NULLABLE']</p>
+<p>];</p>
+
+<p>$bq->createTable('events', $schema);</code></pre></p>
+
+<strong>See:</strong> <a href="../api-reference/DataBQ.html">DataBQ Class Reference</a>
+
+<p>---</p>
+
+<h2>Cloud SQL</h2>
+
+<p>Managed MySQL and PostgreSQL databases.</p>
+
+<h3>Basic Usage</h3>
+
+<pre><code>// Load CloudSQL class
+<p>$sql = $this->core->loadClass('CloudSQL', [</p>
+<p>    'host' => '/cloudsql/project:region:instance',</p>
+<p>    'database' => 'mydb',</p>
+<p>    'username' => 'root',</p>
+<p>    'password' => 'secret'</p>
+<p>]);</p>
+
+<p>// Execute query</p>
+<p>$users = $sql->query("</p>
+<p>    SELECT * FROM users</p>
+<p>    WHERE age > :age AND active = :active</p>
+<p>", [</p>
+<p>    ':age' => 25,</p>
+<p>    ':active' => 1</p>
+<p>]);</p>
+
+<p>// Insert</p>
+<p>$sql->command("</p>
+<p>    INSERT INTO users (name, email, age)</p>
+<p>    VALUES (:name, :email, :age)</p>
+<p>", [</p>
+<p>    ':name' => 'John Doe',</p>
+<p>    ':email' => 'john@example.com',</p>
+<p>    ':age' => 30</p>
+<p>]);</p>
+
+<p>// Get last insert ID</p>
+<p>$userId = $sql->getInsertId();</code></pre></p>
+
+<h3>With Connection Pooling</h3>
+
+<pre><code>// In your API
+<p>function main()</p>
+<p>{</p>
+<p>    // Initialize once</p>
+<p>    if(!isset($this->sql)) {</p>
+<p>        $this->sql = $this->core->loadClass('CloudSQL', [</p>
+<p>            'host' => $_ENV['DB_HOST'],</p>
+<p>            'database' => $_ENV['DB_NAME'],</p>
+<p>            'username' => $_ENV['DB_USER'],</p>
+<p>            'password' => $_ENV['DB_PASS']</p>
+<p>        ]);</p>
+<p>    }</p>
+
+<p>    // Use in endpoints</p>
+<p>    $endpoint = $this->params[0] ?? 'list';</p>
+<p>    $this->useFunction('ENDPOINT_' . $endpoint);</p>
+<p>}</p>
+
+<p>public function ENDPOINT_list()</p>
+<p>{</p>
+<p>    $users = $this->sql->query("SELECT * FROM users");</p>
+<p>    $this->addReturnData($users);</p>
+<p>}</code></pre></p>
+
+<strong>See:</strong> <a href="../api-reference/CloudSQL.html">CloudSQL Class Reference</a>
+
+<p>---</p>
+
+<h2>Secret Manager</h2>
+
+<p>Securely store and access secrets like API keys and passwords.</p>
+
+<h3>Basic Usage</h3>
+
+<pre><code>// Load GoogleSecrets class
+<p>$secrets = $this->core->loadClass('GoogleSecrets');</p>
+
+<p>// Get secret</p>
+<p>$apiKey = $secrets->getSecret('api-key');</p>
+<p>$dbPassword = $secrets->getSecret('database-password');</p>
+
+<p>// Create secret</p>
+<p>$secrets->createSecret('new-secret', 'secret-value');</p>
+
+<p>// Update secret</p>
+<p>$secrets->updateSecret('api-key', 'new-value');</p>
+
+<p>// Delete secret</p>
+<p>$secrets->deleteSecret('old-secret');</code></pre></p>
+
+<h3>Use in Configuration</h3>
+
+<pre><code>// In your API
+<p>function main()</p>
+<p>{</p>
+<p>    $secrets = $this->core->loadClass('GoogleSecrets');</p>
+
+<p>    // Get database credentials from Secret Manager</p>
+<p>    $config = [</p>
+<p>        'host' => $secrets->getSecret('db-host'),</p>
+<p>        'database' => $secrets->getSecret('db-name'),</p>
+<p>        'username' => $secrets->getSecret('db-user'),</p>
+<p>        'password' => $secrets->getSecret('db-password')</p>
+<p>    ];</p>
+
+<p>    $this->sql = $this->core->loadClass('CloudSQL', $config);</p>
+<p>}</code></pre></p>
+
+<strong>See:</strong> <a href="../api-reference/GoogleSecrets.html">GoogleSecrets Class Reference</a>
+
+<p>---</p>
+
+<h2>Pub/Sub</h2>
+
+<p>Messaging service for event-driven architectures.</p>
+
+<h3>Basic Usage</h3>
+
+<pre><code>// Load PubSub class
+<p>$pubsub = $this->core->loadClass('PubSub');</p>
+
+<p>// Publish message</p>
+<p>$pubsub->publish('my-topic', [</p>
+<p>    'event' => 'user.created',</p>
+<p>    'user_id' => 123,</p>
+<p>    'timestamp' => time()</p>
+<p>]);</p>
+
+<p>// Publish multiple messages</p>
+<p>$pubsub->publishBatch('my-topic', [</p>
+<p>    ['event' => 'order.created', 'order_id' => 1],</p>
+<p>    ['event' => 'order.created', 'order_id' => 2],</p>
+<p>    ['event' => 'order.created', 'order_id' => 3]</p>
+<p>]);</p>
+
+<p>// Subscribe and pull messages</p>
+<p>$messages = $pubsub->pull('my-subscription', 10);</p>
+
+<p>foreach($messages as $message) {</p>
+<p>    $data = $message['data'];</p>
+
+<p>    // Process message</p>
+<p>    processEvent($data);</p>
+
+<p>    // Acknowledge message</p>
+<p>    $pubsub->acknowledge('my-subscription', $message['ackId']);</p>
+<p>}</code></pre></p>
+
+<h3>Create Topic and Subscription</h3>
+
+<pre><code>$pubsub = $this->core->loadClass('PubSub');
+
+<p>// Create topic</p>
+<p>$pubsub->createTopic('events');</p>
+
+<p>// Create subscription</p>
+<p>$pubsub->createSubscription('events', 'events-processor');</code></pre></p>
+
+<strong>See:</strong> <a href="../api-reference/PubSub.html">PubSub Class Reference</a>
+
+<p>---</p>
+
+<h2>Best Practices</h2>
+
+<h3>1. Use Environment Variables</h3>
+
+<p>Store sensitive configuration in environment variables or Secret Manager:</p>
+
+<pre><code>// Instead of hardcoding
+<p>$projectId = $_ENV['GCP_PROJECT_ID'];</p>
+<p>$bucket = $_ENV['GCP_BUCKET'];</p>
+
+<p>// Or use Secret Manager</p>
+<p>$secrets = $this->core->loadClass('GoogleSecrets');</p>
+<p>$apiKey = $secrets->getSecret('third-party-api-key');</code></pre></p>
+
+<h3>2. Implement Error Handling</h3>
+
+<p>Always check for errors:</p>
+
+<pre><code>$ds = $this->core->loadClass('DataStore', ['Users']);
+<p>$user = $ds->createEntity($data);</p>
+
+<p>if($ds->error) {</p>
+<p>    $this->core->logs->add($ds->errorMsg, 'datastore', 'error');</p>
+<p>    return $this->setError('Failed to create user', $ds->errorCode);</p>
+<p>}</code></pre></p>
+
+<h3>3. Use Caching</h3>
+
+<p>Enable caching for frequently accessed data:</p>
+
+<pre><code>$ds = $this->core->loadClass('DataStore', ['Users']);
+<p>$ds->activateCache(true);</p>
+
+<p>// First call: fetches from Datastore</p>
+<p>$users = $ds->fetchAll('*', ['active' => true]);</p>
+
+<p>// Subsequent calls: returns from cache</p>
+<p>$users = $ds->fetchAll('*', ['active' => true]);</code></pre></p>
+
+<h3>4. Optimize Queries</h3>
+
+<p>Use indexes and filters effectively:</p>
+
+<pre><code>// Good: Filter at database level
+<p>$activeUsers = $ds->fetchAll('*', ['active' => true]);</p>
+
+<p>// Bad: Fetch all and filter in code</p>
+<p>$allUsers = $ds->fetchAll();</p>
+<p>$activeUsers = array_filter($allUsers, fn($u) => $u['active']);</code></pre></p>
+
+<h3>5. Use Batch Operations</h3>
+
+<p>Batch operations are more efficient:</p>
+
+<pre><code>// Good: Batch insert
+<p>$ds->createEntities($multipleUsers);</p>
+
+<p>// Less efficient: Individual inserts</p>
+<p>foreach($users as $user) {</p>
+<p>    $ds->createEntity($user);</p>
+<p>}</code></pre></p>
+
+<h3>6. Implement Retries</h3>
+
+<p>Add retry logic for transient failures:</p>
+
+<pre><code>function uploadWithRetry($buckets, $source, $dest, $maxRetries = 3)
+<p>{</p>
+<p>    $retries = 0;</p>
+<p>    while($retries < $maxRetries) {</p>
+<p>        $result = $buckets->upload($source, $dest);</p>
+<p>        if($result) {</p>
+<p>            return $result;</p>
+<p>        }</p>
+<p>        $retries++;</p>
+<p>        sleep(pow(2, $retries)); // Exponential backoff</p>
+<p>    }</p>
+<p>    return false;</p>
+<p>}</code></pre></p>
+
+<h3>7. Monitor Costs</h3>
+
+<p>Be aware of GCP costs:</p>
+<ul>
+<li>Datastore: Charged per read/write operation</li>
+<li>Cloud Storage: Charged per storage and operations</li>
+<li>BigQuery: Charged per query data processed</li>
+<li>Use GCP cost monitoring tools</li>
+</ul>
+
+<h3>8. Secure Service Accounts</h3>
+
+<ul>
+<li>Use least privilege principle</li>
+<li>Rotate keys regularly</li>
+<li>Never commit service account keys to version control</li>
+<li>Use Secret Manager for production</li>
+</ul>
+
+<p>---</p>
+
+<h2>Complete Example: User Management with GCP</h2>
+
+<pre><code><?php
+<p>class API extends RESTful</p>
+<p>{</p>
+<p>    private $ds;</p>
+<p>    private $buckets;</p>
+<p>    private $pubsub;</p>
+
+<p>    function main()</p>
+<p>    {</p>
+<p>        // Initialize GCP services</p>
+<p>        $this->ds = $this->core->loadClass('DataStore', ['Users']);</p>
+<p>        $this->ds->activateCache(true);</p>
+
+<p>        $this->buckets = $this->core->loadClass('Buckets', [</p>
+<p>            $this->core->config->get('core.gcp.storage.bucket')</p>
+<p>        ]);</p>
+
+<p>        $this->pubsub = $this->core->loadClass('PubSub');</p>
+
+<p>        // Route to endpoints</p>
+<p>        $endpoint = $this->params[0] ?? 'list';</p>
+<p>        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {</p>
+<p>            return $this->setErrorFromCodelib('not-found');</p>
+<p>        }</p>
+<p>    }</p>
+
+<p>    // POST /users/create</p>
+<p>    public function ENDPOINT_create()</p>
+<p>    {</p>
+<p>        if(!$this->checkMethod('POST')) return;</p>
+
+<p>        // Validate input</p>
+<p>        if(!$this->checkMandatoryFormParams(['name', 'email'])) return;</p>
+
+<p>        // Create user in Datastore</p>
+<p>        $user = $this->ds->createEntity([</p>
+<p>            'name' => $this->formParams['name'],</p>
+<p>            'email' => $this->formParams['email'],</p>
+<p>            'created_at' => new DateTime(),</p>
+<p>            'active' => true</p>
+<p>        ]);</p>
+
+<p>        if($this->ds->error) {</p>
+<p>            $this->core->logs->add($this->ds->errorMsg, 'users', 'error');</p>
+<p>            return $this->setError('Failed to create user', 500);</p>
+<p>        }</p>
+
+<p>        // Handle profile picture upload</p>
+<p>        if(isset($_FILES['photo'])) {</p>
+<p>            $photoPath = "gs://my-bucket/users/{$user['KeyId']}/photo.jpg";</p>
+<p>            $this->buckets->upload($_FILES['photo']['tmp_name'], $photoPath);</p>
+<p>            $user['photo_url'] = $photoPath;</p>
+<p>            $this->ds->createEntity($user);</p>
+<p>        }</p>
+
+<p>        // Publish event to Pub/Sub</p>
+<p>        $this->pubsub->publish('user-events', [</p>
+<p>            'event' => 'user.created',</p>
+<p>            'user_id' => $user['KeyId'],</p>
+<p>            'timestamp' => time()</p>
+<p>        ]);</p>
+
+<p>        // Log to BigQuery for analytics</p>
+<p>        $bq = $this->core->loadClass('DataBQ', ['analytics', 'user_events']);</p>
+<p>        $bq->insert([</p>
+<p>            'event_type' => 'user_created',</p>
+<p>            'user_id' => $user['KeyId'],</p>
+<p>            'timestamp' => new DateTime()</p>
+<p>        ]);</p>
+
+<p>        $this->setReturnStatus(201);</p>
+<p>        $this->addReturnData($user);</p>
+<p>    }</p>
+<p>}</code></pre></p>
+
+<p>---</p>
+
+<h2>Next Steps</h2>
+
+<ul>
+<li><a href="../api-reference/DataStore.html">DataStore Class Reference</a></li>
+<li><a href="../api-reference/Buckets.html">Buckets Class Reference</a></li>
+<li><a href="deployment.html">Deployment Guide</a></li>
+<li><a href="security.html">Security Best Practices</a></li>
+</ul>
+
+
+            <div class="footer">
+                <p><strong>CloudFramework</strong> - Accelerating backend development since 2013</p>
+                <p>Licensed under the MIT License</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

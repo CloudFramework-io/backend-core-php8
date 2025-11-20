@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataValidation Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="DataValidation Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link active">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>DataValidation Class</h1>
+
+<h2>Overview</h2>
+
+The <code>DataValidation</code> class provides comprehensive data validation functionality for API requests and form data. It validates data types, formats, ranges, patterns, and custom rules based on model definitions.
+
+<h2>Loading the Class</h2>
+
+<pre><code class="language-php">$validator = $this->core->loadClass('DataValidation');
+</code></pre>
+
+<h2>Main Methods</h2>
+
+<h3>validateModel()</h3>
+
+<pre><code class="language-php">public function validateModel(array &$model, array &$data, array &$dictionaries = [], $all = true, $extrakey = ''): bool
+</code></pre>
+
+<p>Validates data against a model definition.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$model</code> (array): Validation model with field definitions</li>
+<li><code>$data</code> (array): Data to validate (passed by reference, may be modified)</li>
+<li><code>$dictionaries</code> (array): Optional lookup dictionaries</li>
+<li><code>$all</code> (bool): Validate all fields (true) or only present ones (false)</li>
+<li><code>$extrakey</code> (string): Extra key prefix for nested validation</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if valid, <code>false</code> otherwise
+
+<strong>Model Structure:</strong>
+<pre><code class="language-php">$model = [
+    'field_name' => [
+        'type' => 'string',       // Data type
+        'required' => true,       // Is required
+        'maxlength' => 100,       // Max length
+        'minlength' => 3,         // Min length
+        'email' => true,          // Email format
+        'values' => ['a', 'b'],   // Allowed values
+        'range' => [1, 100],      // Numeric range
+        'regex' => '/^[A-Z]/',    // Regex pattern
+        // ... more rules
+    ]
+];
+</code></pre>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$validator = $this->core->loadClass('DataValidation');
+
+$model = [
+    'name' => ['type' => 'string', 'required' => true, 'maxlength' => 100],
+    'email' => ['type' => 'string', 'required' => true, 'email' => true],
+    'age' => ['type' => 'integer', 'range' => [18, 100]],
+    'status' => ['type' => 'string', 'values' => ['active', 'inactive']]
+];
+
+$data = $this->formParams;
+
+if($validator->validateModel($model, $data)) {
+    // Data is valid, use $data
+} else {
+    // Validation failed
+    $errors = $this->core->errors->getErrorMsg();
+    return $this->setErrorFromCodelib('validation-error', $errors);
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>validType()</h3>
+
+<pre><code class="language-php">public function validType($key, $type, &$data): bool
+</code></pre>
+
+<p>Validates field type.</p>
+
+<strong>Supported Types:</strong>
+<ul>
+<li><code>string</code></li>
+<li><code>integer</code>, <code>int</code></li>
+<li><code>float</code>, <code>double</code></li>
+<li><code>boolean</code>, <code>bool</code></li>
+<li><code>array</code></li>
+<li><code>object</code></li>
+<li><code>email</code></li>
+<li><code>url</code></li>
+<li><code>date</code>, <code>datetime</code>, <code>timestamp</code></li>
+<li><code>json</code></li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($validator->validType('age', 'integer', $data)) {
+    // Age is valid integer
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>validateEmail()</h3>
+
+<pre><code class="language-php">public function validateEmail($key, $options, $data): bool
+</code></pre>
+
+<p>Validates email format.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$validator->validateEmail('email', [], $data);
+</code></pre>
+
+<p>---</p>
+
+<h3>validateDate()</h3>
+
+<pre><code class="language-php">public function validateDate($data): bool
+</code></pre>
+
+<p>Validates date format (YYYY-MM-DD).</p>
+
+<p>---</p>
+
+<h3>validateDateTime()</h3>
+
+<pre><code class="language-php">public function validateDateTime($data): bool
+</code></pre>
+
+<p>Validates datetime format.</p>
+
+<p>---</p>
+
+<h3>validateMaxLength()</h3>
+
+<pre><code class="language-php">public function validateMaxLength($key, $options, $data): bool
+</code></pre>
+
+<p>Validates maximum string length.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$model = ['name' => ['type' => 'string', 'maxlength' => 100]];
+</code></pre>
+
+<p>---</p>
+
+<h3>validateMinLength()</h3>
+
+<pre><code class="language-php">public function validateMinLength($key, $options, $data): bool
+</code></pre>
+
+<p>Validates minimum string length.</p>
+
+<p>---</p>
+
+<h3>validateRange()</h3>
+
+<pre><code class="language-php">public function validateRange($key, $options, $data): bool
+</code></pre>
+
+<p>Validates numeric range.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$model = ['age' => ['type' => 'integer', 'range' => [18, 100]]];
+</code></pre>
+
+<p>---</p>
+
+<h3>validateValues()</h3>
+
+<pre><code class="language-php">public function validateValues($key, $options, $data): bool
+</code></pre>
+
+<p>Validates value against allowed values list.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$model = ['status' => ['type' => 'string', 'values' => ['active', 'inactive', 'pending']]];
+</code></pre>
+
+<p>---</p>
+
+<h3>validateRegexMatch()</h3>
+
+<pre><code class="language-php">public function validateRegexMatch($key, $options, $data): bool
+</code></pre>
+
+<p>Validates value against regex pattern.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$model = ['code' => ['type' => 'string', 'regex' => '/^[A-Z]{2}[0-9]{4}$/']];
+</code></pre>
+
+<p>---</p>
+
+<h3>validateUnsigned()</h3>
+
+<pre><code class="language-php">public function validateUnsigned($key, $options, $data): bool
+</code></pre>
+
+<p>Validates unsigned integer (positive number).</p>
+
+<p>---</p>
+
+<h3>transformValue()</h3>
+
+<pre><code class="language-php">public function transformValue($data, $options): mixed
+</code></pre>
+
+<p>Transforms value based on options (trim, uppercase, lowercase, etc.).</p>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>API Request Validation</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_create_user()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Define validation model
+        $model = [
+            'name' => [
+                'type' => 'string',
+                'required' => true,
+                'minlength' => 2,
+                'maxlength' => 100
+            ],
+            'email' => [
+                'type' => 'string',
+                'required' => true,
+                'email' => true
+            ],
+            'age' => [
+                'type' => 'integer',
+                'required' => true,
+                'range' => [18, 120]
+            ],
+            'country' => [
+                'type' => 'string',
+                'required' => true,
+                'values' => ['US', 'UK', 'ES', 'FR', 'DE']
+            ],
+            'phone' => [
+                'type' => 'string',
+                'regex' => '/^\+?[0-9]{10,15}$/'
+            ]
+        ];
+
+        // Validate
+        $validator = $this->core->loadClass('DataValidation');
+        $data = $this->formParams;
+
+        if(!$validator->validateModel($model, $data)) {
+            $errors = $this->core->errors->getErrorMsg();
+            return $this->setErrorFromCodelib('validation-error', json_encode($errors));
+        }
+
+        // Data is valid - create user
+        $userId = $this->createUser($data);
+
+        $this->addReturnData(['user_id' => $userId]);
+    }
+}
+</code></pre>
+
+<h3>Complex Validation</h3>
+
+<pre><code class="language-php">$model = [
+    'product_name' => [
+        'type' => 'string',
+        'required' => true,
+        'minlength' => 3,
+        'maxlength' => 200
+    ],
+    'price' => [
+        'type' => 'float',
+        'required' => true,
+        'range' => [0.01, 999999.99],
+        'unsigned' => true
+    ],
+    'quantity' => [
+        'type' => 'integer',
+        'required' => true,
+        'range' => [0, 10000],
+        'unsigned' => true
+    ],
+    'category' => [
+        'type' => 'string',
+        'required' => true,
+        'values' => ['electronics', 'clothing', 'food', 'books']
+    ],
+    'sku' => [
+        'type' => 'string',
+        'required' => true,
+        'regex' => '/^[A-Z]{3}-[0-9]{6}$/',
+        'fixlength' => 10
+    ],
+    'description' => [
+        'type' => 'string',
+        'maxlength' => 1000
+    ],
+    'tags' => [
+        'type' => 'array'
+    ],
+    'metadata' => [
+        'type' => 'json'
+    ]
+];
+
+$validator = $this->core->loadClass('DataValidation');
+if(!$validator->validateModel($model, $productData)) {
+    // Handle validation errors
+}
+</code></pre>
+
+<h3>Partial Validation (Update)</h3>
+
+<pre><code class="language-php">// Only validate fields that are present
+$model = [
+    'name' => ['type' => 'string', 'maxlength' => 100],
+    'email' => ['type' => 'string', 'email' => true],
+    'status' => ['type' => 'string', 'values' => ['active', 'inactive']]
+];
+
+$data = $this->formParams;
+
+// Validate only present fields (not all)
+$validator = $this->core->loadClass('DataValidation');
+if($validator->validateModel($model, $data, [], false)) {
+    // Update user with $data
+    $this->updateUser($userId, $data);
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Validation Rules</h2>
+
+<h3>Type Validation</h3>
+
+<ul>
+<li><code>type: 'string'</code> - String value</li>
+<li><code>type: 'integer'</code> - Integer number</li>
+<li><code>type: 'float'</code> - Floating point number</li>
+<li><code>type: 'boolean'</code> - Boolean true/false</li>
+<li><code>type: 'array'</code> - Array value</li>
+<li><code>type: 'email'</code> - Valid email format</li>
+<li><code>type: 'url'</code> - Valid URL format</li>
+<li><code>type: 'date'</code> - Valid date (YYYY-MM-DD)</li>
+<li><code>type: 'datetime'</code> - Valid datetime</li>
+<li><code>type: 'json'</code> - Valid JSON string</li>
+</ul>
+
+<h3>String Rules</h3>
+
+<ul>
+<li><code>required: true</code> - Field is mandatory</li>
+<li><code>maxlength: N</code> - Maximum string length</li>
+<li><code>minlength: N</code> - Minimum string length</li>
+<li><code>fixlength: N</code> - Exact string length</li>
+<li><code>regex: '/pattern/'</code> - Must match regex pattern</li>
+</ul>
+
+<h3>Numeric Rules</h3>
+
+<ul>
+<li><code>range: [min, max]</code> - Number must be in range</li>
+<li><code>unsigned: true</code> - Must be positive number</li>
+</ul>
+
+<h3>Value Rules</h3>
+
+<ul>
+<li><code>values: [...]</code> - Must be one of allowed values</li>
+</ul>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="RESTful.html">RESTful Class Reference</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+<li><a href="../guides/security.html">Security Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

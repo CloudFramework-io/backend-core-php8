@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataBQ Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="DataBQ Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link active">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>DataBQ Class</h1>
+
+<h2>Overview</h2>
+
+The <code>DataBQ</code> class provides a comprehensive interface to Google BigQuery, a serverless data warehouse for analytics. It handles query execution, data insertion, table management, and includes support for CloudFramework models.
+
+<h2>Requirements</h2>
+
+<ul>
+<li>Google BigQuery API enabled</li>
+<li>Service account with BigQuery Data Editor role</li>
+<li>Configuration in <code>config.json</code>:</li>
+</ul>
+  <pre><code class="language-json">  {
+    "core.bigquery.on": true,
+    "core.gcp.bigquery.project_id": "your-project-id"
+  }
+  </code></pre>
+
+<h2>Basic Usage</h2>
+
+<pre><code class="language-php">// Load DataBQ class
+$bq = $this->core->loadClass('DataBQ', ['my_dataset']);
+
+// Run query
+$results = $bq->query('Get users', "
+    SELECT * FROM <code>project.my_dataset.users</code>
+    WHERE age > 25
+    LIMIT 10
+");
+
+// Insert data
+$bq = $this->core->loadClass('DataBQ', ['my_dataset', 'events']);
+$bq->insert([
+    'user_id' => 123,
+    'event' => 'page_view',
+    'timestamp' => new DateTime()
+]);
+
+// Check for errors
+if($bq->error) {
+    echo "Error: " . implode(', ', $bq->errorMsg);
+}
+</code></pre>
+
+<h2>Constructor</h2>
+
+<pre><code class="language-php">function __construct(Core7 &$core, $params)
+</code></pre>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$params[0]</code> (string): Dataset name or <code>dataset.table</code> format</li>
+<li><code>$params[1]</code> (array, optional): CloudFramework schema</li>
+<li><code>$params[2]</code> (array, optional): Options</li>
+</ul>
+<p>- <code>projectId</code> (string): GCP project ID - <code>keyFile</code> (array): Service account credentials</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Dataset only
+$bq = $this->core->loadClass('DataBQ', ['my_dataset']);
+
+// Dataset and table
+$bq = $this->core->loadClass('DataBQ', ['my_dataset.users']);
+
+// With schema
+$schema = [
+    'model' => [
+        'user_id' => ['ID', 'KEY'],
+        'name' => ['Name', 'string'],
+        'email' => ['Email', 'string'],
+        'age' => ['Age', 'integer']
+    ]
+];
+$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// With custom project
+$bq = $this->core->loadClass('DataBQ', [
+    'my_dataset',
+    null,
+    ['projectId' => 'other-project']
+]);
+</code></pre>
+
+<p>---</p>
+
+<h2>Dataset Methods</h2>
+
+<h3>getDataSets()</h3>
+
+<pre><code class="language-php">public function getDataSets(): array|false
+</code></pre>
+
+<p>Returns all datasets in the project.</p>
+
+<strong>Returns:</strong> Array of dataset names, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', []);
+
+$datasets = $bq->getDataSets();
+// Returns: ['dataset1', 'dataset2', 'analytics', 'logs']
+
+foreach($datasets as $dataset) {
+    echo "Dataset: {$dataset}\n";
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getDataSetInfo()</h3>
+
+<pre><code class="language-php">public function getDataSetInfo($dataset_name = null): array|false
+</code></pre>
+
+<p>Gets detailed information about a dataset.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$dataset_name</code> (string, optional): Dataset name (uses current dataset if not provided)</li>
+</ul>
+
+<strong>Returns:</strong> Dataset information array, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset']);
+
+$info = $bq->getDataSetInfo();
+
+echo $info['id'];              // Dataset ID
+echo $info['location'];        // Dataset location (e.g., 'US')
+echo $info['creationTime'];    // Creation timestamp
+echo $info['description'];     // Dataset description
+</code></pre>
+
+<p>---</p>
+
+<h3>getDataSetTables()</h3>
+
+<pre><code class="language-php">public function getDataSetTables($dataset_name = null): array|false
+</code></pre>
+
+<p>Lists all tables in a dataset.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$dataset_name</code> (string, optional): Dataset name</li>
+</ul>
+
+<strong>Returns:</strong> Array of table names, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset']);
+
+$tables = $bq->getDataSetTables();
+// Returns: ['users', 'orders', 'products', 'events']
+
+foreach($tables as $table) {
+    echo "Table: {$table}\n";
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getDataSetTableInfo()</h3>
+
+<pre><code class="language-php">public function getDataSetTableInfo($dataset_name = null, $table_name = null): array|false
+</code></pre>
+
+<p>Gets detailed information about a table including schema.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$dataset_name</code> (string, optional): Dataset name</li>
+<li><code>$table_name</code> (string, optional): Table name</li>
+</ul>
+
+<strong>Returns:</strong> Table information array, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users']);
+
+$info = $bq->getDataSetTableInfo();
+
+echo $info['id'];              // Table ID
+echo $info['numRows'];         // Number of rows
+echo $info['numBytes'];        // Size in bytes
+echo $info['creationTime'];    // Creation timestamp
+echo $info['schema']['fields']; // Table schema
+</code></pre>
+
+<p>---</p>
+
+<h3>createDataSetTableInfo()</h3>
+
+<pre><code class="language-php">public function createDataSetTableInfo(array $fields, $dataset_name = null, $table_name = null): bool
+</code></pre>
+
+<p>Creates a new table with the specified schema.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$fields</code> (array): Array of field definitions</li>
+<li><code>$dataset_name</code> (string, optional): Dataset name</li>
+<li><code>$table_name</code> (string, optional): Table name</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset']);
+
+// Define schema
+$schema = [
+    ['name' => 'user_id', 'type' => 'INTEGER', 'mode' => 'REQUIRED'],
+    ['name' => 'email', 'type' => 'STRING', 'mode' => 'REQUIRED'],
+    ['name' => 'name', 'type' => 'STRING', 'mode' => 'NULLABLE'],
+    ['name' => 'age', 'type' => 'INTEGER', 'mode' => 'NULLABLE'],
+    ['name' => 'created_at', 'type' => 'TIMESTAMP', 'mode' => 'REQUIRED'],
+    ['name' => 'metadata', 'type' => 'JSON', 'mode' => 'NULLABLE']
+];
+
+// Create table
+$bq->createDataSetTableInfo($schema, 'my_dataset', 'users');
+
+if($bq->error) {
+    echo "Failed to create table";
+}
+</code></pre>
+
+<strong>Field Types:</strong>
+<ul>
+<li><code>STRING</code>: Text data</li>
+<li><code>INTEGER</code>: Whole numbers</li>
+<li><code>FLOAT</code>: Decimal numbers</li>
+<li><code>BOOLEAN</code>: True/false</li>
+<li><code>TIMESTAMP</code>: Date and time</li>
+<li><code>DATE</code>: Date only</li>
+<li><code>TIME</code>: Time only</li>
+<li><code>DATETIME</code>: Date and time</li>
+<li><code>JSON</code>: JSON data</li>
+<li><code>ARRAY</code>: Arrays</li>
+<li><code>STRUCT</code>: Nested structures</li>
+</ul>
+
+<strong>Field Modes:</strong>
+<ul>
+<li><code>REQUIRED</code>: Field must have a value</li>
+<li><code>NULLABLE</code>: Field can be null</li>
+<li><code>REPEATED</code>: Field can have multiple values (array)</li>
+</ul>
+
+<p>---</p>
+
+<h2>Query Methods</h2>
+
+<h3>query()</h3>
+
+<pre><code class="language-php">public function query($title, $_q, $params = []): array|false
+</code></pre>
+
+<p>Executes a BigQuery SQL query.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$title</code> (string): Query title for logging</li>
+<li><code>$_q</code> (string): SQL query</li>
+<li><code>$params</code> (array, optional): Query parameters for parameterized queries</li>
+</ul>
+
+<strong>Returns:</strong> Array of results, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', []);
+
+// Simple query
+$results = $bq->query('Get active users', "
+    SELECT user_id, name, email
+    FROM <code>my-project.my_dataset.users</code>
+    WHERE active = true
+    ORDER BY created_at DESC
+    LIMIT 100
+");
+
+// Parameterized query
+$results = $bq->query('Get users by age', "
+    SELECT * FROM <code>my-project.my_dataset.users</code>
+    WHERE age > @min_age AND country = @country
+", [
+    'min_age' => 25,
+    'country' => 'US'
+]);
+
+// Analytics query
+$results = $bq->query('Monthly revenue', "
+    SELECT
+        FORMAT_TIMESTAMP('%Y-%m', created_at) as month,
+        COUNT(*) as order_count,
+        SUM(total) as revenue
+    FROM <code>my-project.my_dataset.orders</code>
+    WHERE created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 12 MONTH)
+    GROUP BY month
+    ORDER BY month DESC
+");
+
+if($bq->error) {
+    echo "Query failed: " . implode(', ', $bq->errorMsg);
+} else {
+    foreach($results as $row) {
+        print_r($row);
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>dbQuery()</h3>
+
+<pre><code class="language-php">public function dbQuery($title, $_q, $params = []): array|false
+</code></pre>
+
+<p>Alias for <code>query()</code> method.</p>
+
+<p>---</p>
+
+<h2>Data Insertion Methods</h2>
+
+<h3>insert()</h3>
+
+<pre><code class="language-php">public function insert($data, $upsert = false): bool
+</code></pre>
+
+<p>Inserts one or more rows into a table.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$data</code> (array): Data to insert (single row or array of rows)</li>
+<li><code>$upsert</code> (bool): If true, update if record exists (default: false)</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset', 'events']);
+
+// Insert single row
+$bq->insert([
+    'user_id' => 123,
+    'event' => 'page_view',
+    'page' => '/home',
+    'timestamp' => new DateTime()
+]);
+
+// Insert multiple rows
+$bq->insert([
+    ['user_id' => 123, 'event' => 'click', 'timestamp' => new DateTime()],
+    ['user_id' => 456, 'event' => 'purchase', 'timestamp' => new DateTime()],
+    ['user_id' => 789, 'event' => 'signup', 'timestamp' => new DateTime()]
+]);
+
+if($bq->error) {
+    echo "Insert failed: " . implode(', ', $bq->errorMsg);
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>upsert()</h3>
+
+<pre><code class="language-php">public function upsert($data): bool
+</code></pre>
+
+<p>Inserts or updates data (requires a key field in the schema).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$data</code> (array): Data to upsert</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$schema = [
+    'model' => [
+        'user_id' => ['ID', 'KEY'],
+        'name' => ['Name', 'string'],
+        'email' => ['Email', 'string']
+    ]
+];
+
+$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// Upsert (insert if new, update if exists)
+$bq->upsert([
+    'user_id' => 123,
+    'name' => 'John Doe',
+    'email' => 'john@example.com'
+]);
+</code></pre>
+
+<p>---</p>
+
+<h3>insertWithStreamingBuffer()</h3>
+
+<pre><code class="language-php">public function insertWithStreamingBuffer(array $data): bool
+</code></pre>
+
+<p>Inserts data using streaming buffer for real-time analytics.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$data</code> (array): Array of rows to insert</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['analytics', 'events']);
+
+// Stream events in real-time
+$bq->insertWithStreamingBuffer([
+    ['event' => 'click', 'user_id' => 123, 'timestamp' => time()],
+    ['event' => 'view', 'user_id' => 456, 'timestamp' => time()]
+]);
+</code></pre>
+
+<p>---</p>
+
+<h2>Data Retrieval Methods</h2>
+
+<h3>fetch()</h3>
+
+<pre><code class="language-php">function fetch($keysWhere = [], $fields = null, $groupBy = null, $params = []): array|false
+</code></pre>
+
+<p>Fetches multiple rows from a table.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$keysWhere</code> (array): WHERE conditions</li>
+<li><code>$fields</code> (array|string, optional): Fields to select</li>
+<li><code>$groupBy</code> (string, optional): GROUP BY clause</li>
+<li><code>$params</code> (array, optional): Additional query parameters</li>
+</ul>
+
+<strong>Returns:</strong> Array of rows, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users']);
+
+// Fetch all users
+$users = $bq->fetch();
+
+// Fetch with conditions
+$users = $bq->fetch(['active' => true, 'age' => ['>' => 25]]);
+
+// Fetch specific fields
+$users = $bq->fetch(['active' => true], ['name', 'email']);
+
+// Fetch with GROUP BY
+$stats = $bq->fetch([], ['country', 'COUNT(*) as count'], 'country');
+</code></pre>
+
+<p>---</p>
+
+<h3>fetchOne()</h3>
+
+<pre><code class="language-php">function fetchOne($keysWhere = [], $fields = null, $groupBy = null, $params = []): array|false
+</code></pre>
+
+<p>Fetches a single row from a table.</p>
+
+<strong>Parameters:</strong> Same as <code>fetch()</code>
+
+<strong>Returns:</strong> Single row array, or <code>false</code> if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users']);
+
+// Fetch one user
+$user = $bq->fetchOne(['email' => 'john@example.com']);
+
+if($user) {
+    echo $user['name'];
+    echo $user['email'];
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>fetchOneByKey()</h3>
+
+<pre><code class="language-php">function fetchOneByKey($key, $fields = null): array|false
+</code></pre>
+
+<p>Fetches a row by its key value.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$key</code> (mixed): Key value</li>
+<li><code>$fields</code> (array|string, optional): Fields to select</li>
+</ul>
+
+<strong>Returns:</strong> Row array, or <code>false</code> if not found
+
+<strong>Example:</strong>
+<pre><code class="language-php">$schema = [
+    'model' => [
+        'user_id' => ['ID', 'KEY'],
+        'name' => ['Name', 'string'],
+        'email' => ['Email', 'string']
+    ]
+];
+
+$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// Fetch by key
+$user = $bq->fetchOneByKey(123);
+
+// Fetch specific fields
+$user = $bq->fetchOneByKey(123, ['name', 'email']);
+</code></pre>
+
+<p>---</p>
+
+<h3>fetchByKeys()</h3>
+
+<pre><code class="language-php">function fetchByKeys($keysWhere, $fields = null): array|false
+</code></pre>
+
+<p>Fetches multiple rows by key values.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$keysWhere</code> (array): Array of key values</li>
+<li><code>$fields</code> (array|string, optional): Fields to select</li>
+</ul>
+
+<strong>Returns:</strong> Array of rows, or <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// Fetch multiple users by IDs
+$users = $bq->fetchByKeys([123, 456, 789]);
+
+foreach($users as $user) {
+    echo $user['name'] . "\n";
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Data Update Methods</h2>
+
+<h3>update()</h3>
+
+<pre><code class="language-php">public function update($data, $record_readed = []): bool
+</code></pre>
+
+<p>Updates an existing row (requires key field).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$data</code> (array): Updated data</li>
+<li><code>$record_readed</code> (array, optional): Original record for comparison</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// Update user
+$bq->update([
+    'user_id' => 123,
+    'name' => 'Jane Doe',
+    'email' => 'jane@example.com'
+]);
+</code></pre>
+
+<p>---</p>
+
+<h3>delete()</h3>
+
+<pre><code class="language-php">public function delete($data): bool
+</code></pre>
+
+<p>Deletes a row (requires key field).</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$data</code> (array): Data with key field</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// Delete user
+$bq->delete(['user_id' => 123]);
+</code></pre>
+
+<p>---</p>
+
+<h3>softDelete()</h3>
+
+<pre><code class="language-php">public function softDelete($key): bool
+</code></pre>
+
+<p>Soft deletes a row by setting a deleted flag.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$key</code> (mixed): Key value</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq = $this->core->loadClass('DataBQ', ['my_dataset.users', $schema]);
+
+// Soft delete (sets deleted_at timestamp)
+$bq->softDelete(123);
+</code></pre>
+
+<p>---</p>
+
+<h2>Query Building Methods</h2>
+
+<h3>setLimit()</h3>
+
+<pre><code class="language-php">function setLimit($limit): void
+</code></pre>
+
+<p>Sets the LIMIT for queries.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setLimit(10);
+$users = $bq->fetch();
+</code></pre>
+
+<p>---</p>
+
+<h3>setPage()</h3>
+
+<pre><code class="language-php">function setPage($page): void
+</code></pre>
+
+<p>Sets the page number for pagination.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setLimit(20);
+$bq->setPage(2); // Skip first 20 records
+$users = $bq->fetch();
+</code></pre>
+
+<p>---</p>
+
+<h3>setOffset()</h3>
+
+<pre><code class="language-php">function setOffset($offset): void
+</code></pre>
+
+<p>Sets the OFFSET for queries.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setOffset(50);
+$bq->setLimit(10);
+$users = $bq->fetch(); // Records 51-60
+</code></pre>
+
+<p>---</p>
+
+<h3>setOrder()</h3>
+
+<pre><code class="language-php">function setOrder($field, $type = 'ASC'): void
+</code></pre>
+
+<p>Sets the ORDER BY clause (replaces existing order).</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setOrder('created_at', 'DESC');
+$users = $bq->fetch();
+</code></pre>
+
+<p>---</p>
+
+<h3>addOrder()</h3>
+
+<pre><code class="language-php">function addOrder($field, $type = 'ASC'): void
+</code></pre>
+
+<p>Adds an ORDER BY clause (keeps existing orders).</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setOrder('country', 'ASC');
+$bq->addOrder('created_at', 'DESC');
+$users = $bq->fetch();
+// ORDER BY country ASC, created_at DESC
+</code></pre>
+
+<p>---</p>
+
+<h3>setQueryFields()</h3>
+
+<pre><code class="language-php">function setQueryFields($fields): void
+</code></pre>
+
+<p>Sets specific fields to select.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setQueryFields(['name', 'email', 'created_at']);
+$users = $bq->fetch();
+</code></pre>
+
+<p>---</p>
+
+<h3>setQueryWhere()</h3>
+
+<pre><code class="language-php">function setQueryWhere($keysWhere): void
+</code></pre>
+
+<p>Sets WHERE conditions (replaces existing).</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setQueryWhere(['active' => true, 'age' => ['>' => 25]]);
+$users = $bq->fetch();
+</code></pre>
+
+<p>---</p>
+
+<h3>addQueryWhere()</h3>
+
+<pre><code class="language-php">function addQueryWhere($keysWhere): void
+</code></pre>
+
+<p>Adds WHERE conditions (keeps existing).</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setQueryWhere(['active' => true]);
+$bq->addQueryWhere(['country' => 'US']);
+$users = $bq->fetch();
+// WHERE active = true AND country = 'US'
+</code></pre>
+
+<p>---</p>
+
+<h3>setExtraWhere()</h3>
+
+<pre><code class="language-php">function setExtraWhere($extraWhere): void
+</code></pre>
+
+<p>Adds raw SQL to WHERE clause.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->setExtraWhere("AND created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)");
+$users = $bq->fetch();
+</code></pre>
+
+<p>---</p>
+
+<h3>reset()</h3>
+
+<pre><code class="language-php">public function reset(): void
+</code></pre>
+
+<p>Resets all query parameters.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$bq->reset();
+</code></pre>
+
+<p>---</p>
+
+<h2>Complete Examples</h2>
+
+<h3>Analytics Dashboard</h3>
+
+<pre><code class="language-php"><?php
+class API extends RESTful
+{
+    // GET /analytics/dashboard
+    public function ENDPOINT_dashboard()
+    {
+        $bq = $this->core->loadClass('DataBQ', []);
+
+        // Get daily active users
+        $daily_users = $bq->query('Daily Active Users', "
+            SELECT
+                DATE(timestamp) as date,
+                COUNT(DISTINCT user_id) as active_users
+            FROM <code>{$this->core->gc_project_id}.analytics.events</code>
+            WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+            GROUP BY date
+            ORDER BY date DESC
+        ");
+
+        // Get top pages
+        $top_pages = $bq->query('Top Pages', "
+            SELECT
+                page,
+                COUNT(*) as views
+            FROM <code>{$this->core->gc_project_id}.analytics.page_views</code>
+            WHERE timestamp >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+            GROUP BY page
+            ORDER BY views DESC
+            LIMIT 10
+        ");
+
+        // Get revenue by country
+        $revenue = $bq->query('Revenue by Country', "
+            SELECT
+                country,
+                COUNT(*) as orders,
+                SUM(amount) as revenue
+            FROM <code>{$this->core->gc_project_id}.sales.orders</code>
+            WHERE created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+            GROUP BY country
+            ORDER BY revenue DESC
+        ");
+
+        if($bq->error) {
+            return $this->setError('Analytics query failed', 500);
+        }
+
+        $this->addReturnData([
+            'daily_active_users' => $daily_users,
+            'top_pages' => $top_pages,
+            'revenue_by_country' => $revenue
+        ]);
+    }
+}
+</code></pre>
+
+<h3>Event Tracking</h3>
+
+<pre><code class="language-php">// POST /events/track
+public function ENDPOINT_track()
+{
+    if(!$this->checkMethod('POST')) return;
+
+    // Validate event data
+    if(!$this->checkMandatoryFormParams(['event', 'user_id'])) return;
+
+    $bq = $this->core->loadClass('DataBQ', ['analytics', 'events']);
+
+    // Insert event
+    $bq->insert([
+        'event' => $this->formParams['event'],
+        'user_id' => $this->formParams['user_id'],
+        'page' => $this->formParams['page'] ?? null,
+        'data' => json_encode($this->formParams['data'] ?? []),
+        'timestamp' => new DateTime(),
+        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
+        'ip_address' => $_SERVER['REMOTE_ADDR'] ?? ''
+    ]);
+
+    if($bq->error) {
+        $this->core->logs->add($bq->errorMsg, 'bigquery', 'error');
+        return $this->setError('Failed to track event', 500);
+    }
+
+    $this->setReturnStatus(201);
+    $this->addReturnData(['tracked' => true]);
+}
+</code></pre>
+
+<h3>Data Export</h3>
+
+<pre><code class="language-php">// GET /export/users
+public function ENDPOINT_users()
+{
+    $bq = $this->core->loadClass('DataBQ', ['my_dataset']);
+
+    // Export users to CSV
+    $users = $bq->query('Export Users', "
+        SELECT
+            user_id,
+            name,
+            email,
+            created_at,
+            last_login
+        FROM <code>{$this->core->gc_project_id}.my_dataset.users</code>
+        WHERE active = true
+        ORDER BY created_at DESC
+    ");
+
+    if($bq->error) {
+        return $this->setError('Export failed', 500);
+    }
+
+    // Generate CSV
+    $csv = "User ID,Name,Email,Created At,Last Login\n";
+    foreach($users as $user) {
+        $csv .= implode(',', [
+            $user['user_id'],
+            '"' . $user['name'] . '"',
+            $user['email'],
+            $user['created_at'],
+            $user['last_login'] ?? ''
+        ]) . "\n";
+    }
+
+    // Send CSV file
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="users-export.csv"');
+    echo $csv;
+    exit;
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/getting-started.html">Getting Started Guide</a></li>
+<li><a href="../guides/gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="DataStore.html">DataStore Class</a></li>
+<li><a href="Buckets.html">Buckets Class</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

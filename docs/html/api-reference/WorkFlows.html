@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkFlows Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="WorkFlows Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link active">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>WorkFlows Class</h1>
+
+<h2>Overview</h2>
+
+The <code>WorkFlows</code> class provides workflow management functionality for orchestrating multi-step business processes. It helps manage state transitions, approvals, and automated task execution.
+
+<h2>Loading the Class</h2>
+
+<pre><code class="language-php">$workflows = $this->core->loadClass('WorkFlows');
+</code></pre>
+
+<h2>Properties</h2>
+
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>$core</code></td>
+<td>Core7</td>
+<td>Reference to Core7 instance</td>
+</tr>
+<tr>
+<td><code>$error</code></td>
+<td>bool</td>
+<td>Error flag</td>
+</tr>
+<tr>
+<td><code>$errorMsg</code></td>
+<td>array</td>
+<td>Error messages</td>
+</tr>
+</tbody>
+</table>
+
+<p>---</p>
+
+<h2>Common Usage Patterns</h2>
+
+<h3>Order Processing Workflow</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    public function ENDPOINT_process_order()
+    {
+        $orderId = $this->params[0] ?? null;
+
+        $workflows = $this->core->loadClass('WorkFlows');
+
+        // Define workflow states
+        $workflow = [
+            'states' => [
+                'pending' => ['next' => ['processing', 'cancelled']],
+                'processing' => ['next' => ['shipped', 'cancelled']],
+                'shipped' => ['next' => ['delivered', 'returned']],
+                'delivered' => ['next' => ['completed']],
+                'cancelled' => ['final' => true],
+                'completed' => ['final' => true],
+                'returned' => ['final' => true]
+            ]
+        ];
+
+        // Get current order state
+        $order = $this->getOrder($orderId);
+        $currentState = $order['status'];
+
+        // Transition to next state
+        $newState = 'processing';
+
+        if($workflows->canTransition($currentState, $newState, $workflow)) {
+            $this->updateOrderStatus($orderId, $newState);
+
+            // Trigger workflow actions
+            $this->executeWorkflowActions($newState, $order);
+
+            $this->addReturnData(['status' => $newState]);
+        } else {
+            return $this->setErrorFromCodelib('workflow-error', 'Invalid state transition');
+        }
+    }
+
+    private function executeWorkflowActions($state, $order)
+    {
+        switch($state) {
+            case 'processing':
+                // Charge payment
+                $this->chargePayment($order);
+                // Send confirmation email
+                $this->sendOrderConfirmation($order);
+                break;
+
+            case 'shipped':
+                // Send tracking email
+                $this->sendTrackingInfo($order);
+                break;
+
+            case 'delivered':
+                // Request review
+                $this->requestProductReview($order);
+                break;
+        }
+    }
+}
+</code></pre>
+
+<h3>Approval Workflow</h3>
+
+<pre><code class="language-php">// Document approval workflow
+$workflow = [
+    'states' => [
+        'draft' => ['next' => ['pending_review']],
+        'pending_review' => ['next' => ['approved', 'rejected', 'needs_changes']],
+        'needs_changes' => ['next' => ['pending_review']],
+        'approved' => ['next' => ['published']],
+        'published' => ['final' => true],
+        'rejected' => ['final' => true]
+    ],
+    'permissions' => [
+        'draft' => ['author'],
+        'pending_review' => ['author'],
+        'approved' => ['manager', 'admin'],
+        'rejected' => ['manager', 'admin'],
+        'published' => ['admin']
+    ]
+];
+
+// Check if user can approve
+public function canApprove($documentId, $userId)
+{
+    $document = $this->getDocument($documentId);
+    $user = $this->getUser($userId);
+
+    $workflows = $this->core->loadClass('WorkFlows');
+
+    $currentState = $document['status'];
+    $newState = 'approved';
+
+    // Check transition is valid
+    if(!$workflows->canTransition($currentState, $newState, $workflow)) {
+        return false;
+    }
+
+    // Check user has permission
+    $allowedRoles = $workflow['permissions'][$newState] ?? [];
+    return in_array($user['role'], $allowedRoles);
+}
+</code></pre>
+
+<h3>Task Workflow</h3>
+
+<pre><code class="language-php">// Support ticket workflow
+class API extends RESTful
+{
+    public function ENDPOINT_ticket_workflow()
+    {
+        $ticketId = $this->params[0] ?? null;
+        $action = $this->params[1] ?? null;
+
+        $workflows = $this->core->loadClass('WorkFlows');
+
+        $workflow = [
+            'states' => [
+                'new' => [
+                    'next' => ['assigned', 'closed'],
+                    'actions' => ['assign', 'close']
+                ],
+                'assigned' => [
+                    'next' => ['in_progress', 'closed'],
+                    'actions' => ['start', 'close']
+                ],
+                'in_progress' => [
+                    'next' => ['waiting_customer', 'resolved', 'closed'],
+                    'actions' => ['wait_customer', 'resolve', 'close']
+                ],
+                'waiting_customer' => [
+                    'next' => ['in_progress', 'closed'],
+                    'actions' => ['resume', 'close']
+                ],
+                'resolved' => [
+                    'next' => ['closed', 'in_progress'],
+                    'actions' => ['close', 'reopen']
+                ],
+                'closed' => ['final' => true]
+            ]
+        ];
+
+        $ticket = $this->getTicket($ticketId);
+
+        // Execute action
+        switch($action) {
+            case 'assign':
+                $this->assignTicket($ticketId, $this->formParams['agent_id']);
+                $this->updateTicketStatus($ticketId, 'assigned');
+                break;
+
+            case 'start':
+                $this->updateTicketStatus($ticketId, 'in_progress');
+                break;
+
+            case 'resolve':
+                $this->updateTicketStatus($ticketId, 'resolved');
+                $this->sendResolutionEmail($ticket);
+                break;
+
+            case 'close':
+                $this->updateTicketStatus($ticketId, 'closed');
+                break;
+        }
+
+        $this->addReturnData(['status' => 'success']);
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Workflow Patterns</h2>
+
+<h3>State Machine</h3>
+
+<pre><code class="language-php">$workflow = [
+    'initial_state' => 'draft',
+    'states' => [
+        'draft' => ['next' => ['review']],
+        'review' => ['next' => ['approved', 'rejected']],
+        'approved' => ['final' => true],
+        'rejected' => ['final' => true]
+    ]
+];
+</code></pre>
+
+<h3>Multi-Step Process</h3>
+
+<pre><code class="language-php">$workflow = [
+    'steps' => [
+        ['name' => 'collect_info', 'required_fields' => ['name', 'email']],
+        ['name' => 'verify_identity', 'required_fields' => ['id_number']],
+        ['name' => 'payment', 'required_fields' => ['card_number']],
+        ['name' => 'confirmation', 'final' => true]
+    ]
+];
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="Core7.html">Core7 Class Reference</a></li>
+<li><a href="DataStore.html">DataStore Class Reference</a></li>
+<li><a href="../guides/api-development.html">API Development Guide</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudSQL Class - CloudFramework Backend Core PHP8</title>
+    <meta name="description" content="CloudSQL Class - CloudFramework Backend Core PHP8 API Reference">
+    <link rel="stylesheet" href="../css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1>CloudFramework Backend Core PHP8</h1>
+        <span class="version">v8.4+</span>
+    </header>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-search">
+                <input type="text" id="search-input" placeholder="Search documentation...">
+            </div>
+
+            <nav class="sidebar-nav">
+                <!-- Getting Started -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Getting Started</div>
+                    <ul>
+                        <li><a href="../index.html" class="sidebar-nav-link">Documentation Home</a></li>
+                        <li><a href="../guides/getting-started.html" class="sidebar-nav-link">Installation & Setup</a></li>
+                        <li><a href="../guides/getting-started.html#quick-start" class="sidebar-nav-link">Quick Start</a></li>
+                    </ul>
+                </div>
+
+                <!-- Development Guides -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Development Guides</div>
+                    <ul>
+                        <li><a href="../guides/api-development.html" class="sidebar-nav-link">API Development</a></li>
+                        <li><a href="../guides/script-development.html" class="sidebar-nav-link">Script Development</a></li>
+                        <li><a href="../guides/configuration.html" class="sidebar-nav-link">Configuration</a></li>
+                        <li><a href="../guides/deployment.html" class="sidebar-nav-link">Deployment</a></li>
+                    </ul>
+                </div>
+
+                <!-- GCP Integration -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">GCP Integration</div>
+                    <ul>
+                        <li><a href="../guides/gcp-integration.html" class="sidebar-nav-link">GCP Overview</a></li>
+                        <li><a href="../guides/security.html" class="sidebar-nav-link">Security</a></li>
+                        <li><a href="../guides/testing.html" class="sidebar-nav-link">Testing</a></li>
+                    </ul>
+                </div>
+
+                <!-- Core Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Core Classes</div>
+                    <ul>
+                        <li><a href="Core7.html" class="sidebar-nav-link">Core7</a></li>
+                        <li><a href="RESTful.html" class="sidebar-nav-link">RESTful</a></li>
+                        <li><a href="Scripts2020.html" class="sidebar-nav-link">Scripts2020</a></li>
+                    </ul>
+                </div>
+
+                <!-- Configuration Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Configuration</div>
+                    <ul>
+                        <li><a href="CoreConfig.html" class="sidebar-nav-link">CoreConfig</a></li>
+                        <li><a href="CoreCache.html" class="sidebar-nav-link">CoreCache</a></li>
+                        <li><a href="CoreSession.html" class="sidebar-nav-link">CoreSession</a></li>
+                        <li><a href="CoreSecurity.html" class="sidebar-nav-link">CoreSecurity</a></li>
+                    </ul>
+                </div>
+
+                <!-- Data Access Classes -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Data Access</div>
+                    <ul>
+                        <li><a href="DataStore.html" class="sidebar-nav-link">DataStore</a></li>
+                        <li><a href="Buckets.html" class="sidebar-nav-link">Buckets</a></li>
+                        <li><a href="DataBQ.html" class="sidebar-nav-link">DataBQ</a></li>
+                        <li><a href="CloudSQL.html" class="sidebar-nav-link active">CloudSQL</a></li>
+                        <li><a href="DataSQL.html" class="sidebar-nav-link">DataSQL</a></li>
+                        <li><a href="DataMongoDB.html" class="sidebar-nav-link">DataMongoDB</a></li>
+                    </ul>
+                </div>
+
+                <!-- Utilities -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Utilities</div>
+                    <ul>
+                        <li><a href="Email.html" class="sidebar-nav-link">Email</a></li>
+                        <li><a href="DataValidation.html" class="sidebar-nav-link">DataValidation</a></li>
+                        <li><a href="WorkFlows.html" class="sidebar-nav-link">WorkFlows</a></li>
+                        <li><a href="GoogleSecrets.html" class="sidebar-nav-link">GoogleSecrets</a></li>
+                        <li><a href="PubSub.html" class="sidebar-nav-link">PubSub</a></li>
+                    </ul>
+                </div>
+
+                <!-- Examples -->
+                <div class="sidebar-nav-section">
+                    <div class="sidebar-nav-title">Examples</div>
+                    <ul>
+                        <li><a href="../examples/api-examples.html" class="sidebar-nav-link">API Examples</a></li>
+                        <li><a href="../examples/script-examples.html" class="sidebar-nav-link">Script Examples</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+<h1>CloudSQL Class</h1>
+
+<h2>Overview</h2>
+
+The <code>CloudSQL</code> class provides a comprehensive interface to Google Cloud SQL (MySQL/PostgreSQL), allowing you to execute queries, manage data, and work with relational databases. It supports both direct connections and Cloud SQL proxy connections.
+
+<h2>Requirements</h2>
+
+<ul>
+<li>Google Cloud SQL instance (MySQL or PostgreSQL)</li>
+<li>Service account with Cloud SQL Client role</li>
+<li>Configuration in <code>config.json</code> or direct connection parameters</li>
+</ul>
+
+<h2>Basic Usage</h2>
+
+<pre><code class="language-php">// Load CloudSQL class
+$sql = $this->core->loadClass('CloudSQL', [
+    '/cloudsql/project:region:instance',  // host (Cloud SQL socket)
+    'root',                                // username
+    'password',                            // password
+    'database_name',                       // database
+    '3306',                                // port
+    '',                                    // socket
+    'utf8mb4'                              // charset
+]);
+
+// Execute query
+$users = $sql->command("SELECT * FROM users WHERE age > ? AND status = ?", [25, 'active']);
+
+// Check for errors
+if($sql->error()) {
+    print_r($sql->getError());
+}
+</code></pre>
+
+<h2>Constructor</h2>
+
+<pre><code class="language-php">function __construct(Core7 &$core, $h = '', $u = '', $p = '', $db = '', $port = '3306', $socket = '', $charset = '')
+</code></pre>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$h</code> (string): Host (IP, domain, or Cloud SQL socket path)</li>
+<li><code>$u</code> (string): Username</li>
+<li><code>$p</code> (string): Password</li>
+<li><code>$db</code> (string): Database name</li>
+<li><code>$port</code> (string): Port (default: '3306')</li>
+<li><code>$socket</code> (string): Socket path (optional)</li>
+<li><code>$charset</code> (string): Character set (optional, e.g., 'utf8mb4')</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">// Direct connection
+$sql = $this->core->loadClass('CloudSQL', [
+    '10.0.0.1',
+    'myuser',
+    'mypassword',
+    'mydatabase',
+    '3306'
+]);
+
+// Cloud SQL Unix socket (recommended for App Engine)
+$sql = $this->core->loadClass('CloudSQL', [
+    '',                                      // empty host
+    'root',
+    'password',
+    'mydb',
+    '3306',
+    '/cloudsql/project:region:instance'     // socket
+]);
+
+// Load from config.json
+// If parameters are empty, it loads from:
+// - dbServer, dbUser, dbPassword, dbName, dbSocket, dbPort, dbCharset
+$sql = $this->core->loadClass('CloudSQL');
+</code></pre>
+
+<p>---</p>
+
+<h2>Connection Methods</h2>
+
+<h3>connect()</h3>
+
+<pre><code class="language-php">function connect($h = '', $u = '', $p = '', $db = '', $port = "3306", $socket = '', $charset = ''): bool
+</code></pre>
+
+<p>Establishes a connection to the database.</p>
+
+<strong>Parameters:</strong> Same as constructor
+
+<strong>Returns:</strong> <code>true</code> on success, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql = $this->core->loadClass('CloudSQL');
+
+// Connect manually
+$sql->connect(
+    '127.0.0.1',
+    'user',
+    'pass',
+    'mydb',
+    '3306'
+);
+
+if($sql->error()) {
+    echo "Connection failed";
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>close()</h3>
+
+<pre><code class="language-php">function close(): void
+</code></pre>
+
+<p>Closes the database connection.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->close();
+</code></pre>
+
+<p>---</p>
+
+<h2>Query Execution Methods</h2>
+
+<h3>command()</h3>
+
+<pre><code class="language-php">function command($query, $params = []): array|false
+</code></pre>
+
+<p>Executes a SQL query with optional parameter binding.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$query</code> (string): SQL query (use <code>?</code> for parameter placeholders)</li>
+<li><code>$params</code> (array): Values to bind to placeholders</li>
+</ul>
+
+<strong>Returns:</strong> Array of results for SELECT, <code>true</code> for other queries, <code>false</code> on error
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql = $this->core->loadClass('CloudSQL');
+
+// SELECT query
+$users = $sql->command("SELECT * FROM users WHERE age > ? AND status = ?", [25, 'active']);
+
+// INSERT query
+$sql->command("INSERT INTO users (name, email, age) VALUES (?, ?, ?)", [
+    'John Doe',
+    'john@example.com',
+    30
+]);
+
+// UPDATE query
+$sql->command("UPDATE users SET status = ? WHERE id = ?", ['active', 123]);
+
+// DELETE query
+$sql->command("DELETE FROM users WHERE id = ?", [123]);
+
+// Multiple parameters
+$orders = $sql->command("
+    SELECT * FROM orders
+    WHERE user_id = ?
+    AND created_at >= ?
+    AND status IN (?, ?)
+    ORDER BY created_at DESC
+", [123, '2024-01-01', 'completed', 'shipped']);
+
+// Check results
+if($sql->error()) {
+    print_r($sql->getError());
+} else {
+    foreach($users as $user) {
+        echo $user['name'] . "\n";
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>query()</h3>
+
+<pre><code class="language-php">function query($query, $params = []): array|false
+</code></pre>
+
+<p>Alias for <code>command()</code> method.</p>
+
+<p>---</p>
+
+<h2>Configuration Methods</h2>
+
+<h3>setConf()</h3>
+
+<pre><code class="language-php">function setConf($var, $value): void
+</code></pre>
+
+<p>Sets a configuration variable.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$var</code> (string): Configuration key</li>
+</ul>
+<p>- <code>dbServer</code>: Database host - <code>dbUser</code>: Database username - <code>dbPassword</code>: Database password - <code>dbName</code>: Database name - <code>dbSocket</code>: Socket path - <code>dbPort</code>: Port number - <code>dbCharset</code>: Character set</p>
+<ul>
+<li><code>$value</code> (string): Configuration value</li>
+</ul>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql = $this->core->loadClass('CloudSQL');
+
+$sql->setConf('dbServer', '127.0.0.1');
+$sql->setConf('dbUser', 'myuser');
+$sql->setConf('dbPassword', 'mypass');
+$sql->setConf('dbName', 'mydb');
+$sql->setConf('dbCharset', 'utf8mb4');
+
+$sql->connect();
+</code></pre>
+
+<p>---</p>
+
+<h3>getConf()</h3>
+
+<pre><code class="language-php">function getConf($var): string
+</code></pre>
+
+<p>Gets a configuration variable.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$host = $sql->getConf('dbServer');
+$database = $sql->getConf('dbName');
+</code></pre>
+
+<p>---</p>
+
+<h3>setDB()</h3>
+
+<pre><code class="language-php">function setDB($db): void
+</code></pre>
+
+<p>Changes the active database.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->setDB('another_database');
+</code></pre>
+
+<p>---</p>
+
+<h2>Helper Methods</h2>
+
+<h3>getInsertId()</h3>
+
+<pre><code class="language-php">function getInsertId(): int
+</code></pre>
+
+<p>Returns the last inserted ID from an INSERT query.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->command("INSERT INTO users (name, email) VALUES (?, ?)", ['John', 'john@example.com']);
+
+$userId = $sql->getInsertId();
+echo "New user ID: {$userId}";
+</code></pre>
+
+<p>---</p>
+
+<h3>getAffectedRows()</h3>
+
+<pre><code class="language-php">function getAffectedRows(): int
+</code></pre>
+
+<p>Returns the number of rows affected by the last query.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->command("UPDATE users SET status = ? WHERE age > ?", ['active', 18]);
+
+$affected = $sql->getAffectedRows();
+echo "Updated {$affected} users";
+</code></pre>
+
+<p>---</p>
+
+<h3>getQuery()</h3>
+
+<pre><code class="language-php">function getQuery(): string
+</code></pre>
+
+<p>Returns the last executed query.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->command("SELECT * FROM users");
+
+echo "Last query: " . $sql->getQuery();
+</code></pre>
+
+<p>---</p>
+
+<h3>tableExists()</h3>
+
+<pre><code class="language-php">function tableExists($table): bool
+</code></pre>
+
+<p>Checks if a table exists in the database.</p>
+
+<strong>Parameters:</strong>
+<ul>
+<li><code>$table</code> (string): Table name</li>
+</ul>
+
+<strong>Returns:</strong> <code>true</code> if table exists, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($sql->tableExists('users')) {
+    echo "Users table exists";
+} else {
+    // Create table
+    $sql->command("CREATE TABLE users (...)");
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Error Handling Methods</h2>
+
+<h3>error()</h3>
+
+<pre><code class="language-php">function error(): bool
+</code></pre>
+
+<p>Checks if there was an error in the last operation.</p>
+
+<strong>Returns:</strong> <code>true</code> if error exists, <code>false</code> otherwise
+
+<strong>Example:</strong>
+<pre><code class="language-php">$users = $sql->command("SELECT * FROM users");
+
+if($sql->error()) {
+    echo "Query failed";
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>getError()</h3>
+
+<pre><code class="language-php">function getError(): array
+</code></pre>
+
+<p>Returns error details.</p>
+
+<strong>Returns:</strong> Array of error messages
+
+<strong>Example:</strong>
+<pre><code class="language-php">if($sql->error()) {
+    $errors = $sql->getError();
+    foreach($errors as $error) {
+        echo "Error: {$error}\n";
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h3>setError()</h3>
+
+<pre><code class="language-php">function setError($err): void
+</code></pre>
+
+<p>Sets an error message.</p>
+
+<p>---</p>
+
+<h2>Pagination Methods</h2>
+
+<h3>setLimit()</h3>
+
+<pre><code class="language-php">function setLimit($limit): void
+</code></pre>
+
+<p>Sets the LIMIT for queries.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->setLimit(10);
+</code></pre>
+
+<p>---</p>
+
+<h3>setPage()</h3>
+
+<pre><code class="language-php">function setPage($page): void
+</code></pre>
+
+<p>Sets the page number for pagination.</p>
+
+<strong>Example:</strong>
+<pre><code class="language-php">$sql->setLimit(20);
+$sql->setPage(2); // Skip first 20 records
+</code></pre>
+
+<p>---</p>
+
+<h2>Complete Examples</h2>
+
+<h3>CRUD Operations</h3>
+
+<pre><code class="language-php"><?php
+class API extends RESTful
+{
+    private $sql;
+
+    function main()
+    {
+        // Initialize SQL connection
+        $this->sql = $this->core->loadClass('CloudSQL', [
+            '/cloudsql/my-project:us-central1:myinstance',
+            'root',
+            'password',
+            'mydatabase'
+        ]);
+
+        if($this->sql->error()) {
+            return $this->setError('Database connection failed', 500);
+        }
+
+        // Route to endpoints
+        $endpoint = $this->params[0] ?? 'list';
+        if(!$this->useFunction('ENDPOINT_' . $endpoint)) {
+            return $this->setErrorFromCodelib('not-found');
+        }
+    }
+
+    // GET /users/list
+    public function ENDPOINT_list()
+    {
+        if(!$this->checkMethod('GET')) return;
+
+        // Pagination
+        $page = (int)($this->formParams['page'] ?? 1);
+        $limit = (int)($this->formParams['limit'] ?? 10);
+        $offset = ($page - 1) * $limit;
+
+        // Get users
+        $users = $this->sql->command("
+            SELECT id, name, email, created_at
+            FROM users
+            WHERE active = 1
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        ", [$limit, $offset]);
+
+        // Get total count
+        $result = $this->sql->command("SELECT COUNT(*) as total FROM users WHERE active = 1");
+        $total = $result[0]['total'];
+
+        if($this->sql->error()) {
+            return $this->setError('Failed to fetch users', 500);
+        }
+
+        $this->addReturnData([
+            'users' => $users,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'pages' => ceil($total / $limit)
+            ]
+        ]);
+    }
+
+    // POST /users/create
+    public function ENDPOINT_create()
+    {
+        if(!$this->checkMethod('POST')) return;
+
+        // Validate
+        if(!$this->checkMandatoryFormParams(['name', 'email'])) return;
+
+        // Check if email exists
+        $existing = $this->sql->command("
+            SELECT id FROM users WHERE email = ?
+        ", [$this->formParams['email']]);
+
+        if($existing) {
+            return $this->setError('Email already exists', 409);
+        }
+
+        // Insert user
+        $this->sql->command("
+            INSERT INTO users (name, email, created_at)
+            VALUES (?, ?, NOW())
+        ", [
+            $this->formParams['name'],
+            $this->formParams['email']
+        ]);
+
+        if($this->sql->error()) {
+            return $this->setError('Failed to create user', 500);
+        }
+
+        $userId = $this->sql->getInsertId();
+
+        // Get created user
+        $user = $this->sql->command("SELECT * FROM users WHERE id = ?", [$userId]);
+
+        $this->setReturnStatus(201);
+        $this->addReturnData($user[0]);
+    }
+
+    // PUT /users/update/{id}
+    public function ENDPOINT_update()
+    {
+        if(!$this->checkMethod('PUT')) return;
+
+        $userId = $this->checkMandatoryParam(1, 'User ID required');
+        if(!$userId) return;
+
+        // Check if user exists
+        $user = $this->sql->command("SELECT id FROM users WHERE id = ?", [$userId]);
+        if(!$user) {
+            return $this->setError('User not found', 404);
+        }
+
+        // Update user
+        $this->sql->command("
+            UPDATE users
+            SET name = ?, email = ?, updated_at = NOW()
+            WHERE id = ?
+        ", [
+            $this->formParams['name'] ?? $user[0]['name'],
+            $this->formParams['email'] ?? $user[0]['email'],
+            $userId
+        ]);
+
+        if($this->sql->error()) {
+            return $this->setError('Failed to update user', 500);
+        }
+
+        // Get updated user
+        $updatedUser = $this->sql->command("SELECT * FROM users WHERE id = ?", [$userId]);
+
+        $this->addReturnData($updatedUser[0]);
+    }
+
+    // DELETE /users/delete/{id}
+    public function ENDPOINT_delete()
+    {
+        if(!$this->checkMethod('DELETE')) return;
+
+        $userId = $this->checkMandatoryParam(1, 'User ID required');
+        if(!$userId) return;
+
+        // Soft delete
+        $this->sql->command("
+            UPDATE users
+            SET active = 0, deleted_at = NOW()
+            WHERE id = ?
+        ", [$userId]);
+
+        // Or hard delete
+        // $this->sql->command("DELETE FROM users WHERE id = ?", [$userId]);
+
+        if($this->sql->error()) {
+            return $this->setError('Failed to delete user', 500);
+        }
+
+        $this->setReturnStatus(204);
+    }
+}
+</code></pre>
+
+<h3>Transaction Example</h3>
+
+<pre><code class="language-php">// Start transaction
+$sql->command("START TRANSACTION");
+
+try {
+    // Create user
+    $sql->command("
+        INSERT INTO users (name, email)
+        VALUES (?, ?)
+    ", ['John Doe', 'john@example.com']);
+
+    $userId = $sql->getInsertId();
+
+    // Create user profile
+    $sql->command("
+        INSERT INTO user_profiles (user_id, bio, avatar)
+        VALUES (?, ?, ?)
+    ", [$userId, 'Software Developer', '/avatars/default.jpg']);
+
+    // Commit transaction
+    $sql->command("COMMIT");
+
+    echo "User and profile created successfully";
+
+} catch(Exception $e) {
+    // Rollback on error
+    $sql->command("ROLLBACK");
+    echo "Transaction failed: " . $e->getMessage();
+}
+</code></pre>
+
+<h3>Advanced Query Example</h3>
+
+<pre><code class="language-php">// Complex JOIN query
+$orders = $sql->command("
+    SELECT
+        o.id,
+        o.order_number,
+        o.total,
+        u.name as customer_name,
+        u.email as customer_email,
+        COUNT(oi.id) as item_count
+    FROM orders o
+    JOIN users u ON o.user_id = u.id
+    LEFT JOIN order_items oi ON o.id = oi.order_id
+    WHERE o.status = ?
+    AND o.created_at >= ?
+    GROUP BY o.id, u.name, u.email
+    HAVING COUNT(oi.id) > ?
+    ORDER BY o.created_at DESC
+    LIMIT ?
+", ['completed', '2024-01-01', 0, 100]);
+</code></pre>
+
+<h3>Connection Pool Pattern</h3>
+
+<pre><code class="language-php">class API extends RESTful
+{
+    private static $sqlConnection = null;
+
+    function main()
+    {
+        // Reuse connection across multiple requests
+        if(self::$sqlConnection === null) {
+            self::$sqlConnection = $this->core->loadClass('CloudSQL', [
+                $_ENV['DB_HOST'],
+                $_ENV['DB_USER'],
+                $_ENV['DB_PASS'],
+                $_ENV['DB_NAME']
+            ]);
+
+            if(self::$sqlConnection->error()) {
+                return $this->setError('Database connection failed', 500);
+            }
+        }
+
+        $this->sql = self::$sqlConnection;
+
+        // Route to endpoints
+        $endpoint = $this->params[0] ?? 'list';
+        $this->useFunction('ENDPOINT_' . $endpoint);
+    }
+}
+</code></pre>
+
+<p>---</p>
+
+<h2>Best Practices</h2>
+
+<h3>1. Use Parameterized Queries</h3>
+
+Always use parameterized queries to prevent SQL injection:
+
+<pre><code class="language-php">// Good
+$users = $sql->command("SELECT * FROM users WHERE email = ?", [$email]);
+
+// Bad
+$users = $sql->command("SELECT * FROM users WHERE email = '{$email}'");
+</code></pre>
+
+<h3>2. Handle Errors Properly</h3>
+
+<pre><code class="language-php">$result = $sql->command("SELECT * FROM users");
+
+if($sql->error()) {
+    $this->core->logs->add($sql->getError(), 'database', 'error');
+    return $this->setError('Database query failed', 500);
+}
+</code></pre>
+
+<h3>3. Close Connections</h3>
+
+<pre><code class="language-php">// Close connection when done (optional, automatically closed on script end)
+$sql->close();
+</code></pre>
+
+<h3>4. Use Transactions for Multiple Operations</h3>
+
+<pre><code class="language-php">$sql->command("START TRANSACTION");
+
+// Multiple operations
+$sql->command("INSERT INTO...");
+$sql->command("UPDATE...");
+
+if($sql->error()) {
+    $sql->command("ROLLBACK");
+} else {
+    $sql->command("COMMIT");
+}
+</code></pre>
+
+<h3>5. Use Connection Pooling</h3>
+
+Reuse connections across multiple API calls for better performance.
+
+---
+
+<h2>Cloud SQL Specific Notes</h2>
+
+<h3>Cloud SQL Unix Sockets (App Engine)</h3>
+
+<pre><code class="language-php">$sql = $this->core->loadClass('CloudSQL', [
+    '',                                      // empty host
+    'root',
+    'password',
+    'mydb',
+    '3306',
+    '/cloudsql/project:region:instance'     // Cloud SQL socket
+]);
+</code></pre>
+
+<h3>Cloud SQL Proxy</h3>
+
+For local development, use Cloud SQL Proxy:
+
+<pre><code class="language-shell"># Start proxy
+./cloud_sql_proxy -instances=project:region:instance=tcp:3306
+
+<h1>Connect normally</h1>
+$sql = $this->core->loadClass('CloudSQL', [
+    '127.0.0.1',
+    'root',
+    'password',
+    'mydb',
+    '3306'
+]);
+</code></pre>
+
+<p>---</p>
+
+<h2>See Also</h2>
+
+<ul>
+<li><a href="../guides/getting-started.html">Getting Started Guide</a></li>
+<li><a href="../guides/gcp-integration.html">GCP Integration Guide</a></li>
+<li><a href="DataStore.html">DataStore Class</a></li>
+<li><a href="DataBQ.html">DataBQ Class</a></li>
+</ul>
+
+        </main>
+    </div>
+
+    <script src="../js/main.js"></script>
+</body>
+</html>
