@@ -349,10 +349,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 }
 
                 // Detect security issue
-                if(preg_match('/\.(php|json|txt)($|\/|\?)/',$apifile)) {
+                if(preg_match('/\.(php|json|txt|xml)($|\/|\?)/',strtolower($apifile))) {
                     header("Content-Type: text/plain");
                     header("HTTP/1.0 403 Forbidden");
-                    die("Your IP [{$this->system->ip}] has been blocked");
+                    die("Your call with IP [{$this->system->ip}] has been intercepted");
                 }
 
                 // if $apifile starts with '_' character or start with queue the look into the framework
@@ -4750,10 +4750,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function defaultServiceUrl($path = '')
         {
-            if (!$path || strpos($path, 'http') === 0) return $path;
+            if ($path && strpos($path, 'http') === 0) return $path;
             else {
                 if (!$this->core->config->get("CloudServiceUrl"))
-                    $this->core->config->set("CloudServiceUrl", 'https://api7.cloudframework.io');
+                    $this->core->config->set("CloudServiceUrl", 'https://api.cloudframework.io');
 
                 $this->http = $this->core->config->get("CloudServiceUrl");
 
