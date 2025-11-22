@@ -41,7 +41,7 @@ if (!defined ("_GoogleSecrets_CLASS_") ) {
             if($this->core->config->get('core.gcp.project_id')) $this->project_id = $this->core->config->get('core.gcp.project_id');
             if($this->core->config->get('core.gcp.secrets.project_id')) $this->project_id = $this->core->config->get('core.gcp.secrets.project_id');
 
-            if(!$this->project_id) return($this->addError('Missing PROJECT_ID env_var or core.gcp.project_id, core.gcp.secrets.project_id config vars'));
+            if(!$this->project_id) return($this->addError('params-error','Missing PROJECT_ID env_var or core.gcp.project_id, core.gcp.secrets.project_id config vars'));
             $this->client = new SecretManagerServiceClient();
             $this->project_path = $this->client->projectName($this->project_id);
         }
