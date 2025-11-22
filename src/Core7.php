@@ -949,6 +949,53 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 });
         }
 
+        /**
+         * Reorganizes an array to be indexed by a specific column value from each item in the array.
+         * If a duplicate index is encountered, a unique suffix is appended to ensure key uniqueness.
+         *
+         * @param array $array The input array to be reorganized, passed by reference.
+         * @param string $column The column name used as the index key for the resulting array.
+         * @return array The resulting array indexed by the specified column values.
+         */
+        public function convertArrayIndexedByColumn(&$array, string $column) {
+            $result = [];
+            $keyCounters = []; // specific tracker for collisions
+
+            foreach ($array as &$item) {
+                // 1. Safe retrieval of the key
+                // We verify if the column exists, otherwise default to 'unknown'
+                $rawValue = $item[$column] ?? 'unknown';
+
+                // 2. Ensure the key is a valid array key (Int or String)
+                // PHP 8.x requires strict key types.
+                $index = (is_string($rawValue) || is_int($rawValue))
+                    ? (string)$rawValue
+                    : 'invalid_type';
+
+                // 3. Collision Handling
+                // Instead of expensive uniqid(), we check if the key exists
+                // and use a deterministic counter.
+                if (array_key_exists($index, $result)) {
+                    // Initialize counter for this specific key if not present
+                    if (!isset($keyCounters[$index])) {
+                        $keyCounters[$index] = 0;
+                    }
+
+                    $keyCounters[$index]++;
+                    $index = sprintf('%s_%d', $index, $keyCounters[$index]);
+                }
+
+                // 4. Assign by Reference
+                // We assign the reference to prevent memory duplication of the item data.
+                $result[$index] = &$item;
+            }
+
+            // Break the reference to the last element to prevent future accidental modification
+            unset($item);
+
+            return $result;
+        }
+
 
     }
 
