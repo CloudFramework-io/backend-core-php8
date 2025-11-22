@@ -156,10 +156,12 @@ class CFOs {
 
         //region SET $options[cf_models_api_key,namespace,projectId,projectId]
         $options = ['cf_models_api_key'=>$this->integrationKey];
+
         if($namespace) $options['namespace'] = $namespace;
         if($project_id) $options['projectId'] = $project_id;
         elseif($this->project_id) $options['projectId'] = $this->project_id;
         if($service_account){
+
             if ((!($service_account['private_key']??null) && !($service_account['source_credentials']??null)) || !($service_account['project_id']??null)) {
                 $this->createFooDatastoreObject($cfoId);
                 $this->dsObjects[$cfoId]->error = true;
