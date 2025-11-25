@@ -558,14 +558,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $hash = hash('md5', $class . json_encode($params));
             if (key_exists($hash, $this->loadedClasses)) return $this->loadedClasses[$hash];
-            $bucket_path = $this->config->get('core.api.extra_path');
 
-            if (is_file(__DIR__ . "/class/{$class}.php"))
-                include_once(__DIR__ . "/class/{$class}.php");
-            elseif (is_file($this->system->app_path . "/class/" . $class . ".php"))
-                include_once($this->system->app_path . "/class/" . $class . ".php");
-            elseif($bucket_path)
-                @include_once($bucket_path . "/class/" . $class . ".php");
+            if(!class_exists($class)) {
+                $bucket_path = $this->config->get('core.api.extra_path');
+
+                if (is_file(__DIR__ . "/class/{$class}.php"))
+                    include_once(__DIR__ . "/class/{$class}.php");
+                elseif (is_file($this->system->app_path . "/class/" . $class . ".php"))
+                    include_once($this->system->app_path . "/class/" . $class . ".php");
+                elseif ($bucket_path)
+                    @include_once($bucket_path . "/class/" . $class . ".php");
+            }
 
             if(!class_exists($class))
             {
@@ -578,6 +581,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->errors->add($error);
                 return null;
             }
+
             $this->loadedClasses[$hash] = new $class($this, $params);
             return $this->loadedClasses[$hash];
 
