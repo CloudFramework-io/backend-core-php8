@@ -2860,6 +2860,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $erp_platform_id = $this->platform;
                 if(!$erp_platform_id) return($this->addError('getPlatformSecretVar(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
+
             if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id) || ($this->secret_vars['platform']??null)!=$erp_platform_id) {
                 if (!$this->readPlatformSecretVars($erp_secret_id, $erp_platform_id, $erp_user)) return false;
             }
@@ -2919,12 +2920,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
+
+
             if(!$this->readERPDeveloperEncryptedSubKeys($erp_platform_id,$erp_user))
                 return($this->addError('Called from readPlatformSecretVars(..)'));
 
             //region READ $user_secrets from cache and RETURN it if it exist
             $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
             $user_secrets = $this->getCache($key,'ERP.secrets');
+
+            if(!($user_secrets['platform']??'')) {
+                _printe($key,$this->getCache('','ERP.secrets'));
+                _print($key . ' : ' . ($user_secrets['platform'] ?? '') . ': ' . $this->core->cache->spacename);
+            }
 
             //verify $user_secrets['id'] match with $erp_user
             //fix bug when in production the $erp_user is returning default
@@ -2972,13 +2980,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/my-secrets/'.$user_secrets['id'];
             }
 
+
             $headers = ['X-WEB-KEY'=>$user_secrets['id'],'X-DS-TOKEN'=>$token];
             $secrets = $this->core->request->get_json_decode($url,null,$headers);
 
+
             if($this->core->request->error) {
                 return($this->addError(($secrets['message']??null)?:$this->core->request->errorMsg));
-                $this->core->request->reset();
-                $this->core->errors->reset();
             }
 
             $user_secrets['secret-id'] = ($erp_secret_id)?:$user_secrets['id'];
@@ -3997,8 +4005,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Reset Cache of the module
          */
         public function readCache($security_group = 'default') {
-            if(!isset($this->cache[$security_group]))
-                $this->cache[$security_group] = ($this->core->cache->get('Core7.CoreSecurity.'.$security_group,3600*24,null,$this->cache_key,$this->cache_iv))?:[];
+            if(!isset($this->cache[$security_group][$this->core->cache->spacename]))
+                $this->cache[$security_group][$this->core->cache->spacename] = ($this->core->cache->get('Core7.CoreSecurity.'.$security_group,3600*24,null,$this->cache_key,$this->cache_iv))?:[];
         }
 
         /**
@@ -4021,8 +4029,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Reset Cache of the module
          */
         public function resetCache($security_group = 'default') {
-            $this->cache[$security_group] = [];
-            $this->core->cache->set('Core7.CoreSecurity.'.$security_group,$this->cache[$security_group],null,$this->cache_key,$this->cache_iv);
+            $this->cache[$security_group][$this->core->cache->spacename] = [];
+            $this->core->cache->set('Core7.CoreSecurity.'.$security_group,$this->cache[$security_group][$this->core->cache->spacename],null,$this->cache_key,$this->cache_iv);
             $this->core->logs->add('CoreSecurity.resetCache(\''.$security_group.'\') from '.$this->core->system->url['host_url_uri'],'CoreSecurity');
         }
 
@@ -4032,8 +4040,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         public function updateCache($var,$data,$security_group = 'default') {
             if(!$security_group) $security_group = 'default';
             $this->readCache($security_group);
-            $this->cache[$security_group][$var] = $data;
-            $this->core->cache->set('Core7.CoreSecurity.'.$security_group,$this->cache[$security_group],null,$this->cache_key,$this->cache_iv);
+            $this->cache[$security_group][$this->core->cache->spacename][$var] = $data;
+            $this->core->cache->set('Core7.CoreSecurity.'.$security_group,$this->cache[$security_group][$this->core->cache->spacename],null,$this->cache_key,$this->cache_iv);
 
         }
 
@@ -4046,8 +4054,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         public function getCache(string $var='',$security_group = 'default') {
             if(!$security_group) $security_group = 'default';
             $this->readCache($security_group);
-            if($var) return $this->cache[$security_group][$var] ?? null;
-            else return $this->cache[$security_group] ?? null;
+            if($var) return $this->cache[$security_group][$this->core->cache->spacename][$var] ?? null;
+            else return $this->cache[$security_group][$this->core->cache->spacename] ?? null;
         }
 
 
