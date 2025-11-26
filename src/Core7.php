@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.11';  // 2025-11-22 1
+        var $_version = '8.4.11';  // 2025-11-26 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -2920,8 +2920,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             //endregion
 
-
-
             if(!$this->readERPDeveloperEncryptedSubKeys($erp_platform_id,$erp_user))
                 return($this->addError('Called from readPlatformSecretVars(..)'));
 
@@ -2929,15 +2927,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
             $user_secrets = $this->getCache($key,'ERP.secrets');
 
-            if(!($user_secrets['platform']??'')) {
-                _printe($key,$this->getCache('','ERP.secrets'));
-                _print($key . ' : ' . ($user_secrets['platform'] ?? '') . ': ' . $this->core->cache->spacename);
-            }
-
             //verify $user_secrets['id'] match with $erp_user
             //fix bug when in production the $erp_user is returning default
             if($erp_user=='default' && isset($user_secrets['id'])) $erp_user = $user_secrets['id'];
-
 
             //check the
             if($erp_user && isset($user_secrets['id']) && $user_secrets['id']!=$erp_user) $user_secrets=[];
@@ -2951,7 +2943,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 return true;
             }
             //endregion
-
 
             //region IF $user_secrets is empty feed it with basic structure
             $user_secrets = ['access_token'=>null,'id'=>'','platform'=>$erp_platform_id,'secrets'=>''];
@@ -2980,10 +2971,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/my-secrets/'.$user_secrets['id'];
             }
 
-
             $headers = ['X-WEB-KEY'=>$user_secrets['id'],'X-DS-TOKEN'=>$token];
             $secrets = $this->core->request->get_json_decode($url,null,$headers);
-
 
             if($this->core->request->error) {
                 return($this->addError(($secrets['message']??null)?:$this->core->request->errorMsg));
@@ -4002,7 +3991,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Reset Cache of the module
+         * Reads and retrieves cached data for the specified security group.
+         * If no cache exists for the given security group and space name, it initializes the cache.
+         *
+         * @param string $security_group The security group to retrieve cached data for. Defaults to 'default'.
+         * @return array The cached data for the specified security group and space name.
          */
         public function readCache($security_group = 'default') {
             if(!isset($this->cache[$security_group][$this->core->cache->spacename]))
@@ -4010,23 +4003,34 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Reset Cache of the module
+         * Resets the cache specifically for ERP secret variables by invoking
+         * the platform-level secret variable cache reset mechanism.
+         *
          * @deprecated
-         * @see resetCacheForPlatformSecretVars
+         * @return void
          */
         public function resetCacheForERPSecretVars() {
             $this->resetCacheForPlatformSecretVars();
         }
 
         /**
-         * Reset Cache of the module
+         * Resets the cache for platform secret variables.
+         * This method clears the cached data related to platform secret variables
+         * by invoking a cache reset for a specific cache identifier.
+         *
+         * @return void
          */
         public function resetCacheForPlatformSecretVars() {
             $this->resetCache('ERP.secrets');
         }
 
         /**
-         * Reset Cache of the module
+         * Resets the cache for a given security group.
+         * This method clears the cache for the specified security group and updates
+         * the corresponding cache entry in the system cache.
+         *
+         * @param string $security_group The security group for which the cache is being reset. Defaults to 'default'.
+         * @return void
          */
         public function resetCache($security_group = 'default') {
             $this->cache[$security_group][$this->core->cache->spacename] = [];
@@ -4035,7 +4039,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Update Cache of the module
+         * Updates the cache with the given data under the specified variable name and security group.
+         * If no security group is provided, 'default' will be used.
+         *
+         * @param string $var The variable name under which the data will be stored.
+         * @param mixed $data The data to be stored in the cache.
+         * @param string $security_group Optional. The security group within which the cache will be updated. Defaults to 'default'.
+         * @return void
          */
         public function updateCache($var,$data,$security_group = 'default') {
             if(!$security_group) $security_group = 'default';
@@ -4046,10 +4056,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Get var Cache of the module
-         * @param string $var y empty it returns all the variable of the security group
-         * @param string $security_group
-         * @return mixed|null
+         * Retrieves the cached value or the entire cache structure for a specific variable and security group.
+         *
+         * @param string $var The identifier of the cache variable to retrieve. If not provided, the entire cache structure is returned.
+         * @param string $security_group The security group under which the cache is stored. Defaults to 'default' if not specified.
+         * @return mixed|null The cached value for the specified variable or the entire cache structure within the security group. Returns null if no value is found.
          */
         public function getCache(string $var='',$security_group = 'default') {
             if(!$security_group) $security_group = 'default';
@@ -4059,10 +4070,25 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
 
+        /**
+         * Encodes the given input into a URL-safe Base64 format.
+         * This method modifies the standard Base64 encoding by replacing certain characters to make the string URL-safe.
+         *
+         * @param string $input The input string to be encoded.
+         * @return string The URL-safe Base64 encoded version of the input.
+         */
         public function urlsafeB64Encode($input) {
             return str_replace('=', '', strtr(base64_encode($input), '+/', '-_'));
         }
 
+        /**
+         * Decodes a URL-safe Base64 encoded string.
+         * This method ensures that the input string is padded correctly and converts
+         * URL-safe Base64 characters back to standard Base64 characters before decoding.
+         *
+         * @param string $input The URL-safe Base64 encoded string to decode.
+         * @return string|false The decoded string, or false on failure.
+         */
         public function urlsafeB64Decode($input)
         {
             $remainder = strlen($input) % 4;
