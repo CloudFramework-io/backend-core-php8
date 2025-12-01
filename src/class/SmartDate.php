@@ -26,12 +26,13 @@ if (!defined ("_SmartDate_CLASS_") ) {
         }
 
         /**
-         * Return an array of Dates
-         * @param int $init
-         * @param int $end
-         * @param string $type Valid values: day,month,year
-         * @param null $format
-         * @return array
+         * Generates an array of formatted dates based on the specified range and type.
+         *
+         * @param int $init The starting value of the range. Default is -1.
+         * @param int $end The ending value of the range. Default is 0.
+         * @param string $type The type of increment for the range. Accepted values are 'day', 'month', or 'year'. Default is 'day'.
+         * @param string|null $format The format in which the dates should be returned. Defaults to the internal format if null.
+         * @return array Returns an array of formatted date strings. If an unsupported type is provided, returns an array with an error message.
          */
         public function getArray($init = -1, $end = 0, $type = 'day', $format = null)
         {
