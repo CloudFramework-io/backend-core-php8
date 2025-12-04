@@ -1257,6 +1257,17 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                 return(['table_exists'=> false]);
         }
 
+        /**
+         * Generate a simplified model structure from a database table's metadata.
+         *
+         * This method extracts metadata of the specified database table, such as field types,
+         * constraints, keys, and descriptions, and builds a structured mapping to represent
+         * the table's model in a simplified format.
+         *
+         * @param string $table The name of the database table to retrieve the model from.
+         * @return array An array containing the simplified model representation, including the
+         *               field metadata, mapping information, and table entity association.
+         */
         function getSimpleModelFromTable($table) {
 
             $fields = ['model'=>[],'mapWithEntity'=>$table,'mapping'=>[]];

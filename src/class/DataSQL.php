@@ -1,12 +1,15 @@
 <?php
 
 /**
+ * Class DataSQL
  * [$sql = $this->core->loadClass('DataSQL');] Class to Handle SQL databases with CloudFramework models
- * @package CoreClasses
+ *
+ * This class facilitates SQL operations aligned with a defined schema. It includes mechanisms
+ * for defining and using schema mappings, resetting query settings, and generating SQL statements.
  */
 class DataSQL
 {
-    var $version = '202511111';
+    var $version = '202512041';
     /** @var Core7  */
     var $core;
     var $error = false;
@@ -130,47 +133,55 @@ class DataSQL
     }
 
     /**
-     * Return the fields ready for a SQL query
-     * @param  array|null fields to show
-     * @return array|null
+     * Generates a SQL SELECT clause based on the specified fields, entity name, and optional mappings.
+     *
+     * @param array|null $fields An array of field names to include in the SELECT clause.
+     *                            If null or empty, the fields are retrieved using entity's configuration.
+     * @return string A comma-separated list of SQL SELECT fields, which may include mapped fields,
+     *                JSON fields with specific casting, or fields using distinct transformations.
      */
-    function getSQLSelectFields($fields=null) {
+    function getSQLSelectFields(?array $fields=null) {
+
+        //region INIT $ret AND VERIFY $fields and IF $fields is NULL SET $fields with local fields o mapping
+        $ret='';
         if(null === $fields || empty($fields)) {
             if($this->use_mapping)
                 $fields = $this->getMappingFields();
             else
                 $fields = $this->getFields();
         }
+        //endregion
+
+        //region IF !$this->mapping UPDATE $ret with $fields to adding the prefix table $this->entity_name.
         if(!$this->use_mapping || !count($this->mapping)) {
-            $ret='';
+
+
+            //control how many ( opens there is in fields
+            $opens = 0;
+
             foreach ($fields as $i=>$field) {
+
+                //add separator in $ret if there is previous content
                 if($ret) $ret.=',';
-                if(strpos($field,'(')!==false) {
-                    if(strpos($field,'(*')===false)
-                        $ret.=str_replace('(','('.$this->entity_name.'.',$field);
-                    else
-                        $ret.=$field;
-                } else {
+                //region IF $field is not included in opens and exists as field
+                if(isset($this->entity_schema['model'][$field][0])) {
                     //JSON workaround https://bugs.php.net/bug.php?id=70384
-                    if(isset($this->entity_schema['model'][$field][0]) && $this->entity_schema['model'][$field][0]=='json') {
+                    if($this->entity_schema['model'][$field][0]=='json') {
                         $ret.='CAST('.$this->entity_name.'.'.$field.' as CHAR) as '.$field;
-                    }elseif(isset($this->entity_schema['model'][$field][0]) || !preg_match('/[^A-Za-z0-9_ ]/',$field)) {
-                        $field = trim($field);
-                        if(stripos($field,'distinct ')===0)
-                            preg_replace('/distinct /i','DISTINCT '.$this->entity_name.'.',$field);
-                        else
-                            $ret.=$this->entity_name.'.'.$field;
-                    }else{
-                        $ret.=$field;
+                    } else {
+                        $ret.=$this->entity_name.'.'.$field;
                     }
+                } else {
+                    $ret.=DataSQL::addTableContextToSQLFields($field,array_keys($this->entity_schema['model']),$this->entity_name);
                 }
+                //endregion
 
             }
-            return $ret;
             //$this->entity_name.'.'.implode(','.$this->entity_name.'.',$fields);
         }
+        //endregion
+        //region ELSE UPDATE $ret APPLYING mapping
         else {
-            $ret = '';
             foreach ($this->mapping as $field=>$fieldMapped) {
                 if(null != $fields && !in_array($fieldMapped,$fields)) continue;
 
@@ -178,8 +189,13 @@ class DataSQL
                 if($ret) $ret.=',';
                 $ret .= "{$this->entity_name}.{$field} AS {$fieldMapped}";
             }
-            return $ret;
         }
+        //endregion
+
+        //region RETURN $ret
+        return $ret;
+        //endregion
+
     }
 
     /**
@@ -936,14 +952,14 @@ class DataSQL
      * @return string The SQL fields formatted for the query.
      */
     function getQuerySQLFields($fields=null) {
+
         if(!$fields) $fields=$this->queryFields;
-        if($fields && is_string($fields)) $fields = explode(',',$fields);
+        if($fields && is_string($fields)) $fields = DataSQL::getArrayOfSQLFieldsFromSelectString($fields);
 
         $ret =  $this->getSQLSelectFields($fields);
         if($ret=='*') $ret=$this->entity_name.'.*';
 
         foreach ($this->joins as $i=>$join) {
-
             /** @var DataSQL $object */
             $object = $join[1];
             $ret.=','.str_replace($object->entity_name.'.',"_j{$i}.",$object->getQuerySQLFields());
@@ -951,6 +967,7 @@ class DataSQL
 
         return $ret;
     }
+
 
     /**
      * Builds and returns the SQL FROM clauses for a query, including handling joins.
@@ -969,6 +986,8 @@ class DataSQL
             $object = $join[1];
             $table_alias[$object->entity_name]="_j{$i}";
 
+            unset($join[1]);
+
             //by default the left join is with main table
             if(!strpos($join[2],'.'))
                 $left_join = "{$this->entity_name}.{$join[2]}";
@@ -980,16 +999,32 @@ class DataSQL
                 }
             }
 
-            $comparator = '=';
+            $comparator = ' = ';
             $right_join = "_j{$i}.{$join[3]}";
 
-            if(strpos($join[3],'%')!==false) $comparator = 'LIKE';
+            if(strpos($join[3],'%')!==false) $comparator = ' LIKE ';
             if(strpos($join[3],'%')!==false || strpos($join[3],'(')!==false) {
-                $right_join = "{$join[3]}";
+                $right_join = trim($join[3]);
+                $right_join = str_replace($object->entity_name.'.',$table_alias[$object->entity_name].'.',$right_join);
             }
-            $from.=" {$join[0]}  JOIN {$object->entity_name} _j{$i} ON ({$left_join} {$comparator} {$right_join})";
-        }
 
+            //evaluate if there is a comparator element in right join
+            if(strpos(trim($right_join),' ')!==false) {
+                list($check_comp,$foo) = explode(' ',trim($right_join),2);
+                $comparator = strtoupper($check_comp);
+                if(strpos($comparator,'=')!==false
+                    || strpos($comparator,'>')!==false
+                    || strpos($comparator,'<')!==false
+                    || strpos($comparator,'LIKE')!==false
+                    || strpos($comparator,'REGEXP')!==false
+                    || strpos($comparator,'NOT')!==false
+                ) $comparator = ' ';
+            }
+
+            //return the from
+            $from.=" {$join[0]}  JOIN {$object->entity_name} _j{$i} ON ({$left_join}{$comparator}{$right_join})";
+
+        }
 
         return $from;
     }
@@ -1077,8 +1112,6 @@ class DataSQL
         return($this->core->model->db->_lastExecutionMicrotime);
     }
 
-
-
     /**
      * Return an array of the mapped fields ready to insert or update Validating the info
      * @param $data
@@ -1121,10 +1154,6 @@ class DataSQL
         return ($dataValidated);
     }
 
-    public function getValidatedRecordToInsert(&$data) {
-
-    }
-
     /**
      * Return the json form model to be used in validations in front-end
      * @return mixed|null
@@ -1153,12 +1182,152 @@ class DataSQL
     }
 
     /**
-     * Return the json schema based on the table in the database
-     * @return mixed|null
+     * Retrieves a simple model representation from the associated database table.
+     *
+     * @return mixed The simple model object fetched from the table, or false if database initialization fails.
      */
     public function getSimpleModelFromTable() {
-        if(!$this->core->model->dbInit()) return;
+        if(!$this->core->model->dbInit()) return false;
         return($this->core->model->db->getSimpleModelFromTable($this->entity_name));
     }
 
+    /**
+     * Splits a SQL SELECT string into an array of individual fields/expressions.
+     * * This function iterates through the string character by character. It respects
+     * SQL syntax context, ensuring that commas located inside parentheses (function arguments)
+     * or inside quotes (string literals) are ignored during the split process.
+     *
+     * @param string $sql_fields The raw string of fields (e.g., "'1', Name, concat(a,b)").
+     * @return string[] An array of trimmed field expressions.
+     */
+    public static function getArrayOfSQLFieldsFromSelectString(string $sql_fields): array
+    {
+        //region RETURN elements separated by ',' IF there is not spacial chars just return the elements separate by '
+        if(!preg_match_all('/(?:[^,()"]|"[^"]*"|\([^\)]*\))+/i', $sql_fields, $matches))
+            return explode(',',$sql_fields);
+        //endregion
+
+        //region INIT $fields,$buffer,$length,$parenDepth,$inQuote,$quoteChar
+        $fields = [];
+        $buffer = '';
+        $length = strlen($sql_fields);
+
+        // State tracking variables
+        $parenDepth = 0;      // Tracks nested parentheses level: func(func())
+        $inQuote = false;     // Are we inside a string literal?
+        $quoteChar = '';      // Which quote opened the string? (' " or `)
+        //endregion
+
+        //region LOOP $sql_fields chars to feed $fields
+        for ($i = 0; $i < $length; $i++) {
+            $char = $sql_fields[$i];
+
+            // 1. Handle Quotes (Single, Double, Backticks)
+            // If we encounter a quote char, we toggle the state, unless we are already
+            // inside a different type of quote.
+            if (in_array($char, ["'", '"', '`'], true)) {
+                if (!$inQuote) {
+                    // Start of a quoted string/identifier
+                    $inQuote = true;
+                    $quoteChar = $char;
+                } elseif ($char === $quoteChar) {
+                    // End of the quoted string/identifier
+                    // Note: Basic handling. Does not account for escaped quotes (e.g. \' )
+                    // deeply, but sufficient for field splitting logic.
+                    $inQuote = false;
+                    $quoteChar = '';
+                }
+            }
+
+            // 2. Handle Parentheses
+            // We only track depth if we are NOT inside a quote/string.
+            if (!$inQuote) {
+                if ($char === '(') {
+                    $parenDepth++;
+                } elseif ($char === ')') {
+                    $parenDepth--;
+                }
+            }
+
+            // 3. Handle Splitting (The Comma)
+            // We split ONLY if:
+            // - We found a comma
+            // - We are NOT inside quotes
+            // - We are NOT inside parentheses (depth is 0)
+            if ($char === ',' && !$inQuote && $parenDepth === 0) {
+                $fields[] = trim($buffer); // Add current buffer to results
+                $buffer = '';              // Reset buffer
+            } else {
+                $buffer .= $char;          // Build the current field string
+            }
+        }
+        // Add the final remaining buffer if it's not empty
+        if (trim($buffer) !== '') {
+            $fields[] = trim($buffer);
+        }
+        //endregion
+
+        //region RETURN $fields
+        return $fields;
+        //endregion
+    }
+
+    /**
+     * Replaces specific field names in a SQL SELECT string with their table-prefixed versions.
+     * * This function parses the SQL string token by token using regex to ensure safety.
+     * It ignores text inside quotes (strings), existing table references (table.field),
+     * and SQL aliases (AS field).
+     *
+     * @param string $query_fields The SELECT clause (e.g., "count(id) as total, name").
+     * @param string[] $fields An array of field names belonging to the target table.
+     * @param string $table The table name to prefix (e.g., "users").
+     * @return string The modified SQL string.
+     */
+    public static function addTableContextToSQLFields(string $query_fields, array $fields, string $table): string
+    {
+        // Convert fields array to a map for O(1) lookup performance.
+        $fieldsMap = array_flip($fields);
+
+        /**
+         * Regex Pattern Explanation:
+         * 1. `'[^']*'`    : Matches single-quoted strings (SQL string literals).
+         * 2. `"[^"]*"`    : Matches double-quoted strings.
+         * 3. `` `[^`]*` ``: Matches backtick-quoted identifiers (to avoid breaking them).
+         * 4. `\bAS\s+[\w]+`: Matches "AS alias" to prevent replacing the alias name.
+         * 5. `(?<!\.)\b\w+\b`: Matches whole words (identifiers) ONLY if not preceded by a dot.
+         * 6. `\*`: Matches the asterisk character (wildcard).
+         * This prevents double prefixing (e.g., avoids converting "table.name" to "table.table.name").
+         */
+        $pattern = "/'[^']*'|\"[^\"]*\"|`[^`]*`|\bAS\s+[\w]+\b|(?<!\.)\b\w+\b|\*/i";
+
+        return preg_replace_callback($pattern, function (array $matches) use ($fieldsMap, $table): string {
+            $token = $matches[0];
+
+            // Check if the token is a String literal, a Backticked ID, or an Alias clause.
+            // If so, return it exactly as is without modification.
+            if (
+                str_starts_with($token, "'") ||
+                str_starts_with($token, '"') ||
+                str_starts_with($token, '`') ||
+                stripos($token, 'AS ') === 0
+            ) {
+                return $token;
+            }
+
+            // Explicitly prefix the wildcard character.
+            if ($token === '*') {
+                return "{$table}.*";
+            }
+
+            // It is a clean identifier. Check if it exists in our target fields list.
+            if (isset($fieldsMap[$token])) {
+                // Return the field with the table prefix.
+                return "{$table}.{$token}";
+            }
+
+            // Return the original token if it's not in the list (e.g., function names like "concat").
+            return $token;
+
+        }, $query_fields);
+    }
 }
