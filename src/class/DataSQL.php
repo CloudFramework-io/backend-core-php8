@@ -955,7 +955,7 @@ class DataSQL
 
         if(!$fields) $fields=$this->queryFields;
         if($fields && is_string($fields)) $fields = DataSQL::getArrayOfSQLFieldsFromSelectString($fields);
-
+        if(!$fields && !is_array($fields)) $fields = [];
         $ret =  $this->getSQLSelectFields($fields);
         if($ret=='*') $ret=$this->entity_name.'.*';
 
