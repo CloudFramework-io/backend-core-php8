@@ -2861,7 +2861,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if(!$erp_platform_id) return($this->addError('getPlatformSecretVar(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
 
-            if($this->secret_vars ===null || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id) || ($this->secret_vars['platform']??null)!=$erp_platform_id) {
+            if($this->secret_vars ===null
+                || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id)
+                || ($this->secret_vars['platform']??null)!=$erp_platform_id
+            ) {
                 if (!$this->readPlatformSecretVars($erp_secret_id, $erp_platform_id, $erp_user)) return false;
             }
             return $this->secret_vars['secrets'][$var]??null;
