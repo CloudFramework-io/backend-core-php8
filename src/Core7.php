@@ -9080,6 +9080,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public $error = false;
 
+        /** @var CoreScriptPrompt $prompt helps with users prompts*/
+        public CoreScriptPrompt $prompt;
+
         /** @var string|integer Code of the error  */
         public $errorCode = '';
 
@@ -9103,7 +9106,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param Core7 $core
          * @param null $argv
          */
-        function __construct(Core7 $core, $argv=null)
+        function __construct(Core7 &$core, $argv=null)
         {
 
             $this->core = $core;
@@ -9111,6 +9114,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->initParameters($argv);
             $this->cache = &$this->core->cache;
             $this->time = microtime(true);
+            $this->cache_secret_key = substr($this->core->system->getRequestFingerPrint()['hash'],0,32);
+            $this->cache_secret_iv = substr($this->core->system->getRequestFingerPrint()['hash'],0,24);
+            $this->prompt = new CoreScriptPrompt($this);
 
         }
 
@@ -9159,66 +9165,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //                $this->sendTerminal[] = "[ ".(round(microtime(true)-$this->time,4))." ms] ".((is_string($info))?$info:json_encode($info));
         }
 
-        function readCache() {
-            // Read cache into $this->cache_data if not cache default value [];
-            $this->cache_data = ($this->cache->get('Core7_Scripts2020_cache',-1,'',$this->cache_secret_key,$this->cache_secret_iv))?:[];
-        }
-
-        function cleanCache() {
-            // Read cache into $this->cache_data if not cache default value [];
-            $this->cache_data = [];
-            $this->cache->set('Core7_Scripts2020_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
-        }
-
-        function getCacheVar($var) {
-            if($this->cache_data === null) $this->readCache();
-            return((isset($this->cache_data[$var]))?$this->cache_data[$var]:null);
-        }
-
-        function setCacheVar($var,$value) {
-            if($this->cache_data === null) $this->readCache();
-            $this->cache_data[$var] = $value;
-            $this->cache->set('Core7_Scripts2020_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
-        }
 
         /**
-         * Execute a user Prompt
-         * @param $title
-         * @param null $default
-         * @param null $cache_var
-         * @return false|string|null
-         */
-        function prompt($title,$default=null,$cache_var=null) {
-
-            // Check Cache var
-            if($cache_var) {
-                $cache_content = $this->cache->get('Core7_Scripts2020_'.$cache_var,-1,'',$this->cache_secret_key,$this->cache_secret_iv);
-                if($cache_content) $default = $cache_content;
-            }
-
-            // Check default value
-            if($default) $title.="[{$default}] ";
-            $ret = readline($title);
-            if(!$ret) $ret=$default;
-
-            // Set Cache var
-            if($cache_var) {
-                $this->cache->set('Core7_Scripts2020_'.$cache_var,$ret,'',$this->cache_secret_key,$this->cache_secret_iv);
-            }
-            return $ret;
-        }
-
-        /**
-         * Execute a user Prompt user for a specific var
-         *  $options['title'] = titlte to be shown
-         *  $options['default'] = default value
-         *  $options['values'] = [array of valid values]
-         *  $options['cache_var'] = 'name to cache the result. If result is cached it rewrites default'
-         *  $options['type'] = password | number | float
-         *  $options['allowed_values'] = allowed values
+         * Deprecated Prompt function (use $this->prompt object) to get from user an input with specified options and validates the response.
+         * Optionally supports setting and retrieving cached values.
          *
-         * @param $options array array of options
-         * @return false|string|null
+         * @param array $options An array of options to configure the prompt behavior:
+         * - 'title': A string specifying the title or question to display.
+         * - 'default': The default value to return if no input is provided.
+         * - 'cache_var': The name of the cache variable to fetch or store input.
+         * - 'type': The type of input expected (e.g., 'password').
+         * - 'allowed_values': An array of acceptable input values for validation.
+         * @return string|null The user's input, the default value if specified, or null if no input is provided.
+         * @deprecated
          */
         function promptVar($options) {
 
@@ -9262,10 +9221,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
-         * Add an error in the script. This method exist to be compatible with RESTFull class
-         * @param $code
-         * @param $msg
-         * @return false to facilitate the return of other functions
+         * Sets an error using a code and message sourced from a codelib and logs it.
+         *
+         * @param string|int $code The error code to identify the nature of the error.
+         * @param string $msg The error message providing details about the error.
+         * @return false Always returns false to signify error status.
          */
         function setErrorFromCodelib($code,$msg) {
             $this->sendTerminal('ERROR: '.$code);
@@ -9334,12 +9294,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Return the ERP for the user using a Google Access token for specific namespace
-         * @param string $namespace
-         * @param string $user
-         * @return mixed|void
+         * Retrieves a platform-specific token using a Google access token.
+         *
+         * @param string $namespace The unique namespace identifier for the platform.
+         * If not provided, it will attempt to retrieve it from the configuration variable `core.erp.platform_id`.
+         * @param string $user The user email associated with the Google account.
+         * If not provided, it will attempt to retrieve it from the cache or fetch it using the getGoogleEmailAccount method.
+         * @return string|false The platform-specific token if retrieval is successful, or false if there are errors during the process.
          */
-        function getERPTokenWithGoogleAccessToken($namespace='',$user='') {
+        function getPlatformTokenWithGoogleAccessToken($namespace='',$user='') {
 
             //region VERIFY $namespace
             if(!$namespace && !( $namespace = $this->core->config->get('core.erp.platform_id')))
@@ -9392,6 +9355,28 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
+        function readCache() {
+            // Read cache into $this->cache_data if not cache default value [];
+            $this->cache_data = ($this->cache->get('Core7_CoreScript_cache',-1,'',$this->cache_secret_key,$this->cache_secret_iv))?:[];
+        }
+
+        function cleanCache() {
+            // Read cache into $this->cache_data if not cache default value [];
+            $this->cache_data = [];
+            $this->cache->set('Core7_CoreScript_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
+        }
+
+        function getCacheVar($var) {
+            if($this->cache_data === null) $this->readCache();
+            return((isset($this->cache_data[$var]))?$this->cache_data[$var]:null);
+        }
+
+        function setCacheVar($var,$value) {
+            if($this->cache_data === null) $this->readCache();
+            $this->cache_data[$var] = $value;
+            $this->cache->set('Core7_CoreScript_cache',$this->cache_data,'',$this->cache_secret_key,$this->cache_secret_iv);
+        }
+
 
         /**
          * Add an error in the class
@@ -9405,5 +9390,120 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->errorMsg[] = $value;
             return false;
         }
+    }
+
+    /**
+     * Handles user prompts through CLI with additional configurations like
+     * default values, mandatory input, allowed values, and caching functionalities.
+     */
+    Class CoreScriptPrompt {
+
+        /** @var CoreScripts $parent pointer to the Core class. `$this->core->...` */
+        protected CoreScripts $parent;
+        protected string $type='text';
+        protected string $title='';
+        protected string $cache_var='';
+        protected string $default_value='';
+        protected bool $mandatory=false;
+        protected array $allowed_values=[];
+
+        /**
+         * Scripts constructor.
+         * @param Core7 $core
+         * @param null $argv
+         */
+        function __construct(CoreScripts &$parent)
+        {
+            $this->parent = $parent;
+        }
+
+        public function init(string $secret_key='',string $secret_iv=''): static
+        {
+            $this->title = '';
+            $this->cache_var = '';
+            $this->type = 'text';
+            $this->default_value = '';
+            $this->allowed_values = [];
+            $this->mandatory = false;
+            return $this;
+        }
+
+        function query() {
+
+            $title = $this->title;
+            $default = $this->default_value;
+            if($this->cache_var && ($cache_content = $this->parent->getCacheVar($this->cache_var))) $default = $cache_content;
+
+            // Check default value
+            if($this->allowed_values) $title.= ' ['.implode(', ',$this->allowed_values).']';
+            if($default) {
+                if($this->type=='password') $title.=" (*******) :";
+                else $title.=" ({$default}) :";
+            } else {
+                $title.=' :';
+            }
+            do {
+                if($this->type=='password') {
+                    system('stty -echo');
+                    echo $title;
+                    $ret = trim(fgets(STDIN));
+                    echo "\n";
+                    system('stty echo');
+                    if(!$ret) $ret=$default;
+                } else {
+                    $ret = readline($title);
+                    if(!$ret) $ret=$default;
+                }
+
+                $error = false;
+                if($this->mandatory && !$default) $error = true;
+                elseif($this->allowed_values && !in_array($ret,$this->allowed_values)) $error = true;
+
+            } while($error);
+
+
+            // Set Cache var
+            if($this->cache_var) $this->parent->setCacheVar($this->cache_var,$ret);
+
+            return $ret;
+        }
+
+        public function title($title): static
+        {
+            $this->title = $title;
+            return $this;
+        }
+
+        public function defaultValue(string $value): static
+        {
+            $this->default_value = $value;
+            return $this;
+        }
+
+        public function cacheVar(string $variable): static
+        {
+            $this->cache_var = $variable;
+            return $this;
+        }
+
+        public function allowedValues(array $values): static
+        {
+            $this->allowed_values = $values;
+            return $this;
+        }
+
+        public function isPassword(bool $option=true): static
+        {
+            $this->type = $option?'password':'text';
+            return $this;
+        }
+
+        public function mandatory(bool $option=true): static
+        {
+            $this->mandatory = $option;
+            return $this;
+        }
+
+
     }
 }
