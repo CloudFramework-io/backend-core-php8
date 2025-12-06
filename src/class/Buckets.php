@@ -489,7 +489,7 @@ if (!defined ("_Buckets_CLASS_") ) {
                 try {
                     $this->gs_bucket = $this->core->gc_datastorage_client->bucket($bucket_root);
                     if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
-                    $this->gs_bucket_url = 'https://console.cloud.google.com/storage/browser/'.$this->bucket;
+                    $this->gs_bucket_url = 'https://console.cloud.google.com/storage/browser/'.$bucket_root;
                     $this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
                 } catch (Exception $e) {
                     $this->addError($e->getMessage(),'bucket-can-not-be-assigned');
