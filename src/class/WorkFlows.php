@@ -312,19 +312,54 @@ class WorkFlows
     }
 
     /**
-     * Retrieve an email template from the ERP
+     * Deprecated: use getPlatformEmailMessage(..) to retrieve an email message from CLOUD Platform
+     * @param string $slug
+     * @param string $type
+     * @deprecated
+     */
+    public function getERPEmailMessage(string $id,string $type='Mandrill',$update_processing=null) {
+        return $this->getPlatformEmailMessage($id,$type,$update_processing);
+    }
+
+    /**
+     * Retrieves the email platform message mapping for the provided ID and type.
+     *
+     * @param string $id The unique identifier of the message mapping.
+     * @param string $type The platform type (default is 'Mandrill').
+     * @return array|null The mapping data as an associative array if found, or null if not found.
+     */
+    public function getPlatformEmailMessageMapping(string $emailing_id, string $engine_type='Mandrill')
+    {
+        // mapping always is stored in cloudframework namespace
+        $this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->namespace='cloudframework';
+
+        // read record mapping
+        $mapping = $this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->fetchOne('*',['EmailingId'=>$emailing_id,'EngineType'=>$engine_type])[0]??null;
+        if($this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->error)
+            $this->core->logs->add($this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->errorMsg,'datastore.CloudFrameWorkEmailsPlatformMapping');
+
+        // return mapping
+        return $mapping;
+    }
+
+    /**
+     * Retrieve an email message from CLOUD Platform
      * @param string $slug
      * @param string $type
      */
-    public function getERPEmailMessage(string $id,string $type='Mandrill',$update_processing=null)
+    public function getPlatformEmailMessage(string $id,string $type='Mandrill',$update_processing=null)
     {
-        if(!$this->mandrill->getApiKey()) return $this->addError('getERPEmailMessage(...) has been call without calling previously setMandrillApiKey(...)');
+        //verify is used the secret of the cfo
+        $this->cfos->useCFOSecret();
+        //verify mandrill keys is set
+        if(!$this->mandrill->getApiKey()) return $this->addError('getPlatformEmailMessage(...) has been call without calling previously setMandrillApiKey(...)');
         $dsEmeail = $this->cfos->ds('CloudFrameWorkEmails')->fetchOne('*',['EngineId'=>$id])[0]??null;
         if($this->cfos->ds('CloudFrameWorkEmails')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmails')->errorMsg);
+
         if($type=='Mandrill' && is_object($this->mandrill)) {
             if(!$dsEmeail) {
-                if (!$email_info = $this->getMandrillMessageInfo($id)) return;
-                if (!$email = $this->getMandrillMessageContent($id)) return;
+                if (!$email_info = $this->getMandrillMessageInfo($id)) return false;
+                if (!$email = $this->getMandrillMessageContent($id)) return false;
                 $entity = $this->getEntityFromMandrillMessage([], $email,$email_info,$update_processing);
                 $dsEmeail = $this->cfos->ds('CloudFrameWorkEmails')->createEntities($entity)[0]??null;
                 if($this->cfos->ds('CloudFrameWorkEmails')->error) return $this->addError($this->cfos->ds('CloudFrameWorkEmails')->errorMsg);
@@ -379,7 +414,7 @@ class WorkFlows
      */
     public function sendPlatformEmail(array &$params,string $type='Mandrill',string $linked_object='',string $linked_id='')
     {
-        if($type!='Mandrill') return $this->addError('sendPlatformEmail(...) has received a worng $type. [Mandrill] is the valid value');
+        if($type!='Mandrill') return $this->addError('sendPlatformEmail(...) has received a wrong $type. [Mandrill] is the valid value');
         if(!$this->mandrill->getApiKey()) return $this->addError('sendPlatformEmail(...) has been call without calling previously setMandrillApiKey(...)');
 
         switch ($type) {
@@ -424,6 +459,7 @@ class WorkFlows
                     $html = $this->core->replaceCloudFrameworkTagsAndVariables($html,$data);
                 }
                 //endregion
+
                 //region INIT $submission[] with previous INITIATED variables
                 $submission = [
                     "Cat"=>$cat,
@@ -516,6 +552,24 @@ class WorkFlows
                         } else {
                             $result['result'][$i]['CloudFrameWorkEmails'] = strval($dsEmail['KeyId']);
                         }
+                    }
+                }
+                //endregion
+
+                //region EVALUATE to insert ds:CloudFrameWorkEmailsPlatformMapping for emails outside of cloudframework
+                if($dsEmail && ($this->cfos->ds('CloudFrameWorkEmails')->namespace!='cloudframework' || $this->cfos->ds('CloudFrameWorkEmails')->project_id!='cloudframework-io')) {
+                    $this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->namespace='cloudframework';
+                    $mapping = [
+                        'DateInsertion'=>'now',
+                        'ProjectId'=>$this->cfos->ds('CloudFrameWorkEmails')->project_id,
+                        'Namespace'=>$this->cfos->ds('CloudFrameWorkEmails')->namespace,
+                        'Category'=>$dsSubmission['Cat']??null,
+                        'EngineType'=>'Mandrill',
+                        'EmailingId'=>$item['_id'],
+                    ];
+                    $this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->createEntities($mapping);
+                    if($this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->error) {
+                        $this->core->logs->add($this->cfos->ds('CloudFrameWorkEmailsPlatformMapping')->errorMsg,'datastore.CloudFrameWorkEmailsPlatformMapping');
                     }
                 }
                 //endregion
