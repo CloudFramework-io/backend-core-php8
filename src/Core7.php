@@ -5980,6 +5980,45 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Load platform user data using Google access token, authenticate the user,
+         * and fetch ERP token from the platform API. Processes and updates user data on success.
+         *
+         * @param string $user The user's identifier (usually an email or unique username).
+         * @param string $token The Google access token associated with the user's account.
+         * @param string $platform_id Optional. Platform identifier; if not provided, a default configuration value will be used.
+         * @return mixed Returns the result of the processPlatformUserData method or null on error.
+         */
+        function loadPlatformUserWithGoogleAccessToken(string $user, string $access_token, string $platform_id='')
+        {
+            //region VERIFY $namespace
+            if(!$platform_id && !( $platform_id = $this->core->config->get('core.erp.platform_id')))
+                return($this->addError('configuration-error','Missing $platform_id var or core.erp.platform_id config var'));
+            //endregion
+
+            //region SET $payload and POST: https://api.cloudframework.io/core/signin/cloudframework/in
+            $payload = [
+                'user'=>$user,
+                'token'=> $access_token,
+                'type'=>'google-token'
+            ];
+            //endregion
+
+            //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
+            $url = 'https://api.cloudframework.io/core/signin/'.$platform_id.'/in';
+            $userLoginData = $this->core->request->post_json_decode($url,$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
+            if($this->core->request->error) {
+                $this->core->request->reset();
+                return($this->addError(($userLoginData['code']??$this->core->request->getLastResponseCode()),$userLoginData['message']??$this->core->request->errorMsg));
+            }
+            //endregion
+
+            //region CALL processPlatformUserData to process userdata and update user variables
+            return $this->processPlatformUserData($userLoginData);
+            //endregion
+
+        }
+
+        /**
          * Execute a sign-in over the CLOUD-PLATFORM using $user/$password in $platform_id
          * and store the token and user info in $this->token, $this->data
          * @param string $user
@@ -6002,15 +6041,29 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'X-EXTRA-INFO' => $integration_key
             ];
 
-            $cfUserInfo = $this->core->request->post_json_decode($this::APIServices . '/' . $platform_id . '/in?_refresh_integration_keys&from_loadPlatformUserWithUserPassword', $payload, $header);
+            $userLoginData = $this->core->request->post_json_decode($this::APIServices . '/' . $platform_id . '/in?_refresh_integration_keys&from_loadPlatformUserWithUserPassword', $payload, $header);
             if ($this->core->request->error) {
-                $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
+                $this->addError($userLoginData['code']??$this->core->request->getLastResponseCode(), $userLoginData['message']??$this->core->request->errorMsg);
                 $this->core->request->reset();
                 return;
             }
+            //region CALL processPlatformUserData to process userdata and update user variables
+            return $this->processPlatformUserData($userLoginData);
+            //endregion
+
+        }
+
+        /**
+         * Processes platform user data by validating and updating the user's token information within the cache.
+         *
+         * @param array $userLoginData Reference to an array containing the user login data, including the `dstoken` and user details.
+         * @return bool Returns true if the user data is successfully processed and cached; false if the token structure is invalid.
+         */
+        private function processPlatformUserData(array &$userLoginData): bool
+        {
 
             //region SET $user_token,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
-            $tokenParts = explode('__', $cfUserInfo['data']['dstoken']);
+            $tokenParts = explode('__', $userLoginData['data']['dstoken']);
             if (count($tokenParts) != 3
                 || !($namespace = $tokenParts[0])
                 || !($user_token = $tokenParts[1])
@@ -6031,12 +6084,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 array_shift($userData['tokens']);
             } while (count($userData['tokens']) >= $this->maxTokens);
 
-            $token = $cfUserInfo['data']['dstoken'];
+            $token = $userLoginData['data']['dstoken'];
             $userData['tokens'][$token] = ['error' => null, 'time' => $now];
-            if($cfUserInfo['data']['User']['Expires']??null)
-                $this->tokenExpiresIn = $cfUserInfo['data']['User']['Expires']-time();
-            $userData['data'] = $cfUserInfo['data'];
-            $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
+            if($userLoginData['data']['User']['Expires']??null)
+                $this->tokenExpiresIn = $userLoginData['data']['User']['Expires']-time();
+            $userData['data'] = $userLoginData['data'];
+            $userData['id'] = $userLoginData['data']['User']['KeyName'];
 
             $this->core->cache->set($namespace . '_' . $user_token, $userData);
 
@@ -6939,12 +6992,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Add an error Message
          * @param $code
          * @param null $message
+         * @return false to facilitate caller return
          */
         function addError($code,$message)
         {
             $this->error = true;
             $this->errorCode = $code;
             $this->errorMsg[] = $message;
+            return false;
         }
 
 
@@ -9260,7 +9315,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!$user) {
                 $user = $this->getCacheVar('user_readUserGoogleCredentials');
                 do {
-                    $user_new = $this->prompt('Give me your Google User Email: ', $user);
+                    $user_new = $this->prompt->title('Give me your Google User Email')->mandatory()->query();
                 } while (!$this->core->is->validEmail($user_new));
                 $this->setCacheVar('user_readUserGoogleCredentials',$user_new);
                 $user = $user_new;
@@ -9294,7 +9349,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Retrieves a platform-specific token using a Google access token.
+         * Try to authenticate $this->core->user using access token generated with local user configuration
          *
          * @param string $namespace The unique namespace identifier for the platform.
          * If not provided, it will attempt to retrieve it from the configuration variable `core.erp.platform_id`.
@@ -9302,56 +9357,85 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * If not provided, it will attempt to retrieve it from the cache or fetch it using the getGoogleEmailAccount method.
          * @return string|false The platform-specific token if retrieval is successful, or false if there are errors during the process.
          */
-        function getPlatformTokenWithGoogleAccessToken($namespace='',$user='') {
+        function authPlatformUserWithLocalAccessToken($namespace='',$user='',$integration_key='') {
 
-            //region VERIFY $namespace
-            if(!$namespace && !( $namespace = $this->core->config->get('core.erp.platform_id')))
-                return($this->addError('Missing $namespace var or core.erp.platform_id config var'));
-            //endregion
-
-            //region VERIFY $user or GET it from CACHE or GET it from getGoogleEmailAccount()
-            if(!$user && !($user = $this->getCacheVar($namespace.'_erp_user'))) {
-                $user = $this->core->security->getGoogleEmailAccount();
-                if($this->core->security->error) return($this->addError($this->core->security->errorMsg));
-                $this->setCacheVar($namespace.'_erp_user',$user);
+            $hash = md5($namespace.$user);
+            $token = $this->cache->get('user-token-'.$hash);
+            $integration_key = $this->cache->get('integration-key-'.$hash);
+            if(!$integration_key) {
+                $integration_key = $this->prompt->mandatory()->title("Integration Key for platform [{$namespace}]")->query();
+                $this->cache->set('integration-key-'.$hash,$integration_key);
             }
-            //endregion
 
-            //region SET $user_erp_token from cache expiring in 23h or get it from https://api.cloudframework.io/core/signin
-            $user_erp_token = $this->getCacheVar($user.'_'.$namespace.'_erp_token');
-            if(!$user_erp_token || (microtime(true)-$user_erp_token['time']> 60*60*23)) {
-
-                //region GET $access_token from Google
-                // https://app.cloudframework.app/app.html#https://core20.web.app/ajax/ecm.html?page=/scripts/auth/erp-login-with-google-credentials
-                if(!($access_token = $this->getUserGoogleAccessToken($user))) return;
-                $token = $access_token['token'];
-                //endregion
-
-                //region SET $payload and POST: https://api.cloudframework.io/core/signin/cloudframework/in
-                $payload = [
-                    'user'=>$user,
-                    'token'=> $token,
-                    'type'=>'google_token'
-                ];
-                //endregion
-
-
-                $this->sendTerminal('Calling [https://api.cloudframework.io/core/signin/'.$namespace.'/in] with Google access token');
-                //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
-                $ret = $this->core->request->post_json_decode('https://api7.cloudframework.io/core/signin/'.$namespace.'/in',$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
-                if($this->core->request->error) return($this->addError($this->core->request->errorMsg));
-                $user_erp_token = [
-                    'time'=>microtime(true),
-                    'token'=>$ret['data']['dstoken']];
-                $this->setCacheVar($user.'_'.$namespace.'_erp_token',$user_erp_token);
-                $this->core->namespace = $namespace;
-                //endregion
+            if(!$user) {
+                if(!$user = $this->cache->get('user-email-'.$hash)) {
+                    if($user = $this->core->security->getGoogleEmailAccount()) {
+                        $this->cache->set('user-email-'.$hash,$user);
+                    } else {
+                        return $this->addError('Missing $user');
+                    }
+                }
             }
-            //endregion
 
-            //region RETURN $user_erp_token['token']
-            return $user_erp_token['token'];
-            //endregion
+            if(!$token || !$this->core->user->loadPlatformUserWithToken($token,$integration_key)) {
+                if(!$access_token = $this->getUserGoogleAccessToken($user??'')) return false;
+                $this->cache->set('user-email-'.$hash,$access_token['email']);
+                if(!$this->core->user->loadPlatformUserWithGoogleAccessToken($access_token['email'],$access_token['token']))
+                    return $this->addError(($this->core->user->errorMsg??'Unknown error'));
+                $this->cache->set('user-token-'.$hash,$this->core->user->token,3600*24);
+            }
+
+            return true;
+
+
+            //            //region VERIFY $namespace
+            //            if(!$namespace && !( $namespace = $this->core->config->get('core.erp.platform_id')))
+            //                return($this->addError('Missing $namespace var or core.erp.platform_id config var'));
+            //            //endregion
+            //
+            //            //region VERIFY $user or GET it from CACHE or GET it from getGoogleEmailAccount()
+            //            if(!$user && !($user = $this->getCacheVar($namespace.'_erp_user'))) {
+            //                $user = $this->core->security->getGoogleEmailAccount();
+            //                if($this->core->security->error) return($this->addError($this->core->security->errorMsg));
+            //                $this->setCacheVar($namespace.'_erp_user',$user);
+            //            }
+            //            //endregion
+            //
+            //            //region SET $user_erp_token from cache expiring in 23h or get it from https://api.cloudframework.io/core/signin
+            //            $user_erp_token = $this->getCacheVar($user.'_'.$namespace.'_erp_token');
+            //            if(!$user_erp_token || (microtime(true)-$user_erp_token['time']> 60*60*23)) {
+            //
+            //                //region GET $access_token from Google
+            //                // https://app.cloudframework.app/app.html#https://core20.web.app/ajax/ecm.html?page=/scripts/auth/erp-login-with-google-credentials
+            //                if(!($access_token = $this->getUserGoogleAccessToken($user))) return;
+            //                $token = $access_token['token'];
+            //                //endregion
+            //
+            //                //region SET $payload and POST: https://api.cloudframework.io/core/signin/cloudframework/in
+            //                $payload = [
+            //                    'user'=>$user,
+            //                    'token'=> $token,
+            //                    'type'=>'google_token'
+            //                ];
+            //                //endregion
+            //
+            //
+            //                $this->sendTerminal('Calling [https://api.cloudframework.io/core/signin/'.$namespace.'/in] with Google access token');
+            //                //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
+            //                $ret = $this->core->request->post_json_decode('https://api7.cloudframework.io/core/signin/'.$namespace.'/in',$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
+            //                if($this->core->request->error) return($this->addError($this->core->request->errorMsg));
+            //                $user_erp_token = [
+            //                    'time'=>microtime(true),
+            //                    'token'=>$ret['data']['dstoken']];
+            //                $this->setCacheVar($user.'_'.$namespace.'_erp_token',$user_erp_token);
+            //                $this->core->namespace = $namespace;
+            //                //endregion
+            //            }
+            //            //endregion
+            //
+            //            //region RETURN $user_erp_token['token']
+            //            return $user_erp_token['token'];
+            //            //endregion
 
         }
 
@@ -9428,6 +9512,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return $this;
         }
 
+        /**
+         * Prompts the user for input, validates it based on defined constraints,
+         * and optionally returns a cached value if available.
+         *
+         * The method constructs a title using the `title` property and provides
+         * a default value if available or retrieved from a cache. It supports
+         * validation against allowed values and handles mandatory fields. Input
+         * for password fields is masked for security. In case of invalid input,
+         * the user is prompted again until valid input is provided.
+         *
+         * @return string Returns the user-provided or default value after validation.
+         */
         function query() {
 
             $title = $this->title;
@@ -9456,7 +9552,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 }
 
                 $error = false;
-                if($this->mandatory && !$default) $error = true;
+                if($this->mandatory && !$ret) $error = true;
                 elseif($this->allowed_values && !in_array($ret,$this->allowed_values)) $error = true;
 
             } while($error);
