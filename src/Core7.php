@@ -9463,11 +9463,24 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
+         * Reset errors and messages
+         * @return true to facilitate the return of other functions.
+         */
+        function reset(): true
+        {
+            $this->error = false;
+            $this->core->errors->reset();
+            $this->errorMsg = [];
+            return true;
+        }
+
+
+        /**
          * Add an error in the class
          * @param $value
          * @return false to facilitate the return of other functions.
          */
-        function addError($value)
+        function addError($value): false
         {
             $this->error = true;
             $this->core->errors->add($value);
