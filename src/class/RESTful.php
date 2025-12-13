@@ -147,7 +147,9 @@ if (!defined("_RESTfull_CLASS_")) {
             $this->addCodeLib('conflict','There are conflicts.',409);
             $this->addCodeLib('gone','The resource is not longer available.',410);
             $this->addCodeLib('unsupported-media','Unsupported Media Type.',415);
-            $this->addCodeLib('server-error', 'Generic server error',500);
+            $this->addCodeLib('server-error', 'Internal server error',500);
+            $this->addCodeLib('configuration-error', 'There is an error in server configuration',500);
+            $this->addCodeLib('programming-error', 'There an error in the server programming',500);
             $this->addCodeLib('not-implemented', 'There is something in the server not implemented yet',501);
             $this->addCodeLib('service-unavailable','The service is unavailable.',503);
             $this->addCodeLib('system-error','There is a problem in the platform.',503);
