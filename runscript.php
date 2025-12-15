@@ -103,17 +103,18 @@ $options = ['performance'=>in_array('--p',$argv)];
 //region VERIFY if the script exist
 if(!is_file($path.'/'.$script_name.'.php')) die(" - !!!Script not found. Create it with: composer script _create/<your-script-name>\n");
 include_once $path.'/'.$script_name.'.php';
-if(!class_exists('Script')) die(' - !!!The script does not include a "Class Script'."\nUse:\n-------\n<?php\nclass Script extends Scripts2020 {\n\tfunction main() { }\n}\n-------\n\n");
-/** @var Script $script */
+
+if(!isset($script_class)) $script_class='Script';
+if(!class_exists($script_class)) die(" - !!!The script does not include the Class [{$script_class} \nUse:\n-------\n<?php\n\$script_class='';\nclass {$script_class} extends CoreScripts {\n\tfunction main() { }\n}\n-------\n\n");
 //endregion
 
 //region SET $run = new Script($core,$argv); and verify if the method main exist
-$run = new Script($core,$argv);
+$run = new $script_class($core,$argv);
 $run->params = $script;
 if(strlen($formParams))
     parse_str($formParams,$run->formParams);
 
-if(!method_exists($run,'main')) die(' - !!!The class Script does not include the method "main()'."\n\n");
+if(!method_exists($run,'main')) die(' - !!!The class '.$script_class.' does not include the method "main()'."\n\n");
 //endregion
 
 //region TRY $run->main();
