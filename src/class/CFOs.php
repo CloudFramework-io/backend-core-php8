@@ -2,12 +2,12 @@
 /**
  * [$cfos = $this->core->loadClass('CFOs',$integrationKey);] Class CFOs to handle CFO app for CloudFrameworkInterface
  * https://cloudframework.io/documentation/frameworks/backend-core-php8/classes/CFOs.html
- * last_update: 20251027
+ * last_update: 20251217
  * @package CoreClasses
  */
 class CFOs {
 
-    var $version = '20251027_1';
+    var $version = '20251217_1';
     /** @var Core7  */
     var $core;
     /** @var string $integrationKey To connect with the ERP */
@@ -36,6 +36,9 @@ class CFOs {
     var $secrets = [];
     var $avoid_secrets = true;   // SET
 
+    /** @var bool $isDev says if we are going to work with Dev Data */
+    var $isDev=false;
+
     /** @var CFOWorkFlows $workFlows */
     var $workFlows = null;
     /** @var CFOApi $api */
@@ -56,6 +59,24 @@ class CFOs {
         $this->api = new CFOApi($core);
         $this->globalCache = new CoreCache($core,'global_cache');
         //region Create a
+    }
+
+    /**
+     * Sets the development environment status and adjusts the namespace accordingly.
+     * If activated, appends '_dev' to the namespace if not already present.
+     * If deactivated, removes '_dev' from the namespace if it exists.
+     *
+     * @param bool $activate Determines whether to activate or deactivate the development environment. Defaults to true.
+     * @return void
+     */
+    public function setDevEnvironment($activate=true) {
+        if($this->isDev = $activate) {
+            if(!preg_match('/_dev$/',$this->namespace))
+                $this->setNamespace($this->namespace.'_dev');
+        } else {
+            if(preg_match('/_dev$/',$this->namespace))
+                $this->setNamespace(preg_replace('/_dev$/','',$this->namespace));
+        }
     }
 
     /**
@@ -328,7 +349,8 @@ class CFOs {
             //endregion
 
             //region EVALUATE IF $model['data']['secret'] exist to update $db_connection
-            if (!$db_credentials && ($service_account_secret = ($model['data']['secret'] ?? null)) && !$this->avoid_secrets) {
+            $secret_label = $this->isDev?'secret_dev':'secret';
+            if (!$db_credentials && ($service_account_secret = ($model['data'][$secret_label] ?? null)) && !$this->avoid_secrets) {
                 if (is_string($service_account_secret)) {
                     if(!$db_credentials = $this->getCFOSecret($service_account_secret)) {
                         $this->core->logs->add("CFO {$cfoId} has a secret and it does not exist in CFOs->secrets[]. Use the CFOs->setSecret()  or set CFOs->useCFOSecret(true).", 'CFOs_warning');
