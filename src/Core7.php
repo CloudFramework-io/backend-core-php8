@@ -956,12 +956,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Reorganizes an array to be indexed by a specific column value from each item in the array.
          * If a duplicate index is encountered, a unique suffix is appended to ensure key uniqueness.
+         * If $addAsArray is true the array elements are aggregated in each index in an array
          *
          * @param array $array The input array to be reorganized, passed by reference.
          * @param string $column The column name used as the index key for the resulting array.
+         * @param bool $addAsArray adds the elements as an array of elements
          * @return array The resulting array indexed by the specified column values.
          */
-        public function convertArrayIndexedByColumn(&$array, string $column) {
+        public function convertArrayIndexedByColumn(&$array, string $column, bool $addAsArray=false): array
+        {
             $result = [];
             $keyCounters = []; // specific tracker for collisions
 
@@ -991,7 +994,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                 // 4. Assign by Reference
                 // We assign the reference to prevent memory duplication of the item data.
-                $result[$index] = &$item;
+                if($addAsArray) {
+                    if(!isset($result[$index])) $result[$index] = [];
+                    $result[$index][] = &$item;
+                } else {
+                    $result[$index] = &$item;
+                }
             }
 
             // Break the reference to the last element to prevent future accidental modification
