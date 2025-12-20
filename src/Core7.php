@@ -979,25 +979,26 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     ? (string)$rawValue
                     : 'invalid_type';
 
-                // 3. Collision Handling
-                // Instead of expensive uniqid(), we check if the key exists
-                // and use a deterministic counter.
-                if (array_key_exists($index, $result)) {
-                    // Initialize counter for this specific key if not present
-                    if (!isset($keyCounters[$index])) {
-                        $keyCounters[$index] = 0;
-                    }
-
-                    $keyCounters[$index]++;
-                    $index = sprintf('%s_%d', $index, $keyCounters[$index]);
-                }
-
-                // 4. Assign by Reference
+                // 3. Assign by Reference
                 // We assign the reference to prevent memory duplication of the item data.
                 if($addAsArray) {
                     if(!isset($result[$index])) $result[$index] = [];
                     $result[$index][] = &$item;
                 } else {
+
+                    // 3.1. Collision Handling
+                    // Instead of expensive uniqid(), we check if the key exists
+                    // and use a deterministic counter.
+                    if (array_key_exists($index, $result)) {
+                        // Initialize counter for this specific key if not present
+                        if (!isset($keyCounters[$index])) {
+                            $keyCounters[$index] = 0;
+                        }
+
+                        $keyCounters[$index]++;
+                        $index = sprintf('%s_%d', $index, $keyCounters[$index]);
+                    }
+
                     $result[$index] = &$item;
                 }
             }
