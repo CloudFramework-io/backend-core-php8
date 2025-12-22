@@ -56,6 +56,9 @@ class Script extends CoreScripts
         if (!$this->useFunction('METHOD_' . str_replace('-', '_', $method))) {
             return $this->addError("   #/{$method} is not implemented");
         }
+        if(!$this->error) {
+            $this->core->logs->reset();
+        }
         //endregion
 
     }
@@ -162,7 +165,7 @@ class Script extends CoreScripts
 
             //region SAVE $cfo to individual JSON file
             $filename = "{$backup_dir}/{$key_name}.json";
-            $json_content = $this->core->jsonEncode($cfo, JSON_PRETTY_PRINT);
+            $json_content = $this->core->jsonEncode($cfo, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
             if(file_put_contents($filename, $json_content) === false) {
                 return $this->addError("Failed to write CFO [{$key_name}] to file");
             }
