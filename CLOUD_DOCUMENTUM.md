@@ -262,17 +262,17 @@ buckets/backups/APIs/
 
 ```bash
 # Backup all APIs from all platforms
-composer run-script script backup_platforms_apis
+composer run-script script _backup/apis/backup-from-remote
 
 # CRUD operations for individual APIs
-composer run-script script "apis/crud/:platform/backup-from-remote?id=/erp/projects"
-composer run-script script "apis/crud/:platform/insert-from-backup?id=/core/alerts"
-composer run-script script "apis/crud/:platform/update-from-backup?id=/erp/projects"
-composer run-script script apis/crud/:platform/list-remote
-composer run-script script apis/crud/:platform/list-local
+composer run-script script "_backup/apis/backup-from-remote\?id=:KeyName"
+composer run-script script "_backup/apis/insert-from-backup?id=:KeyName"
+composer run-script script "_backup/apis/update-from-backup?id=:KeyName"
+composer run-script script _backup/apis/list-remote
+composer run-script script _backup/apis/list-local
 ```
 
-**Script location**: `buckets/scripts/apis/crud.php`
+**Script location**: `scripts/_backup/api.php`
 
 ### API Web Interface
 
@@ -419,22 +419,38 @@ Represents the description of a complete Process.
 
 **Key fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `KeyName` | string | Process identifier (e.g., `PROC-001`, `onboarding-employee`) |
-| `DocumentationId` | string | Parent documentation group |
-| `Cat` | string | Category |
-| `Subcat` | string | Subcategory |
-| `Type` | string | Process type |
-| `Status` | enum | Lifecycle status |
-| `Title` | string | Descriptive title |
-| `Owner` | string | Process owner |
-| `AssignedTo` | list | Assigned users |
-| `Introduction` | html | Brief introduction |
-| `Description` | html | Detailed description |
-| `Tags` | list | Search tags |
-| `JSON` | json | Structured data with route references to Checks |
-| `DateUpdated` | datetime | Last update timestamp |
+| Field | Type | Mandatory | Description |
+|-------|------|-----------|-------------|
+| `KeyName` | string | **Yes** | Process identifier (e.g., `PROC-001`, `onboarding-employee`). Min 4 chars. |
+| `Title` | string | **Yes** | Descriptive title |
+| `Cat` | string | **Yes** | Category |
+| `Subcat` | string | **Yes** | Subcategory |
+| `Type` | string | **Yes** | Process type |
+| `Owner` | string | **Yes** | Process owner (email) |
+| `CloudFrameworkUser` | string | **Yes** | User who created/modified (auto-set) |
+| `DocumentationId` | string | No | Parent documentation group |
+| `Status` | enum | No | Lifecycle status (defaults to empty) |
+| `AssignedTo` | list | No | Assigned users |
+| `Introduction` | html | No | Brief introduction |
+| `Description` | html | No | Detailed description |
+| `Tags` | list | No | Search tags |
+| `JSON` | json | No | Structured data with route references to Checks |
+| `DateUpdated` | datetime | Auto | Last update timestamp (auto-set to now) |
+| `DateInsertion` | datetime | Auto | Creation timestamp (auto-set to now) |
+
+**Mandatory fields for creating a Process:**
+
+```json
+{
+  "KeyName": "PROC-001",
+  "Title": "Process Title",
+  "Cat": "CATEGORY",
+  "Subcat": "SUBCATEGORY",
+  "Type": "TYPE",
+  "Owner": "owner@example.com",
+  "CloudFrameworkUser": "creator@example.com"
+}
+```
 
 #### JSON Structure (with Route References)
 
@@ -481,27 +497,44 @@ Represents individual SubProcesses within a Process.
 
 **Key fields:**
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `KeyId` | keyid | Auto-generated unique identifier |
-| `Process` | string | Parent Process KeyName |
-| `Folder` | string | Grouping folder |
-| `Cat` | string | Category |
-| `Status` | enum | Lifecycle status |
-| `EndPoint` | string | Related URL |
-| `Deadline` | date | Target completion date |
-| `TeamOwner` | string | SubProcess owner |
-| `TeamAsignation` | string | Assigned user |
-| `Title` | string | Descriptive title |
-| `Description` | html | Detailed description |
-| `Documents` | string | Associated documents (server_documents) |
-| `Tags` | list | Search tags |
-| `JSON` | json | Structured data with route references to Checks |
-| `WebApps` | list | Related WebApps |
-| `Libraries` | list | Related Libraries |
-| `APIs` | list | Related APIs |
-| `ENDPOINTs` | list | Related Endpoints |
-| `DateUpdated` | datetime | Last update timestamp |
+| Field | Type | Mandatory | Description |
+|-------|------|-----------|-------------|
+| `KeyId` | keyid | Auto | Auto-generated unique identifier (do not set manually) |
+| `Process` | string | **Yes** | Parent Process KeyName (FK to CloudFrameWorkDevDocumentationForProcesses) |
+| `Title` | string | **Yes** | Descriptive title |
+| `Folder` | string | **Yes** | Grouping folder |
+| `Status` | enum | **Yes** | Lifecycle status |
+| `TeamOwner` | string | **Yes** | SubProcess owner (email) |
+| `CloudFrameworkUser` | string | **Yes** | User who created/modified (auto-set) |
+| `Cat` | string | No | Category |
+| `EndPoint` | string | No | Related URL |
+| `Deadline` | date | No | Target completion date |
+| `TeamAsignation` | string | No | Assigned user |
+| `Description` | html | No | Detailed description |
+| `Documents` | string | No | Associated documents (server_documents) |
+| `Tags` | list | No | Search tags |
+| `JSON` | json | No | Structured data with route references to Checks |
+| `WebApps` | list | No | Related WebApps |
+| `Libraries` | list | No | Related Libraries |
+| `APIs` | list | No | Related APIs |
+| `ENDPOINTs` | list | No | Related Endpoints |
+| `DateUpdated` | datetime | Auto | Last update timestamp (auto-set to now) |
+| `DateInsertion` | datetime | Auto | Creation timestamp (auto-set to now) |
+
+**Mandatory fields for creating a SubProcess:**
+
+```json
+{
+  "Process": "PROC-001",
+  "Title": "SubProcess Title",
+  "Folder": "FOLDER_NAME",
+  "Status": "0.DEFINED",
+  "TeamOwner": "owner@example.com",
+  "CloudFrameworkUser": "creator@example.com"
+}
+```
+
+**Important:** Never include `KeyId` when creating a new SubProcess manually - the system will auto-generate it.
 
 #### JSON Structure (with Route References)
 
@@ -584,24 +617,25 @@ buckets/backups/Processes/
     ]
 }
 ```
+When a subprocess is created manually, never insert 'KeyId' because the system will generate the field automatically
+in the remote platform
 
 ### Process Management Scripts
 
 ```bash
 # Backup all Processes from all platforms
-composer run-script script backup_platforms_processes
+composer run-script script _backup/processes/backup-from-remote
 
 # CRUD operations for individual Processes
-composer run-script script "processes/crud/:platform/backup-from-remote?id=PROC-001"
-composer run-script script "processes/crud/:platform/insert-from-backup?id=PROC-001"
-composer run-script script "processes/crud/:platform/update-from-backup?id=PROC-001"
-composer run-script script processes/crud/:platform/list-remote
-composer run-script script processes/crud/:platform/list-local
+composer run-script script "_backup/processes/backup-from-remote?id=:KeyName"
+composer run-script script "_backup/processes/insert-from-backup?id=:KeyName"
+composer run-script script "_backup/processes/update-from-backup?id=:KeyName"
+composer run-script script _backup/processes/list-remote
+composer run-script script _backup/processes/list-local
 ```
 
 **Script locations**:
-- Backup: `buckets/scripts/backup_platforms_processes.php`
-- CRUD: `buckets/scripts/processes/crud.php`
+- Backup: `scripts/_backup/processes.php`
 
 ### Process Web Interface
 
@@ -768,14 +802,14 @@ buckets/backups/Checks/
 
 ```bash
 # Backup all Checks from all platforms
-composer run-script script backup_platforms_checks
+composer run-script script _backup/check/backup-from-remote
 
 # CRUD operations for individual Checks (grouped by CFOEntity and CFOId)
-composer run-script script "checks/crud/:platform/backup-from-remote?entity=CFOEntity&id=CFOId"
-composer run-script script "checks/crud/:platform/insert-from-backup?entity=CFOEntity&id=CFOId"
-composer run-script script "checks/crud/:platform/update-from-backup?entity=CFOEntity&id=CFOId"
-composer run-script script checks/crud/:platform/list-remote
-composer run-script script checks/crud/:platform/list-local
+composer run-script script "_backup/check/backup-from-remote?entity=CFOEntity&id=CFOId"
+composer run-script script "_backup/check/insert-from-backup?entity=CFOEntity&id=CFOId"
+composer run-script script "_backup/check/update-from-backup?entity=CFOEntity&id=CFOId"
+composer run-script script _backup/check/list-remote
+composer run-script script _backup/check/list-local
 ```
 
 **Examples:**
