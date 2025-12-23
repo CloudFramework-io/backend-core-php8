@@ -275,13 +275,12 @@ class Script extends CoreScripts
             //endregion
 
             //region FETCH subprocesses for this Process using KeyId
-            $process_key_id = $process['KeyId'] ?? null;
             $subprocesses = [];
 
-            if ($process_key_id) {
+            if ($key_name) {
                 $subprocesses_response = $this->core->request->get_json_decode(
                     "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
-                    ['filter_ProcessKeyId' => $process_key_id, '_limit' => 500, '_raw' => 1, '_timezone' => 'UTC'],
+                    ['filter_Process' => $key_name, '_limit' => 500, '_raw' => 1, '_timezone' => 'UTC'],
                     $this->headers
                 );
                 if (!$this->core->request->error && ($subprocesses_response['data'] ?? null)) {
@@ -403,13 +402,19 @@ class Script extends CoreScripts
             $this->sendTerminal(" - Updating {" . count($subprocesses) . "} subprocesses...");
             foreach ($subprocesses as $subprocess) {
                 $subprocess_key = $subprocess['KeyId'] ?? $subprocess['KeyName'] ?? null;
-                if (!$subprocess_key) continue;
-
-                $response = $this->core->request->put_json_decode(
-                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses/{$subprocess_key}?_raw&_timezone=UTC",
-                    $subprocess,
-                    $this->headers
-                );
+                if (!$subprocess_key)  {
+                    $response = $this->core->request->post_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
+                        $subprocess,
+                        $this->headers
+                    );
+                } else {
+                    $response = $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses/{$subprocess_key}?_raw&_timezone=UTC",
+                        $subprocess,
+                        $this->headers
+                    );
+                }
 
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $this->sendTerminal("   # Warning: Failed to update subprocess [{$subprocess_key}]");
@@ -506,8 +511,8 @@ class Script extends CoreScripts
         }
 
         // Get the new KeyId from the response for subprocess insertion
-        $new_key_id = $response['data']['KeyId'] ?? $process['KeyId'] ?? null;
-        $this->sendTerminal(" + Process record inserted (KeyId: {$new_key_id})");
+        $new_key_id = $response['data']['KeyName'] ?? $process['KeyName'] ?? null;
+        $this->sendTerminal(" + Process record inserted (KeyName: {$new_key_id})");
         //endregion
 
         //region INSERT subprocesses in remote platform
@@ -515,16 +520,20 @@ class Script extends CoreScripts
         if ($subprocesses) {
             $this->sendTerminal(" - Inserting {" . count($subprocesses) . "} subprocesses...");
             foreach ($subprocesses as $subprocess) {
-                // Update ProcessKeyId if we got a new one
-                if ($new_key_id) {
-                    $subprocess['ProcessKeyId'] = $new_key_id;
+                $subprocess_key = $subprocess['KeyId'] ?? $subprocess['KeyName'] ?? null;
+                if (!$subprocess_key)  {
+                    $response = $this->core->request->post_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
+                        $subprocess,
+                        $this->headers
+                    );
+                } else {
+                    $response = $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses/{$subprocess_key}?_raw&_timezone=UTC",
+                        $subprocess,
+                        $this->headers
+                    );
                 }
-
-                $response = $this->core->request->post_json_decode(
-                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
-                    $subprocess,
-                    $this->headers
-                );
 
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $subprocess_name = $subprocess['Title'] ?? $subprocess['KeyName'] ?? 'unknown';
