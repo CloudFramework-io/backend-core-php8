@@ -8,6 +8,7 @@ CLOUD Documentum consists of several documentation modules:
 
 | Module | Description | CFOs |
 |--------|-------------|------|
+| **Development Groups** | Organizational groups for documentation elements | `CloudFrameWorkDevDocumentation` |
 | **APIs** | REST API documentation with endpoints | `CloudFrameWorkDevDocumentationForAPIs`, `CloudFrameWorkDevDocumentationForAPIEndPoints` |
 | **Libraries** | Code libraries, classes, and functions documentation | `CloudFrameWorkDevDocumentationForLibraries`, `CloudFrameWorkDevDocumentationForLibrariesModules` |
 | **Processes** | Business and technical processes | `CloudFrameWorkDevDocumentationForProcesses`, `CloudFrameWorkDevDocumentationForSubProcesses` |
@@ -15,6 +16,124 @@ CLOUD Documentum consists of several documentation modules:
 | **WebPages** | Web content pages for internal or public publishing | `CloudFrameWorkECMPages` |
 
 All modules share a common lifecycle state system and backup infrastructure.
+
+---
+
+## Development Groups
+
+**Development Groups** are the organizational backbone of CLOUD Documentum. They allow grouping related documentation elements (APIs, Libraries, Processes, WebApps, Courses, AI components, etc.) under a common umbrella for better organization and navigation.
+
+### CloudFrameWorkDevDocumentation CFO
+
+The **CloudFrameWorkDevDocumentation** CFO stores Development Group records. Each record represents a logical grouping of documentation elements.
+
+**Key fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyName` | keyname | Unique identifier for the group (min 4 chars) |
+| `Title` | string | Display title of the development group |
+| `Cat` | string | Category for grouping (autoselect) |
+| `Status` | enum | Lifecycle status (0.DEFINED → 6.DEPRECATED) |
+| `Owner` | string | Group owner (FK to CloudFrameWorkUsers) |
+| `Introduction` | html | Brief HTML introduction |
+| `Description` | html | Detailed HTML description |
+| `Tags` | list | Search tags |
+| `CloudFrameworkUser` | string | User who last modified |
+| `DateUpdated` | datetime | Last update timestamp |
+| `DateInsertion` | datetime | Creation timestamp |
+
+### DocumentationId Relationship
+
+Other documentation CFOs reference Development Groups through the **DocumentationId** field. This creates a hierarchical organization:
+
+```
+CloudFrameWorkDevDocumentation (Development Group)
+       │
+       │ KeyName
+       │
+       ├──> CloudFrameWorkDevDocumentationForAPIs.DocumentationId
+       ├──> CloudFrameWorkDevDocumentationForLibraries.DocumentationId
+       ├──> CloudFrameWorkDevDocumentationForProcesses.DocumentationId
+       ├──> CloudFrameWorkDevDocumentationForWebApps.DocumentationId
+       ├──> CloudFrameWorkECMPages.DocumentationId
+       ├──> CloudFrameWorkAcademyCourses.DocumentationId
+       ├──> CloudFrameWorkAIChatBots.DocumentationId
+       ├──> CloudFrameWorkAIMCP.DocumentationId
+       ├──> CloudFrameWorkAIPrompts.DocumentationId
+       ├──> CloudFrameWorkAIRags.DocumentationId
+       └──> CloudFrameWorkProjectsEntries.DocumentationId
+```
+
+### CFOs with DocumentationId
+
+The following CFOs can be grouped under Development Groups:
+
+| CFO | Module | Description |
+|-----|--------|-------------|
+| `CloudFrameWorkDevDocumentationForAPIs` | APIs | REST API documentation |
+| `CloudFrameWorkDevDocumentationForLibraries` | Libraries | Code libraries and classes |
+| `CloudFrameWorkDevDocumentationForProcesses` | Processes | Business/technical processes |
+| `CloudFrameWorkDevDocumentationForWebApps` | WebApps | Web application documentation |
+| `CloudFrameWorkECMPages` | WebPages | ECM content pages |
+| `CloudFrameWorkAcademyCourses` | Academy | Training courses |
+| `CloudFrameWorkAIChatBots` | AI | AI chatbot configurations |
+| `CloudFrameWorkAIMCP` | AI | Model Context Protocol configs |
+| `CloudFrameWorkAIPrompts` | AI | AI prompt templates |
+| `CloudFrameWorkAIRags` | AI | RAG (Retrieval-Augmented Generation) configs |
+| `CloudFrameWorkProjectsEntries` | Projects | Project entries |
+
+### DocumentationId Field Configuration
+
+In CFOs that support Development Groups, the DocumentationId field is configured as:
+
+```json
+"DocumentationId": {
+    "name": "Development Group",
+    "type": "autocomplete",
+    "external_values": "datastore",
+    "entity": "CloudFrameWorkDevDocumentation",
+    "fields": "KeyName,Title",
+    "linked_field": "KeyName",
+    "allow_empty": true,
+    "display_cfo": true,
+    "cfo": "CloudFrameWorkDevDocumentation"
+}
+```
+
+### Using Development Groups in Code
+
+```php
+// Fetch all Development Groups
+$groups = $this->cfos->ds('CloudFrameWorkDevDocumentation')->fetchAll('*');
+
+// Fetch APIs belonging to a Development Group
+$apis = $this->cfos->ds('CloudFrameWorkDevDocumentationForAPIs')->fetch([
+    'DocumentationId' => 'my-dev-group'
+], '*');
+
+// Fetch all documentation elements for a group
+$documentationId = 'cloud-hrms';
+
+$apis = $this->cfos->ds('CloudFrameWorkDevDocumentationForAPIs')->fetch(['DocumentationId' => $documentationId], '*');
+$libraries = $this->cfos->ds('CloudFrameWorkDevDocumentationForLibraries')->fetch(['DocumentationId' => $documentationId], '*');
+$processes = $this->cfos->ds('CloudFrameWorkDevDocumentationForProcesses')->fetch(['DocumentationId' => $documentationId], '*');
+$webapps = $this->cfos->ds('CloudFrameWorkDevDocumentationForWebApps')->fetch(['DocumentationId' => $documentationId], '*');
+$courses = $this->cfos->ds('CloudFrameWorkAcademyCourses')->fetch(['DocumentationId' => $documentationId], '*');
+```
+
+### Development Group Web Interface
+
+- **Development Groups CFO**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkDevDocumentation`
+
+### Security Privileges
+
+| Privilege | Description |
+|-----------|-------------|
+| `directory-admin` | Full access to Development Groups |
+| `monitors-admin` | Administrative access to Development Groups |
+
+---
 
 ## Visual Representation System
 
@@ -309,6 +428,25 @@ Represents a code library, class, or module.
 | `TeamAsignation` | string | Assigned developer |
 | `TeamSupport` | string | Support contact |
 | `JSON` | json | Additional structured data |
+
+**Mandatory fields for creating a Process:**
+
+```json
+{
+  "KeyName": "/classes/CloudECM",
+  "Title": "Process Title",
+  "Menu": "Menu Title",
+  "Type": "class",
+  "Folder": "CATEGORY",
+  "Description": "<p>Description of the Library</p>",
+  "Status": "SUBCATEGORY",
+  "Tags": [],"/classes/CloudECM","CloudECM"],
+  "TeamOwner": "owner@example.com",
+  "DateInsertion": "now",
+  "DateUpdated": "now",
+  "CloudFrameworkUser": "creator@example.com"
+}
+```
 
 ### CloudFrameWorkDevDocumentationForLibrariesModules
 
