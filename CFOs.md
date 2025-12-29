@@ -442,6 +442,123 @@ Define el comportamiento completo de la WebApp (cfo.html) para gestionar los dat
   }
   ```
 
+### Colores Condicionales de Fila (`conditional_rows_background_color`)
+
+La propiedad `conditional_rows_background_color` permite colorear las filas de un listado en base a condiciones sobre los valores de los campos. Se define dentro de una vista (`views.{nombre_vista}`).
+
+**Formato de colores:**
+- `#RRGGBB` - Color RGB estándar (ej: `#CCCCCC`, `#ff0000`)
+- `#RRGGBBAA` - Color RGBA con transparencia (ej: `#43db81a0`). Los últimos dos caracteres definen el canal alpha (00=transparente, ff=opaco)
+
+**Prioridad de condiciones:** Cuando se definen múltiples condiciones en `fields[]`, se evalúan en orden y se aplica el color de la **primera condición que sea verdadera**.
+
+#### Atributos principales
+
+| Atributo | Descripción | Ejemplo |
+|----------|-------------|---------|
+| `default` | Color por defecto cuando ninguna condición se cumple | `"#f5f5f5"` |
+| `field_color` | Campo del CFO que contiene el color a aplicar | `"Color"` |
+| `fields[]` | Array de condiciones basadas en valores de campo | Ver estructura abajo |
+| `external_values` | Tipo de fuente externa para el color (`ds`, `db`, `bq`) | `"ds"` |
+
+#### Modo 1: Color por condiciones (`fields[]`)
+
+```json
+"conditional_rows_background_color": {
+  "default": "#f5f5f5",
+  "fields": [
+    {
+      "field": "Status",
+      "condition": "equals",
+      "color": "#d9fba2",
+      "values": ["closed", "completed"]
+    },
+    {
+      "field": "Status",
+      "condition": "equals",
+      "color": "#ffdba1",
+      "values": ["pending"]
+    },
+    {
+      "field": "Amount",
+      "condition": "lessthan",
+      "color": "#ffcccc",
+      "value": 0
+    }
+  ]
+}
+```
+
+**Atributos de cada condición en `fields[]`:**
+
+| Atributo | Obligatorio | Descripción |
+|----------|-------------|-------------|
+| `field` | Sí | Nombre del campo a evaluar |
+| `condition` | Sí | Condición a aplicar (ver tabla de condiciones) |
+| `color` | Sí | Color a aplicar si la condición se cumple |
+| `values` | No* | Array de valores a comparar |
+| `value` | No* | Valor único a comparar. Soporta sustitución `{{campo}}` |
+
+*Se requiere `values` o `value` excepto para condiciones `empty` y `not_empty`.
+
+**Condiciones disponibles:**
+
+| Condición | Descripción |
+|-----------|-------------|
+| `equals` | El campo es igual a alguno de los valores |
+| `not_equals` | El campo NO es igual a ninguno de los valores |
+| `lessthan` | El campo es menor que el valor |
+| `lessthanorequals` | El campo es menor o igual que el valor |
+| `greaterthan` | El campo es mayor que el valor |
+| `greaterthanorequals` | El campo es mayor o igual que el valor |
+| `empty` | El campo está vacío o es null |
+| `not_empty` | El campo tiene un valor |
+
+**Ejemplo con comparación entre campos:**
+```json
+{
+  "field": "current_stock",
+  "condition": "lessthan",
+  "color": "#ff0000",
+  "value": "{{min_stock}}"
+}
+```
+
+#### Modo 2: Color desde campo del registro (`field_color`)
+
+Cuando cada registro tiene su propio color almacenado en un campo:
+
+```json
+"conditional_rows_background_color": {
+  "field_color": "Color"
+}
+```
+
+#### Modo 3: Color desde entidad relacionada (`external_values`)
+
+Obtiene el color de una tabla relacionada:
+
+```json
+"conditional_rows_background_color": {
+  "default": "#ebf7fc",
+  "external_values": "ds",
+  "entity": "CloudFrameWorkNotificationsConfig",
+  "linked_field": "KeyName",
+  "fields": "Color",
+  "condition_field": "ConfigId"
+}
+```
+
+| Atributo | Descripción |
+|----------|-------------|
+| `external_values` | Tipo de fuente: `ds` (Datastore), `db` (SQL), `bq` (BigQuery) |
+| `entity` | Nombre del CFO que contiene los colores |
+| `linked_field` | Campo clave en la entidad externa (ej: `KeyName`, `KeyId`, `id`) |
+| `fields` | Campo(s) que contienen el color |
+| `condition_field` | Campo del CFO actual que se compara con `linked_field` |
+
+**Documentación completa:** Ver WebPage [CFO conditional_rows_background_color](https://app.cloudframework.app/app.html#__ecm?page=/training/cfos/cfi/views/conditional_rows_background_color)
+
 ## Backups de CFOs
 
 Los backups de CFOs se almacenan en el directorio `buckets/backup/` organizado por cliente:
