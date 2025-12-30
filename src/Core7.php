@@ -173,6 +173,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var  $__p;
         /** @var CoreIs $is */
         var  $is;
+        /** @var CoreUtils $utils */
+        var  $utils;
         /** @var CoreSession $session */
         var  $session;
         /** @var CoreSystem $system */
@@ -229,6 +231,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
             //region SET $this->__p,$this->is,$this->system,$this->logs,$this->errors
             $this->__p = new CorePerformance();
+            $this->utils = new CoreUtils();
             $this->is = new CoreIs();
             $this->system = new CoreSystem($root_path);
             $this->logs = new CoreLog($this->is->development() && $this->is->terminal());
@@ -1009,7 +1012,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return $result;
         }
 
-
     }
 
     /**
@@ -1171,6 +1173,118 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->data['init'][$spacename][$key]['ok'] = $ok;
             if ($msg !== FALSE) $this->data['init'][$spacename][$key]['notes'] = $msg;
         }
+    }
+
+    /**
+     * $this->core->utils Class to facolitate operations
+     * @package Core.is
+     */
+    class CoreUtils
+    {
+        /**
+         * Return the value of $array[$var]. If $var has '.' separator it assumes that it is a subarray
+         * @param $array
+         * @param $var
+         * @return mixed|string
+         */
+        public function findValueWithDotsInArray(&$array, $var) {
+            if(!strpos($var,'.')) return $array[$var]??'';
+            else {
+                $parts = explode('.',$var,2);
+                if(isset($array[$parts[0]])) return $this->findValueWithDotsInArray($array[$parts[0]],$parts[1]);
+                else return '';
+            }
+        }
+
+        /**
+         * Deletes a specified column from a multidimensional array.
+         * The operation modifies the input array directly.
+         *
+         * @param array $array The input array from which the column will be removed, passed by reference.
+         * @param string $columns The keys of the column to be removed from each element of the array separated by ','
+         * @return void
+         */
+        public function deleteColumnsFromArray(&$array, string $columns) {
+            $columns = explode(',',$columns);
+            foreach ($columns as $column)
+                array_walk($array, function (&$v) use ($column) {
+                    if(isset($v[$column])) unset($v[$column]);
+                });
+        }
+
+        /**
+         * Reorganizes an array to be indexed by a specific column value from each item in the array.
+         * If a duplicate index is encountered, a unique suffix is appended to ensure key uniqueness.
+         * If $addAsArray is true the array elements are aggregated in each index in an array
+         *
+         * @param array $array The input array to be reorganized, passed by reference.
+         * @param string $column The column name used as the index key for the resulting array.
+         * @param bool $addAsArray adds the elements as an array of elements
+         * @return array The resulting array indexed by the specified column values.
+         */
+        public function convertArrayIndexedByColumn(&$array, string $column, bool $addAsArray=false): array
+        {
+            $result = [];
+            $keyCounters = []; // specific tracker for collisions
+
+            foreach ($array as &$item) {
+                // 1. Safe retrieval of the key
+                // We verify if the column exists, otherwise default to 'unknown'
+                $rawValue = $item[$column] ?? 'unknown';
+
+                // 2. Ensure the key is a valid array key (Int or String)
+                // PHP 8.x requires strict key types.
+                $index = (is_string($rawValue) || is_int($rawValue))
+                    ? (string)$rawValue
+                    : 'invalid_type';
+
+                // 3. Assign by Reference
+                // We assign the reference to prevent memory duplication of the item data.
+                if($addAsArray) {
+                    if(!isset($result[$index])) $result[$index] = [];
+                    $result[$index][] = &$item;
+                } else {
+
+                    // 3.1. Collision Handling
+                    // Instead of expensive uniqid(), we check if the key exists
+                    // and use a deterministic counter.
+                    if (array_key_exists($index, $result)) {
+                        // Initialize counter for this specific key if not present
+                        if (!isset($keyCounters[$index])) {
+                            $keyCounters[$index] = 0;
+                        }
+
+                        $keyCounters[$index]++;
+                        $index = sprintf('%s_%d', $index, $keyCounters[$index]);
+                    }
+
+                    $result[$index] = &$item;
+                }
+            }
+
+            // Break the reference to the last element to prevent future accidental modification
+            unset($item);
+
+            return $result;
+        }
+
+
+        /**
+         * Adds a prefix to all keys in the given array.
+         *
+         * @param array $array The input array whose keys will be prefixed, passed by reference.
+         * @param string $prefix The string to prepend to each key in the array.
+         * @return array A new array with prefixed keys.
+         */
+        public function addPrefixToArrayKeys(array $array, string $prefix): array
+        {
+            $result = [];
+            foreach ($array as $key => $value) {
+                $result[$prefix . $key] = $value;
+            }
+            return $result;
+        }
+
     }
 
     /**
