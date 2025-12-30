@@ -158,8 +158,8 @@ if (!defined ("_Buckets_CLASS_") ) {
             //region SET $public,$apply_hash_to_filenames,$allowed_extensions,$allowed_content_types from $options
             $public=($options['public']??false)?true:false;
             $apply_hash_to_filenames = ($options['apply_hash_to_filenames']??false)?true:false;
-            $allowed_extensions = ($options['allowed_extensions']??'')?explode(',',strtolower($options['allowed_extensions'])):[];
-            $allowed_content_types = ($options['allowed_content_types']??'')?explode(',',strtolower($options['allowed_content_types'])):[];
+            $allowed_extensions = ($options['allowed_extensions']??[])?(is_string($options['allowed_extensions'])?explode(',',strtolower($options['allowed_extensions'])):$options['allowed_extensions']):[];
+            $allowed_content_types = ($options['allowed_content_types']??'')?(is_string($options['allowed_content_types'])?explode(',',strtolower($options['allowed_content_types'])):$options['allowed_content_types']):[];
             //endregion
 
             //region IF $public verify the bucket can allow public files
@@ -205,7 +205,7 @@ if (!defined ("_Buckets_CLASS_") ) {
 
                         if(!$allow) {
                             $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
-                            return($this->addError($value['name'].' does not have any of the following extensions: '.$options['allowed_extensions'],'extensions'));
+                            return($this->addError($value['name'].' does not have any of the following extensions: '.$this->core->jsonEncode($options['allowed_extensions']),'extensions'));
                         }
                     }
 
@@ -221,7 +221,7 @@ if (!defined ("_Buckets_CLASS_") ) {
                         }
                         if(!$allow) {
                             $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
-                            return($this->addError($value['type'].' does not match with any of the following content-types: '.$options['allowed_content_types'],'content-type'));
+                            return($this->addError($value['type'].' does not match with any of the following content-types: '.$this->core->jsonEncode($options['allowed_content_types']),'content-type'));
                         }
                     }
                 }
@@ -1697,6 +1697,35 @@ if (!defined ("_Buckets_CLASS_") ) {
             $bucket_path.= $path;
             if(substr($bucket_path,-1)=='/') $bucket_path = substr($bucket_path,0,-1);
             return $bucket_path;
+        }
+        /**
+         * Extracts Google Cloud Storage (gs://) URIs from a formatted string.
+         *
+         * This function expects an input format similar to Markdown links:
+         * [filename](gs://bucket/path), [filename](gs://bucket/path)
+         *
+         * @param string $inputString The raw string containing the file definitions.
+         * @return array<string> An array containing only the valid gs:// paths.
+         */
+        function extractGcsUris(string $inputString): array
+        {
+            // Regex explanation:
+            // \(          -> Match a literal opening parenthesis.
+            // (           -> Start capturing group #1.
+            // gs:\/\/     -> Match the literal string "gs://".
+            // [^\)]+      -> Match one or more characters that are NOT a closing parenthesis.
+            // )           -> End capturing group #1.
+            // \)          -> Match a literal closing parenthesis.
+            $pattern = '/\((gs:\/\/[^\)]+)\)/';
+
+            // Perform a global regular expression match
+            // $matches[1] will contain the text captured by the first capturing group (the URI).
+            if (preg_match_all($pattern, $inputString, $matches)) {
+                return $matches[1];
+            }
+
+            // Return an empty array if no matches are found
+            return [];
         }
 
         /**
