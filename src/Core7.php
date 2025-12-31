@@ -874,13 +874,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region REPLACE {{xx}} variables
-            if($array_of_variables) $this->replaceVariables($array_of_variables,$data,$rawUrlEncode);
+            if($array_of_variables) $this->utils->replaceVariables($array_of_variables,$data,$rawUrlEncode);
             //endregion
             //region APPLY $this->localization->getTag($data) to find final translations
             if(is_string($data) && $data && substr_count($data,';')>1) {
                 $data = $this->localization->getTag($data);
                 if($array_of_variables && strpos($data,'{{')!==false) {
-                    $this->replaceVariables($array_of_variables, $data, $rawUrlEncode);
+                    $this->utils->replaceVariables($array_of_variables, $data, $rawUrlEncode);
                 }
 
             }
@@ -895,123 +895,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             return $data;
 
         }
-
-        private function replaceVariables(array &$array_of_variables,string &$data, bool $rawUrlEncode=false)
-        {
-            //region REPLACE $array_of_variables in $data
-            if($array_of_variables) do {
-                $found = null;
-                $value = '';
-                $default_value='';
-                preg_match('/{{([^}]*)}}/',$data,$found);
-                if($found ) {
-                    //region IF $found[2] contains a ',' the right string will be set to $default_value
-                    if (strpos($found[1], ',')) list($found[1], $default_value) = explode(',', $found[1], 2);
-                    //endregion
-
-                    //region SET $value to replace
-                    $value = $this->findValueWithDotsInArray($array_of_variables,$found[1]);
-                    // isset($array_of_variables[$found[1]]))?$array_of_variables[$found[1]]:'';
-                    if (!$value && strlen(trim($default_value))>0) $value = trim($default_value);
-                    if(is_array($value)) $value = json_encode($value);
-                    if($rawUrlEncode) $value=urlencode($value);
-                    //endregion
-
-                    //region REPLACE $found[0] by $value in $text
-                    $data = str_replace($found[0],$value,$data);
-                    //endregion
-                }
-            } while ($found);
-            //endregion
-        }
-
-        /**
-         * Return the value of $array[$var]. If $var has '.' separator it assumes that it is a subarray
-         * @param $array
-         * @param $var
-         * @return mixed|string
-         */
-        public function findValueWithDotsInArray(&$array, $var) {
-            if(!strpos($var,'.')) return $array[$var]??'';
-            else {
-                $parts = explode('.',$var,2);
-                if(isset($array[$parts[0]])) return $this->findValueWithDotsInArray($array[$parts[0]],$parts[1]);
-                else return '';
-            }
-        }
-
-        /**
-         * Deletes a specified column from a multidimensional array.
-         * The operation modifies the input array directly.
-         *
-         * @param array $array The input array from which the column will be removed, passed by reference.
-         * @param string $columns The keys of the column to be removed from each element of the array separated by ','
-         * @return void
-         */
-        public function deleteColumnsFromArray(&$array, string $columns) {
-            $columns = explode(',',$columns);
-            foreach ($columns as $column)
-                array_walk($array, function (&$v) use ($column) {
-                    if(isset($v[$column])) unset($v[$column]);
-                });
-        }
-
-        /**
-         * Reorganizes an array to be indexed by a specific column value from each item in the array.
-         * If a duplicate index is encountered, a unique suffix is appended to ensure key uniqueness.
-         * If $addAsArray is true the array elements are aggregated in each index in an array
-         *
-         * @param array $array The input array to be reorganized, passed by reference.
-         * @param string $column The column name used as the index key for the resulting array.
-         * @param bool $addAsArray adds the elements as an array of elements
-         * @return array The resulting array indexed by the specified column values.
-         */
-        public function convertArrayIndexedByColumn(&$array, string $column, bool $addAsArray=false): array
-        {
-            $result = [];
-            $keyCounters = []; // specific tracker for collisions
-
-            foreach ($array as &$item) {
-                // 1. Safe retrieval of the key
-                // We verify if the column exists, otherwise default to 'unknown'
-                $rawValue = $item[$column] ?? 'unknown';
-
-                // 2. Ensure the key is a valid array key (Int or String)
-                // PHP 8.x requires strict key types.
-                $index = (is_string($rawValue) || is_int($rawValue))
-                    ? (string)$rawValue
-                    : 'invalid_type';
-
-                // 3. Assign by Reference
-                // We assign the reference to prevent memory duplication of the item data.
-                if($addAsArray) {
-                    if(!isset($result[$index])) $result[$index] = [];
-                    $result[$index][] = &$item;
-                } else {
-
-                    // 3.1. Collision Handling
-                    // Instead of expensive uniqid(), we check if the key exists
-                    // and use a deterministic counter.
-                    if (array_key_exists($index, $result)) {
-                        // Initialize counter for this specific key if not present
-                        if (!isset($keyCounters[$index])) {
-                            $keyCounters[$index] = 0;
-                        }
-
-                        $keyCounters[$index]++;
-                        $index = sprintf('%s_%d', $index, $keyCounters[$index]);
-                    }
-
-                    $result[$index] = &$item;
-                }
-            }
-
-            // Break the reference to the last element to prevent future accidental modification
-            unset($item);
-
-            return $result;
-        }
-
     }
 
     /**
@@ -1176,16 +1059,65 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     }
 
     /**
-     * $this->core->utils Class to facolitate operations
-     * @package Core.is
+     * $this->core->utils Class to facilitate operations. Utility methods for handling arrays, strings, and various other data processing tasks.
+     * This class provides a collection of static methods designed to simplify common data manipulation operations.
+     * All methods in this class work directly on the provided references or return transformed results.
+     *
+     * @package Core.utils
      */
     class CoreUtils
     {
+
         /**
-         * Return the value of $array[$var]. If $var has '.' separator it assumes that it is a subarray
-         * @param $array
-         * @param $var
-         * @return mixed|string
+         * Replaces variable placeholders in a given string with their corresponding values from an array.
+         * Placeholders should be enclosed in double curly braces, e.g., {{key}}. If a default value is provided
+         * after a comma within the placeholder, it will be used if the specified key is not found in the array.
+         * Optionally, the replacement values can be URL-encoded.
+         *
+         * @param array $array_of_variables The array containing key-value pairs to be used for replacements.
+         *        Keys are matched to placeholders within the string.
+         * @param string $data The string containing variable placeholders to be replaced. Passed by reference
+         *        and modified directly.
+         * @param bool $rawUrlEncode Whether to apply raw URL encoding to the replacement values. Defaults to false.
+         * @return void This method does not return any value. The input string is modified in place.
+         */
+        public function replaceVariables(array &$array_of_variables, string &$data, bool $rawUrlEncode=false)
+        {
+            //region REPLACE $array_of_variables in $data
+            if($array_of_variables) do {
+                $found = null;
+                $value = '';
+                $default_value='';
+                preg_match('/{{([^}]*)}}/',$data,$found);
+                if($found ) {
+                    //region IF $found[2] contains a ',' the right string will be set to $default_value
+                    if (strpos($found[1], ',')) list($found[1], $default_value) = explode(',', $found[1], 2);
+                    //endregion
+
+                    //region SET $value to replace
+                    $value = $this->findValueWithDotsInArray($array_of_variables,$found[1]);
+                    // isset($array_of_variables[$found[1]]))?$array_of_variables[$found[1]]:'';
+                    if (!$value && strlen(trim($default_value))>0) $value = trim($default_value);
+                    if(is_array($value)) $value = json_encode($value);
+                    if($rawUrlEncode) $value=urlencode($value);
+                    //endregion
+
+                    //region REPLACE $found[0] by $value in $text
+                    $data = str_replace($found[0],$value,$data);
+                    //endregion
+                }
+            } while ($found);
+            //endregion
+        }
+
+
+        /**
+         * Recursively retrieves a value from a multidimensional array using a dot-separated string to represent nested keys.
+         * If the dot-separated key does not exist in the array, an empty string is returned.
+         *
+         * @param array $array The input array to search, passed by reference.
+         * @param string $var A dot-separated string representing the key path within the array.
+         * @return mixed The value found at the given key path, or an empty string if the key path does not exist.
          */
         public function findValueWithDotsInArray(&$array, $var) {
             if(!strpos($var,'.')) return $array[$var]??'';
