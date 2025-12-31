@@ -594,6 +594,10 @@ Represents the description of a complete Process.
 
 The `JSON` field in Processes defines documentation objectives that link to Check records via the `route` property. Each route value corresponds to a Check's `Route` field.
 
+**Required Format**: Each leaf node **must** be an object with a `route` property:
+- **Key**: The title/label displayed in the UI
+- **Value**: An object with `{"route": "<ruta>"}` where `<ruta>` matches the Check's `Route` field
+
 **Flat structure:**
 ```json
 {
@@ -677,6 +681,10 @@ Represents individual SubProcesses within a Process.
 #### JSON Structure (with Route References)
 
 The `JSON` field in SubProcesses also supports route references that link to Check records, similar to Processes.
+
+**Required Format**: Each leaf node **must** be an object with a `route` property:
+- **Key**: The title/label displayed in the UI
+- **Value**: An object with `{"route": "<ruta>"}` where `<ruta>` matches the Check's `Route` field
 
 **Simple structure:**
 ```json
@@ -899,6 +907,69 @@ This mechanism provides a **documentation completion tracking system** where:
 | `ok` | Finished (OK) |
 
 **Delete rule:** Only checks with `Status == 'pending'` can be deleted.
+
+### JSON Field Structure for Displaying Checks
+
+**IMPORTANT**: For Checks to be visible in the interface, the parent entity (Process, SubProcess, WebApp, etc.) must define the Check structure in its `JSON` field. The `JSON` field acts as an index/table of contents that links to the actual Check records stored in `CloudFrameWorkDevDocumentationForProcessTests`.
+
+**Structure:**
+
+```json
+{
+    "Category Name": {
+        "Check Title": {
+            "route": "/route-identifier"
+        },
+        "Another Check Title": {
+            "route": "/another-route"
+        }
+    },
+    "Another Category": {
+        "Third Check": {
+            "route": "/third-route"
+        }
+    }
+}
+```
+
+**How it works:**
+
+1. **JSON Field in Parent Entity**: Define categories and check titles with their `route` values
+2. **CloudFrameWorkDevDocumentationForProcessTests Records**: Create Check records with matching `Route` field values
+3. **Linking**: The `CFOEntity` and `CFOId` fields in Checks link them to the parent entity
+4. **Display**: The interface uses the JSON structure to organize and display linked Checks
+
+**Example for a SubProcess:**
+
+```json
+// SubProcess JSON field
+{
+    "Conceptos Básicos": {
+        "1. Introducción": {
+            "route": "/introduction"
+        },
+        "2. Estructura de datos": {
+            "route": "/data-structure"
+        }
+    },
+    "Operaciones": {
+        "3. Gestión desde interfaz": {
+            "route": "/management"
+        }
+    }
+}
+```
+
+The corresponding Checks in `CloudFrameWorkDevDocumentationForProcessTests` must have:
+- `CFOEntity`: `CloudFrameWorkDevDocumentationForSubProcesses`
+- `CFOId`: The SubProcess KeyId (e.g., `5761597392814080`)
+- `Route`: Matching route value (e.g., `/introduction`, `/data-structure`, `/management`)
+
+**Key Points:**
+- The `route` value in JSON must match the `Route` field in the Check record
+- Categories in JSON are used for grouping in the interface
+- Check titles in JSON are display names (the Check record has its own `Title` field)
+- Without the JSON structure, Checks exist in the database but won't appear in the interface view
 
 ### Check Backup System
 
