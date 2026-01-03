@@ -528,16 +528,16 @@ buckets/backups/Libraries/
 composer run-script script backup_platforms_libraries
 
 # CRUD operations for individual Libraries
-composer run-script script "libraries/crud/:platform/backup-from-remote?id=/backend-core-php8/src/RESTful"
-composer run-script script "libraries/crud/:platform/insert-from-backup?id=/api-prod/class/CloudAcademy"
-composer run-script script "libraries/crud/:platform/update-from-backup?id=/backend-core-php8/src/RESTful"
-composer run-script script libraries/crud/:platform/list-remote
-composer run-script script libraries/crud/:platform/list-local
+composer run-script script "cloud-documentum/crud-libraries/:platform/backup-from-remote?id=/backend-core-php8/src/RESTful"
+composer run-script script "cloud-documentum/crud-libraries/:platform/insert-from-backup?id=/api-prod/class/CloudAcademy"
+composer run-script script "cloud-documentum/crud-libraries/:platform/update-from-backup?id=/backend-core-php8/src/RESTful"
+composer run-script script cloud-documentum/crud-libraries/:platform/list-remote
+composer run-script script cloud-documentum/crud-libraries/:platform/list-local
 ```
 
 **Script locations**:
 - Backup: `buckets/scripts/backup_platforms_libraries.php`
-- CRUD: `buckets/scripts/libraries/crud.php`
+- CRUD: `buckets/scripts/cloud-documentum/crud-libraries.php`
 
 ### Library Web Interface
 
@@ -1025,15 +1025,15 @@ composer run-script script _backup/check/list-local
 
 ```bash
 # Backup checks linked to process PROC-001
-composer run-script script "checks/crud/cloudframework/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=PROC-001"
+composer run-script script "cloud-documentum/crud-check/cloudframework/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=PROC-001"
 
 # Backup checks linked to API /erp/projects
-composer run-script script "checks/crud/cloudframework/backup-from-remote?entity=CloudFrameWorkDevDocumentationForAPIs&id=/erp/projects"
+composer run-script script "cloud-documentum/crud-check/cloudframework/backup-from-remote?entity=CloudFrameWorkDevDocumentationForAPIs&id=/erp/projects"
 ```
 
 **Script locations**:
 - Backup: `buckets/scripts/backup_platforms_checks.php`
-- CRUD: `buckets/scripts/checks/crud.php`
+- CRUD: `buckets/scripts/cloud-documentum/crud-check.php`
 
 ### Check Web Interface
 
@@ -1430,7 +1430,7 @@ Access to CLOUD Documentum CFOs is controlled by these privileges:
 | Check Backup Script | `buckets/scripts/backup_platforms_checks.php` |
 | WebPages Backup Script | `buckets/scripts/backup_platforms_webpages.php` |
 | **CRUD Scripts** | |
-| API CRUD Script | `buckets/scripts/apis/crud.php` |
-| Library CRUD Script | `buckets/scripts/libraries/crud.php` |
-| Process CRUD Script | `buckets/scripts/processes/crud.php` |
-| Check CRUD Script | `buckets/scripts/checks/crud.php` |
+| API CRUD Script | `buckets/scripts/cloud-documentum/crud-apis.php` |
+| Library CRUD Script | `buckets/scripts/cloud-documentum/crud-libraries.php` |
+| Process CRUD Script | `buckets/scripts/cloud-documentum/crud-processes.php` |
+| Check CRUD Script | `buckets/scripts/cloud-documentum/crud-check.php` |
