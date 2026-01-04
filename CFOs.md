@@ -694,6 +694,489 @@ Se requiere que el usuario tenga privilegios de [development-admin] o [developme
 4. **Preguntar al usuario**: Si desea actualizar en la plataforma remota
 5. **Actualizar en remoto**: Ejecutar el script update-from-backup
 
+## CFO Workflows (Automatización de Acciones)
+
+Los CFOs pueden definir **workflows** que se ejecutan automáticamente en respuesta a eventos de creación, modificación o eliminación de registros. Los workflows se procesan a través de la clase `CFOWorkFlows` definida en `vendor/cloudframework-io/backend-core-php8/src/class/CFOs.php`.
+
+### Estructura del Campo `events`
+
+El campo `events` en un CFO admite la siguiente estructura JSON:
+
+```json
+{
+    "events": {
+        "workflows": {
+            "common": [...],        // Workflows que se ejecutan en TODOS los eventos
+            "on.insert": [...],     // Workflows que se ejecutan al INSERTAR
+            "on.update": {...},     // Workflows que se ejecutan al ACTUALIZAR
+            "on.delete": [...]      // Workflows que se ejecutan al ELIMINAR
+        },
+        "__workflows": "@EXTERNAL_ID"   // Referencia a workflows externos
+    }
+}
+```
+
+### Eventos Disponibles
+
+| Evento | Descripción |
+|--------|-------------|
+| `common` | Se fusiona con todos los demás eventos (se ejecuta siempre) |
+| `on.insert` | Se ejecuta después de insertar un nuevo registro |
+| `on.update` | Se ejecuta después de actualizar un registro existente |
+| `on.delete` | Se ejecuta después de eliminar un registro |
+
+### Workflows Externos
+
+Los workflows se pueden definir externamente en la entidad Datastore `CloudFrameWorkCFOWorkFlows`:
+
+1. **Referencia con `__workflows`**: Usar `"__workflows": "@CFO_ID"` para cargar workflows desde la entidad externa
+2. **Flag `hasExternalWorkflows`**: Si es `true`, el sistema busca workflows en `CloudFrameWorkCFOWorkFlows` con `CFOId = nombre_del_cfo`
+
+### Atributos Comunes de Workflows
+
+Todos los workflows comparten estos atributos:
+
+| Atributo | Tipo | Requerido | Descripción |
+|----------|------|-----------|-------------|
+| `action` | string | Sí | Tipo de acción a ejecutar (ver tipos de acciones) |
+| `active` | boolean | Sí | Si es `false`, el workflow no se ejecuta |
+| `id` | string | No | Identificador único del workflow para logs |
+| `conditional` | string | No | Expresión PHP que debe evaluar a `true` para ejecutar |
+| `message` | object | No | Mensaje a mostrar al usuario después de ejecutar |
+| `error_message` | object | No | Mensaje a mostrar si el workflow falla |
+
+#### Atributo `conditional`
+
+El atributo `conditional` permite ejecutar workflows condicionalmente. Soporta expresiones PHP con sustitución de variables usando `{{variable}}`:
+
+```json
+{
+    "action": "sendEmail",
+    "active": true,
+    "conditional": "'{{Status}}' == 'closed'"
+}
+```
+
+La expresión se evalúa después de reemplazar las variables con los valores del registro actual.
+
+#### Atributo `message`
+
+```json
+{
+    "message": {
+        "title": "Operación completada",
+        "type": "info",          // info, success, warning, error
+        "description": "El registro {{KeyId}} ha sido procesado",
+        "time": -1,              // Tiempo en ms para auto-cerrar (-1 = no cerrar)
+        "url": "https://..."     // URL opcional para redirección
+    }
+}
+```
+
+### Tipos de Acciones de Workflow
+
+#### 1. `setVariables` - Establecer Variables
+
+Establece variables en el contexto de datos que pueden ser usadas por workflows posteriores.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `variables` | object | Sí | Objeto con pares clave-valor |
+
+**Ejemplo:**
+```json
+{
+    "action": "setVariables",
+    "active": true,
+    "id": "set_user_vars",
+    "variables": {
+        "MODULE": "{{Department}}",
+        "FULL_NAME": "{{FirstName}} {{LastName}}",
+        "CURRENT_DATE": "{{_now_}}"
+    }
+}
+```
+
+---
+
+#### 2. `readRelations` - Leer Datos Relacionados
+
+Lee datos de otros CFOs (Datastore o Database) y los almacena en variables para uso posterior.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `relations` | array | Sí | Array de relaciones a leer |
+
+**Estructura de cada relación:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `cfo` | string | Sí | Nombre del CFO a consultar |
+| `key` | string | Sí* | Campo clave para la búsqueda |
+| `value` | string | Sí* | Valor a buscar (soporta `{{variables}}`) |
+| `fields` | string | No | Campos a retornar (`*` para todos) |
+| `output_variable` | string | No | Nombre de variable para guardar resultado |
+| `namespace` | string | No | Namespace para CFOs tipo Datastore |
+| `count` | string | No* | Variable para guardar conteo en lugar de datos |
+| `group_field` | string | No* | Campo para agrupar resultados |
+| `where` | object | No | Condiciones de filtrado |
+| `not_found_message` | string | No | Mensaje si no se encuentra el registro |
+
+*Solo uno de `key/value`, `count`, o `group_field` debe usarse.
+
+**Ejemplo - Lectura por clave:**
+```json
+{
+    "action": "readRelations",
+    "active": true,
+    "id": "read_user_data",
+    "relations": [
+        {
+            "cfo": "CloudFrameWorkUsers",
+            "key": "KeyName",
+            "value": "{{UserId}}",
+            "fields": "KeyName,UserEmail,UserName",
+            "output_variable": "UserData"
+        }
+    ]
+}
+```
+
+**Ejemplo - Conteo:**
+```json
+{
+    "action": "readRelations",
+    "active": true,
+    "id": "count_tasks",
+    "relations": [
+        {
+            "cfo": "CloudFrameWorkProjectsTasks",
+            "count": "total_tasks",
+            "where": {"ProjectId": "{{ProjectId}}", "Open": true}
+        }
+    ]
+}
+```
+
+---
+
+#### 3. `insertCFOData` - Insertar Registro en CFO
+
+Inserta un nuevo registro en otro CFO.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `cfo` | string | Sí | Nombre del CFO donde insertar |
+| `data` | object | Sí | Datos a insertar (soporta `{{variables}}`) |
+| `namespace` | string | No | Namespace para CFOs tipo Datastore |
+| `output_variable` | string | No | Variable para guardar el registro creado |
+
+**Ejemplo:**
+```json
+{
+    "action": "insertCFOData",
+    "active": true,
+    "id": "create_bitacora",
+    "cfo": "CloudFrameWorkBitacora",
+    "data": {
+        "Action": "insert",
+        "CFOName": "{{_cfo_}}",
+        "RecordId": "{{KeyId}}",
+        "UserId": "{{_user_}}",
+        "DateAction": "{{_now_}}",
+        "Description": "Registro creado por workflow"
+    },
+    "output_variable": "NewBitacora"
+}
+```
+
+---
+
+#### 4. `updateCFOData` - Actualizar Registro en CFO
+
+Actualiza un registro existente en otro CFO.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `cfo` | string | Sí | Nombre del CFO a actualizar |
+| `key` | string | Sí | Campo clave para identificar el registro |
+| `value` | string | Sí | Valor de la clave (soporta `{{variables}}`) |
+| `data` | object | Sí | Datos a actualizar (soporta `{{variables}}`) |
+| `output_variable` | string | No | Variable para guardar el registro actualizado |
+
+**Ejemplo:**
+```json
+{
+    "action": "updateCFOData",
+    "active": true,
+    "id": "update_project_status",
+    "cfo": "CloudFrameWorkProjectsEntries",
+    "key": "KeyName",
+    "value": "{{ProjectId}}",
+    "data": {
+        "Status": "in-progress",
+        "DateUpdated": "{{_now_}}"
+    }
+}
+```
+
+---
+
+#### 5. `sendEmail` - Enviar Email
+
+Envía un email usando Mandrill (MailChimp Transactional).
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `from` | string | Sí | Email del remitente |
+| `to` | string | Sí | Email(s) del destinatario (separados por coma) |
+| `subject` | string | Sí | Asunto del email |
+| `template` | string | Sí | Slug del template de Mandrill |
+| `via` | string | No | Proveedor de email (default: `mandrill`) |
+| `cc` | string | No | Emails en copia |
+| `bcc` | string | No | Emails en copia oculta |
+| `async` | boolean | No | Enviar asíncronamente |
+| `variables` | object | No | Variables adicionales para el template |
+| `attachments` | array | No | Archivos adjuntos |
+| `linkedObject` | string | No | CFO relacionado para tracking |
+| `linkedId` | string | No | ID del registro relacionado |
+
+**Estructura de attachments:**
+```json
+{
+    "attachments": [
+        {
+            "source": "gs://bucket/path/{{FileName}}",
+            "name": "documento"
+        }
+    ]
+}
+```
+
+**Ejemplo completo:**
+```json
+{
+    "action": "sendEmail",
+    "active": true,
+    "id": "notify_task_closed",
+    "conditional": "'{{Status}}' == 'closed'",
+    "from": "notifications@cloudframework.io",
+    "to": "{{UserEmail}}",
+    "cc": "{{EmailWatchers}}",
+    "subject": "Tarea {{KeyId}} cerrada",
+    "template": "cloud-product-notification",
+    "variables": {
+        "TITLE": "Tarea cerrada",
+        "MODULE": "{{Department}}",
+        "CONTENT": "<p>La tarea <b>{{Title}}</b> ha sido cerrada.</p>"
+    },
+    "message": {
+        "title": "Email enviado",
+        "type": "success"
+    }
+}
+```
+
+**Configuración requerida:**
+El sistema busca la configuración de Mandrill en `ds:CloudFrameWorkModulesConfigs` con `KeyName = 'email'` y lee `Config.mandrill_api_key`.
+
+---
+
+#### 6. `hook` - Llamar Endpoint HTTP
+
+Ejecuta una llamada HTTP a un endpoint externo o interno.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `url` | string | Sí | URL del endpoint (soporta `{{variables}}`) |
+| `method` | string | Sí | Método HTTP: `GET`, `POST`, `PUT`, `DELETE` |
+| `data` | object | No | Datos a enviar en el body (para POST/PUT) |
+| `headers` | object | No | Headers adicionales |
+
+**Headers por defecto:**
+- `X-WEB-KEY`: Se hereda del request original
+- `X-DS-TOKEN`: Se hereda del request original
+
+**Parámetros añadidos automáticamente a la URL:**
+- `_user`: ID del usuario que ejecutó la acción
+- `_type`: Tipo de evento (on.insert, on.update, on.delete)
+
+**Ejemplo:**
+```json
+{
+    "action": "hook",
+    "active": true,
+    "id": "notify_project_system",
+    "name": "Actualiza procesos para la tarea {{KeyId}}",
+    "method": "PUT",
+    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}",
+    "data": {
+        "action": "task_updated",
+        "taskId": "{{KeyId}}",
+        "status": "{{Status}}"
+    }
+}
+```
+
+---
+
+#### 7. `setLocalizationLang` - Establecer Idioma
+
+Establece el idioma de localización para workflows posteriores (útil antes de enviar emails localizados).
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `value` | string | Sí | Código de idioma (ej: `es`, `en`, `fr`) |
+
+**Ejemplo:**
+```json
+{
+    "action": "setLocalizationLang",
+    "active": true,
+    "id": "set_user_lang",
+    "value": "{{UserLang}}"
+}
+```
+
+---
+
+#### 8. `workflows` - Agrupar Workflows
+
+Permite agrupar múltiples workflows bajo un mismo bloque con una condición común.
+
+**Parámetros:**
+| Parámetro | Tipo | Requerido | Descripción |
+|-----------|------|-----------|-------------|
+| `workflows` | array | Sí | Array de workflows a ejecutar |
+
+**Ejemplo:**
+```json
+{
+    "action": "workflows",
+    "active": true,
+    "id": "process_closed_task",
+    "conditional": "'{{Status}}' == 'closed'",
+    "workflows": [
+        {
+            "action": "setVariables",
+            "active": true,
+            "id": "set_closing_vars",
+            "variables": {
+                "CLOSING_DATE": "{{_now_}}"
+            }
+        },
+        {
+            "action": "sendEmail",
+            "active": true,
+            "id": "send_closing_email",
+            "from": "noreply@example.com",
+            "to": "{{UserEmail}}",
+            "subject": "Tarea cerrada",
+            "template": "task-closed"
+        }
+    ]
+}
+```
+
+---
+
+### Variables Disponibles para Sustitución
+
+El sistema usa `replaceCloudFrameworkTagsAndVariables()` para sustituir variables con la sintaxis `{{variable}}`:
+
+| Variable | Descripción |
+|----------|-------------|
+| `{{KeyId}}` | ID del registro actual |
+| `{{KeyName}}` | Nombre clave del registro (si aplica) |
+| `{{campo}}` | Cualquier campo del registro |
+| `{{_now_}}` | Fecha y hora actual |
+| `{{_user_}}` | ID del usuario actual |
+| `{{Platform:namespace}}` | Namespace de la plataforma |
+| `{{User:KeyName}}` | KeyName del usuario actual |
+| `{{RelatedCFO:campo}}` | Campo de un CFO relacionado (leído con readRelations) |
+
+### Ejemplo Completo de Workflow
+
+```json
+{
+    "events": {
+        "workflows": {
+            "on.update": {
+                "PROCESS_STATUS_CHANGE": {
+                    "action": "workflows",
+                    "active": true,
+                    "id": "status_change_workflow",
+                    "conditional": "'{{Status}}' == 'closed'",
+                    "workflows": [
+                        {
+                            "action": "readRelations",
+                            "active": true,
+                            "id": "read_user",
+                            "relations": [
+                                {
+                                    "cfo": "CloudFrameWorkUsers",
+                                    "key": "KeyName",
+                                    "value": "{{UserId}}",
+                                    "fields": "KeyName,UserEmail,UserName"
+                                }
+                            ]
+                        },
+                        {
+                            "action": "setLocalizationLang",
+                            "active": true,
+                            "id": "set_lang",
+                            "value": "{{CloudFrameWorkUsers:UserLang}}"
+                        },
+                        {
+                            "action": "sendEmail",
+                            "active": true,
+                            "id": "notify_closure",
+                            "from": "noreply@platform.com",
+                            "to": "{{CloudFrameWorkUsers:UserEmail}}",
+                            "subject": "Registro {{KeyId}} cerrado",
+                            "template": "record-closed",
+                            "variables": {
+                                "USER_NAME": "{{CloudFrameWorkUsers:UserName}}",
+                                "RECORD_ID": "{{KeyId}}"
+                            }
+                        },
+                        {
+                            "action": "insertCFOData",
+                            "active": true,
+                            "id": "create_log",
+                            "cfo": "CloudFrameWorkBitacora",
+                            "data": {
+                                "Action": "closed",
+                                "RecordId": "{{KeyId}}",
+                                "UserId": "{{_user_}}"
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}
+```
+
+### Logs y Debugging
+
+Los workflows generan logs detallados accesibles a través de la propiedad `$this->logs` de la clase `CFOWorkFlows`. Cada workflow genera entradas con:
+
+- ID del workflow
+- Resultado de condiciones
+- Datos enviados/recibidos
+- Tiempos de ejecución
+- Errores si los hay
+
+---
+
 ## CFI Class (CloudFramework Interface)
 
 La clase **CFI** es una utilidad PHP para generar modelos JSON que instruyen a la WebApp `cfo.html` en CLOUD Platform. Proporciona una interfaz fluida para construir formularios dinámicos, campos, botones y pestañas.
