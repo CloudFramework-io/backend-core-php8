@@ -13,6 +13,7 @@ CLOUD Documentum consists of several documentation modules:
 | **Libraries** | Code libraries, classes, and functions documentation | `CloudFrameWorkDevDocumentationForLibraries`, `CloudFrameWorkDevDocumentationForLibrariesModules` |
 | **Processes** | Business and technical processes | `CloudFrameWorkDevDocumentationForProcesses`, `CloudFrameWorkDevDocumentationForSubProcesses` |
 | **Checks** | Tests, objectives, and specifications linked to other documentation | `CloudFrameWorkDevDocumentationForProcessTests` |
+| **Resources** | Infrastructure resources (tangible and intangible assets) | `CloudFrameWorkInfrastructureResources` |
 | **WebPages** | Web content pages for internal or public publishing | `CloudFrameWorkECMPages` |
 
 All modules share a common lifecycle state system and backup infrastructure.
@@ -1041,6 +1042,168 @@ composer run-script script "cloud-documentum/crud-check/cloudframework/backup-fr
 
 ---
 
+## Infrastructure Resources
+
+Infrastructure Resources document organizational assets that are under the organization's control. This includes both:
+
+- **Tangible assets**: Computers, servers, devices, hardware equipment
+- **Intangible assets**: Domains, databases, web servers, cloud services, certificates, subscriptions
+
+Resources are part of CLOUD Documentum and accessible through the CLOUD Development menu under "Resources" section.
+
+### CloudFrameWorkInfrastructureResources
+
+**Key fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyName` | keyname | Unique identifier for the resource (min 1 char, lowercase) |
+| `ResourceParent` | string | Parent resource KeyName (for hierarchical organization) |
+| `Category` | string | Resource category (e.g., `Hardware`, `Cloud Services`, `Domains`) |
+| `Type` | string | Resource type (min 3 chars, e.g., `Server`, `Database`, `Domain`) |
+| `Description` | string | Brief description of the resource |
+| `HTMLDescription` | string | Detailed HTML description |
+| `Tags` | list | Search tags for categorization |
+| `Structure` | json | Structured data about the resource configuration |
+| `MonthlyPrice` | float | Monthly cost/price of the resource |
+| `ResourceContent` | json | Additional content and metadata |
+| `ExpirationDate` | date | Expiration or renewal date (for domains, certificates, subscriptions) |
+| `Active` | boolean | Whether the resource is currently active |
+
+### Resource Categories
+
+Common categories for organizing resources:
+
+| Category | Examples |
+|----------|----------|
+| `Hardware` | Servers, laptops, network equipment |
+| `Cloud Services` | GCP projects, AWS accounts, Azure subscriptions |
+| `Domains` | Domain names, DNS records |
+| `Databases` | Cloud SQL, Datastore, BigQuery datasets |
+| `Certificates` | SSL/TLS certificates, code signing certificates |
+| `Software` | Licenses, subscriptions, SaaS tools |
+| `Storage` | Cloud Storage buckets, backup systems |
+
+### Resource Hierarchy
+
+Resources can be organized hierarchically using the `ResourceParent` field:
+
+```
+Organization (KeyName: "org-cloudframework")
+├── Infrastructure (ResourceParent: "org-cloudframework")
+│   ├── GCP Project (ResourceParent: "infrastructure")
+│   │   ├── App Engine (ResourceParent: "gcp-project")
+│   │   ├── Cloud SQL (ResourceParent: "gcp-project")
+│   │   └── Cloud Storage (ResourceParent: "gcp-project")
+│   └── Domain (ResourceParent: "infrastructure")
+│       └── SSL Certificate (ResourceParent: "domain")
+```
+
+### Resource Backup System
+
+**Location**: `buckets/backups/Resources/`
+
+```
+buckets/backups/Resources/
+├── cloudframework/            # CloudFramework Resources
+│   ├── server-production.json
+│   ├── domain-cloudframework-io.json
+│   ├── gcp-project-cloudframework.json
+│   ├── _all_resources.json    # Consolidated backup with metadata
+│   └── ...
+├── hipotecalia/               # Client Resources
+└── ...
+```
+
+**JSON file structure:**
+
+```json
+{
+    "KeyName": "server-production",
+    "ResourceParent": "infrastructure",
+    "Category": "Hardware",
+    "Type": "Server",
+    "Description": "Production application server",
+    "HTMLDescription": "<p>Main production server...</p>",
+    "Tags": ["production", "critical"],
+    "Structure": {
+        "cpu": "8 cores",
+        "ram": "32GB",
+        "storage": "500GB SSD"
+    },
+    "MonthlyPrice": 150.00,
+    "ResourceContent": {
+        "ip": "10.0.0.1",
+        "hostname": "prod-server-01"
+    },
+    "ExpirationDate": null,
+    "Active": true
+}
+```
+
+### Resource Management Scripts
+
+```bash
+# Backup all Resources from all platforms
+composer run-script script backup_platforms_resources
+
+# CRUD operations for individual Resources
+composer run-script script "cloud-documentum/crud-resources/:platform/list-remote"
+composer run-script script "cloud-documentum/crud-resources/:platform/list-local"
+composer run-script script "cloud-documentum/crud-resources/:platform/backup-from-remote?id=resource-key"
+composer run-script script "cloud-documentum/crud-resources/:platform/backup-from-remote"  # all resources
+composer run-script script "cloud-documentum/crud-resources/:platform/update-from-backup?id=resource-key"
+composer run-script script "cloud-documentum/crud-resources/:platform/insert-from-backup?id=resource-key"
+```
+
+**Script locations**:
+- Backup: `buckets/scripts/backup_platforms_resources.php`
+- CRUD: `buckets/scripts/cloud-documentum/crud-resources.php`
+
+### Using Resources in Code
+
+```php
+// Fetch all resources
+$resources = $this->cfos->ds('CloudFrameWorkInfrastructureResources')->fetchAll('*');
+
+// Fetch active resources by category
+$servers = $this->cfos->ds('CloudFrameWorkInfrastructureResources')->fetch([
+    'Category' => 'Hardware',
+    'Active' => true
+], '*');
+
+// Fetch resources expiring soon
+$expiringResources = $this->cfos->ds('CloudFrameWorkInfrastructureResources')->fetch([
+    'ExpirationDate' => ['<=', date('Y-m-d', strtotime('+30 days'))]
+], '*');
+
+// Fetch child resources
+$childResources = $this->cfos->ds('CloudFrameWorkInfrastructureResources')->fetch([
+    'ResourceParent' => 'parent-resource-key'
+], '*');
+```
+
+### Resource Web Interface
+
+- **Resource Management**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkInfrastructureResources`
+- **Resource Accesses**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkInfrastructureResourcesAccesses`
+
+### Related CFOs
+
+| CFO | Description |
+|-----|-------------|
+| `CloudFrameWorkInfrastructureResources` | Main resource records |
+| `CloudFrameWorkInfrastructureResourcesAccesses` | Access permissions and credentials for resources |
+
+### Security Privileges
+
+| Privilege | Description |
+|-----------|-------------|
+| `directory-admin` | Full access to Infrastructure Resources |
+| `documents-admin` | Administrative access to Resources |
+
+---
+
 ## WebPages (ECM Pages)
 
 WebPages provide a web content management system for creating, managing, and publishing web pages. Pages can be used internally within the platform or exposed publicly for external access. They support rich HTML content, structured JSON data, and integration with documentation systems.
@@ -1419,6 +1582,7 @@ Access to CLOUD Documentum CFOs is controlled by these privileges:
 | Library Backups | `buckets/backups/Libraries/` |
 | Process Backups | `buckets/backups/Processes/` |
 | Check Backups | `buckets/backups/Checks/` |
+| Resource Backups | `buckets/backups/Resources/` |
 | WebPages Backups | `buckets/backups/WebPages/` |
 | **Documentation** | |
 | CFOs Documentation | `CLAUDE.md` (CFOs section) |
@@ -1428,9 +1592,11 @@ Access to CLOUD Documentum CFOs is controlled by these privileges:
 | Library Backup Script | `buckets/scripts/backup_platforms_libraries.php` |
 | Process Backup Script | `buckets/scripts/backup_platforms_processes.php` |
 | Check Backup Script | `buckets/scripts/backup_platforms_checks.php` |
+| Resource Backup Script | `buckets/scripts/backup_platforms_resources.php` |
 | WebPages Backup Script | `buckets/scripts/backup_platforms_webpages.php` |
 | **CRUD Scripts** | |
 | API CRUD Script | `buckets/scripts/cloud-documentum/crud-apis.php` |
 | Library CRUD Script | `buckets/scripts/cloud-documentum/crud-libraries.php` |
 | Process CRUD Script | `buckets/scripts/cloud-documentum/crud-processes.php` |
 | Check CRUD Script | `buckets/scripts/cloud-documentum/crud-check.php` |
+| Resource CRUD Script | `buckets/scripts/cloud-documentum/crud-resources.php` |
