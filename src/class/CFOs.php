@@ -82,35 +82,87 @@ class CFOs {
     /**
      * Retrieve or create a CFO object of the class CFO\{$cfo} created as code in cfo folder
      *
-     * @param string $cfo The identifier or name of the CFO object to retrieve or create.
+     * @param string $cfoId The identifier or name of the CFO object to retrieve or create.
      * @return mixed Returns the CFO object if successfully retrieved or created, or a failure response if an error occurs.
      */
-    function getCFOCodeObject($cfo)
+    function getCFOCodeObject(string $cfoId)
     {
 
         //if object has been previously created return it
-        if (key_exists($cfo, $this->cfoObjects)) return $this->cfoObjects[$cfo];
+        if (key_exists($cfoId, $this->cfoObjects)) return $this->cfoObjects[$cfoId];
 
         //if the class has not been previously loaded try to load it
-        if(!class_exists("CFO\\{$cfo}\ClassObject")) {
-            if (is_file($this->core->system->app_path . "/cfos/" . $cfo . ".php"))
-                include_once($this->core->system->app_path . "/cfos/" . $cfo . ".php");
+        if(!class_exists("CFO\\{$cfoId}\ClassObject")) {
+            if (is_file($this->core->system->app_path . "/cfos/" . $cfoId . ".php"))
+                include_once($this->core->system->app_path . "/cfos/" . $cfoId . ".php");
             else {
                 $bucket_path = $this->core->config->get('core.api.extra_path');
                 if ($bucket_path)
-                    @include_once($bucket_path . "/cfos/" . $cfo . ".php");
+                    @include_once($bucket_path . "/cfos/" . $cfoId . ".php");
             }
         }
 
         //if the class already does not exist RETURN error
-        if(!class_exists("CFO\\{$cfo}\ClassObject"))
-            return $this->addError('params-error',"cfos/{$cfo}.php does not exist");
+        if(!class_exists("CFO\\{$cfoId}\ClassObject"))
+            return $this->addError('params-error',"cfos/{$cfoId}.php does not exist");
 
         //set the object
-        $this->cfoObjects[$cfo] = new ('CFO\\'.$cfo.'\ClassObject')($this->core, $this);
+        $this->cfoObjects[$cfoId] = new ('CFO\\'.$cfoId.'\ClassObject')($this->core, $this);
 
         //return the object
-        return $this->cfoObjects[$cfo];
+        return $this->cfoObjects[$cfoId];
+    }
+
+    /**
+     * Retrieves the CFO entity data from ds:CloudFrameWorkCFOsLocal based on the provided CFO ID and namespace.
+     * Handles access verification, namespace management, and error handling for data retrieval.
+     *
+     * @param string $cfoId The unique identifier of the CFO model to retrieve.
+     * @param string $namespace Optional. The namespace within which to search for the CFO model. Default is an empty string.
+     * @return array|false Returns the CFO model data if found, or an error response if an issue occurs or the model is not found.
+     */
+    public function getCFOEntity(string $cfoId, string $namespace=''): bool|array
+    {
+
+        //region VERIFY we have access to Datastore model
+        if($this->ds('CloudFrameWorkCFOsLocal')->error)
+            return $this->addError('system-error',$this->ds('CloudFrameWorkCFOsLocal')->errorMsg[0]??$this->ds('CloudFrameWorkCFOsLocal')->errorMsg);
+        //endregion
+
+        //region SAVE $local_namespace and SET $namespace
+        $local_namespace = $this->ds('CloudFrameWorkCFOsLocal')->namespace;
+        if($namespace && $local_namespace != $namespace)
+            $this->ds('CloudFrameWorkCFOsLocal')->namespace = $namespace;
+        //endregion
+
+        //region SEARCH $cfo_data
+        $cfo_data = $this->ds('CloudFrameWorkCFOsLocal')->fetchOneByKey($cfoId);
+        if($this->ds('CloudFrameWorkCFOsLocal')->error)
+            return $this->addError('system-error',$this->ds('CloudFrameWorkCFOsLocal')->errorMsg[0]??$this->ds('CloudFrameWorkCFOsLocal')->errorMsg);
+        //endregion
+
+        //region IF NOT found try again of namcespace != 'cloudframework' and !$namespace
+        if(!$cfo_data && !$namespace && $local_namespace!='cloudframework') {
+            $this->ds('CloudFrameWorkCFOsLocal')->namespace='cloudframework';
+            $cfo_data = $this->ds('CloudFrameWorkCFOsLocal')->fetchOneByKey($cfoId);
+            if($this->ds('CloudFrameWorkCFOsLocal')->error)
+                return $this->addError('system-error',$this->ds('CloudFrameWorkCFOsLocal')->errorMsg[0]??$this->ds('CloudFrameWorkCFOsLocal')->errorMsg);
+        }
+        //endregion
+
+        //region RESTORE object namespace with $local_namespace
+        $this->ds('CloudFrameWorkCFOsLocal')->namespace = $local_namespace;
+        //endregion
+
+        //region RETURN not-found if !$cfo_data
+        if(!$cfo_data) {
+            if(!$namespace) $namespace = $local_namespace;
+            if($namespace != 'cloudframework') $namespace.= '|cloudframework';
+            return $this->addError('not-found', "CFO {$cfoId} does not exist in namespace [{$namespace}]");;
+        }
+        //endregion
+
+        return $cfo_data;
     }
 
     /**
