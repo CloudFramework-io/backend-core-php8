@@ -433,6 +433,133 @@ Define el comportamiento completo de la WebApp (cfo.html) para gestionar los dat
   }
   ```
 
+- **`reports`**: Definición de informes agregados (solo para CFOs tipo `db`)
+
+  Los informes permiten mostrar KPIs y métricas agregadas sobre los datos del CFO. Se definen como un objeto donde cada clave es el identificador del informe.
+
+  **Estructura del informe:**
+  ```json
+  {
+    "reports": {
+      "nombre_informe": {
+        "title": "Título del Informe",
+        "kpis": [
+          {
+            "dimensions": [
+              {
+                "field": "Nombre visible de la dimensión",
+                "formula": "campo_o_formula_sql"
+              }
+            ],
+            "metrics": [
+              {
+                "field": "Nombre de la métrica",
+                "formula": "COUNT(id)|SUM(campo)|AVG(campo)",
+                "align": "right|left|center",
+                "sum": true,
+                "currency": "€"
+              }
+            ],
+            "order": "formula_o_campo ASC|DESC",
+            "where": "condicion_sql"
+          }
+        ]
+      }
+    }
+  }
+  ```
+
+  **Propiedades del informe:**
+  | Propiedad | Tipo | Descripción |
+  |-----------|------|-------------|
+  | `title` | string | Título visible del informe |
+  | `kpis` | array | Array de definiciones de KPIs |
+
+  **Propiedades del KPI:**
+  | Propiedad | Tipo | Descripción |
+  |-----------|------|-------------|
+  | `dimensions` | array | Campos por los que agrupar (GROUP BY) |
+  | `metrics` | array | Métricas calculadas (COUNT, SUM, AVG, etc.) |
+  | `order` | string | Ordenación de resultados |
+  | `where` | string | Condición SQL para filtrar datos |
+
+  **Propiedades de dimensions:**
+  | Propiedad | Tipo | Descripción |
+  |-----------|------|-------------|
+  | `field` | string | Nombre visible de la columna |
+  | `formula` | string | Campo o fórmula SQL (ej: `CONCAT(campo1, campo2)`) |
+
+  **Propiedades de metrics:**
+  | Propiedad | Tipo | Descripción |
+  |-----------|------|-------------|
+  | `field` | string | Nombre visible de la métrica |
+  | `formula` | string | Fórmula SQL (COUNT, SUM, AVG, etc.) |
+  | `align` | string | Alineación: `left`, `center`, `right` |
+  | `sum` | boolean | Mostrar suma total al final |
+  | `currency` | string | Símbolo de moneda (ej: `€`, `$`) |
+
+  **Vincular informes a vistas:**
+
+  Los informes se vinculan a las vistas mediante un array `reports` dentro de cada vista:
+  ```json
+  {
+    "views": {
+      "default": {
+        "name": "Vista por defecto",
+        "reports": ["nombre_informe1", "nombre_informe2"],
+        "fields": {...}
+      }
+    }
+  }
+  ```
+
+  **Ejemplo completo:**
+  ```json
+  {
+    "interface": {
+      "reports": {
+        "by_department": {
+          "title": "Empleados por Departamento",
+          "kpis": [
+            {
+              "dimensions": [
+                {
+                  "field": "Departamento",
+                  "formula": "department_name"
+                }
+              ],
+              "metrics": [
+                {
+                  "field": "Total Empleados",
+                  "formula": "COUNT(id)",
+                  "align": "right",
+                  "sum": true
+                },
+                {
+                  "field": "Salario Promedio",
+                  "formula": "AVG(salary)",
+                  "align": "right",
+                  "currency": "€"
+                }
+              ],
+              "order": "COUNT(id) DESC",
+              "where": "status = 10 AND is_employee = 1"
+            }
+          ]
+        }
+      },
+      "views": {
+        "default": {
+          "name": "Empleados",
+          "reports": ["by_department"]
+        }
+      }
+    }
+  }
+  ```
+
+  > **Nota:** Los informes solo están disponibles para CFOs de tipo `db` (base de datos SQL), no para CFOs de tipo `ds` (Datastore).
+
 - **`hooks`**: Hooks de ciclo de vida
   ```json
   {
