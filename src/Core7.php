@@ -9360,15 +9360,24 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Retrieves the Google access token for a specified user.
          *
-         * @param string $user optional is the Google user email. If empty it will prompt it
-         * @return array|mixed|void
+         * This method checks the cache for an existing token, otherwise it requests a new one
+         * using the Google Cloud SDK command-line tool. If no user is provided, it prompts
+         * for the user's email and validates it. The token information is then returned and
+         * optionally cached for further use.
+         *
+         * @param string $user The Google user email. If not provided, it will be prompted
+         *                     and validated.
+         * @param bool $use_cache Whether to use cached credentials if available. Defaults to true.
+         * @return array|false Returns an array containing the token and related information, or
+         *                     false if an error occurs during the process.
          */
-        function getUserGoogleAccessToken(string $user='')
+        function getUserGoogleAccessToken(string $user='',$use_cache=true)
         {
             //region VERIFY $user or prompt it
+            if(!$user && $use_cache) $user = $this->getCacheVar('user_readUserGoogleCredentials');
             if(!$user) {
-                $user = $this->getCacheVar('user_readUserGoogleCredentials');
                 do {
                     $user_new = $this->prompt->title('Give me your Google User Email')->mandatory()->query();
                 } while (!$this->core->is->validEmail($user_new));
@@ -9379,7 +9388,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region SET $token from cache or gather a new one if expired
-            $token = $this->getCacheVar($user.'_token_readUserGoogleCredentials');
+            $token = $use_cache?$this->getCacheVar($user.'_token_readUserGoogleCredentials'):null;
             if(!$token || (microtime(true)-$token['time'] > 3500)) {
                 $token=[];
                 $gcloud_token_command = 'gcloud auth print-access-token --account='.$user;
@@ -9416,7 +9425,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $hash = md5($namespace.$user);
             $token = $this->cache->get('user-token-'.$hash);
-            $integration_key = $this->cache->get('integration-key-'.$hash);
+            if(!$integration_key) $integration_key = $this->cache->get('integration-key-'.$hash);
             if(!$integration_key) {
                 $integration_key = $this->prompt->mandatory()->title("Integration Key for platform [{$namespace}]")->query();
                 $this->cache->set('integration-key-'.$hash,$integration_key);
@@ -9433,10 +9442,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             if(!$token || !$this->core->user->loadPlatformUserWithToken($token,$integration_key)) {
-                if(!$access_token = $this->getUserGoogleAccessToken($user??'')) return false;
+                $this->cache->delete('user-token-'.$hash);
+                $this->cache->delete('user-email-'.$hash);
+                if(!$access_token = $this->getUserGoogleAccessToken(($user??''),false)) return false;
                 $this->cache->set('user-email-'.$hash,$access_token['email']);
-                if(!$this->core->user->loadPlatformUserWithGoogleAccessToken($access_token['email'],$access_token['token']))
-                    return $this->addError(($this->core->user->errorMsg??'Unknown error'));
+                if(!$this->core->user->loadPlatformUserWithGoogleAccessToken($access_token['email'],$access_token['token'],$namespace))
+                    return $this->addError($this->core->user->errorMsg??'Unknown error');
+
                 $this->cache->set('user-token-'.$hash,$this->core->user->token,3600*24);
             }
 
