@@ -743,7 +743,37 @@ Recent commits follow pattern:
 │   ├── api/                   # Framework core APIs
 │   ├── dispatcher.php         # API request dispatcher
 │   └── config.json            # Framework default config
+├── cloudia/                   # CLOUDIA documentation system
+│   ├── CLOUDIA.md             # CLOUDIA overview and conventions
+│   ├── CLOUD_DOCUMENTUM.md    # CLOUD Documentum documentation
+│   ├── CFOs.md                # CloudFramework Objects documentation
+│   └── cfos/                  # CFO JSON definitions for CLOUD Documentum
+│       ├── CloudFrameWorkCFOs.json
+│       ├── CloudFrameWorkDevDocumentation.json
+│       ├── CloudFrameWorkDevDocumentationForAPIs.json
+│       ├── CloudFrameWorkDevDocumentationForAPIEndPoints.json
+│       ├── CloudFrameWorkDevDocumentationForLibraries.json
+│       ├── CloudFrameWorkDevDocumentationForProcesses.json
+│       ├── CloudFrameWorkDevDocumentationForProcessTests.json
+│       ├── CloudFrameWorkDevDocumentationForWebApps.json
+│       ├── CloudFrameWorkECMPages.json
+│       ├── CloudFrameWorkInfrastructureResources.json
+│       ├── CloudFrameWorkInfrastructureResourcesAccesses.json
+│       ├── CloudFrameWorkModules.json
+│       └── ...
 ├── scripts/                   # Framework scripts (_*.php)
+│   └── _cloudia/              # CLOUDIA backup/sync scripts
+│       ├── apis.php           # API documentation CRUD
+│       ├── auth.php           # Authentication utilities
+│       ├── cfos.php           # CFO definitions CRUD
+│       ├── checks.php         # Checks documentation CRUD
+│       ├── courses.php        # Courses documentation CRUD
+│       ├── libraries.php      # Libraries documentation CRUD
+│       ├── menu.php           # Menu modules CRUD
+│       ├── processes.php      # Processes documentation CRUD
+│       ├── resources.php      # Infrastructure resources CRUD
+│       ├── webapps.php        # WebApps documentation CRUD
+│       └── webpages.php       # WebPages documentation CRUD
 ├── install/                   # Installation templates
 │   ├── api-dist/              # Example API templates
 │   ├── scripts-dist/          # Example script templates
@@ -776,3 +806,122 @@ Recent commits follow pattern:
 9. **Error Handling:** Check `$core->errors->data` after operations to detect failures
 
 10. **Stream Wrapper:** Enable Cloud Storage stream wrapper to use `gs://` URLs with native PHP file functions
+
+## CLOUDIA Documentation System
+
+The `cloudia/` directory contains documentation and CFO definitions for the CLOUDIA platform:
+
+### Documentation Files
+
+| File | Description |
+|------|-------------|
+| `cloudia/CLOUDIA.md` | CLOUDIA overview, conventions, and architecture |
+| `cloudia/CLOUD_DOCUMENTUM.md` | CLOUD Documentum documentation system (APIs, Processes, Libraries, etc.) |
+| `cloudia/CFOs.md` | CloudFramework Objects (CFOs) business logic layer documentation |
+
+### CFO Definitions
+
+The `cloudia/cfos/` directory contains JSON definitions for CLOUD Documentum entities:
+
+| CFO | Description |
+|-----|-------------|
+| `CloudFrameWorkCFOs` | Master CFO definitions management |
+| `CloudFrameWorkDevDocumentation` | Development groups |
+| `CloudFrameWorkDevDocumentationForAPIs` | API documentation |
+| `CloudFrameWorkDevDocumentationForAPIEndPoints` | API endpoints |
+| `CloudFrameWorkDevDocumentationForLibraries` | Code libraries |
+| `CloudFrameWorkDevDocumentationForLibrariesModules` | Library functions/methods |
+| `CloudFrameWorkDevDocumentationForProcesses` | Business processes |
+| `CloudFrameWorkDevDocumentationForSubProcesses` | Sub-processes |
+| `CloudFrameWorkDevDocumentationForProcessTests` | Checks and tests |
+| `CloudFrameWorkDevDocumentationForWebApps` | Web applications |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp modules |
+| `CloudFrameWorkECMPages` | ECM content pages |
+| `CloudFrameWorkInfrastructureResources` | Infrastructure resources (servers, computers, domains) |
+| `CloudFrameWorkInfrastructureResourcesAccesses` | Access permissions and credentials for resources |
+| `CloudFrameWorkModules` | Menu modules for different platform solutions |
+
+For detailed CFO structure documentation, see `cloudia/CLOUD_DOCUMENTUM.md`.
+
+## CLOUDIA Scripts (_cloudia)
+
+The `scripts/_cloudia/` directory contains scripts for managing CLOUD Documentum content:
+
+### Available Scripts
+
+```bash
+# APIs - Manage API documentation
+composer script -- _cloudia/apis/:platform/list-remote       # List remote APIs
+composer script -- _cloudia/apis/:platform/list-local        # List local backups
+composer script -- _cloudia/apis/:platform/backup-from-remote # Backup all APIs
+composer script -- "_cloudia/apis/:platform/backup-from-remote?id=/api/path" # Backup specific API
+composer script -- "_cloudia/apis/:platform/insert-from-backup?id=/api/path" # Insert from backup
+composer script -- "_cloudia/apis/:platform/update-from-backup?id=/api/path" # Update from backup
+
+# Libraries - Manage library documentation
+composer script -- _cloudia/libraries/:platform/list-remote
+composer script -- _cloudia/libraries/:platform/backup-from-remote
+composer script -- "_cloudia/libraries/:platform/backup-from-remote?id=/path/to/library"
+
+# Processes - Manage process documentation
+composer script -- _cloudia/processes/:platform/list-remote
+composer script -- _cloudia/processes/:platform/backup-from-remote
+composer script -- "_cloudia/processes/:platform/backup-from-remote?id=PROCESS-ID"
+
+# Checks - Manage checks/tests
+composer script -- _cloudia/checks/:platform/list-remote
+composer script -- "_cloudia/checks/:platform/backup-from-remote?entity=CFOEntity&id=CFOId"
+
+# WebApps - Manage webapp documentation
+composer script -- _cloudia/webapps/:platform/list-remote
+composer script -- _cloudia/webapps/:platform/backup-from-remote
+
+# Courses - Manage academy courses
+composer script -- _cloudia/courses/:platform/list-remote
+composer script -- _cloudia/courses/:platform/backup-from-remote
+
+# WebPages - Manage ECM pages
+composer script -- _cloudia/webpages/:platform/list-remote
+composer script -- _cloudia/webpages/:platform/backup-from-remote
+
+# CFOs - Manage CFO definitions
+composer script -- _cloudia/cfos/:platform/list-remote
+composer script -- _cloudia/cfos/:platform/backup-from-remote
+composer script -- "_cloudia/cfos/:platform/backup-from-remote?id=CFOKeyName"
+
+# Resources - Manage infrastructure resources
+composer script -- _cloudia/resources/:platform/list-remote
+composer script -- _cloudia/resources/:platform/backup-from-remote
+
+# Menu - Manage menu modules
+composer script -- _cloudia/menu/:platform/list-remote
+composer script -- _cloudia/menu/:platform/backup-from-remote
+
+# Auth - Authentication utilities
+composer script -- _cloudia/auth/:platform/info          # Show auth info
+composer script -- _cloudia/auth/:platform/token         # Get/refresh token
+```
+
+### Script Parameters
+
+| Parameter | Description |
+|-----------|-------------|
+| `:platform` | Platform namespace (e.g., `cloudframework`, `freeme`) |
+| `id` | Entity identifier (KeyName for APIs/Libraries/Processes, KeyId for others) |
+| `entity` | CFO entity name (for Checks) |
+
+### Example Usage
+
+```bash
+# Backup all CloudFramework APIs
+composer script -- _cloudia/apis/cloudframework/backup-from-remote
+
+# Backup specific API with its endpoints
+composer script -- "_cloudia/apis/cloudframework/backup-from-remote?id=/erp/projects"
+
+# List all libraries for freeme platform
+composer script -- _cloudia/libraries/freeme/list-remote
+
+# Backup checks linked to a process
+composer script -- "_cloudia/checks/cloudframework/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=/cloud-hrms"
+```
