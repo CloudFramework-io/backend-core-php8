@@ -1,0 +1,949 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2026-01-10 10:31:03",
+    "Description": "<p>Este CFO permite la creación de Objetivos de información o [Checks] con el objetivo e ayudar en la definición documental o en la creación de tests de usuario. Se han definido las siguientes reglas:</p><ul><li>El campo Status puede tener los: pending,in-progress,blocked,in-qa,ok</li><li>Sólo se podrán borrar entidades cuyo valor de Status == 'pending'</li></ul>",
+    "GroupName": "CLOUD Documentum",
+    "KeyName": "CloudFrameWorkDevDocumentationForProcessTests",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "documentum",
+        "documentación",
+        "checks",
+        "contents"
+    ],
+    "Title": "",
+    "_search": [
+        "CLOUDFRAMEWORKDEVDOCUMENTATIONFORPROCESSTESTS",
+        "CLOUD DOCUMENTUM",
+        "DOCUMENTUM",
+        "DOCUMENTACION",
+        "CHECKS",
+        "CONTENTS"
+    ],
+    "entity": "CloudFrameWorkDevDocumentationForProcessTests",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Check de información",
+        "plural": "Checks de información",
+        "ico": "ballot-check",
+        "ecm": "/cfo/CloudFrameWorkDevDocumentationForProcessTests",
+        "tabs": {
+            "main": {
+                "title": "Objetivos",
+                "ico": "ballot-check"
+            },
+            "config": {
+                "title": "Configuración",
+                "ico": "cog"
+            }
+        },
+        "filters": [
+            {
+                "type": "autocomplete",
+                "field": "Cat",
+                "empty_value": "Select a CAT",
+                "allow_empty": true,
+                "_external_where": {
+                    "Folder": "{{filter_Folder}}"
+                },
+                "external_auto_values": true
+            },
+            {
+                "type": "autocomplete",
+                "field": "Subcat",
+                "empty_value": "Select a Subcat",
+                "allow_empty": true,
+                "external_auto_values": true
+            },
+            {
+                "type": "autocomplete",
+                "field": "Type",
+                "empty_value": "Select a Type",
+                "allow_empty": true,
+                "external_auto_values": true
+            }
+        ],
+        "buttons": [
+            {
+                "title": "New Test",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "server_order": "DateUpdated DESC",
+                "server_limit": 200,
+                "multiselect": {
+                    "active": true,
+                    "menu": [
+                        {
+                            "title": "Update Open Value",
+                            "type": "cfo-update-fields",
+                            "values": {
+                                "Open": true
+                            }
+                        }
+                    ]
+                },
+                "conditional_rows_background_color": {
+                    "default": "#d4dad5a0",
+                    "fields": [
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#43db81a0",
+                            "values": [
+                                "5.RUNNING"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#f48e4fba",
+                            "values": [
+                                "4.WITH INCIDENCES"
+                            ]
+                        }
+                    ]
+                },
+                "fields": {
+                    "Route": {
+                        "field": "Route",
+                        "id_field": "KeyId",
+                        "update_cfo": true,
+                        "virtual_values": [
+                            "Route"
+                        ]
+                    },
+                    "v_Cat (copy)": {
+                        "field": "v_Cat",
+                        "name": "Linked CFO",
+                        "type": "virtual",
+                        "id_field": "KeyId",
+                        "update_cfo": true,
+                        "virtual_values": [
+                            "CFOEntity",
+                            "CFOField",
+                            "CFOId"
+                        ]
+                    },
+                    "Status": {
+                        "row_group": true,
+                        "field": "Status"
+                    },
+                    "Title": {
+                        "field": "Title",
+                        "display_cfo": true,
+                        "id_field": "KeyId"
+                    },
+                    "Owner": {
+                        "field": "Owner"
+                    },
+                    "AssignedTo": {
+                        "field": "AssignedTo"
+                    },
+                    "Open": {
+                        "field": "Open"
+                    },
+                    "DateDueDate": {
+                        "field": "DateDueDate"
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated"
+                    },
+                    "Results": {
+                        "field": "Results",
+                        "security": {
+                            "user_privileges": [
+                                "none"
+                            ]
+                        }
+                    },
+                    "JSON": {
+                        "field": "JSON",
+                        "security": {
+                            "user_privileges": [
+                                "none"
+                            ]
+                        }
+                    },
+                    "Description": {
+                        "field": "Description",
+                        "security": {
+                            "user_privileges": [
+                                "none"
+                            ]
+                        }
+                    },
+                    "KeyId": {
+                        "field": "KeyId"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "Route": {
+                "field": "Route"
+            },
+            "CFOEntity": {
+                "field": "CFOEntity"
+            },
+            "CFOField": {
+                "field": "CFOField"
+            },
+            "CFOId": {
+                "field": "CFOId"
+            },
+            "Owner": {
+                "field": "Owner",
+                "defaultvalue": "{{User:KeyName}}"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo",
+                "new_row": true
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDueDate": {
+                "field": "DateDueDate"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Results": {
+                "field": "Results"
+            },
+            "Documents": {
+                "field": "Documents"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{}"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "Open": {
+                "field": "Open"
+            }
+        },
+        "display_fields": {
+            "Route": {
+                "field": "Route",
+                "tab": "config"
+            },
+            "CFOEntity": {
+                "field": "CFOEntity",
+                "tab": "config"
+            },
+            "CFOField": {
+                "field": "CFOField",
+                "tab": "config"
+            },
+            "CFOId": {
+                "field": "CFOId",
+                "tab": "config"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo",
+                "new_row": true
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDueDate": {
+                "field": "DateDueDate"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Results": {
+                "field": "Results"
+            },
+            "Documents": {
+                "field": "Documents"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "JSON": {
+                "field": "JSON",
+                "tab": "config"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "tab": "config"
+            },
+            "Open": {
+                "field": "Open",
+                "tab": "config"
+            }
+        },
+        "update_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "hidden": true
+            },
+            "Route": {
+                "field": "Route",
+                "tab": "config"
+            },
+            "CFOEntity": {
+                "field": "CFOEntity",
+                "tab": "config"
+            },
+            "CFOField": {
+                "field": "CFOField",
+                "tab": "config"
+            },
+            "CFOId": {
+                "field": "CFOId",
+                "tab": "config"
+            },
+            "Owner": {
+                "field": "Owner",
+                "tab": "config"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo",
+                "tab": "main",
+                "new_row": true
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDueDate": {
+                "field": "DateDueDate"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Results": {
+                "field": "Results"
+            },
+            "Documents": {
+                "field": "Documents"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "JSON": {
+                "field": "JSON",
+                "tab": "config"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "tab": "config"
+            },
+            "Open": {
+                "field": "Open",
+                "tab": "config"
+            }
+        },
+        "copy_fields": {
+            "Route": {
+                "field": "Route",
+                "tab": "main"
+            },
+            "CFOEntity": {
+                "field": "CFOEntity",
+                "tab": "config"
+            },
+            "CFOField": {
+                "field": "CFOField",
+                "tab": "config"
+            },
+            "CFOId": {
+                "field": "CFOId",
+                "tab": "config"
+            },
+            "Owner": {
+                "field": "Owner",
+                "tab": "config"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo",
+                "tab": "main",
+                "new_row": true
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDueDate": {
+                "field": "DateDueDate"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Results": {
+                "field": "Results"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "JSON": {
+                "field": "JSON",
+                "tab": "config"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "tab": "config"
+            },
+            "Open": {
+                "field": "Open",
+                "tab": "config"
+            }
+        },
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId"
+            }
+        }
+    },
+    "lowCode": {
+        "name": "Check de información",
+        "plural": "Checks de información",
+        "description": "",
+        "ico": "ballot-check",
+        "secret": "",
+        "model": {
+            "Route": {
+                "name": "Test Route (/test/xxx)",
+                "description": "Test Route (/test/xxx)",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "minlength": 4,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "CFOEntity": {
+                "name": "CFO Entity",
+                "description": "CFO Entity",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "autoselect"
+                }
+            },
+            "CFOField": {
+                "name": "CFO Field",
+                "description": "CFO Field",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "autoselect"
+                }
+            },
+            "CFOId": {
+                "name": "CFOId",
+                "description": "CFOId",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "Status": {
+                "name": "Status",
+                "description": "Status",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "Open": {
+                "name": "$namespace:cloudframework,cfo;project;variables;open",
+                "description": "$namespace:cloudframework,cfo;project;variables;open",
+                "type": "boolean",
+                "allow_null": false,
+                "index": true,
+                "defaultvalue": "true",
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "Title": {
+                "name": "Title",
+                "description": "Title",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "Owner": {
+                "name": "Owner",
+                "description": "Owner",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "AssignedTo": {
+                "name": "AssignedTo",
+                "description": "AssignedTo",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "multiselect"
+                }
+            },
+            "DateDeadline": {
+                "name": "Deadline",
+                "description": "deadline to complete the check",
+                "type": "date",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false,
+                "interface": {
+                    "type": "date"
+                }
+            },
+            "DateDueDate": {
+                "name": "To Finish before of..",
+                "description": "due date to complete the check",
+                "type": "date",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "date"
+                }
+            },
+            "Description": {
+                "name": "Objetivo",
+                "description": "Description of the test",
+                "type": "zip",
+                "allow_null": false,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "html"
+                }
+            },
+            "Results": {
+                "name": "Resultado",
+                "description": "Results of the Tests",
+                "type": "zip",
+                "allow_null": true,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "html"
+                }
+            },
+            "JSON": {
+                "name": "Test Extra JSON Data",
+                "description": "Test Extra JSON Data",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "CloudFrameworkUser": {
+                "name": "Updated By",
+                "description": "Updated By",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "DateUpdated": {
+                "name": "DateUpdated",
+                "description": "DateUpdated",
+                "type": "datetime",
+                "allow_null": true,
+                "index": true,
+                "forcevalue": "now",
+                "view": true,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "DateInsertion": {
+                "name": "DateInsertion",
+                "description": "DateInsertion",
+                "type": "datetime",
+                "allow_null": true,
+                "index": true,
+                "defaultvalue": "now",
+                "view": false,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "Documents": {
+                "name": "Associated Documents",
+                "description": "Associated Documents",
+                "type": "string",
+                "allow_null": true,
+                "index": false,
+                "defaultvalue": "Documentación funcional",
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": false,
+                "interface": {
+                    "type": "server_documents"
+                }
+            },
+            "Tags": {
+                "name": "Search Tags separated by ','",
+                "description": "Tags for search",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            }
+        },
+        "dependencies": []
+    },
+    "model": {
+        "model": {
+            "Route": [
+                "string",
+                "index|minlength:4"
+            ],
+            "CFOEntity": [
+                "string",
+                "index|allownull"
+            ],
+            "CFOField": [
+                "string",
+                "index|allownull"
+            ],
+            "CFOId": [
+                "string",
+                "index|allownull"
+            ],
+            "Status": [
+                "string",
+                "index|allownull"
+            ],
+            "Open": [
+                "boolean",
+                "index|defaultvalue:true"
+            ],
+            "Title": [
+                "string",
+                "index"
+            ],
+            "Owner": [
+                "string",
+                "index"
+            ],
+            "AssignedTo": [
+                "list",
+                "index|allownull"
+            ],
+            "DateDeadline": [
+                "date",
+                "index|allownull|description:deadline to complete the check"
+            ],
+            "DateDueDate": [
+                "date",
+                "index|allownull|description:due date to complete the check"
+            ],
+            "Description": [
+                "zip",
+                "|description:Description of the test"
+            ],
+            "Results": [
+                "zip",
+                "allownull|description:Results of the Tests"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ],
+            "CloudFrameworkUser": [
+                "string",
+                "index|notnull"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "index|allownull|forcevalue:now"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|allownull|defaultvalue:now"
+            ],
+            "Documents": [
+                "string",
+                "allownull|defaultvalue:Documentación funcional"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull|description:Tags for search"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkUsers"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "cfo_locked": true,
+            "user_spacenames": null,
+            "user_organizations": null,
+            "backups": {
+                "update": true,
+                "delete": true
+            },
+            "allow_delete": {
+                "field_values": {
+                    "Status": [
+                        "equals",
+                        "pending"
+                    ]
+                }
+            },
+            "user_privileges": [
+                "development-admin",
+                "development-user",
+                "ecm-admin",
+                "ecm-user"
+            ]
+        },
+        "fields": {
+            "KeyId": {
+                "name": "Test Id"
+            },
+            "Description": {
+                "type": "html",
+                "name": "Objetivo"
+            },
+            "Results": {
+                "type": "html",
+                "name": "Resultado",
+                "allow_empty": true
+            },
+            "Route": {
+                "name": "Test Route (/test/xxx)",
+                "tab": "config"
+            },
+            "Status": {
+                "type": "select",
+                "values": [
+                    {
+                        "id": "pending",
+                        "value": "Pendiente de definir"
+                    },
+                    {
+                        "id": "in-progress",
+                        "value": "En curso"
+                    },
+                    {
+                        "id": "blocked",
+                        "value": "Bloqueado"
+                    },
+                    {
+                        "id": "in-qa",
+                        "value": "En QA"
+                    },
+                    {
+                        "id": "ok",
+                        "value": "Finalizado (OK)"
+                    }
+                ]
+            },
+            "DateDeadline": {
+                "type": "date",
+                "name": "Deadline",
+                "allow_empty": true
+            },
+            "DateDueDate": {
+                "type": "date",
+                "name": "To Finish before of..",
+                "allow_empty": true
+            },
+            "Title": {
+                "name": "Title"
+            },
+            "Tags": {
+                "name": "Search Tags separated by ','",
+                "allow_empty": true
+            },
+            "CFOEntity": {
+                "name": "CFO Entity",
+                "type": "autoselect",
+                "allow_empty": "autoselect",
+                "tab": "config",
+                "cols": 2,
+                "new_row": true
+            },
+            "CFOField": {
+                "name": "CFO Field",
+                "type": "autoselect",
+                "allow_empty": true,
+                "tab": "config"
+            },
+            "CFOId": {
+                "name": "CFOId",
+                "allow_empty": true,
+                "tab": "config"
+            },
+            "Owner": {
+                "name": "Owner"
+            },
+            "AssignedTo": {
+                "name": "AssignedTo",
+                "type": "multiselect",
+                "external_values": "ds",
+                "external_where": {
+                    "UserActive": true,
+                    "UserPrivileges": [
+                        "development-admin",
+                        "development-user",
+                        "ecm-admin",
+                        "ecm-user"
+                    ]
+                },
+                "entity": "CloudFrameWorkUsers",
+                "fields": "UserEmail,UserName",
+                "linked_field": "KeyName",
+                "allow_empty": true
+            },
+            "Open": {
+                "name": "$namespace:cloudframework,cfo;project;variables;open",
+                "internal_replacement": true,
+                "value": true,
+                "conditional_value": {
+                    "Status == ok": {
+                        "value": false,
+                        "condition": [
+                            "{{Status}}",
+                            "equals",
+                            [
+                                "ok"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "CloudFrameworkUser": {
+                "name": "Updated By"
+            },
+            "JSON": {
+                "type": "json",
+                "tab": "config",
+                "name": "Test Extra JSON Data"
+            },
+            "Documents": {
+                "type": "server_documents",
+                "name": "Associated Documents",
+                "bucket": "gs://{{Platform:company-bucket,cloudframework-private}}/{{Platform:namespace}}/checks",
+                "cf_bucket": "KeyId",
+                "max_file_size": 10242880,
+                "multiple": true,
+                "allow_empty": true
+            }
+        }
+    },
+    "status": "IN PRODUCTION",
+    "type": "ds"
+}

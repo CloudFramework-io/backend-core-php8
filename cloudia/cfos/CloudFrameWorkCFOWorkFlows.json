@@ -1,0 +1,199 @@
+{
+    "DateUpdating": "2024-08-22 09:38:35",
+    "Description": "<p><br></p>",
+    "GroupName": "CLOUD-PLATFORM",
+    "KeyName": "CloudFrameWorkCFOWorkFlows",
+    "entity": "CloudFrameWorkCFOWorkFlows",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "CloudFramework Workflow",
+        "plural": "CloudFramework Workflows",
+        "ico": "expand-arrows-alt",
+        "buttons": [
+            {
+                "title": "Insert new Workflow",
+                "type": "api-insert"
+            }
+        ],
+        "_filters": [
+            {
+                "field": "Active",
+                "type": "select",
+                "allow_empty": false,
+                "deafaultvalue": "true",
+                "values": [
+                    {
+                        "id": "true",
+                        "value": "Only Active Platforms"
+                    },
+                    {
+                        "id": "false",
+                        "value": "No Active Platforms"
+                    }
+                ]
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "_server_order": "ModuleName ASC",
+                "server_limit": 100,
+                "fields": {
+                    "KeyId": {
+                        "field": "KeyId",
+                        "update_cfo": true
+                    },
+                    "CFOId": {
+                        "order": "asc",
+                        "field": "CFOId"
+                    },
+                    "WorkFlowName": {
+                        "field": "WorkFlowName"
+                    },
+                    "Active": {
+                        "field": "Active"
+                    },
+                    "DateUpdating": {
+                        "field": "DateUpdating"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "CFOId": {
+                "field": "CFOId"
+            },
+            "WorkFlowName": {
+                "field": "WorkFlowName",
+                "new_row": true
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{\"menu\": {        \"_template\": \"https://core20.web.app/ajax/people_dashboard.html?v2022110801\",\n        \"_icon\": \"fa-chess\",\n        \"_security\": {\n            \"user_privileges\": [\n                \"people-admin\",\n                \"people-user\",\n                \"lms-admin\"\n            ]\n        },\n        \"Dashboard\": {\n            \"_code\": \"people-dashboard\",\n            \"_template\": \"https://core20.web.app/ajax/people_dashboard.html?v2022110801\",\n            \"_icon\": \"fa-chess\",\n            \"_security\": {\n                \"user_privileges\": [\n                    \"people-admin\",\n                    \"people-user\",\n                    \"lms-admin\"\n                ]\n            }\n        }}}"
+            }
+        },
+        "update_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "read_only": true
+            },
+            "CFOId": {
+                "field": "CFOId",
+                "read_only": true
+            },
+            "WorkFlowName": {
+                "field": "WorkFlowName"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "JSON": {
+                "field": "JSON",
+                "_section_class": "col col-xs-12"
+            }
+        },
+        "copy_fields": {
+            "CFOId": {
+                "field": "CFOId"
+            },
+            "WorkFlowName": {
+                "field": "WorkFlowName",
+                "new_row": true
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{\"menu\": {        \"_template\": \"https://core20.web.app/ajax/people_dashboard.html?v2022110801\",\n        \"_icon\": \"fa-chess\",\n        \"_security\": {\n            \"user_privileges\": [\n                \"people-admin\",\n                \"people-user\",\n                \"lms-admin\"\n            ]\n        },\n        \"Dashboard\": {\n            \"_code\": \"people-dashboard\",\n            \"_template\": \"https://core20.web.app/ajax/people_dashboard.html?v2022110801\",\n            \"_icon\": \"fa-chess\",\n            \"_security\": {\n                \"user_privileges\": [\n                    \"people-admin\",\n                    \"people-user\",\n                    \"lms-admin\"\n                ]\n            }\n        }}}"
+            }
+        },
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            }
+        },
+        "display_fields": null
+    },
+    "model": {
+        "model": {
+            "CFOId": [
+                "string",
+                "index|unique|minlength:2"
+            ],
+            "WorkFlowName": [
+                "string",
+                "index|minlength:4"
+            ],
+            "Fingerprint": [
+                "json",
+                "internal"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|defaultvalue:now"
+            ],
+            "DateUpdating": [
+                "datetime",
+                "index|forcevalue:now"
+            ],
+            "Active": [
+                "boolean",
+                "index|defaultvalue:true"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ]
+        },
+        "dependencies": []
+    },
+    "securityAndFields": {
+        "security": {
+            "user_organizations": null,
+            "user_spacenames": null,
+            "backups": {
+                "update": true,
+                "delete": true
+            },
+            "logs": {
+                "update": true,
+                "delete": true
+            },
+            "user_privileges": [
+                "_superadmin_",
+                "platform-admin",
+                "development-admin",
+                "CFDE"
+            ]
+        },
+        "fields": {
+            "CFOId": {
+                "name": "CFO Id",
+                "unique": true
+            },
+            "WorkFlowName": {
+                "name": "Workflow Name"
+            },
+            "DateInsertion": {
+                "name": "Creation Date"
+            },
+            "DateUpdating": {
+                "name": "Last Update"
+            },
+            "Active": {
+                "name": "Active",
+                "type": "boolean"
+            },
+            "JSON": {
+                "name": "Workflow Configuration",
+                "type": "JSON"
+            }
+        }
+    },
+    "type": "ds"
+}

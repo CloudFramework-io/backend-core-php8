@@ -1,0 +1,670 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-12-22 06:56:54",
+    "Description": "<p>This CFOs contains the ENDPOINTs definitions of APIs where you will be able to describe: methods, query params, body, responses etc..</p>",
+    "GroupName": "CLOUD Documentum",
+    "KeyName": "CloudFrameWorkDevDocumentationForAPIEndPoints",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "endpoints",
+        "apis"
+    ],
+    "Title": "ENDPOINTs associated an an API",
+    "_search": [
+        "CLOUDFRAMEWORKDEVDOCUMENTATIONFORAPIENDPOINTS",
+        "CLOUD DOCUMENTUM",
+        "ENDPOINTS",
+        "APIS"
+    ],
+    "entity": "CloudFrameWorkDevDocumentationForAPIEndPoints",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "CloudFramework Doc API End-point",
+        "plural": "CloudFramework Doc API  End-points",
+        "ico": "bullseye",
+        "ecm": "/cfos/CloudFrameWorkDevDocumentationForAPIEndPoints",
+        "tabs": {
+            "main": {
+                "title": "ENDPOINT data"
+            },
+            "development": {
+                "title": "Docs & Development Relations"
+            },
+            "source": {
+                "title": "Source Code",
+                "ico": "code"
+            }
+        },
+        "filters": [
+            {
+                "field": "API",
+                "type": "select",
+                "allow_empty": true,
+                "empty_value": "SELECT API",
+                "auto_values": true
+            },
+            {
+                "field": "Folder",
+                "type": "select",
+                "allow_empty": true,
+                "empty_value": "SELECT FOLDER",
+                "auto_values": true
+            },
+            {
+                "field": "Cat",
+                "type": "select",
+                "allow_empty": true,
+                "empty_value": "SELECT CAT",
+                "auto_values": true
+            }
+        ],
+        "buttons": [
+            {
+                "title": "NEW ENDPOINT",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "_server_order": "DateInsertion ASC",
+                "server_limit": 200,
+                "conditional_rows_background_color": {
+                    "default": "",
+                    "fields": [
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "value": "5.RUNNING",
+                            "color": "#aafc9e"
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "value": "3.IN QA",
+                            "color": "#84f5e2"
+                        }
+                    ]
+                },
+                "fields": {
+                    "Cat": {
+                        "field": "Cat"
+                    },
+                    "Status": {
+                        "field": "Status"
+                    },
+                    "v_ENDPOINT": {
+                        "field": "v_ENDPOINT",
+                        "type": "virtual",
+                        "full_col_width": true,
+                        "js_conditional_cell_color": [
+                            {
+                                "color": "#fcd086",
+                                "condition": "\"{{Method}}\"===\"POST\""
+                            },
+                            {
+                                "color": "#76f470",
+                                "condition": "\"{{Method}}\"===\"GET\""
+                            },
+                            {
+                                "color": "#70f4dc",
+                                "condition": "\"{{Method}}\"===\"PUT\""
+                            },
+                            {
+                                "color": "#ff8686",
+                                "condition": "\"{{Method}}\"===\"DELETE\""
+                            }
+                        ],
+                        "virtual_elements": {
+                            "APIview": {
+                                "type": "display",
+                                "ico": "project-diagram",
+                                "cfo": "CloudFrameWorkDevDocumentationForAPIs",
+                                "id_field": "API"
+                            },
+                            "display": {
+                                "type": "display"
+                            },
+                            "update": {
+                                "type": "update"
+                            },
+                            "values": {
+                                "type": "value",
+                                "value": "[{{Method}}]{{API}}{{EndPoint}}"
+                            }
+                        }
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "TeamOwner": {
+                        "field": "TeamOwner",
+                        "crm-user": true
+                    },
+                    "Deadline": {
+                        "field": "Deadline"
+                    },
+                    "TeamAsignation": {
+                        "field": "TeamAsignation"
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated",
+                        "order": "desc"
+                    },
+                    "Folder": {
+                        "order": "asc",
+                        "field": "Folder",
+                        "row_group": true
+                    },
+                    "Tests": {
+                        "field": "Tests",
+                        "js_conditional_cell_color": [
+                            {
+                                "default": "#ff3c3c",
+                                "color": "#60b5ff",
+                                "condition": "\"{{Tests}}\".indexOf(\"OK\")===0"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "Method": {
+                "field": "Method"
+            },
+            "API": {
+                "field": "API"
+            },
+            "EndPoint": {
+                "field": "EndPoint"
+            },
+            "Folder": {
+                "field": "Folder"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Private": {
+                "field": "Private"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation",
+                "new_row": true
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Deadline": {
+                "field": "Deadline"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "PAYLOADJSON": {
+                "field": "PAYLOADJSON"
+            },
+            "RETURNEDJSON": {
+                "field": "RETURNEDJSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            },
+            "TESTJSON": {
+                "field": "TESTJSON"
+            },
+            "CFOs": {
+                "field": "CFOs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            },
+            "SourceCodeContent": {
+                "field": "SourceCodeContent"
+            }
+        },
+        "update_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "hidden": true
+            },
+            "Method": {
+                "field": "Method"
+            },
+            "API": {
+                "field": "API"
+            },
+            "EndPoint": {
+                "field": "EndPoint"
+            },
+            "Folder": {
+                "field": "Folder"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Private": {
+                "field": "Private"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "PAYLOADJSON": {
+                "field": "PAYLOADJSON"
+            },
+            "RETURNEDJSON": {
+                "field": "RETURNEDJSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Deadline": {
+                "field": "Deadline"
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{\"_default\":{\"vars\":{\"var1\":\"value1\"}},\"testname\":{\"prompt_vars\":{},\"vars\":{},\"cals\":[{\"title\":\"title1\",\"method\":\"get\",\"url\":\"https://\",\"headers\":{},\"payload\":{},\"status\":200,\"set-run-vars\":{},\"check-json-values\":{}}]}}"
+            },
+            "CFOs": {
+                "field": "CFOs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            },
+            "TESTJSON": {
+                "field": "TESTJSON"
+            },
+            "SourceCodeContent": {
+                "field": "SourceCodeContent"
+            }
+        },
+        "copy_fields": {
+            "Folder": {
+                "field": "Folder"
+            },
+            "Cat": {
+                "field": "Cat",
+                "new_row": true
+            },
+            "Method": {
+                "field": "Method"
+            },
+            "API": {
+                "field": "API"
+            },
+            "EndPoint": {
+                "field": "EndPoint"
+            },
+            "Deadline": {
+                "field": "Deadline"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{\"_default\":{\"vars\":{\"var1\":\"value1\"}},\"testname\":{\"prompt_vars\":{},\"vars\":{},\"cals\":[{\"title\":\"title1\",\"method\":\"get\",\"url\":\"https://\",\"headers\":{},\"payload\":{},\"status\":200,\"set-run-vars\":{},\"check-json-values\":{}}]}}"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "PAYLOADJSON": {
+                "field": "PAYLOADJSON"
+            },
+            "RETURNEDJSON": {
+                "field": "JSON"
+            },
+            "TESTJSON": {
+                "field": "TESTJSON"
+            },
+            "CFOs": {
+                "field": "CFOs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            },
+            "SourceCodeContent": {
+                "field": "SourceCodeContent"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            }
+        },
+        "display_fields": null,
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId"
+            }
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "EndPoint": [
+                "string",
+                "index"
+            ],
+            "Method": [
+                "string",
+                "index"
+            ],
+            "API": [
+                "string",
+                "index"
+            ],
+            "Cat": [
+                "string",
+                "index|allownull"
+            ],
+            "Folder": [
+                "string",
+                "index"
+            ],
+            "Status": [
+                "string",
+                "index"
+            ],
+            "Deadline": [
+                "date",
+                "index|allownull"
+            ],
+            "Tests": [
+                "string",
+                "index|allownull"
+            ],
+            "TeamOwner": [
+                "string",
+                "index"
+            ],
+            "TeamAsignation": [
+                "string",
+                "index|allownull"
+            ],
+            "TeamSupport": [
+                "list",
+                "index|allownull"
+            ],
+            "Title": [
+                "string",
+                "index|description=Title of the API"
+            ],
+            "Description": [
+                "string",
+                "allownull"
+            ],
+            "CloudFrameworkUser": [
+                "string",
+                "index|notnull"
+            ],
+            "PAYLOADJSON": [
+                "json",
+                "allownull"
+            ],
+            "RETURNEDJSON": [
+                "json",
+                "allownull"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ],
+            "TESTJSON": [
+                "json",
+                "allownull"
+            ],
+            "SourceCodeContent": [
+                "zip",
+                "allownull|description:relevant source code for the end-point"
+            ],
+            "CFOs": [
+                "list",
+                "index|allownull|description:related CFOs"
+            ],
+            "Libraries": [
+                "list",
+                "index|allownull|description:Libraries used by the API"
+            ],
+            "Private": [
+                "boolean",
+                "index|allownull|description:It will indicate if the ENDPOINT is private to avoud Public documentation"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|allownull|defaultvalue:now"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "index|allownull|forcevalue:now"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkDevDocumentationForAPIs",
+            "CloudFrameWorkPeoplePlayers",
+            "CloudFrameWorkUsers"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "cfo_locked": true,
+            "user_spacenames": null,
+            "user_organizations": null,
+            "user_privileges": [
+                "directory-admin",
+                "development-admin",
+                "development-user"
+            ],
+            "backups": {
+                "delete": true,
+                "update": true
+            }
+        },
+        "fields": {
+            "Description": {
+                "type": "html"
+            },
+            "KeyId": {
+                "name": "API Internal Id"
+            },
+            "TeamOwner": {
+                "name": "API Owner",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "fields": "UserName,UserEmail",
+                "external_where": {
+                    "UserActive": true,
+                    "UserPrivileges": "development-admin"
+                },
+                "linked_field": "KeyName",
+                "defaultvalue": "{{User:KeyName}}",
+                "tab": "development"
+            },
+            "TeamAsignation": {
+                "name": "Team Assignation",
+                "type": "multiselect",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "fields": "UserName,UserEmail",
+                "external_where": {
+                    "UserActive": true
+                },
+                "linked_field": "KeyName",
+                "allow_empty": true,
+                "empty_value": "Assign User if it is in support",
+                "tab": "development"
+            },
+            "Cat": {
+                "name": "Cat",
+                "type": "autoselect",
+                "allow_empty": true
+            },
+            "Private": {
+                "name": "Private?",
+                "type": "boolean",
+                "defaultvalue": false
+            },
+            "Deadline": {
+                "name": "Production Date",
+                "allow_empty": true,
+                "type": "date",
+                "tab": "development"
+            },
+            "API": {
+                "name": "Parent API",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkDevDocumentationForAPIs",
+                "fields": "KeyName,ExtraPath",
+                "linked_field": "KeyName",
+                "nowrap": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkDevDocumentationForAPIs"
+            },
+            "EndPoint": {
+                "name": "END-POINT",
+                "nowrap": true
+            },
+            "Folder": {
+                "name": "Folder",
+                "type": "autoselect",
+                "external_order": "Folder ASC",
+                "external_where": {
+                    "API": "{{API}}"
+                }
+            },
+            "Title": {
+                "name": "Title",
+                "cols": 3
+            },
+            "Method": {
+                "type": "select",
+                "values": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "DELETE"
+                ]
+            },
+            "Status": {
+                "type": "select",
+                "values": [
+                    "0.DEFINED",
+                    "1.MOCKED",
+                    "2.IN DEVELOPMENT",
+                    "3.IN QA",
+                    "4.WITH INCIDENCES",
+                    "5.RUNNING",
+                    "6.DEPRECATED"
+                ],
+                "tab": "development"
+            },
+            "PAYLOADJSON": {
+                "name": "Payload",
+                "type": "json",
+                "contextual": {
+                    "title": "Info about json format",
+                    "tooltip": "Click for more info",
+                    "url": "/ajax/cfa.html?api=/erp/dev-docs?tag=ecm-links:/training/cloud-development/apis/endpoints/payload&namespace=cloudframework"
+                },
+                "defaultvalue": "{\n    \"path_variables\": {\n        \"var1\": \"\"\n    },\n    \"params\": {\n        \"variable\": {\n            \"description\": \"desc\",\n            \"type\": \"string|intenger\",\n            \"mandatory\": true\n        }\n    },\n    \"body\": {\n        \"variable\": {\n            \"description\": \"desc\",\n            \"type\": \"string|intenger\",\n            \"mandatory\": true,\n            \"example\": \"example_value\"\n        }\n    }\n}",
+                "size": 1.5
+            },
+            "RETURNEDJSON": {
+                "type": "json",
+                "name": "Returned Json",
+                "contextual": {
+                    "title": "Info about json format",
+                    "tooltip": "Click for more info",
+                    "url": "/ajax/cfa.html?api=/erp/dev-docs?tag=ecm-links:/training/cloud-development/apis/endpoints/returned-json&namespace=cloudframework"
+                },
+                "defaultvalue": "{\"200\":{\"success\":true,\"status\":200,\"code\":\"ok\",\"data\":{}},\"400 name missing\":{\"success\":false,\"status\":400,\"error\":[]}}",
+                "size": 1.5
+            },
+            "JSON": {
+                "type": "json",
+                "name": "Checks & Documentation",
+                "defaultvalue": "{}",
+                "tab": "development"
+            },
+            "TESTJSON": {
+                "type": "json",
+                "name": "Test Schema",
+                "tab": "development",
+                "allow_empty": true,
+                "defaultvalue": "{}"
+            },
+            "SourceCodeContent": {
+                "name": "Source Code",
+                "allow_empty": true,
+                "type": "textarea",
+                "tab": "source"
+            },
+            "CFOs": {
+                "name": "CFOs Relacionados",
+                "type": "multiselect",
+                "external_values": "ds",
+                "entity": "CloudFrameWorkCFOsLocal",
+                "fields": "KeyName,GroupName",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "allow_empty": true,
+                "tab": "development"
+            },
+            "Libraries": {
+                "name": "Librerias Relacionadas",
+                "type": "multiselect",
+                "external_values": "ds",
+                "entity": "CloudFrameWorkDevDocumentationForLibraries",
+                "fields": "KeyName,Cat",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "tab": "development",
+                "allow_empty": true
+            }
+        }
+    },
+    "status": "IN PRODUCTION",
+    "type": "ds"
+}

@@ -1,0 +1,632 @@
+{
+    "Active": false,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2026-01-10 11:46:32",
+    "Description": "<p>This entity stores the information in CloudFramework to help in development documentation. Normally this entity includes references to APIs, CFOs or other information pages.</p>",
+    "GroupName": "CLOUD Documentum",
+    "KeyName": "CloudFrameWorkDevDocumentationForWebApps",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "apps",
+        "webapps",
+        "developers",
+        "libraries",
+        "librerias",
+        "aplicaciones"
+    ],
+    "Title": "List of Apps,Webapps",
+    "_search": [
+        "CLOUDFRAMEWORKDEVDOCUMENTATIONFORWEBAPPS",
+        "CLOUD DOCUMENTUM",
+        "APPS",
+        "WEBAPPS",
+        "DEVELOPERS",
+        "LIBRARIES",
+        "LIBRERIAS",
+        "APLICACIONES"
+    ],
+    "entity": "CloudFrameWorkDevDocumentationForWebApps",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "App/Libray and its Modules",
+        "plural": "Apps/Libraries and its Modules",
+        "ico": "laptop-code",
+        "ecm": "/cfos/CloudFrameWorkDevDocumentationForWebApps",
+        "tabs": {
+            "default": {
+                "title": "WebApp Data",
+                "ico": "laptop-code"
+            },
+            "categorization": {
+                "title": "Categorization",
+                "ico": "cabinet-filing"
+            },
+            "development": {
+                "title": "Development relations",
+                "ico": "code"
+            }
+        },
+        "filters": [
+            {
+                "type": "autocomplete",
+                "field": "Folder",
+                "empty_value": "Select a Folder",
+                "allow_empty": true,
+                "external_auto_values": true
+            },
+            {
+                "type": "autocomplete",
+                "field": "Cat",
+                "empty_value": "Select a CAT",
+                "allow_empty": true,
+                "_external_where": {
+                    "Folder": "{{filter_Folder}}"
+                },
+                "external_auto_values": true
+            }
+        ],
+        "buttons": [
+            {
+                "title": "NEW WEBAPP",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "_server_order": "DateInsertion ASC",
+                "server_limit": 200,
+                "conditional_rows_background_color": {
+                    "default": "",
+                    "fields": [
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#43db81a0",
+                            "values": [
+                                "5.RUNNING"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#f48e4fba",
+                            "values": [
+                                "4.WITH INCIDENCES"
+                            ]
+                        }
+                    ]
+                },
+                "fields": {
+                    "DocumentationId": {
+                        "field": "DocumentationId",
+                        "display_cfo": true
+                    },
+                    "Cat": {
+                        "field": "Cat",
+                        "update_cfo": true,
+                        "id_field": "KeyName",
+                        "api": "/cfi/CloudFrameWorkDevDocumentationForWebApps?fields=KeyName,DocumentationId,Folder,Cat,Menu,Type,Status"
+                    },
+                    "Menu": {
+                        "field": "Menu"
+                    },
+                    "Type": {
+                        "field": "Type"
+                    },
+                    "KeyName": {
+                        "field": "KeyName"
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "Status": {
+                        "field": "Status"
+                    },
+                    "TeamAsignation": {
+                        "field": "TeamAsignation"
+                    },
+                    "SourceCode": {
+                        "field": "SourceCode"
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated"
+                    },
+                    "TeamOwner": {
+                        "field": "TeamOwner"
+                    },
+                    "Folder": {
+                        "field": "Folder",
+                        "order": "ASC",
+                        "row_group": true
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Folder": {
+                "field": "Folder"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Menu": {
+                "field": "Menu"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation",
+                "new_row": true
+            },
+            "SourceCode": {
+                "field": "SourceCode",
+                "cols": 3
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            },
+            "APIs": {
+                "field": "APIs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            }
+        },
+        "update_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "hidden": true
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Folder": {
+                "field": "Folder"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Menu": {
+                "field": "Menu"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation"
+            },
+            "SourceCode": {
+                "field": "SourceCode",
+                "cols": 3
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            },
+            "APIs": {
+                "field": "APIs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            }
+        },
+        "display_fields": {
+            "Folder": {
+                "field": "Folder"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Menu": {
+                "field": "Menu"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation"
+            },
+            "SourceCode": {
+                "field": "SourceCode",
+                "cols": 3
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            },
+            "APIs": {
+                "field": "APIs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            },
+            "VirtualModules": {
+                "field": "VirtualModules"
+            }
+        },
+        "copy_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Folder": {
+                "field": "Folder"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Menu": {
+                "field": "Menu"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "TeamOwner": {
+                "field": "TeamOwner"
+            },
+            "TeamAsignation": {
+                "field": "TeamAsignation"
+            },
+            "SourceCode": {
+                "field": "SourceCode",
+                "cols": 3
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser",
+                "name": "Created By"
+            },
+            "APIs": {
+                "field": "APIs"
+            },
+            "Libraries": {
+                "field": "Libraries"
+            }
+        },
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId"
+            }
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "KeyName": [
+                "keyname",
+                "index"
+            ],
+            "Folder": [
+                "string",
+                "index"
+            ],
+            "DocumentationId": [
+                "string",
+                "index|allownull|description:Grupo de Documentación al que pertence"
+            ],
+            "Cat": [
+                "string",
+                "index"
+            ],
+            "Menu": [
+                "string",
+                "index|allowempty"
+            ],
+            "Type": [
+                "string",
+                "index"
+            ],
+            "Status": [
+                "string",
+                "index"
+            ],
+            "TeamOwner": [
+                "string",
+                "index"
+            ],
+            "TeamAsignation": [
+                "list",
+                "index|allownull"
+            ],
+            "TeamSupport": [
+                "list",
+                "index|allownull"
+            ],
+            "Title": [
+                "string",
+                "index|description=Title of the API"
+            ],
+            "Description": [
+                "string",
+                "allownull"
+            ],
+            "SourceCode": [
+                "string",
+                "allownull"
+            ],
+            "APIs": [
+                "list",
+                "index|allownull|description:related APIs"
+            ],
+            "Libraries": [
+                "list",
+                "index|allownull|description:related Libraries"
+            ],
+            "CloudFrameworkUser": [
+                "string",
+                "index|notnull"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|allownull|defaultvalue:now"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "index|allownull|forcevalue:now"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull|:description:Search tagss"
+            ],
+            "JSON": [
+                "json",
+                "allownull|description:JSON model to define objectives and documentation"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkDevDocumentation",
+            "CloudFrameWorkDevDocumentationForWebAppsModules",
+            "CloudFrameWorkDevDocumentationForLibraries",
+            "CloudFrameWorkDevDocumentationForAPIs",
+            "CloudFrameWorkPeoplePlayers"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "cfo_locked": true,
+            "user_spacenames": null,
+            "user_organizations": null,
+            "user_privileges": [
+                "development-admin",
+                "development-user"
+            ]
+        },
+        "fields": {
+            "KeyName": {
+                "name": "APP Id",
+                "display_cfo": true
+            },
+            "Folder": {
+                "name": "Folder",
+                "type": "autoselect",
+                "tab": "categorization",
+                "header": {
+                    "title": "Menu fields",
+                    "type": "h1"
+                }
+            },
+            "Cat": {
+                "name": "Cat",
+                "type": "autoselect",
+                "tab": "categorization"
+            },
+            "Menu": {
+                "name": "Menu",
+                "type": "autoselect",
+                "tab": "categorization",
+                "allow_empty": true
+            },
+            "Type": {
+                "name": "Type",
+                "type": "autoselect",
+                "tab": "categorization",
+                "header": {
+                    "title": "Development Info"
+                }
+            },
+            "Title": {
+                "name": "Title"
+            },
+            "Description": {
+                "type": "html"
+            },
+            "TeamOwner": {
+                "name": "APP Owner",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "external_where": {
+                    "UserActive": true,
+                    "UserPrivileges": [
+                        "development-admin",
+                        "development-user"
+                    ]
+                },
+                "fields": "UserName,UserEmail",
+                "linked_field": "KeyName",
+                "defaultvalue": "{{User:KeyName}}",
+                "tab": "categorization"
+            },
+            "TeamAsignation": {
+                "name": "Team Assignation",
+                "type": "multiselect",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "external_where": {
+                    "UserActive": true,
+                    "UserPrivileges": [
+                        "development-admin",
+                        "development-user"
+                    ]
+                },
+                "fields": "UserName,UserEmail",
+                "linked_field": "KeyName",
+                "tab": "categorization",
+                "allow_empty": true,
+                "empty_value": "Assign User if it is in support"
+            },
+            "Status": {
+                "type": "select",
+                "cat": "categorization",
+                "values": [
+                    "0.DEFINED",
+                    "1.MOCKED",
+                    "2.IN DEVELOPMENT",
+                    "3.IN QA",
+                    "4.WITH INCIDENCES",
+                    "5.RUNNING",
+                    "6.DEPRECATED"
+                ]
+            },
+            "SourceCode": {
+                "name": "URL to source code or webapp",
+                "link": true,
+                "allow_empty": true,
+                "cols": 3
+            },
+            "APIs": {
+                "name": "APIs Relacionadas",
+                "type": "multiselect",
+                "external_values": "ds",
+                "entity": "CloudFrameWorkDevDocumentationForAPIs",
+                "fields": "KeyName,ExtraPath",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "allow_empty": true,
+                "cols": 3,
+                "tab": "development"
+            },
+            "Libraries": {
+                "name": "Libraries Relacionadas",
+                "type": "multiselect",
+                "external_values": "ds",
+                "entity": "CloudFrameWorkDevDocumentationForLibraries",
+                "fields": "KeyName,Title",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "allow_empty": true,
+                "cols": 3,
+                "tab": "development"
+            },
+            "Tags": {
+                "name": "Tags"
+            },
+            "JSON": {
+                "name": "Objetives & Documentation",
+                "type": "json",
+                "allow_empty": true,
+                "defaultvalue": "{}"
+            },
+            "VirtualModules": {
+                "name": "Modules",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkDevDocumentationForWebAppsModules",
+                "linked_field": "WebApp",
+                "field_value": "KeyName",
+                "fields": "*",
+                "summary_line": "[{{Cat}}/{{Folder}}] ({{Method}} {{API}}{{EndPoint}}) {{Title}} [{{Status}}]",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebAppsModules/insert?filter_WebApp={{KeyName}}&filter_Cat={{Folder}}/{{Cat}}"
+            },
+            "DocumentationId": {
+                "name": "Documentation Group",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkDevDocumentation",
+                "fields": "KeyName,Title",
+                "linked_field": "KeyName",
+                "nowrap": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkDevDocumentation",
+                "cols": 3,
+                "tab": "development"
+            }
+        }
+    },
+    "status": "IN PRODUCTION",
+    "type": "ds"
+}

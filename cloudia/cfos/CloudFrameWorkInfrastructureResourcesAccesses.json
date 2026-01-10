@@ -1,0 +1,394 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-08-25 08:15:41",
+    "Description": "<p><br></p>",
+    "GroupName": "Infraestructure",
+    "KeyName": "CloudFrameWorkInfrastructureResourcesAccesses",
+    "Owner": "",
+    "Tags": "",
+    "Title": "",
+    "_search": [
+        "CLOUDFRAMEWORKINFRASTRUCTURERESOURCESACCESSES",
+        "INFRAESTRUCTURE"
+    ],
+    "entity": "CloudFrameWorkInfrastructureResourcesAccesses",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Infra Resources Access User/Passwords",
+        "plural": "Infra Resources Access User/Password",
+        "ico": "lock",
+        "buttons": [
+            {
+                "title": "New Infra User/Passwords",
+                "type": "api-insert"
+            }
+        ],
+        "filters": [
+            {
+                "field": "Category",
+                "name": "Category",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkInfrastructureResourcesAccesses",
+                "fields": "Category",
+                "linked_field": "Category",
+                "allow_empty": true,
+                "empty_value": "Select a Category",
+                "defaultvalue": null
+            },
+            {
+                "field": "Type",
+                "name": "Type",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkInfrastructureResourcesAccesses",
+                "fields": "Type",
+                "linked_field": "Type",
+                "allow_empty": true,
+                "empty_value": "Select a Type",
+                "defaultvalue": null
+            },
+            {
+                "field": "SearchData",
+                "name": "Search",
+                "type": "text",
+                "placeholder": "Search: email%"
+            }
+        ],
+        "views": {
+            "default": {
+                "fields": {
+                    "KeyName": {
+                        "field": "KeyName",
+                        "readonly": true
+                    },
+                    "Category": {
+                        "field": "Category"
+                    },
+                    "Type": {
+                        "field": "Type"
+                    },
+                    "Resource": {
+                        "field": "Resource"
+                    },
+                    "User": {
+                        "field": "User"
+                    },
+                    "CFUser": {
+                        "field": "CFUser"
+                    },
+                    "SearchData": {
+                        "field": "SearchData"
+                    },
+                    "Description": {
+                        "field": "Description"
+                    },
+                    "Status": {
+                        "field": "Status"
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated"
+                    },
+                    "DateCreated": {
+                        "field": "DateCreated"
+                    },
+                    "DateEnded": {
+                        "field": "DateEnded"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "Resource": {
+                "field": "Resource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "User": {
+                "field": "User"
+            },
+            "CFUser": {
+                "field": "CFUser"
+            },
+            "SearchData": {
+                "field": "SearchData"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            },
+            "Structure": {
+                "field": "Structure"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateUpdated": {
+                "field": "DateUpdated"
+            }
+        },
+        "update_fields": {
+            "Resource": {
+                "field": "Resource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "KeyName": {
+                "field": "KeyName",
+                "readonly": true
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "User": {
+                "field": "User"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "CFUser": {
+                "field": "CFUser"
+            },
+            "SearchData": {
+                "field": "SearchData"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            },
+            "Structure": {
+                "field": "Structure"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateUpdated": {
+                "field": "DateUpdated"
+            },
+            "DateCreated": {
+                "field": "DateCreated"
+            },
+            "DateEnded": {
+                "field": "DateEnded"
+            }
+        },
+        "copy_fields": {
+            "Resource": {
+                "field": "Resource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "KeyName": {
+                "field": "KeyName",
+                "readonly": true
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "User": {
+                "field": "User"
+            },
+            "SearchData": {
+                "field": "SearchData"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "CFUser": {
+                "field": "CFUser"
+            },
+            "Structure": {
+                "field": "Structure"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateUpdated": {
+                "field": "DateUpdated"
+            },
+            "DateEnded": {
+                "field": "DateEnded"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            }
+        },
+        "display_fields": null,
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            }
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "KeyName": [
+                "keyname",
+                "minlength:1|tolowercase"
+            ],
+            "User": [
+                "string",
+                "index|allownull"
+            ],
+            "CFUser": [
+                "string",
+                "index|allownull"
+            ],
+            "Resource": [
+                "string",
+                "index|allownull"
+            ],
+            "Category": [
+                "string",
+                "index|allownull"
+            ],
+            "SearchData": [
+                "list",
+                "index|allownull"
+            ],
+            "Type": [
+                "string",
+                "index|allownull"
+            ],
+            "Description": [
+                "string",
+                "allownull"
+            ],
+            "HTMLDescription": [
+                "string",
+                "allownull"
+            ],
+            "Structure": [
+                "json",
+                "allownull"
+            ],
+            "Status": [
+                "string",
+                "allownull|index"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "allownull|forcevalue=now"
+            ],
+            "DateCreated": [
+                "datetime",
+                "allownull"
+            ],
+            "DateEnded": [
+                "datetime",
+                "allownull"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkInfrastructureResources"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "user_privileges": [
+                "directory-admin",
+                "documents-admin"
+            ]
+        },
+        "fields": {
+            "KeyName": {
+                "name": "Access Id",
+                "update_cfo": true
+            },
+            "User": {
+                "name": "User Id",
+                "allow_empty": true
+            },
+            "CFUser": {
+                "name": "Company User",
+                "allow_empty": true
+            },
+            "Resource": {
+                "name": "Resource",
+                "allow_empty": true,
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkInfrastructureResources",
+                "fields": "KeyName",
+                "linked_field": "KeyName"
+            },
+            "Description": {
+                "name": "Description",
+                "allow_empty": true
+            },
+            "HTMLDescription": {
+                "name": "HTML Description",
+                "type": "html",
+                "defaultvalue": "<h1>Resource Description</h1>"
+            },
+            "Category": {
+                "name": "Category"
+            },
+            "Structure": {
+                "name": "Structure",
+                "type": "json",
+                "defaultvalue": "{}"
+            },
+            "Status": {
+                "name": "Status",
+                "type": "select",
+                "defaultvalue": "active",
+                "values": [
+                    {
+                        "id": "active",
+                        "value": "Active"
+                    },
+                    {
+                        "id": "deleted",
+                        "value": "Deleted"
+                    }
+                ]
+            },
+            "SearchData": {
+                "name": "Search Data",
+                "type": "text",
+                "allow_empty": true
+            },
+            "DateUpdated": {
+                "name": "DateUpdated",
+                "type": "datetime",
+                "forcevalue": "now",
+                "read_only": true
+            },
+            "DateCreated": {
+                "name": "DateCreated",
+                "type": "datetime",
+                "defaultvalue": "now"
+            },
+            "DateEnded": {
+                "name": "Date ended",
+                "type": "datetime",
+                "allow_empty": true
+            }
+        }
+    },
+    "status": "",
+    "type": "ds"
+}

@@ -1,0 +1,569 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-06-11 06:11:39",
+    "Description": "<p><br></p>",
+    "GroupName": "CLOUD-ECM",
+    "KeyName": "CloudFrameWorkECMPages",
+    "Owner": "info@adrianmm.com",
+    "Tags": "",
+    "Title": "",
+    "_search": [
+        "CLOUDFRAMEWORKECMPAGES",
+        "CLOUD-ECM"
+    ],
+    "entity": "CloudFrameWorkECMPages",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "ECM Page",
+        "plural": "ECM Pages",
+        "ico": "browser",
+        "ecm": "/cfos/CloudFrameWorkECMPages",
+        "_secret": "cfo-secrets.service-account",
+        "filters": [
+            {
+                "field": "PageRoute",
+                "field_name": "Private Route",
+                "type": "text",
+                "placeholder": "/cfos/%",
+                "avoid_order": true
+            },
+            {
+                "field": "PublicPageRoutes",
+                "field_name": "Public Route",
+                "type": "text",
+                "placeholder": "/cfos/%",
+                "avoid_order": true
+            }
+        ],
+        "buttons": [
+            {
+                "type": "api-insert",
+                "title": "New Page"
+            }
+        ],
+        "tabs": {
+            "main": {
+                "title": "ECM Page",
+                "ico": "browser"
+            },
+            "public": {
+                "title": "Public Info",
+                "ico": "browser"
+            },
+            "development": {
+                "title": "Development relations",
+                "ico": "browser"
+            }
+        },
+        "views": {
+            "default": {
+                "name": "Default View",
+                "all_fields": true,
+                "sort": null,
+                "server_limit": 100,
+                "server_order": "DateUpdating DESC",
+                "fields": {
+                    "PageIco": {
+                        "field": "PageIco"
+                    },
+                    "PageRoute": {
+                        "field": "PageRoute",
+                        "order": "asc",
+                        "link": true,
+                        "link_content": "/app.html#https://core20.web.app/ajax/ecm.html?page={{PageRoute}}"
+                    },
+                    "PublicPageRoutes": {
+                        "field": "PublicPageRoutes",
+                        "link": true,
+                        "link_content": "https://cloudframework.io/developers/training{{PagePublicRoute}}"
+                    },
+                    "PageTitle": {
+                        "display_cfo": true,
+                        "field": "PageTitle",
+                        "id_field": "KeyId"
+                    },
+                    "Status": {
+                        "field": "Status"
+                    },
+                    "MultiPlatform": {
+                        "field": "MultiPlatform"
+                    },
+                    "Public": {
+                        "field": "Public"
+                    },
+                    "DateInsertion": {
+                        "field": "DateInsertion"
+                    },
+                    "DateUpdating": {
+                        "field": "DateUpdating"
+                    },
+                    "CloudFrameworkUser": {
+                        "field": "CloudFrameworkUser"
+                    }
+                }
+            },
+            "public": {
+                "name": "Public Pages",
+                "all_fields": true,
+                "server_where": {
+                    "Public": true
+                },
+                "server_limit": 100,
+                "server_order": "DateUpdating DESC",
+                "fields": {
+                    "PageIco": {
+                        "field": "PageIco"
+                    },
+                    "PageRoute": {
+                        "field": "PageRoute",
+                        "order": "asc",
+                        "link": true,
+                        "link_content": "/app.html#https://core20.web.app/ajax/ecm.html?page={{PageRoute}}"
+                    },
+                    "PublicPageRoutes": {
+                        "field": "PublicPageRoutes",
+                        "link": true,
+                        "link_content": "https://cloudframework.io/developers/training{{PagePublicRoute}}"
+                    },
+                    "PageTitle": {
+                        "update_cfo": true,
+                        "field": "PageTitle",
+                        "id_field": "KeyId"
+                    },
+                    "Status": {
+                        "field": "Status"
+                    },
+                    "MultiPlatform": {
+                        "field": "MultiPlatform"
+                    },
+                    "Public": {
+                        "field": "Public"
+                    },
+                    "DateInsertion": {
+                        "field": "DateInsertion"
+                    },
+                    "DateUpdating": {
+                        "field": "DateUpdating"
+                    },
+                    "CloudFrameworkUser": {
+                        "field": "CloudFrameworkUser"
+                    }
+                }
+            }
+        },
+        "update_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "hidden": true
+            },
+            "MultiPlatform": {
+                "field": "MultiPlatform"
+            },
+            "Public": {
+                "field": "Public"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "PageRoute": {
+                "field": "PageRoute"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "PageTitle": {
+                "field": "PageTitle"
+            },
+            "PublicTitle": {
+                "field": "PublicTitle"
+            },
+            "PublicPageRoutes": {
+                "field": "PublicPageRoutes"
+            },
+            "PageHTML": {
+                "field": "PageHTML"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "PublicMeta": {
+                "field": "PublicMeta"
+            },
+            "PublicRouteTree": {
+                "field": "PublicRouteTree"
+            }
+        },
+        "display_fields": {
+            "MultiPlatform": {
+                "field": "MultiPlatform"
+            },
+            "Public": {
+                "field": "Public"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "PageRoute": {
+                "field": "PageRoute"
+            },
+            "PageTitle": {
+                "field": "PageTitle"
+            },
+            "PageIco": {
+                "field": "PageIco"
+            },
+            "PageHTML": {
+                "field": "PageHTML"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "DateUpdating": {
+                "field": "DateUpdating"
+            },
+            "PublicPageRoutes": {
+                "field": "PublicPageRoutes"
+            },
+            "PublicTitle": {
+                "field": "PublicTitle"
+            },
+            "PublicMeta": {
+                "field": "PublicMeta"
+            }
+        },
+        "insert_fields": {
+            "MultiPlatform": {
+                "field": "MultiPlatform"
+            },
+            "Public": {
+                "field": "Public"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "PageRoute": {
+                "field": "PageRoute"
+            },
+            "PageTitle": {
+                "field": "PageTitle"
+            },
+            "PageIco": {
+                "field": "PageIco"
+            },
+            "PageHTML": {
+                "field": "PageHTML"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "PublicPageRoutes": {
+                "field": "PublicPageRoutes"
+            },
+            "PublicTitle": {
+                "field": "PublicTitle"
+            },
+            "PublicMeta": {
+                "field": "PublicMeta"
+            },
+            "PublicRouteTree": {
+                "field": "PublicRouteTree"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            }
+        },
+        "copy_fields": {
+            "MultiPlatform": {
+                "field": "MultiPlatform"
+            },
+            "PageIco": {
+                "field": "PageIco"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "PageRoute": {
+                "field": "PageRoute"
+            },
+            "PageTitle": {
+                "field": "PageTitle"
+            },
+            "PageHTML": {
+                "field": "PageHTML"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "Public": {
+                "field": "Public"
+            },
+            "PublicPageRoutes": {
+                "field": "PublicPageRoutes"
+            },
+            "PublicTitle": {
+                "field": "PublicTitle"
+            },
+            "PublicMeta": {
+                "field": "PublicMeta"
+            },
+            "PublicRouteTree": {
+                "field": "PublicRouteTree"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            }
+        },
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "update_cfo": true
+            }
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "DocumentationId": [
+                "string",
+                "index|allownull|description:Grupo de Documentación al que pertence"
+            ],
+            "PageRoute": [
+                "string",
+                "index|minlength:4|allownull|unique"
+            ],
+            "PageTitle": [
+                "string",
+                "index"
+            ],
+            "PageIco": [
+                "string",
+                "allownull"
+            ],
+            "PageHTML": [
+                "zip",
+                "allownull"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ],
+            "MultiPlatform": [
+                "boolean",
+                "allownull"
+            ],
+            "Public": [
+                "boolean",
+                "index|allownull"
+            ],
+            "Status": [
+                "string",
+                "index|allownull|defaultvalue:ok"
+            ],
+            "CloudFrameworkUser": [
+                "string",
+                "index|notnull"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|defaultvalue:now"
+            ],
+            "DateUpdating": [
+                "datetime",
+                "index|forcevalue:now"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull"
+            ],
+            "PublicPageRoutes": [
+                "list",
+                "index|minlength:4|allownull|unique"
+            ],
+            "PublicRouteTree": [
+                "string",
+                "index|minlength:4|allownull"
+            ],
+            "PublicTitle": [
+                "string",
+                "index|minlength:2|allownull"
+            ],
+            "PublicMeta": [
+                "json",
+                "allownull"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkDevDocumentation"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "backups": {
+                "update": true,
+                "delete": true
+            },
+            "user_privileges": [
+                "directory-admin",
+                "documents-admin"
+            ]
+        },
+        "fields": {
+            "PageHTML": {
+                "name": "HTML",
+                "type": "html"
+            },
+            "PageTitle": {
+                "name": "Internal Title",
+                "full_col_width": true
+            },
+            "PageRoute": {
+                "name": "Page Route",
+                "cols": 3,
+                "full_col_width": true
+            },
+            "Status": {
+                "name": "Status",
+                "type": "select",
+                "values": [
+                    {
+                        "id": "new",
+                        "value": "New not Assigned"
+                    },
+                    {
+                        "id": "pending",
+                        "value": "Pending to Develop"
+                    },
+                    {
+                        "id": "in-development",
+                        "value": "In Development"
+                    },
+                    {
+                        "id": "with-issues",
+                        "value": "With Issues"
+                    },
+                    {
+                        "id": "ok",
+                        "value": "Finished"
+                    }
+                ]
+            },
+            "PageIco": {
+                "name": "Ico",
+                "allow_empty": true
+            },
+            "JSON": {
+                "type": "json",
+                "name": "Structured Contents",
+                "allow_empty": true
+            },
+            "DateUpdating": {
+                "name": "Updated",
+                "disabled": true
+            },
+            "DateInsertion": {
+                "name": "Inserted",
+                "disabled": true
+            },
+            "MultiPlatform": {
+                "name": "MultiPlatform",
+                "type": "boolean"
+            },
+            "Tags": {
+                "name": "Tags",
+                "cols": 3,
+                "allow_empty": true
+            },
+            "Public": {
+                "name": "Public",
+                "type": "boolean"
+            },
+            "PublicPageRoutes": {
+                "name": "PublicPageRoutes",
+                "allow_empty": true,
+                "tab": "public",
+                "cols": 3
+            },
+            "PublicTitle": {
+                "name": "Public Title",
+                "tab": "public",
+                "allow_empty": true
+            },
+            "PublicMeta": {
+                "name": "MetaTags",
+                "type": "json",
+                "allow_empty": true,
+                "tab": "public",
+                "defaultvalue": "{}"
+            },
+            "PublicRouteTree": {
+                "name": "Public Route Tree",
+                "allow_empty": true,
+                "tab": "public"
+            },
+            "DocumentationId": {
+                "name": "Development Documentation Group",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkDevDocumentation",
+                "fields": "KeyName,Title",
+                "linked_field": "KeyName",
+                "nowrap": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkDevDocumentation",
+                "cols": 3,
+                "allow_empty": true,
+                "empty_value": "Seleccionada un Proceso Documental",
+                "tab": "development"
+            }
+        }
+    },
+    "status": "",
+    "type": "ds"
+}

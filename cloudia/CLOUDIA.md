@@ -48,7 +48,7 @@ composer credentials
 ```
 
 ## CloudIA
-CloudIA is the solution for Generative IA connected with CLOUDFRAMEWORK EaaS
+CloudIA is the solution for Generative IA connected with CLOUDFRAMEWORK EaaS (Enterprise as a Service) CLOUD Platform.
 
 ```bash
 # Verify you have credentials with CloudIA
@@ -59,6 +59,7 @@ composer script _cloudia/auth/x-ds-token
 ```
 
 ## API Development
+APIs are the way to interact with the logic of an organization. To develop APIs we can follow a basic structure.
 
 ### Basic API Structure
 

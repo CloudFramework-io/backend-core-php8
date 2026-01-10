@@ -1,0 +1,522 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-12-16 04:30:31",
+    "Description": "<p><br></p>",
+    "GroupName": "CLOUD Documentum",
+    "KeyName": "CloudFrameWorkDevDocumentationForProcesses",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "procesos",
+        "subprocesos"
+    ],
+    "Title": "",
+    "_search": [
+        "CLOUDFRAMEWORKDEVDOCUMENTATIONFORPROCESSES",
+        "CLOUD DOCUMENTUM",
+        "PROCESOS",
+        "SUBPROCESOS"
+    ],
+    "entity": "CloudFrameWorkDevDocumentationForProcesses",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Dev Process",
+        "plural": "Automate Processes",
+        "ico": "books",
+        "ecm": "/cfo/CloudFrameWorkDevDocumentationForProcesses",
+        "tabs": {
+            "main": {
+                "title": "Información del proceso",
+                "ico": "books"
+            },
+            "development": {
+                "title": "Development relations",
+                "ico": "code"
+            }
+        },
+        "filters": [
+            {
+                "type": "autocomplete",
+                "field": "Cat",
+                "empty_value": "Select a CAT",
+                "allow_empty": true,
+                "_external_where": {
+                    "Folder": "{{filter_Folder}}"
+                },
+                "external_auto_values": true
+            },
+            {
+                "type": "autocomplete",
+                "field": "Subcat",
+                "empty_value": "Select a Subcat",
+                "allow_empty": true,
+                "external_auto_values": true
+            },
+            {
+                "type": "autocomplete",
+                "field": "Type",
+                "empty_value": "Select a Type",
+                "allow_empty": true,
+                "external_auto_values": true
+            }
+        ],
+        "buttons": [
+            {
+                "title": "New Process",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "_server_order": "Cat ASC",
+                "server_limit": 200,
+                "conditional_rows_background_color": {
+                    "default": "#d4dad5a0",
+                    "fields": [
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#43db81a0",
+                            "values": [
+                                "5.RUNNING"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#f48e4fba",
+                            "values": [
+                                "4.WITH INCIDENCES"
+                            ]
+                        }
+                    ]
+                },
+                "fields": {
+                    "KeyName": {
+                        "field": "KeyName",
+                        "display_cfo": true,
+                        "id_field": "KeyName"
+                    },
+                    "v_Cat": {
+                        "field": "v_Cat",
+                        "name": "Cat/Subcat/Type",
+                        "type": "virtual",
+                        "id_field": "KeyName",
+                        "update_cfo": true,
+                        "api": "/cfi/CloudFrameWorkDevDocumentationForProcesses?fields=KeyName,Cat,Subcat,Type,Status",
+                        "virtual_values": [
+                            "Subcat",
+                            "Type"
+                        ]
+                    },
+                    "Status": {
+                        "field": "Status"
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "Owner": {
+                        "field": "Owner"
+                    },
+                    "AssignedTo": {
+                        "field": "AssignedTo"
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated"
+                    },
+                    "Cat": {
+                        "row_group": true,
+                        "field": "Cat",
+                        "order": "asc"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Subcat": {
+                "field": "Subcat"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo"
+            },
+            "Introduction": {
+                "field": "Introduction"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{\"notion\":\"\",\"source-code\":\"\"}"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            }
+        },
+        "update_fields": {
+            "Support": {
+                "field": "Support",
+                "type": "virtual",
+                "value": "Go to: Creating Tests in CFTs (CloudFrameworkTests)",
+                "link": true,
+                "new_row": true,
+                "link_content": "https://www.notion.so/Creating-Tests-in-CloudFramework-Tests-CFTs-d13852c566084eaaa4914b6723319f67"
+            },
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Subcat": {
+                "field": "Subcat"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Title": {
+                "field": "Title",
+                "cols": 3
+            },
+            "Introduction": {
+                "field": "Introduction"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Tags": {
+                "field": "Tags"
+            }
+        },
+        "display_fields": {
+            "Support": {
+                "field": "Support",
+                "type": "virtual",
+                "value": "Go to: Creating Tests in CFTs (CloudFrameworkTests)",
+                "link": true,
+                "new_row": true,
+                "link_content": "https://www.notion.so/Creating-Tests-in-CloudFramework-Tests-CFTs-d13852c566084eaaa4914b6723319f67"
+            },
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Subcat": {
+                "field": "Subcat"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo"
+            },
+            "Introduction": {
+                "field": "Introduction"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            }
+        },
+        "copy_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "Cat": {
+                "field": "Cat"
+            },
+            "Subcat": {
+                "field": "Subcat"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "AssignedTo": {
+                "field": "AssignedTo"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Introduction": {
+                "field": "Introduction"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "Tags": {
+                "field": "Tags"
+            }
+        },
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            }
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "KeyName": [
+                "keyname",
+                "index|minlength:4"
+            ],
+            "DocumentationId": [
+                "string",
+                "index|allownull|description:Grupo de Documentación al que pertence"
+            ],
+            "Cat": [
+                "string",
+                "index"
+            ],
+            "Subcat": [
+                "string",
+                "index"
+            ],
+            "Type": [
+                "string",
+                "index"
+            ],
+            "Status": [
+                "string",
+                "index|allownull"
+            ],
+            "Title": [
+                "string",
+                "index"
+            ],
+            "Owner": [
+                "string",
+                "index"
+            ],
+            "AssignedTo": [
+                "list",
+                "index|allownull"
+            ],
+            "Introduction": [
+                "string",
+                "allownull"
+            ],
+            "Description": [
+                "string",
+                "allownull"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ],
+            "CloudFrameworkUser": [
+                "string",
+                "index|notnull"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "index|allownull|forcevalue:now"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|allownull|defaultvalue:now"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkDevDocumentation",
+            "CloudFrameWorkPeoplePlayers"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "cfo_locked": true,
+            "user_spacenames": null,
+            "user_organizations": null,
+            "user_privileges": [
+                "ecm-admin",
+                "ecm-user",
+                "development-admin"
+            ]
+        },
+        "fields": {
+            "KeyName": {
+                "name": "Process Id"
+            },
+            "Description": {
+                "type": "html"
+            },
+            "Introduction": {
+                "type": "html"
+            },
+            "Status": {
+                "type": "select",
+                "values": [
+                    "0.DEFINED",
+                    "1.MOCKED",
+                    "2.IN DEVELOPMENT",
+                    "3.IN QA",
+                    "4.WITH INCIDENCES",
+                    "5.RUNNING",
+                    "6.DEPRECATED"
+                ]
+            },
+            "Title": {
+                "name": "Title"
+            },
+            "Cat": {
+                "name": "Cat",
+                "type": "autoselect"
+            },
+            "Subcat": {
+                "name": "Subcat",
+                "type": "autoselect"
+            },
+            "Owner": {
+                "name": "Process Owner",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "external_where": {
+                    "UserActive": true,
+                    "UserPrivileges": [
+                        "development-admin",
+                        "development-user",
+                        "ecm-admin",
+                        "ecm-user"
+                    ]
+                },
+                "fields": "UserName,UserEmail",
+                "linked_field": "KeyName",
+                "defaultvalue": "{{User:KeyName}}",
+                "tab": "categorization"
+            },
+            "AssignedTo": {
+                "name": "Content Assignations",
+                "type": "multiselect",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "external_where": {
+                    "UserActive": true,
+                    "UserPrivileges": [
+                        "development-admin",
+                        "development-user",
+                        "ecm-admin",
+                        "ecm-user"
+                    ]
+                },
+                "fields": "UserName,UserEmail",
+                "linked_field": "KeyName",
+                "tab": "categorization",
+                "allow_empty": true,
+                "empty_value": "Assign Content responsible"
+            },
+            "CloudFrameworkUser": {
+                "name": "Updated By"
+            },
+            "JSON": {
+                "type": "json",
+                "name": "Process Description"
+            },
+            "DocumentationId": {
+                "name": "Development Documentation Group",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkDevDocumentation",
+                "fields": "KeyName,Title",
+                "linked_field": "KeyName",
+                "nowrap": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkDevDocumentation",
+                "cols": 3,
+                "tab": "development",
+                "allow_empty": true,
+                "empty_value": "Seleccionada un Proceso Documental"
+            }
+        }
+    },
+    "status": "IN PRODUCTION",
+    "type": "ds"
+}

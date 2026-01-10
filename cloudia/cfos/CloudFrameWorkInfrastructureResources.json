@@ -1,0 +1,464 @@
+{
+    "DateUpdating": "2024-04-26 08:49:13",
+    "Description": "<p><br></p>",
+    "GroupName": "Infraestructure",
+    "KeyName": "CloudFrameWorkInfrastructureResources",
+    "entity": "CloudFrameWorkInfrastructureResources",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Infraestructure Resource",
+        "plural": "Infraestructure Resources",
+        "ico": "road",
+        "ecm": "/erp/it/resources",
+        "buttons": [
+            {
+                "title": "New Infraestructure Resource",
+                "type": "api-insert",
+                "api": "/cfi/CloudFrameWorkInfrastructureResources"
+            }
+        ],
+        "filters": [
+            {
+                "field": "Active",
+                "type": "select",
+                "values": [
+                    {
+                        "id": true,
+                        "value": "Recursos Activos"
+                    },
+                    {
+                        "id": false,
+                        "value": "Recursos Desactivados"
+                    }
+                ],
+                "defaultvalue": true
+            },
+            {
+                "field": "Category",
+                "name": "Category",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkInfrastructureResources",
+                "fields": "Category",
+                "linked_field": "Category",
+                "allow_empty": true,
+                "empty_value": "Select a Category",
+                "defaultvalue": null
+            },
+            {
+                "field": "Type",
+                "name": "Type",
+                "type": "autocomplete",
+                "auto_values": true,
+                "allow_empty": true,
+                "empty_value": "Select a Type",
+                "defaultvalue": null
+            }
+        ],
+        "views": {
+            "default": {
+                "title": "Todos los servicios",
+                "multiselect": {
+                    "active": true,
+                    "menu": [
+                        {
+                            "title": "Delete",
+                            "type": "delete",
+                            "ico": "trash-alt",
+                            "security": null
+                        }
+                    ]
+                },
+                "fields": {
+                    "KeyName": {
+                        "field": "KeyName",
+                        "readonly": true
+                    },
+                    "Type": {
+                        "field": "Type"
+                    },
+                    "Description": {
+                        "field": "Description",
+                        "update_cfo": true,
+                        "order": "asc",
+                        "id_field": "KeyName"
+                    },
+                    "ExpirationDate": {
+                        "field": "ExpirationDate"
+                    },
+                    "Tags": {
+                        "field": "Tags"
+                    },
+                    "MonthlyPrice": {
+                        "field": "MonthlyPrice"
+                    },
+                    "Active": {
+                        "field": "Active"
+                    },
+                    "URL": {
+                        "field": "Structure.url",
+                        "link": true
+                    },
+                    "ResourceParent": {
+                        "field": "ResourceParent"
+                    },
+                    "Category": {
+                        "order": "asc",
+                        "field": "Category",
+                        "row_group": true
+                    }
+                }
+            },
+            "expired": {
+                "title": "Servicios Expirados",
+                "server_order": "ExpirationDate DESC",
+                "server_where": {
+                    "ExpirationDate": "<=now"
+                },
+                "fields": {
+                    "ResourceParent": {
+                        "field": "ResourceParent",
+                        "order": "desc"
+                    },
+                    "KeyName": {
+                        "field": "KeyName",
+                        "readonly": true
+                    },
+                    "Category": {
+                        "field": "Category"
+                    },
+                    "Type": {
+                        "field": "Type"
+                    },
+                    "Description": {
+                        "field": "Description",
+                        "update_cfo": true,
+                        "order": "asc",
+                        "id_field": "KeyName"
+                    },
+                    "ExpirationDate": {
+                        "field": "ExpirationDate"
+                    },
+                    "Tags": {
+                        "field": "Tags"
+                    },
+                    "MonthlyPrice": {
+                        "field": "MonthlyPrice"
+                    },
+                    "Active": {
+                        "field": "Active"
+                    },
+                    "URL": {
+                        "field": "Structure.url",
+                        "link": true
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "ResourceParent": {
+                "field": "ResourceParent",
+                "allow_empty": true
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "ExpirationDate": {
+                "field": "ExpirationDate"
+            },
+            "MonthlyPrice": {
+                "field": "MonthlyPrice"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            },
+            "Structure": {
+                "field": "Structure"
+            }
+        },
+        "update_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            },
+            "ResourceParent": {
+                "field": "ResourceParent",
+                "allow_empty": true
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "ExpirationDate": {
+                "field": "ExpirationDate"
+            },
+            "MonthlyPrice": {
+                "field": "MonthlyPrice"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            },
+            "Structure": {
+                "field": "Structure"
+            }
+        },
+        "display_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            },
+            "ResourceParent": {
+                "field": "ResourceParent",
+                "allow_empty": true
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "ExpirationDate": {
+                "field": "ExpirationDate"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "MonthlyPrice": {
+                "field": "MonthlyPrice"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            },
+            "Structure": {
+                "field": "Structure"
+            },
+            "ResourceContent": {
+                "field": "ResourceContent"
+            },
+            "UsersAccesses": {
+                "field": "UsersAccesses",
+                "name": "Users Accesses",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkInfrastructureResourcesAccesses",
+                "fields": "*",
+                "linked_field": "Resource",
+                "field_value": "KeyName",
+                "summary_line": "{{Category}}/{{Type}} [user:{{User}} / {{Status}}] {{Description}}",
+                "external_new_entity_url": "/cfi/CloudFrameWorkInfrastructureResourcesAccesses/insert?filter_Resource={{KeyName}}"
+            }
+        },
+        "copy_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "readonly": true
+            },
+            "ResourceParent": {
+                "field": "ResourceParent"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "ExpirationDate": {
+                "field": "ExpirationDate"
+            },
+            "MonthlyPrice": {
+                "field": "MonthlyPrice"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "HTMLDescription": {
+                "field": "HTMLDescription"
+            },
+            "Structure": {
+                "field": "Structure"
+            }
+        },
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            }
+        }
+    },
+    "model": {
+        "model": {
+            "KeyName": [
+                "keyname",
+                "minlength:1|tolowercase"
+            ],
+            "ResourceParent": [
+                "string",
+                "index|allownull"
+            ],
+            "Category": [
+                "string",
+                "index|allownull"
+            ],
+            "Type": [
+                "string",
+                "index|minlength:3|allownull"
+            ],
+            "Description": [
+                "string",
+                "index"
+            ],
+            "HTMLDescription": [
+                "string",
+                "allownull"
+            ],
+            "Tags": [
+                "list",
+                "allownull|index"
+            ],
+            "Structure": [
+                "json",
+                "allownull"
+            ],
+            "MonthlyPrice": [
+                "float",
+                "index|allownull"
+            ],
+            "ResourceContent": [
+                "json",
+                "allownull"
+            ],
+            "ExpirationDate": [
+                "date",
+                "index|allownull"
+            ],
+            "Active": [
+                "boolean",
+                "index"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkInfrastructureResourcesAccesses"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "user_privileges": [
+                "directory-admin",
+                "documents-admin"
+            ]
+        },
+        "fields": {
+            "ResourceParent": {
+                "name": "ResourceParent",
+                "allow_empty": true
+            },
+            "KeyName": {
+                "name": "Resource Id",
+                "display_cfo": true
+            },
+            "Description": {
+                "name": "Title",
+                "allow_empty": true
+            },
+            "HTMLDescription": {
+                "name": "HTML Description",
+                "type": "html",
+                "default_value": "<h1>Description</h1>"
+            },
+            "Category": {
+                "name": "Category",
+                "type": "autoselect"
+            },
+            "Type": {
+                "name": "Type",
+                "type": "autoselect"
+            },
+            "Tags": {
+                "name": "Tags",
+                "type": "checkbox",
+                "values": [
+                    {
+                        "id": "production",
+                        "value": "Production"
+                    },
+                    {
+                        "id": "stage",
+                        "value": "Stage"
+                    }
+                ]
+            },
+            "MonthlyPrice": {
+                "name": "MonthlyPrice",
+                "allow_empty": true
+            },
+            "ResourceContent": {
+                "name": "ResourceContent",
+                "type": "json",
+                "defaultvalue": "{}"
+            },
+            "Structure": {
+                "name": "Structure",
+                "ecm": "/cfos/CloudFrameWorkInfrastructureResources/Structure",
+                "type": "json",
+                "defaultvalue": "{\"provider\":\"Resource Provider\",\"url\":\"https://\",\"billing-url\":\"https://\",\"administrators\":\"User to admin the resource\",\"secrets\":\"secret-to-access\"}"
+            },
+            "Active": {
+                "name": "Active",
+                "type": "boolean",
+                "defaultvalue": true
+            },
+            "ExpirationDate": {
+                "name": "Expiration Date",
+                "type": "date",
+                "allow_empty": "date"
+            }
+        }
+    },
+    "type": "ds"
+}

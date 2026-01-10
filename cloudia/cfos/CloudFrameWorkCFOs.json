@@ -1,0 +1,1307 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-12-20 03:40:23",
+    "Description": "<p>Modelo principal para la gestión de CFOs</p>",
+    "GroupName": "CLOUD Development",
+    "KeyName": "CloudFrameWorkCFOs",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "cfos",
+        "master",
+        "development"
+    ],
+    "Title": "Sistema de Gestión de CFOs MASTER de CloudFramework",
+    "_search": [
+        "CLOUDFRAMEWORKCFOS",
+        "CLOUD DEVELOPMENT",
+        "CFOS",
+        "MASTER",
+        "DEVELOPMENT"
+    ],
+    "entity": "CloudFrameWorkCFOs",
+    "environment": "",
+    "events": [],
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Master CFO",
+        "plural": "Master CFOs",
+        "ico": "database",
+        "ecm": "/cfos/CloudFrameWorkCFOs",
+        "filters": [
+            {
+                "field": "GroupName",
+                "field_name": "GroupName",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkCFOs",
+                "fields": "GroupName",
+                "linked_field": "GroupName",
+                "allow_empty": true,
+                "empty_value": "Select a GroupName",
+                "defaultvalue": null
+            },
+            {
+                "field": "status",
+                "field_name": "Status",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkCFOs",
+                "fields": "status",
+                "linked_field": "status",
+                "allow_empty": true,
+                "empty_value": "Select a Satus",
+                "defaultvalue": null
+            }
+        ],
+        "buttons1": [
+            {
+                "title": "Insert new CFO",
+                "type": "api-insert"
+            },
+            {
+                "title": "Wizard CFO from db/ds/bq",
+                "type": "external-api",
+                "api": "https://api.cloudframework.io/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/cfo-from-source"
+            },
+            {
+                "title": "_",
+                "type": "external-api",
+                "api": "http://localhost:9999/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/cfo-from-source"
+            }
+        ],
+        "buttons": [
+            {
+                "title": "Wizard CFO from db/ds/bq",
+                "type": "external-api",
+                "api": "https://api.cloudframework.io/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/cfo-from-source"
+            },
+            {
+                "title": "{$namespace:cloudframework,cloud-development;apis;cfos;button-cfo-from-json}",
+                "type": "external-api",
+                "api": "https://api.cloudframework.io/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/cfo-from-json"
+            },
+            {
+                "title": "_",
+                "type": "external-api",
+                "api": "http://localhost:9999/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/cfo-from-lowcode"
+            }
+        ],
+        "tabs": {
+            "main": {
+                "title": "CFO Definition",
+                "ico": "pallet"
+            },
+            "workflows": {
+                "title": "Hooks & Worflows",
+                "ico": "people-arrows"
+            },
+            "lowcode": {
+                "title": "LowCode",
+                "ico": "code"
+            },
+            "description": {
+                "title": "CFO Description",
+                "ico": "info"
+            }
+        },
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "_server_order": "DateUpdating DESC",
+                "server_limit": 25,
+                "conditional_rows_background_color": {
+                    "default": "#f5f5f5",
+                    "fields": [
+                        {
+                            "field": "status",
+                            "color": "#a8ffa8bb",
+                            "condition": "equals",
+                            "values": [
+                                "IN PRODUCTION"
+                            ]
+                        },
+                        {
+                            "field": "status",
+                            "color": "#fba8ffbb",
+                            "condition": "equals",
+                            "values": [
+                                "IN QA"
+                            ]
+                        },
+                        {
+                            "field": "status",
+                            "color": "#a8fdffbb",
+                            "condition": "equals",
+                            "values": [
+                                "IN DEVELOPMENT"
+                            ]
+                        },
+                        {
+                            "field": "status",
+                            "color": "#feffa8bb",
+                            "condition": "equals",
+                            "values": [
+                                "IN DESIGN"
+                            ]
+                        }
+                    ]
+                },
+                "multiselect": {
+                    "active": true,
+                    "menu": [
+                        {
+                            "title": "Actualizar multi-campos ",
+                            "type": "external-api",
+                            "api": "/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/multi-update",
+                            "ico": "list-alt"
+                        },
+                        {
+                            "type": "cfo-update-fields",
+                            "title": "Cambiar a inactivo",
+                            "ico": "hand-middle-finger",
+                            "color": "red",
+                            "values": {
+                                "Active": false
+                            }
+                        },
+                        {
+                            "type": "cfo-update-fields",
+                            "title": "Cambiar a activo",
+                            "ico": "hand-peace",
+                            "color": "green",
+                            "values": {
+                                "Active": true
+                            }
+                        }
+                    ]
+                },
+                "fields": {
+                    "status": {
+                        "field": "status"
+                    },
+                    "tryIt": {
+                        "name": "Test it!",
+                        "type": "virtual",
+                        "value": "Try it!",
+                        "link": true,
+                        "link_content": "#__cfo/{{KeyName}}"
+                    },
+                    "CFO Info": {
+                        "field": "CFOInfo",
+                        "name": "CFO Info",
+                        "type": "virtual",
+                        "full_col_width": true,
+                        "virtual_elements": {
+                            "update": {
+                                "type": "update"
+                            },
+                            "cfo_info": {
+                                "type": "ico",
+                                "ico": "book",
+                                "onClick": "CloudFrameWorkCFA.showDevDocPage('/cfo/{{KeyName}}');return false;"
+                            },
+                            "cfo_db_sync": {
+                                "type": "ico",
+                                "ico": "database",
+                                "js_condition": "'{{type}}' == 'db'",
+                                "onClick": "CloudFrameWorkCFO.ExternalAPI('https://api.cloudframework.io/erp/development-cfos/{{Platform:namespace}}/CF_mobiles/cfi/lowcode-db-structure/{{KeyName}}/update?_tab=lowcode');return false;"
+                            },
+                            "value": {
+                                "type": "value",
+                                "value": "{{type}}:{{KeyName}}"
+                            }
+                        }
+                    },
+                    "entity": {
+                        "field": "entity"
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "Owner": {
+                        "field": "Owner",
+                        "crm-user": true
+                    },
+                    "GroupName": {
+                        "field": "GroupName",
+                        "row_group": true,
+                        "full_col_width": true,
+                        "order": "asc"
+                    },
+                    "Active": {
+                        "field": "Active"
+                    },
+                    "extends": {
+                        "field": "extends",
+                        "update_cfo": true,
+                        "id_field": "extends"
+                    },
+                    "Connections": {
+                        "field": "Connections"
+                    },
+                    "Description": {
+                        "field": "Description"
+                    },
+                    "Virtual_secret": {
+                        "field": "interface.secret",
+                        "type": "virtual",
+                        "name": "Secret",
+                        "value": "{{interface.secret}}"
+                    },
+                    "DateUpdating": {
+                        "field": "DateUpdating"
+                    },
+                    "avoid_lowCode": {
+                        "field": "lowCode",
+                        "security": {
+                            "user_privileges": [
+                                "none"
+                            ]
+                        }
+                    },
+                    "avoid_model": {
+                        "field": "model",
+                        "security": {
+                            "user_privileges": [
+                                "none"
+                            ]
+                        }
+                    },
+                    "avoid_securityAndFields": {
+                        "field": "securityAndFields",
+                        "security": {
+                            "user_privileges": [
+                                "none"
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "GroupName": {
+                "field": "GroupName"
+            },
+            "type": {
+                "field": "type"
+            },
+            "extends": {
+                "field": "extends"
+            },
+            "entity": {
+                "field": "entity"
+            },
+            "status": {
+                "field": "status"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "securityAndFields": {
+                "type": "json",
+                "field": "securityAndFields"
+            },
+            "interface": {
+                "field": "interface"
+            },
+            "events": {
+                "field": "events"
+            },
+            "hasExternalWorkflows": {
+                "field": "hasExternalWorkflows"
+            },
+            "Connections": {
+                "field": "Connections"
+            },
+            "lowCode": {
+                "field": "lowCode"
+            },
+            "model": {
+                "field": "model",
+                "type": "json"
+            }
+        },
+        "update_fields": {
+            "Support": {
+                "field": "Support"
+            },
+            "Icons": {
+                "field": "Icons"
+            },
+            "InternalDoc": {
+                "field": "InternalDoc"
+            },
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true,
+                "tab": "description"
+            },
+            "type": {
+                "field": "type",
+                "tab": "description"
+            },
+            "GroupName": {
+                "field": "GroupName",
+                "tab": "description"
+            },
+            "extends": {
+                "field": "extends",
+                "tab": "description"
+            },
+            "entity": {
+                "field": "entity",
+                "tab": "description"
+            },
+            "status": {
+                "field": "status",
+                "tab": "description"
+            },
+            "Title": {
+                "field": "Title",
+                "tab": "description"
+            },
+            "Active": {
+                "field": "Active",
+                "tab": "description"
+            },
+            "Description": {
+                "field": "Description",
+                "tab": "description"
+            },
+            "Tags": {
+                "field": "Tags",
+                "tab": "description"
+            },
+            "securityAndFields": {
+                "field": "securityAndFields"
+            },
+            "interface": {
+                "field": "interface"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "events": {
+                "field": "events"
+            },
+            "hasExternalWorkflows": {
+                "field": "hasExternalWorkflows"
+            },
+            "VirtualWorkflows": {
+                "field": "VirtualWorkflows"
+            },
+            "lowCode": {
+                "field": "lowCode"
+            },
+            "Connections": {
+                "field": "Connections"
+            },
+            "ButtonUpdateLowCodeSQL": {
+                "field": "ButtonUpdateLowCodeSQL"
+            },
+            "ButtonUpdateLowCodeCFI": {
+                "field": "ButtonUpdateLowCodeCFI"
+            },
+            "model": {
+                "field": "model"
+            },
+            "_search": {
+                "field": "_search",
+                "tab": "description"
+            }
+        },
+        "display_fields": {
+            "Support": {
+                "field": "Support"
+            },
+            "Icons": {
+                "field": "Icons"
+            },
+            "InternalDoc": {
+                "field": "InternalDoc"
+            },
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            },
+            "type": {
+                "field": "type"
+            },
+            "GroupName": {
+                "field": "GroupName"
+            },
+            "extends": {
+                "field": "extends"
+            },
+            "entity": {
+                "field": "entity"
+            },
+            "status": {
+                "field": "status"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "securityAndFields": {
+                "field": "securityAndFields"
+            },
+            "interface": {
+                "field": "interface"
+            },
+            "CloudFrameworkUser": {
+                "field": "CloudFrameworkUser"
+            },
+            "Owner": {
+                "field": "Owner"
+            },
+            "events": {
+                "field": "events"
+            },
+            "hasExternalWorkflows": {
+                "field": "hasExternalWorkflows"
+            },
+            "VirtualWorkflows": {
+                "field": "VirtualWorkflows",
+                "tab": 1
+            },
+            "model": {
+                "field": "model"
+            },
+            "Connections": {
+                "field": "Connections"
+            },
+            "lowCode": {
+                "field": "lowCode"
+            },
+            "ButtonUpdateLowCodeSQL": {
+                "field": "ButtonUpdateLowCodeSQL"
+            },
+            "ButtonUpdateLowCodeCFI": {
+                "field": "ButtonUpdateLowCodeCFI"
+            },
+            "_search": {
+                "field": "_search"
+            }
+        },
+        "copy_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "GroupName": {
+                "field": "GroupName"
+            },
+            "type": {
+                "field": "type"
+            },
+            "extends": {
+                "field": "extends"
+            },
+            "entity": {
+                "field": "entity"
+            },
+            "status": {
+                "field": "status"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Connections": {
+                "field": "Connections"
+            },
+            "lowCode": {
+                "field": "lowCode"
+            },
+            "model": {
+                "field": "model"
+            },
+            "securityAndFields": {
+                "field": "securityAndFields"
+            },
+            "interface": {
+                "field": "interface"
+            },
+            "events": {
+                "field": "events"
+            },
+            "hasExternalWorkflows": {
+                "field": "hasExternalWorkflows"
+            }
+        },
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            }
+        },
+        "_hooks": {
+            "on.update": [
+                {
+                    "code": "refresh_cache",
+                    "name": "Refesh Cache of the Object",
+                    "method": "GET",
+                    "url": "https://api7-dot-cloudframework-io.appspot.com/queue/core/cfo/cfi/{{KeyName}}?_refresh_cache&_appengine_service=api7"
+                }
+            ],
+            "on.delete": [
+                {
+                    "code": "refresh_cache",
+                    "name": "Refesh Cache of the Object",
+                    "method": "GET",
+                    "url": "https://api7-dot-cloudframework-io.appspot.com/queue/core/cfo/cfi/{{KeyName}}?_refresh_cache&_appengine_service=api7"
+                }
+            ]
+        }
+    },
+    "lowCode": {
+        "name": "CloudFramework CFO",
+        "plural": "CloudFramework CFOs",
+        "description": "Sistema de Gestión de CFOs MASTER de CloudFramework",
+        "ico": "pallet",
+        "secret": "",
+        "model": {
+            "KeyName": {
+                "name": "CFO Id",
+                "description": "Identificador único del CFO (ej. CloudFrameWorkCFOs, MP_HIPOTECH_EntityOffices)",
+                "type": "keyname",
+                "allow_null": false,
+                "index": true,
+                "minlength": 2,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "DateUpdating": {
+                "name": "Updated",
+                "description": "Fecha y hora de la última actualización del CFO",
+                "type": "datetime",
+                "allow_null": false,
+                "index": true,
+                "forcevalue": "now",
+                "view": true,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "Title": {
+                "name": "Titular",
+                "description": "Descripción corta del CFO",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "Description": {
+                "name": "Description",
+                "description": "Descripción larga del CFO",
+                "type": "string",
+                "allow_null": true,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "html"
+                }
+            },
+            "type": {
+                "name": "DS/DB",
+                "description": "Tipo de TABLA que define el CFO. Los posibles valores son (ds=Google DataStore,db=Google SQL,bq=Google BigQuery)",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "Active": {
+                "name": "Active?",
+                "description": "Indica si el CFO está activo (true) o no (false)",
+                "type": "boolean",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "boolean"
+                }
+            },
+            "GroupName": {
+                "name": "Group Name",
+                "description": "Nombre del grupo al que pertenece el CFO",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "minlength": 3,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "autoselect"
+                }
+            },
+            "extends": {
+                "name": "Extends from:",
+                "description": "ID del CFO del que se extiende el actual CFO",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "entity": {
+                "name": "Entity Name",
+                "description": "Nombre de TABLA en el servidor que contiene los datos. En general suele coincidir con el valor del KeyName",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "minlength": 2,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "Connections": {
+                "name": "Allowed Connections",
+                "description": "Conexiones permitedas para el CFO. Son los posibles valores el atributo secret",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "multiselect"
+                }
+            },
+            "environment": {
+                "name": "Default Environment",
+                "description": "Define el Entorno por defecto sobre el que se ejecuta el CFO",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "status": {
+                "name": "Status",
+                "description": "Estado del CFO, indicando el grado de madurez de su definición.",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "autoselect"
+                }
+            },
+            "lowCode": {
+                "name": "LOW-CODE Description",
+                "description": "Estructura JSON para definir el modelo de datos la TABLA.",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "model": {
+                "name": "DS/DB/BQ Model and Dependences",
+                "description": "Estructura JSON generada a partir del campo lowCode que sirve para facilitar las queries en las TABLAS de datos. Esta estructura es utilizada por el entorno programativo.",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "securityAndFields": {
+                "name": "Security (Access,Logs & Backups) & Fields",
+                "description": "Estructura JSON que define propiedades de los campos que será utilizado por la WebApp cfo.html",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "interface": {
+                "name": "Interface: CFO",
+                "description": "Estructura JSON que define propiedades para el comportamiento de la WebApp cfo.html",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "events": {
+                "name": "Hooks & Internal Workflows",
+                "description": "Estructura JSON para definir Hooks y Workflows que se ejecutarán en procesos de creación, modificación o borrado de las TABLAS",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "CloudFrameworkUser": {
+                "name": "Actualizado por",
+                "description": "Indica el id del usuario de la plataforma cloud que ha actualizado el CFO por última vez",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": false,
+                "insert": false,
+                "display": true,
+                "update": true,
+                "copy": false
+            },
+            "Owner": {
+                "name": "Responsable del CFO",
+                "description": "Indica el id del usaurio de la plataforma cloud que es el principal responsable de la definición del CFO",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": false,
+                "display": true,
+                "update": true,
+                "copy": false
+            },
+            "hasExternalWorkflows": {
+                "name": "Tiene Workflows externos?",
+                "description": "Indica si existen Workflows externos definidos en el CFO [CloudFrameWorkCFOWorkFlows] al margen los workflows que pudieran estar definidos en  elcampo [events]",
+                "type": "boolean",
+                "allow_null": true,
+                "index": true,
+                "defaultvalue": "false",
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "boolean"
+                }
+            },
+            "Tags": {
+                "name": "Palabras Clave",
+                "description": "Palabras clave separadas por [,] para facilitar la búsqueda del CFO el la plataforma cloud.",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "_search": {
+                "name": "Search field",
+                "description": "Campo interno que contiene palabras clave generadas a partir del resto de otros campos para facilitar la búsqueda del cfo.",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": false,
+                "display": true,
+                "update": true,
+                "copy": false
+            }
+        },
+        "dependencies": []
+    },
+    "model": {
+        "model": {
+            "KeyName": [
+                "keyname",
+                "index|minlength:2"
+            ],
+            "DateUpdating": [
+                "datetime",
+                "index|forcevalue:now"
+            ],
+            "Title": [
+                "string",
+                "index|allownull|description:Titluar del CFO"
+            ],
+            "Description": [
+                "string",
+                "allownull|description:Description of the Data Object"
+            ],
+            "type": [
+                "string",
+                "index|values:db,ds,bq,mongodb,api"
+            ],
+            "Active": [
+                "boolean",
+                "index|allownull|deafaultvalue:true|description:Id the CFO Active? Only Unactive CFOs can be deleted"
+            ],
+            "GroupName": [
+                "string",
+                "index|allowNull|minlength:3"
+            ],
+            "extends": [
+                "string",
+                "index|allownull"
+            ],
+            "entity": [
+                "string",
+                "index|minlength:2"
+            ],
+            "Connections": [
+                "list",
+                "index|allownull|description:Connections allowed"
+            ],
+            "environment": [
+                "string",
+                "index|allownull|description:default environment"
+            ],
+            "status": [
+                "string",
+                "index|allownull|description:Internal Status of CFO"
+            ],
+            "lowCode": [
+                "json",
+                "allownull"
+            ],
+            "model": [
+                "json",
+                "allownull"
+            ],
+            "securityAndFields": [
+                "json",
+                "allownull"
+            ],
+            "interface": [
+                "json",
+                "allownull"
+            ],
+            "events": [
+                "json",
+                "allownull|description:json with hooks and workflows"
+            ],
+            "CloudFrameworkUser": [
+                "string",
+                "index|notnull|description:who was the last to update the record"
+            ],
+            "Owner": [
+                "string",
+                "index|allownull|description:Who is the owner of this CFO"
+            ],
+            "hasExternalWorkflows": [
+                "boolean",
+                "index|allownull|defaultvalue:false|description:if true the CFO will search in CloudFrameWorkCFOWorkFlows entitites related to itself"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull|description:key words to search separated by ','"
+            ],
+            "_search": [
+                "list",
+                "index|allownull|description:internal search field"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkCFOWorkFlows",
+            "CloudFrameWorkCFOsConnections",
+            "CloudFrameWorkCFOsEnvironments"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "cfo_locked": true,
+            "user_organizations": null,
+            "user_privileges": [
+                "_superadmin_",
+                "CFED",
+                "development-admin"
+            ],
+            "backups": {
+                "update": true,
+                "delete": true
+            },
+            "logs": {
+                "update": true,
+                "delete": true
+            }
+        },
+        "fields": {
+            "KeyName": {
+                "name": "CFO Id",
+                "rules": [
+                    {
+                        "type": "unique",
+                        "message": "El valor debe ser único"
+                    }
+                ]
+            },
+            "GroupName": {
+                "name": "Group Name",
+                "type": "autoselect"
+            },
+            "DateUpdating": {
+                "name": "Updated"
+            },
+            "Title": {
+                "name": "Titular",
+                "allow_empty": true
+            },
+            "Description": {
+                "name": "Description",
+                "type": "html",
+                "allow_empty": true
+            },
+            "securityAndFields": {
+                "name": "Security (Access,Logs & Backups) & Fields",
+                "type": "json",
+                "defaultvalue": "{\n    \"security\": {\n        \"user_privileges\": [],\n        \"user_organizations\": [],\n        \"user_groups\":[],\n        \"allow_insert\": [],\n        \"allow_display\": [],\n        \"allow_delete\": [],\n        \"allow_copy\": [],\n        \"allow_update\": []\n    },\n    \"fields\":{}\n}"
+            },
+            "type": {
+                "name": "DS/DB",
+                "type": "select",
+                "values": [
+                    "ds",
+                    "db",
+                    "bq",
+                    "mongodb",
+                    "api"
+                ]
+            },
+            "extends": {
+                "name": "Extends from:",
+                "allow_empty": true
+            },
+            "entity": {
+                "name": "Entity Name",
+                "full_col_width": true
+            },
+            "Connections": {
+                "name": "Allowed Connections",
+                "type": "multiselect",
+                "external_values": "ds",
+                "external_where": {
+                    "Active": true
+                },
+                "entity": "CloudFrameWorkCFOsConnections",
+                "fields": "Name",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "allow_empty": true,
+                "tab": "lowcode",
+                "security": {
+                    "field_values": {
+                        "type": [
+                            "equals",
+                            "db"
+                        ]
+                    }
+                }
+            },
+            "environment": {
+                "name": "Default Environment",
+                "type": "select",
+                "external_values": "ds",
+                "external_where": {
+                    "Active": true
+                },
+                "entity": "CloudFrameWorkCFOsEnvironments",
+                "fields": "Name",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "allow_empty": true,
+                "empty_value": "Select a default environment",
+                "tab": "main"
+            },
+            "status": {
+                "name": "Status",
+                "type": "autoselect",
+                "allow_empty": true
+            },
+            "model": {
+                "name": "DS/DB/BQ Model and Dependences",
+                "type": "json",
+                "tab": "lowcode",
+                "defaultvalue": "{\"model\": [{\"KeyName\":[\"keyname\",\"index|minlength:4\"],\"GroupName\": [\"string\",\"index|minlength:3\"]}],\"dependencies\":[]}"
+            },
+            "interface": {
+                "name": "Interface: CFO",
+                "type": "json",
+                "defaultvalue": "{\n        \"name\": \"CloudFramework CFO\",\n        \"plural\": \"CloudFramework CFOs\",\n        \"security\":{\n          \"user_spacenames\": [\"cloudframework\"],\n          \"user_organizations\": null,\n          \"user_privileges\": [\"_superadmin_\"]\n        }}"
+            },
+            "Support": {
+                "name": "Support",
+                "type": "virtual",
+                "value": "Visit CFO - Cloud Framework Objects",
+                "link": true,
+                "link_content": "https://www.notion.so/cloudframework/CFO-Cloud-Framework-Objects-6e7c154a57e3467b986308865cc0a17c"
+            },
+            "Icons": {
+                "name": "Icons",
+                "type": "select_icon",
+                "value": "Visit Icons to Use",
+                "section_class": "col col-4",
+                "allow_empty": true
+            },
+            "InternalDoc": {
+                "name": "Internal Doc",
+                "type": "virtual",
+                "__onclick": "CloudFrameWorkCFA.showDevDocPage('/ecm-pages/%2Ftraining%2Facademy%2Fcfo%2Ffields');return false;",
+                "_onclick": "CloudFrameWorkCFA.showDevDocPage('/webappmodule/6188879363702784');return false;",
+                "value": "Definiciones de campo",
+                "link": true,
+                "link_content": "/app.html#https://core20.web.app/ajax/ecm.html?page=/training/academy/cfos/fields"
+            },
+            "events": {
+                "name": "Hooks & Internal Workflows",
+                "type": "json",
+                "defaultvalue": "{\"hooks\":null,\"workflows\":null}",
+                "tab": "workflows"
+            },
+            "hasExternalWorkflows": {
+                "name": "Allow External Workflows",
+                "type": "boolean",
+                "defaultvalue": false,
+                "tab": "workflows"
+            },
+            "VirtualWorkflows": {
+                "name": "External Workflows",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkCFOWorkFlows",
+                "linked_field": "CFOId",
+                "field_value": "entity",
+                "fields": "KeyId,WorkFlowName",
+                "summary_line": "{{KeyId}} {{WorkFlowName}}",
+                "allow_insert": true,
+                "tab": "workflows"
+            },
+            "lowCode": {
+                "name": "LOW-CODE Description",
+                "type": "json",
+                "tab": "lowcode",
+                "defaultvalue": "{}",
+                "contextual": {
+                    "title": "Elementos para crear LOWCODE",
+                    "icon": "fa-question",
+                    "url": "/ajax/cfa.html?api=/erp/dev-docs?tag=ecm-links:%2Ftraining%2Fcfos%2Ffield-definitions",
+                    "tooltip": "Click para más info",
+                    "_contextual_icon": "fa-flag"
+                }
+            },
+            "Active": {
+                "name": "Active?",
+                "type": "boolean",
+                "defaultvalue": true
+            },
+            "CloudFrameworkUser": {
+                "name": "Who was the last to update the CFO?",
+                "disabled": true
+            },
+            "Owner": {
+                "name": "Owner",
+                "allow_empty": true
+            },
+            "ButtonUpdateModel": {
+                "name": "Update Model",
+                "type": "virtual",
+                "external_apis": [
+                    {
+                        "_url": "http://localhost:9999/core/cfo/development/cfi/{{Platform:spacename}}/{{KeyName}}/model_update",
+                        "_url_": "https://api.cloudframework.io/core/cfo/development/cfi/{{Platform:spacename}}/{{KeyName}}/model_update",
+                        "title": "Update Dabase Model v1",
+                        "js_condition": "\"{{type}}\"==\"db\"",
+                        "method": "GET"
+                    },
+                    {
+                        "_url": "http://localhost:9999/erp/development-cfos/{{Platform:spacename}}/{{User:KeyName}}/cfi/db_model_update/{{KeyName}}",
+                        "url": "https://api.cloudframework.io/erp/development-cfos/{{Platform:spacename}}/{{User:KeyName}}/cfi/db_model_update/{{KeyName}}",
+                        "title": "Update Dabase Model v2",
+                        "js_condition": "\"{{type}}\"==\"db\"",
+                        "method": "GET"
+                    },
+                    {
+                        "url": "http://localhost:9999/erp/development-cfos/{{Platform:spacename}}/{{User:KeyName}}/cfi/bq_model_update/{{KeyName}}",
+                        "_url": "https://api.cloudframework.io/core/cfo/development/cfi/{{Platform:spacename}}/{{KeyName}}/bq_model_update",
+                        "title": "Handle BQ Model dev",
+                        "js_condition": "\"{{type}}\"==\"bq\"",
+                        "method": "GET"
+                    }
+                ]
+            },
+            "ButtonUpdateLowCodeSQL": {
+                "tab": "lowcode",
+                "name": "Update Database Structure",
+                "type": "virtual",
+                "security": {
+                    "field_values": {
+                        "type": [
+                            "equals",
+                            "db"
+                        ]
+                    }
+                },
+                "external_apis": [
+                    {
+                        "url": "https://api.cloudframework.io/erp/development-cfos/{{Platform:spacename}}/{{KeyName}}/cfi/lowcode-db-structure/{{KeyName}}/update?_tab=lowcode",
+                        "title": "Sync DB Structure",
+                        "js_condition": "\"{{type}}\"==\"db\"",
+                        "method": "GET"
+                    },
+                    {
+                        "url": "https://api.cloudframework.dev/erp/development-cfos/{{Platform:spacename}}/{{KeyName}}/cfi/lowcode-db-structure/{{KeyName}}/update?_tab=lowcode",
+                        "title": "_d",
+                        "js_condition": "\"{{type}}\"==\"db\"",
+                        "method": "GET"
+                    },
+                    {
+                        "url": "http://localhost:9999/erp/development-cfos/{{Platform:spacename}}/{{KeyName}}/cfi/lowcode-db-structure/{{KeyName}}/update?_tab=lowcode",
+                        "title": "_l",
+                        "js_condition": "\"{{type}}\"==\"db\"",
+                        "method": "GET"
+                    }
+                ]
+            },
+            "ButtonUpdateLowCodeCFI": {
+                "tab": "lowcode",
+                "name": "Update CFI Using LowCode",
+                "type": "virtual",
+                "external_apis": [
+                    {
+                        "url": "https://api.cloudframework.io/erp/development-cfos/{{Platform:spacename}}/{{KeyName}}/cfi/lowcode-cfi-structure/{{KeyName}}/update?_tab=lowcode",
+                        "title": "Sync CFI Structure",
+                        "method": "GET"
+                    },
+                    {
+                        "url": "https://api.cloudframework.dev/erp/development-cfos/{{Platform:spacename}}/{{KeyName}}/cfi/lowcode-cfi-structure/{{KeyName}}/update?_tab=lowcode",
+                        "title": "_d",
+                        "method": "GET"
+                    },
+                    {
+                        "url": "http://localhost:9999/erp/development-cfos/{{Platform:spacename}}/{{KeyName}}/cfi/lowcode-cfi-structure/{{KeyName}}/update?_tab=lowcode",
+                        "title": "_l",
+                        "method": "GET"
+                    },
+                    {
+                        "url": "http://localhost:9999/erp/development-cfos/{{Platform:namespace}}/{{User:KeyName}}/cfi/cfo-from-lowcode?type={{type}}&id={{KeyName}}",
+                        "title": "_l2",
+                        "method": "GET"
+                    }
+                ]
+            },
+            "Tags": {
+                "name": "Tags",
+                "allow_empty": true
+            },
+            "_search": {
+                "name": "Search field",
+                "search_fields": "KeyName,GroupName,entity,extends,Tags",
+                "tab": "lowcode",
+                "disabled": true,
+                "cols": 3
+            }
+        },
+        "behaviour": {
+            "after_insert": "update",
+            "after_update": "display"
+        }
+    },
+    "status": "IN PRODUCTION",
+    "type": "ds"
+}

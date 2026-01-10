@@ -14,6 +14,7 @@ CLOUD Documentum consists of several documentation modules:
 | **Processes** | Business and technical processes | `CloudFrameWorkDevDocumentationForProcesses`, `CloudFrameWorkDevDocumentationForSubProcesses` |
 | **Checks** | Tests, objectives, and specifications linked to other documentation | `CloudFrameWorkDevDocumentationForProcessTests` |
 | **Resources** | Infrastructure resources (tangible and intangible assets) | `CloudFrameWorkInfrastructureResources` |
+| **Modules** | Menu configuration for platform solutions | `CloudFrameWorkModules` |
 | **WebPages** | Web content pages for internal or public publishing | `CloudFrameWorkECMPages` |
 
 All modules share a common lifecycle state system and backup infrastructure.
@@ -1202,6 +1203,112 @@ $childResources = $this->cfos->ds('CloudFrameWorkInfrastructureResources')->fetc
 
 ---
 
+## Modules (Menu Configuration)
+
+Modules define the navigation menu structure for different platform solutions. Each module contains a JSON configuration that specifies menu items, templates, icons, and security privileges for different user roles.
+
+### CloudFrameWorkModules
+
+**Key fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyName` | keyname | Module identifier (unique key) |
+| `ModuleName` | string | Display name for the module |
+| `Active` | boolean | Whether the module is enabled |
+| `JSON` | json | Menu structure configuration |
+| `Fingerprint` | json | Internal tracking data |
+| `DateInsertion` | datetime | Creation timestamp |
+| `DateUpdating` | datetime | Last modification timestamp |
+
+### Menu JSON Structure
+
+The `JSON` field contains the complete menu configuration:
+
+```json
+{
+    "menu": {
+        "_template": "https://core20.web.app/ajax/dashboard.html",
+        "_icon": "fa-chess",
+        "_security": {
+            "user_privileges": ["module-admin", "module-user"]
+        },
+        "Dashboard": {
+            "_code": "module-dashboard",
+            "_template": "https://core20.web.app/ajax/module_dashboard.html",
+            "_icon": "fa-tachometer-alt",
+            "_security": {
+                "user_privileges": ["module-admin", "module-user"]
+            }
+        },
+        "Settings": {
+            "_code": "module-settings",
+            "_template": "https://core20.web.app/ajax/module_settings.html",
+            "_icon": "fa-cog",
+            "_security": {
+                "user_privileges": ["module-admin"]
+            }
+        }
+    }
+}
+```
+
+### Menu Configuration Properties
+
+| Property | Description |
+|----------|-------------|
+| `_template` | URL to the HTML template for the menu item |
+| `_icon` | FontAwesome icon class (e.g., `fa-chess`, `fa-cog`) |
+| `_code` | Internal code identifier for the menu item |
+| `_security.user_privileges` | Array of privileges required to see/access the menu item |
+
+### Web Interface
+
+- **Module Management**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkModules`
+
+### Security Privileges
+
+| Privilege | Description |
+|-----------|-------------|
+| `_superadmin_` | Full system access |
+| `platform-admin` | Platform administration access |
+| `development-admin` | Development administration access |
+| `CFDE` | CloudFramework Development Environment access |
+
+### Example: Creating a New Module
+
+```php
+// Create a new module for a CRM solution
+$moduleData = [
+    'KeyName' => 'crm-module',
+    'ModuleName' => 'CRM Solution',
+    'Active' => true,
+    'JSON' => [
+        'menu' => [
+            '_template' => 'https://core20.web.app/ajax/crm_dashboard.html',
+            '_icon' => 'fa-users',
+            '_security' => [
+                'user_privileges' => ['crm-admin', 'crm-user']
+            ],
+            'Contacts' => [
+                '_code' => 'crm-contacts',
+                '_template' => 'https://core20.web.app/ajax/crm_contacts.html',
+                '_icon' => 'fa-address-book'
+            ],
+            'Deals' => [
+                '_code' => 'crm-deals',
+                '_template' => 'https://core20.web.app/ajax/crm_deals.html',
+                '_icon' => 'fa-handshake'
+            ]
+        ]
+    ]
+];
+
+$this->cfos->ds('CloudFrameWorkModules')->insert($moduleData);
+```
+
+---
+
 ## WebPages (ECM Pages)
 
 WebPages provide a web content management system for creating, managing, and publishing web pages. Pages can be used internally within the platform or exposed publicly for external access. They support rich HTML content, structured JSON data, and integration with documentation systems.
@@ -1567,6 +1674,453 @@ Access to CLOUD Documentum CFOs is controlled by these privileges:
 
 ---
 
+## CFO Structure Reference
+
+CFOs (Cloud Framework Objects) are JSON files that define data models, security rules, and user interface configurations for CLOUD Documentum entities. This section documents the structure and components of CFO definitions.
+
+### Local CFO Files
+
+The CFO definitions for CLOUD Documentum are stored in `vendor/cloudframework-io/backend-core-php8/cloudia/cfos/`:
+
+| CFO File | Entity | Description |
+|----------|--------|-------------|
+| `CloudFrameWorkCFOs.json` | CloudFrameWorkCFOs | Master CFO definitions management |
+| `CloudFrameWorkCFOWorkFlows.json` | CloudFrameWorkCFOWorkFlows | CFO workflow configurations |
+| `CloudFrameWorkDevDocumentation.json` | CloudFrameWorkDevDocumentation | Development groups |
+| `CloudFrameWorkDevDocumentationForAPIs.json` | CloudFrameWorkDevDocumentationForAPIs | API documentation |
+| `CloudFrameWorkDevDocumentationForAPIEndPoints.json` | CloudFrameWorkDevDocumentationForAPIEndPoints | API endpoints |
+| `CloudFrameWorkDevDocumentationForLibraries.json` | CloudFrameWorkDevDocumentationForLibraries | Code libraries |
+| `CloudFrameWorkDevDocumentationForLibrariesModules.json` | CloudFrameWorkDevDocumentationForLibrariesModules | Library modules/functions |
+| `CloudFrameWorkDevDocumentationForProcesses.json` | CloudFrameWorkDevDocumentationForProcesses | Business processes |
+| `CloudFrameWorkDevDocumentationForSubProcesses.json` | CloudFrameWorkDevDocumentationForSubProcesses | Sub-processes |
+| `CloudFrameWorkDevDocumentationForProcessTests.json` | CloudFrameWorkDevDocumentationForProcessTests | Checks/tests |
+| `CloudFrameWorkDevDocumentationForWebApps.json` | CloudFrameWorkDevDocumentationForWebApps | Web applications |
+| `CloudFrameWorkDevDocumentationForWebAppsModules.json` | CloudFrameWorkDevDocumentationForWebAppsModules | WebApp modules |
+| `CloudFrameWorkECMPages.json` | CloudFrameWorkECMPages | ECM content pages |
+| `CloudFrameWorkECMPagesCompany.json` | CloudFrameWorkECMPagesCompany | Company-specific ECM pages |
+| `CloudFrameWorkInfrastructureResources.json` | CloudFrameWorkInfrastructureResources | Infrastructure resources (servers, computers, domains, etc.) |
+| `CloudFrameWorkInfrastructureResourcesAccesses.json` | CloudFrameWorkInfrastructureResourcesAccesses | Access permissions and credentials for resources |
+| `CloudFrameWorkModules.json` | CloudFrameWorkModules | Menu modules for different platform solutions |
+
+### CFO JSON Structure
+
+Every CFO file follows a consistent JSON structure with these main sections:
+
+```json
+{
+    "KeyName": "CFOEntityName",
+    "entity": "CFOEntityName",
+    "type": "ds",
+    "GroupName": "CLOUD Documentum",
+    "Active": true,
+    "status": "IN PRODUCTION",
+    "Owner": "owner@example.com",
+    "CloudFrameworkUser": "creator@example.com",
+    "DateUpdating": "2025-01-10 12:00:00",
+    "Title": "CFO Title",
+    "Description": "<p>HTML description</p>",
+    "Tags": ["tag1", "tag2"],
+    "_search": ["SEARCHTERM1", "SEARCHTERM2"],
+    "environment": "",
+    "extends": "",
+    "Connections": "",
+    "hasExternalWorkflows": false,
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "model": { ... },
+    "securityAndFields": { ... },
+    "interface": { ... },
+    "lowCode": { ... }
+}
+```
+
+### Root-Level Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `KeyName` | string | Unique identifier for the CFO |
+| `entity` | string | Datastore entity name (table name) |
+| `type` | string | Storage backend: `ds` (Datastore), `db` (SQL), `bq` (BigQuery), `api` |
+| `GroupName` | string | Category group (e.g., "CLOUD Documentum") |
+| `Active` | boolean | Whether the CFO is currently active |
+| `status` | string | Production status (e.g., "IN PRODUCTION", "IN DEVELOPMENT") |
+| `Owner` | string | CFO owner email |
+| `CloudFrameworkUser` | string | User who last modified the CFO |
+| `Title` | string | Display title |
+| `Description` | string | HTML description of the CFO purpose |
+| `Tags` | array | Categorization tags |
+| `_search` | array | Auto-generated search terms (uppercase) |
+| `extends` | string | Parent CFO to extend from |
+| `events` | object | Event hooks and workflows configuration |
+
+### Model Section
+
+The `model` section defines the data schema and field validation:
+
+```json
+{
+    "model": {
+        "model": {
+            "KeyName": ["keyname", "index"],
+            "Title": ["string", "index|description=Title of the entity"],
+            "Status": ["string", "index"],
+            "Email": ["string", "index|required|email"],
+            "Age": ["integer", "index|min:18|max:100"],
+            "Tags": ["list", "index|allownull"],
+            "Description": ["string", "allownull"],
+            "JSON": ["json", "allownull|description:Extra data"],
+            "Content": ["zip", "allownull"],
+            "DateInsertion": ["datetime", "index|allownull|defaultvalue:now"],
+            "DateUpdated": ["datetime", "index|allownull|forcevalue:now"]
+        },
+        "dependencies": [
+            "CloudFrameWorkUsers",
+            "CloudFrameWorkDevDocumentation"
+        ]
+    }
+}
+```
+
+#### Field Types
+
+| Type | Description | Storage |
+|------|-------------|---------|
+| `keyname` | Primary key (auto-generated if not provided) | String |
+| `keyid` | Auto-generated numeric ID | Integer |
+| `string` | Text field | String |
+| `integer` | Numeric field | Integer |
+| `float` | Decimal number | Float |
+| `boolean` | True/false | Boolean |
+| `list` | Array of values | Array |
+| `json` | JSON object | JSON |
+| `zip` | Compressed text (for large content) | Compressed String |
+| `datetime` | Date and time with timezone | Timestamp |
+| `date` | Date only | Date |
+| `geo` | Geographic coordinates | Geopoint |
+| `email` | Email address | String |
+
+#### Validation Rules
+
+| Rule | Description | Example |
+|------|-------------|---------|
+| `index` | Create index for queries | `"index"` |
+| `allownull` | Field can be null | `"index\|allownull"` |
+| `allowempty` | Field can be empty string | `"index\|allowempty"` |
+| `notnull` | Field is required | `"index\|notnull"` |
+| `required` | Alias for notnull | `"required"` |
+| `unique` | Value must be unique | `"unique"` |
+| `minlength:N` | Minimum string length | `"minlength:4"` |
+| `maxlength:N` | Maximum string length | `"maxlength:100"` |
+| `min:N` | Minimum numeric value | `"min:0"` |
+| `max:N` | Maximum numeric value | `"max:100"` |
+| `defaultvalue:X` | Default value on insert | `"defaultvalue:now"` |
+| `forcevalue:X` | Force value on every update | `"forcevalue:now"` |
+| `description:X` | Field description | `"description:User email"` |
+| `internal` | Cannot be set via API | `"internal"` |
+
+### SecurityAndFields Section
+
+The `securityAndFields` section defines access control and field UI configurations:
+
+```json
+{
+    "securityAndFields": {
+        "security": {
+            "cfo_locked": true,
+            "user_privileges": ["development-admin", "development-user"],
+            "user_spacenames": null,
+            "user_organizations": null,
+            "backups": {
+                "delete": true,
+                "update": true
+            },
+            "allow_delete": {
+                "field_values": {
+                    "Status": ["equals", "pending"]
+                }
+            }
+        },
+        "fields": {
+            "KeyName": {
+                "name": "Display Name",
+                "display_cfo": true
+            },
+            "Status": {
+                "type": "select",
+                "values": ["0.DEFINED", "1.MOCKED", "5.RUNNING"]
+            },
+            "TeamOwner": {
+                "name": "Owner",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkUsers",
+                "fields": "UserName,UserEmail",
+                "linked_field": "KeyName",
+                "defaultvalue": "{{User:KeyName}}"
+            },
+            "Description": {
+                "type": "html"
+            },
+            "JSON": {
+                "type": "json",
+                "tab": "config"
+            }
+        }
+    }
+}
+```
+
+#### Security Properties
+
+| Property | Description |
+|----------|-------------|
+| `cfo_locked` | Prevents CFO structure modification |
+| `user_privileges` | Required user privileges to access |
+| `user_spacenames` | Namespace restrictions |
+| `user_organizations` | Organization restrictions |
+| `backups.delete` | Enable backup on delete |
+| `backups.update` | Enable backup on update |
+| `allow_delete.field_values` | Conditional delete rules |
+
+#### Field UI Types
+
+| Type | Description |
+|------|-------------|
+| `string` | Text input (default) |
+| `textarea` | Multi-line text |
+| `html` | Rich text editor |
+| `json` | JSON editor |
+| `select` | Dropdown with static values |
+| `multiselect` | Multiple selection |
+| `autocomplete` | Search-based dropdown |
+| `autoselect` | Auto-populated from existing values |
+| `date` | Date picker |
+| `datetime` | Date and time picker |
+| `boolean` | Checkbox |
+| `server_documents` | File upload |
+| `virtual` | Computed/display-only field |
+
+#### External Values Configuration
+
+For fields that reference other entities:
+
+```json
+{
+    "TeamOwner": {
+        "type": "autocomplete",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkUsers",
+        "fields": "UserName,UserEmail",
+        "linked_field": "KeyName",
+        "external_where": {
+            "UserActive": true,
+            "UserPrivileges": ["development-admin"]
+        },
+        "allow_empty": true,
+        "empty_value": "Select a user"
+    }
+}
+```
+
+### Interface Section
+
+The `interface` section defines the web UI configuration:
+
+```json
+{
+    "interface": {
+        "name": "Entity Name",
+        "plural": "Entity Names",
+        "ico": "bullseye",
+        "ecm": "/cfos/EntityName",
+        "tabs": {
+            "default": {"title": "Main", "ico": "home"},
+            "config": {"title": "Configuration", "ico": "cog"}
+        },
+        "filters": [
+            {
+                "type": "autocomplete",
+                "field": "Folder",
+                "empty_value": "Select a Folder",
+                "allow_empty": true,
+                "external_auto_values": true
+            }
+        ],
+        "buttons": [
+            {"title": "New Entry", "type": "api-insert"}
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "server_limit": 200,
+                "fields": { ... }
+            }
+        },
+        "insert_fields": { ... },
+        "update_fields": { ... },
+        "display_fields": { ... },
+        "copy_fields": { ... },
+        "delete_fields": { ... }
+    }
+}
+```
+
+#### Interface Properties
+
+| Property | Description |
+|----------|-------------|
+| `name` | Singular display name |
+| `plural` | Plural display name |
+| `ico` | FontAwesome icon name |
+| `ecm` | ECM documentation path |
+| `tabs` | Tab definitions for forms |
+| `filters` | List filters for views |
+| `buttons` | Action buttons |
+| `views` | Grid/list view configurations |
+| `insert_fields` | Fields shown on insert form |
+| `update_fields` | Fields shown on update form |
+| `display_fields` | Fields shown on display/read form |
+| `copy_fields` | Fields shown on copy form |
+| `delete_fields` | Fields shown on delete confirmation |
+
+#### View Configuration
+
+```json
+{
+    "views": {
+        "default": {
+            "name": "General View",
+            "all_fields": true,
+            "server_order": "DateUpdated DESC",
+            "server_limit": 200,
+            "conditional_rows_background_color": {
+                "default": "",
+                "fields": [
+                    {
+                        "field": "Status",
+                        "condition": "equals",
+                        "color": "#43db81a0",
+                        "values": ["5.RUNNING"]
+                    }
+                ]
+            },
+            "fields": {
+                "Folder": {
+                    "field": "Folder",
+                    "order": "ASC",
+                    "row_group": true
+                },
+                "KeyName": {
+                    "field": "KeyName",
+                    "display_cfo": true,
+                    "id_field": "KeyName"
+                }
+            }
+        }
+    }
+}
+```
+
+### LowCode Section
+
+The `lowCode` section provides a human-readable model description for code generation:
+
+```json
+{
+    "lowCode": {
+        "name": "Check de información",
+        "plural": "Checks de información",
+        "description": "",
+        "ico": "ballot-check",
+        "secret": "",
+        "model": {
+            "Title": {
+                "name": "Title",
+                "description": "Title of the check",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "string"
+                }
+            }
+        },
+        "dependencies": []
+    }
+}
+```
+
+### Events Section
+
+The `events` section defines automation hooks and workflows:
+
+```json
+{
+    "events": {
+        "hooks": {
+            "beforeInsert": "validate_data",
+            "afterInsert": "send_notification",
+            "beforeUpdate": null,
+            "afterUpdate": "log_changes",
+            "beforeDelete": "check_dependencies",
+            "afterDelete": null
+        },
+        "workflows": {
+            "approval": {
+                "trigger": "Status == pending",
+                "actions": ["notify_approvers", "set_deadline"]
+            }
+        }
+    }
+}
+```
+
+### CFO Dependencies
+
+The `dependencies` array in the model section lists related CFOs:
+
+```
+CloudFrameWorkDevDocumentation
+├── CloudFrameWorkDevDocumentationForAPIs
+│   └── CloudFrameWorkDevDocumentationForAPIEndPoints
+├── CloudFrameWorkDevDocumentationForLibraries
+│   └── CloudFrameWorkDevDocumentationForLibrariesModules
+├── CloudFrameWorkDevDocumentationForProcesses
+│   ├── CloudFrameWorkDevDocumentationForSubProcesses
+│   └── CloudFrameWorkDevDocumentationForProcessTests
+├── CloudFrameWorkDevDocumentationForWebApps
+│   └── CloudFrameWorkDevDocumentationForWebAppsModules
+└── CloudFrameWorkECMPages
+```
+
+### Using CFOs in Code
+
+```php
+// Load a CFO definition
+$cfo = $this->cfos->getCFODefinition('CloudFrameWorkDevDocumentationForAPIs');
+
+// Access model fields
+$model = $cfo['model']['model'];
+
+// Access field configurations
+$fields = $cfo['securityAndFields']['fields'];
+
+// Access interface configuration
+$interface = $cfo['interface'];
+
+// Fetch data using CFO entity
+$apis = $this->cfos->ds('CloudFrameWorkDevDocumentationForAPIs')->fetchAll('*');
+```
+
+---
+
 ## Related Documentation
 
 | Resource | Location |
@@ -1581,6 +2135,7 @@ Access to CLOUD Documentum CFOs is controlled by these privileges:
 | **Documentation** | |
 | CFOs Documentation | `CLAUDE.md` (CFOs section) |
 | CFI Class | `buckets/backups/CFOs/CFI.md` |
+| CFO Definitions | `vendor/cloudframework-io/backend-core-php8/cloudia/cfos/` |
 | **Backup Scripts** | |
 | API Backup Script | `buckets/scripts/backup_platforms_apis.php` |
 | Library Backup Script | `buckets/scripts/backup_platforms_libraries.php` |
@@ -1592,5 +2147,11 @@ Access to CLOUD Documentum CFOs is controlled by these privileges:
 | API CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/apis.php` |
 | Library CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/libraries.php` |
 | Process CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/processes.php` |
-| Check CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/check.php` |
+| Check CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/checks.php` |
 | Resource CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/resources.php` |
+| WebApp CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/webapps.php` |
+| WebPages CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/webpages.php` |
+| Courses CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/courses.php` |
+| CFO CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/cfos.php` |
+| Menu CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/menu.php` |
+| Auth Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/auth.php` |

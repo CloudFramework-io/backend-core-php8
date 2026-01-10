@@ -1,0 +1,203 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-10-01 03:13:42",
+    "Description": "<p><br></p>",
+    "GroupName": "CLOUD-PLATFORM",
+    "KeyName": "CloudFrameWorkModules",
+    "Owner": "",
+    "Tags": "",
+    "Title": "",
+    "_search": [
+        "CLOUDFRAMEWORKMODULES",
+        "CLOUD-PLATFORM"
+    ],
+    "entity": "CloudFrameWorkModules",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "MENU Module",
+        "plural": "MENU Modules",
+        "ico": "list-alt",
+        "buttons": [
+            {
+                "title": "Insert new Module",
+                "type": "api-insert"
+            }
+        ],
+        "_filters": [
+            {
+                "field": "Active",
+                "type": "select",
+                "allow_empty": false,
+                "deafaultvalue": "true",
+                "values": [
+                    {
+                        "id": "true",
+                        "value": "Only Active Platforms"
+                    },
+                    {
+                        "id": "false",
+                        "value": "No Active Platforms"
+                    }
+                ]
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "_server_order": "ModuleName ASC",
+                "server_limit": 100,
+                "fields": {
+                    "KeyName": {
+                        "field": "KeyName",
+                        "update_cfo": true
+                    },
+                    "ModuleName": {
+                        "field": "ModuleName",
+                        "order": "asc"
+                    },
+                    "Active": {
+                        "field": "Active"
+                    },
+                    "DateUpdating": {
+                        "field": "DateUpdating"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "ModuleName": {
+                "field": "ModuleName",
+                "new_row": true
+            },
+            "JSON": {
+                "field": "JSON",
+                "defaultvalue": "{\"menu\": {        \"_template\": \"https://core20.web.app/ajax/people_dashboard.html?v2022110801\",\n        \"_icon\": \"fa-chess\",\n        \"_security\": {\n            \"user_privileges\": [\n                \"people-admin\",\n                \"people-user\",\n                \"lms-admin\"\n            ]\n        },\n        \"Dashboard\": {\n            \"_code\": \"people-dashboard\",\n            \"_template\": \"https://core20.web.app/ajax/people_dashboard.html?v2022110801\",\n            \"_icon\": \"fa-chess\",\n            \"_security\": {\n                \"user_privileges\": [\n                    \"people-admin\",\n                    \"people-user\",\n                    \"lms-admin\"\n                ]\n            }\n        }}}"
+            }
+        },
+        "update_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            },
+            "ModuleName": {
+                "field": "ModuleName"
+            },
+            "Active": {
+                "field": "Active"
+            },
+            "JSON": {
+                "field": "JSON",
+                "section_class": "col col-xs-12"
+            }
+        },
+        "copy_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "ModuleName": {
+                "field": "ModuleName",
+                "new_row": true
+            },
+            "JSON": {
+                "field": "JSON",
+                "section_class": "col col-xs-12"
+            }
+        },
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            }
+        },
+        "display_fields": null
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "KeyName": [
+                "keyname",
+                "index|minlength:2"
+            ],
+            "ModuleName": [
+                "string",
+                "index|minlength:4"
+            ],
+            "Fingerprint": [
+                "json",
+                "internal"
+            ],
+            "DateInsertion": [
+                "datetime",
+                "index|defaultvalue:now"
+            ],
+            "DateUpdating": [
+                "datetime",
+                "index|forcevalue:now"
+            ],
+            "Active": [
+                "boolean",
+                "index|defaultvalue:true"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ]
+        },
+        "dependencies": []
+    },
+    "securityAndFields": {
+        "security": {
+            "user_organizations": null,
+            "user_spacenames": null,
+            "backups": {
+                "update": true,
+                "delete": true
+            },
+            "logs": {
+                "update": true,
+                "delete": true
+            },
+            "user_privileges": [
+                "_superadmin_",
+                "platform-admin",
+                "development-admin",
+                "CFDE"
+            ]
+        },
+        "fields": {
+            "KeyName": {
+                "name": "KeyName"
+            },
+            "ModuleName": {
+                "name": "Module Name"
+            },
+            "DateInsertion": {
+                "name": "Creation Date"
+            },
+            "DateUpdating": {
+                "name": "Last Update"
+            },
+            "Active": {
+                "name": "Active",
+                "type": "boolean"
+            },
+            "JSON": {
+                "name": "Platform Variables",
+                "type": "JSON"
+            }
+        }
+    },
+    "status": "",
+    "type": "ds"
+}
