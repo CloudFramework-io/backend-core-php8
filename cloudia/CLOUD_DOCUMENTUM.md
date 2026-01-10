@@ -240,6 +240,8 @@ The full API URL is formed by concatenating `KeyName` + `ExtraPath`:
 
 Represents individual endpoints within an API.
 
+> **Important:** When creating new ENDPOINTs in local backup files, do NOT include the `KeyId` field. When the API is updated/synced to the remote server, new ENDPOINTs will automatically generate their `KeyId` value. Only existing ENDPOINTs that were previously synced should retain their `KeyId` for proper identification and updates.
+
 **Key fields:**
 
 | Field | Type | Description |
