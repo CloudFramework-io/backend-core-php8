@@ -16,15 +16,15 @@
  * and synchronizes them with the CloudFramework platform via REST API.
  *
  * Usage:
- *   _backup/checks/backup-from-remote                      - Backup all Checks from remote
- *   _backup/checks/backup-from-remote?entity=X&id=Y        - Backup specific Checks
- *   _backup/checks/insert-from-backup?entity=X&id=Y        - Insert new Checks to remote
- *   _backup/checks/update-from-backup?entity=X&id=Y        - Update existing Checks in remote
- *   _backup/checks/list-remote                             - List all Checks in remote
- *   _backup/checks/list-local                              - List all Checks in local backup
+ *   _cloudia/checks/backup-from-remote                      - Backup all Checks from remote
+ *   _cloudia/checks/backup-from-remote?entity=X&id=Y        - Backup specific Checks
+ *   _cloudia/checks/insert-from-backup?entity=X&id=Y        - Insert new Checks to remote
+ *   _cloudia/checks/update-from-backup?entity=X&id=Y        - Update existing Checks in remote
+ *   _cloudia/checks/list-remote                             - List all Checks in remote
+ *   _cloudia/checks/list-local                              - List all Checks in local backup
  *
  * @author CloudFramework Development Team
- * @version 1.0
+ * @version 1.1
  */
 class Script extends CoreScripts
 {
@@ -35,7 +35,7 @@ class Script extends CoreScripts
     var $headers = [];
 
     /** @var string Base API URL for remote platform */
-    var $api_base_url = 'https://api.cloudframework.dev';
+    var $api_base_url = 'https://api.cloudframework.io';
 
     /**
      * Main execution method
@@ -64,7 +64,7 @@ class Script extends CoreScripts
 
         //region SET AUTHENTICATE header for API call
         $this->headers = [
-            'X-WEB-KEY' => '/scripts/_backup/checks',
+            'X-WEB-KEY' => '/scripts/_cloudia/checks',
             'X-DS-TOKEN' => $this->core->user->token
         ];
         //endregion
@@ -95,8 +95,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  /list-local                              - List all Checks in local backup");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
-        $this->sendTerminal("  composer run-script script \"_backup/checks/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=PROC-001\"");
-        $this->sendTerminal("  composer run-script script _backup/checks/list-remote");
+        $this->sendTerminal("  composer run-script script \"_cloudia/checks/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=PROC-001\"");
+        $this->sendTerminal("  composer run-script script _cloudia/checks/list-remote");
         $this->sendTerminal("");
         $this->sendTerminal("Parameters:");
         $this->sendTerminal("  entity: The CFO KeyName to which the checks are linked (e.g., CloudFrameWorkDevDocumentationForProcesses)");
@@ -153,7 +153,7 @@ class Script extends CoreScripts
         $this->sendTerminal("Listing Checks in remote platform [{$this->platform_id}]:");
         $this->sendTerminal(str_repeat('-', 80));
 
-        $params = ['_fields' => 'KeyId,CFOEntity,CFOId,Route,Title,Status', '_order' => 'CFOEntity,CFOId', '_limit' => 1000];
+        $params = ['_fields' => 'KeyId,CFOEntity,CFOId,Route,Title,Status', '_order' => 'CFOEntity,CFOId', 'cfo_limit' => 2000];
         $response = $this->core->request->get_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw=1&_timezone=UTC",
             $params,
@@ -311,10 +311,10 @@ class Script extends CoreScripts
             //endregion
         } else {
             //region FETCH all Checks and group them
-            $this->sendTerminal(" - Fetching all Checks...");
+            $this->sendTerminal(" - Fetching all Checks... [max 2000]");
             $response = $this->core->request->get_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
-                ['_limit' => 1000, '_raw' => 1, '_timezone' => 'UTC'],
+                ['cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
             if ($this->core->request->error) {
@@ -387,7 +387,7 @@ class Script extends CoreScripts
         $cfo_entity = $this->formParams['entity'] ?? null;
         $cfo_id = $this->formParams['id'] ?? null;
         if (!$cfo_entity || !$cfo_id) {
-            return $this->addError("Missing required parameters: entity and id. Usage: _backup/checks/update-from-backup?entity=X&id=Y");
+            return $this->addError("Missing required parameters: entity and id. Usage: _cloudia/checks/update-from-backup?entity=X&id=Y");
         }
         $this->sendTerminal(" - Checks to update: {$cfo_entity}/{$cfo_id}");
         //endregion
@@ -452,7 +452,6 @@ class Script extends CoreScripts
         //region UPDATE/INSERT/DELETE Checks
         $this->sendTerminal(" - Syncing checks...");
 
-        _printe(array_keys($local_indexed),array_keys($remote_indexed));;
         // Update or delete remote checks
         foreach ($remote_indexed as $keyId => $remote_check) {
             if (!isset($local_indexed[$keyId])) {
@@ -522,7 +521,7 @@ class Script extends CoreScripts
         $cfo_entity = $this->formParams['entity'] ?? null;
         $cfo_id = $this->formParams['id'] ?? null;
         if (!$cfo_entity || !$cfo_id) {
-            return $this->addError("Missing required parameters: entity and id. Usage: _backup/checks/insert-from-backup?entity=X&id=Y");
+            return $this->addError("Missing required parameters: entity and id. Usage: _cloudia/checks/insert-from-backup?entity=X&id=Y");
         }
         $this->sendTerminal(" - Checks to insert: {$cfo_entity}/{$cfo_id}");
         //endregion

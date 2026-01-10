@@ -117,7 +117,7 @@ class Script extends CoreScripts
         } else {
             //region FETCH all CFOs
             $this->sendTerminal(" - Fetching all CFOs...");
-            $params = ['cfo_limit' => 1000,'_timezone'=>'UTC','_raw'=>1];
+            $params = ['cfo_limit' => 2000,'_timezone'=>'UTC','_raw'=>1];
             $response = $this->core->request->get_json_decode(
                 'https://api.cloudframework.dev/core/cfo/cfi/CloudFrameWorkCFOsLocal?_raw',
                 $params,

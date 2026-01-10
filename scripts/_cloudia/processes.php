@@ -16,12 +16,12 @@
  * - CloudFrameWorkDevDocumentationForSubProcesses: Individual subprocess documentation
  *
  * Usage:
- *   _backup/processes/backup-from-remote           - Backup all Processes from remote
- *   _backup/processes/backup-from-remote?id=PROC1  - Backup specific Process
- *   _backup/processes/insert-from-backup?id=PROC1  - Insert new Process to remote
- *   _backup/processes/update-from-backup?id=PROC1  - Update existing Process in remote
- *   _backup/processes/list-remote                  - List all Processes in remote
- *   _backup/processes/list-local                   - List all Processes in local backup
+ *   _cloudia/processes/backup-from-remote           - Backup all Processes from remote
+ *   _cloudia/processes/backup-from-remote?id=PROC1  - Backup specific Process
+ *   _cloudia/processes/insert-from-backup?id=PROC1  - Insert new Process to remote
+ *   _cloudia/processes/update-from-backup?id=PROC1  - Update existing Process in remote
+ *   _cloudia/processes/list-remote                  - List all Processes in remote
+ *   _cloudia/processes/list-local                   - List all Processes in local backup
  *
  * @author CloudFramework Development Team
  * @version 1.0
@@ -35,7 +35,7 @@ class Script extends CoreScripts
     var $headers = [];
 
     /** @var string Base API URL for remote platform */
-    var $api_base_url = 'https://api.cloudframework.dev';
+    var $api_base_url = 'https://api.cloudframework.io';
 
     /**
      * Main execution method
@@ -64,7 +64,7 @@ class Script extends CoreScripts
 
         //region SET AUTHENTICATE header for API call
         $this->headers = [
-            'X-WEB-KEY' => '/scripts/_backup/processes',
+            'X-WEB-KEY' => '/scripts/_cloudia/processes',
             'X-DS-TOKEN' => $this->core->user->token
         ];
         //endregion
@@ -93,8 +93,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  /list-local                - List all Processes in local backup");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
-        $this->sendTerminal("  composer run-script script \"_backup/processes/backup-from-remote?id=HIPOTECH-001\"");
-        $this->sendTerminal("  composer run-script script _backup/processes/list-remote");
+        $this->sendTerminal("  composer run-script script \"_cloudia/processes/backup-from-remote?id=HIPOTECH-001\"");
+        $this->sendTerminal("  composer run-script script _cloudia/processes/list-remote");
     }
 
     /**
@@ -229,6 +229,8 @@ class Script extends CoreScripts
         //endregion
 
         //region READ Processes from remote API
+        $processes=[];
+        $all_subprocesses=[];
         if ($process_id) {
             //region FETCH single Process by KeyName
             $this->sendTerminal(" - Fetching Process: {$process_id}");
@@ -245,12 +247,25 @@ class Script extends CoreScripts
             }
             $processes = [$response['data']];
             //endregion
+
+            //region READ subprocesses associated
+            $this->sendTerminal(" - Fetching all SubProcesses... [max 2000]");
+            $all_subprocesses = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
+                ['filter_Process' => $process_id,'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+            if ($this->core->request->error) {
+                return $this->addError($this->core->request->errorMsg);
+            }
+            //endregion
+
         } else {
             //region FETCH all Processes
-            $this->sendTerminal(" - Fetching all Processes...");
+            $this->sendTerminal(" - Fetching all Processes... [max 2000]");
             $response = $this->core->request->get_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcesses?_raw&_timezone=UTC",
-                ['_limit' => 1000, '_raw' => 1, '_timezone' => 'UTC'],
+                ['cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
             if ($this->core->request->error) {
@@ -258,8 +273,23 @@ class Script extends CoreScripts
             }
             $processes = $response['data'] ?? [];
             //endregion
+            //region READ subprocesses associated
+            $this->sendTerminal(" - Fetching all SubProcesses... [max 2000]");
+            $all_subprocesses = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
+                [ 'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+            if ($this->core->request->error) {
+                return $this->addError($this->core->request->errorMsg);
+            }
+            //endregion
         }
-        $this->sendTerminal(" - Processes to backup: " . count($processes));
+        $tot_processes = count($processes);
+        $tot_subprocesses = count($all_subprocesses['data']??[]);
+
+        $this->sendTerminal(" - Processes/Subprocesses to backup: {$tot_processes}/{$tot_subprocesses}");
+        $all_subprocesses = $this->core->utils->convertArrayIndexedByColumn($all_subprocesses['data'],'Process',true);
         //endregion
 
         //region PROCESS and SAVE each Process to backup directory
@@ -275,27 +305,21 @@ class Script extends CoreScripts
             //endregion
 
             //region FETCH subprocesses for this Process using KeyId
-            $subprocesses = [];
+            $subprocesses_response = [];
+            if(isset($all_subprocesses[$key_name])) {
+                $subprocesses_response = ['data'=>&$all_subprocesses[$key_name]];
+            }
 
-            if ($key_name) {
-                $subprocesses_response = $this->core->request->get_json_decode(
-                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
-                    ['filter_Process' => $key_name, '_limit' => 500, '_raw' => 1, '_timezone' => 'UTC'],
-                    $this->headers
-                );
-                if (!$this->core->request->error && ($subprocesses_response['data'] ?? null)) {
-                    $subprocesses = $subprocesses_response['data'];
-                    // Sort subprocesses by Position then KeyName
-                    foreach ($subprocesses as &$subprocess) {
-                        ksort($subprocess);
-                    }
-                    usort($subprocesses, function ($a, $b) {
-                        $posA = $a['Position'] ?? 0;
-                        $posB = $b['Position'] ?? 0;
-                        if ($posA !== $posB) return $posA - $posB;
-                        return strcmp($a['KeyName'] ?? '', $b['KeyName'] ?? '');
-                    });
+            $subprocesses = [];
+            if (!$this->core->request->error && ($subprocesses_response['data'] ?? null)) {
+                $subprocesses = $subprocesses_response['data'];
+                // Sort subprocesses by Position then KeyName
+                foreach ($subprocesses as &$subprocess) {
+                    ksort($subprocess);
                 }
+                usort($subprocesses, function ($a, $b) {
+                    return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+                });
             }
             //endregion
 
@@ -326,7 +350,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total Processes saved: {$saved_count}");
+        $this->sendTerminal(" - Total Processes/Subprocesses saved: {$tot_processes}/{$tot_subprocesses}");
         //endregion
 
         return true;
@@ -340,7 +364,7 @@ class Script extends CoreScripts
         //region VALIDATE $process_id (required parameter)
         $process_id = $this->formParams['id'] ?? null;
         if (!$process_id) {
-            return $this->addError("Missing required parameter: id. Usage: _backup/processes/update-from-backup?id=PROCESS_ID");
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/processes/update-from-backup?id=PROCESS_ID");
         }
         $this->sendTerminal(" - Process to update: {$process_id}");
         //endregion
@@ -445,7 +469,7 @@ class Script extends CoreScripts
         //region VALIDATE $process_id (required parameter)
         $process_id = $this->formParams['id'] ?? null;
         if (!$process_id) {
-            return $this->addError("Missing required parameter: id. Usage: _backup/processes/insert-from-backup?id=PROCESS_ID");
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/processes/insert-from-backup?id=PROCESS_ID");
         }
         $this->sendTerminal(" - Process to insert: {$process_id}");
         //endregion

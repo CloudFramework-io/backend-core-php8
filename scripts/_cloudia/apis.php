@@ -16,15 +16,15 @@
  * - CloudFrameWorkDevDocumentationForAPIEndPoints: Individual endpoint documentation
  *
  * Usage:
- *   _backup/apis/backup-from-remote           - Backup all APIs from remote
- *   _backup/apis/backup-from-remote?id=/path  - Backup specific API
- *   _backup/apis/insert-from-backup?id=/path  - Insert new API to remote
- *   _backup/apis/update-from-backup?id=/path  - Update existing API in remote
- *   _backup/apis/list-remote                  - List all APIs in remote
- *   _backup/apis/list-local                   - List all APIs in local backup
+ *   _cloudia/apis/backup-from-remote           - Backup all APIs from remote
+ *   _cloudia/apis/backup-from-remote?id=/path  - Backup specific API
+ *   _cloudia/apis/insert-from-backup?id=/path  - Insert new API to remote
+ *   _cloudia/apis/update-from-backup?id=/path  - Update existing API in remote
+ *   _cloudia/apis/list-remote                  - List all APIs in remote
+ *   _cloudia/apis/list-local                   - List all APIs in local backup
  *
  * @author CloudFramework Development Team
- * @version 2.0
+ * @version 2.1
  */
 class Script extends CoreScripts
 {
@@ -35,7 +35,7 @@ class Script extends CoreScripts
     var $headers = [];
 
     /** @var string Base API URL for remote platform */
-    var $api_base_url = 'https://api.cloudframework.dev';
+    var $api_base_url = 'https://api.cloudframework.io';
 
     /**
      * Main execution method
@@ -64,7 +64,7 @@ class Script extends CoreScripts
 
         //region SET AUTHENTICATE header for API call
         $this->headers = [
-            'X-WEB-KEY' => '/scripts/_backup/apis',
+            'X-WEB-KEY' => '/scripts/_cloudia/apis',
             'X-DS-TOKEN' => $this->core->user->token
         ];
         //endregion
@@ -93,8 +93,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  /list-local                - List all APIs in local backup");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
-        $this->sendTerminal("  composer run-script script \"_backup/apis/backup-from-remote?id=/erp/projects\"");
-        $this->sendTerminal("  composer run-script script _backup/apis/list-remote");
+        $this->sendTerminal("  composer run-script script \"_cloudia/apis/backup-from-remote?id=/erp/projects\"");
+        $this->sendTerminal("  composer run-script script _cloudia/apis/list-remote");
     }
 
     /**
@@ -105,9 +105,25 @@ class Script extends CoreScripts
      */
     private function apiIdToFilename($api_id)
     {
+        // Remove leading slash and replace special characters with underscores
         $name = ltrim($api_id, '/');
-        $name = str_replace('/', '_', $name);
+        $name = str_replace(['/', '\\', ':', '*', '?', '"', '<', '>', '|'], '_', $name);
         return '_' . $name . '.json';
+    }
+
+    /**
+     * Convert backup filename to API KeyName
+     *
+     * @param string $filename Filename (e.g., _erp_projects.json)
+     * @return string API KeyName (e.g., /erp/projects)
+     */
+    private function filenameToApiId($filename)
+    {
+        // Remove .json extension and leading underscore
+        $name = basename($filename, '.json');
+        $name = ltrim($name, '_');
+        // Replace underscores back to slashes (this is an approximation)
+        return '/' . str_replace('_', '/', $name);
     }
 
     /**
@@ -232,11 +248,13 @@ class Script extends CoreScripts
         //endregion
 
         //region READ APIs from remote API
+        $apis = [];
+        $all_endpoints = [];
         if ($api_id) {
             //region FETCH single API by KeyName
             $this->sendTerminal(" - Fetching API: {$api_id}");
             $response = $this->core->request->get_json_decode(
-                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIs/display/" . urlencode($api_id).'?_raw&_timezone=UTC',
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIs/display/" . urlencode($api_id) . '?_raw&_timezone=UTC',
                 ['_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
@@ -248,12 +266,25 @@ class Script extends CoreScripts
             }
             $apis = [$response['data']];
             //endregion
+
+            //region READ endpoints associated
+            $this->sendTerminal(" - Fetching endpoints for API... [max 2000]");
+            $all_endpoints = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
+                ['filter_API' => $api_id, 'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+            if ($this->core->request->error) {
+                return $this->addError($this->core->request->errorMsg);
+            }
+            //endregion
+
         } else {
             //region FETCH all APIs
-            $this->sendTerminal(" - Fetching all APIs...");
+            $this->sendTerminal(" - Fetching all APIs... [max 2000]");
             $response = $this->core->request->get_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIs?_raw&_timezone=UTC",
-                ['_limit' => 1000, '_raw' => 1, '_timezone' => 'UTC'],
+                ['cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
             if ($this->core->request->error) {
@@ -261,8 +292,25 @@ class Script extends CoreScripts
             }
             $apis = $response['data'] ?? [];
             //endregion
+
+            //region READ all endpoints
+            $this->sendTerminal(" - Fetching all Endpoints... [max 2000]");
+            $all_endpoints = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
+                ['cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+            if ($this->core->request->error) {
+                return $this->addError($this->core->request->errorMsg);
+            }
+            //endregion
         }
-        $this->sendTerminal(" - APIs to backup: " . count($apis));
+        $tot_apis = count($apis);
+        $endpoints_data = $all_endpoints['data'] ?? [];
+        $tot_endpoints = count($endpoints_data);
+
+        $this->sendTerminal(" - APIs/Endpoints to backup: {$tot_apis}/{$tot_endpoints}");
+        $all_endpoints = $this->core->utils->convertArrayIndexedByColumn($endpoints_data, 'API', true);
         //endregion
 
         //region PROCESS and SAVE each API to backup directory
@@ -277,12 +325,12 @@ class Script extends CoreScripts
             $key_name = $api['KeyName'];
             //endregion
 
-            //region FETCH endpoints for this API
-            $endpoints_response = $this->core->request->get_json_decode(
-                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
-                ['filter_API' => $key_name, '_limit' => 500, '_raw' => 1, '_timezone' => 'UTC'],
-                $this->headers
-            );
+            //region FETCH endpoints for this API using KeyName
+            $endpoints_response = [];
+            if (isset($all_endpoints[$key_name])) {
+                $endpoints_response = ['data' => &$all_endpoints[$key_name]];
+            }
+
             $endpoints = [];
             if (!$this->core->request->error && ($endpoints_response['data'] ?? null)) {
                 $endpoints = $endpoints_response['data'];
@@ -323,7 +371,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total APIs saved: {$saved_count}");
+        $this->sendTerminal(" - Total APIs/Endpoints saved: {$tot_apis}/{$tot_endpoints}");
         //endregion
 
         return true;
@@ -337,7 +385,7 @@ class Script extends CoreScripts
         //region VALIDATE $api_id (required parameter)
         $api_id = $this->formParams['id'] ?? null;
         if (!$api_id) {
-            return $this->addError("Missing required parameter: id. Usage: _backup/apis/update-from-backup?id=/path/to/api");
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/apis/update-from-backup?id=/path/to/api");
         }
         if (strpos($api_id, '/') !== 0) {
             $api_id = '/' . $api_id;
@@ -402,16 +450,23 @@ class Script extends CoreScripts
             $this->sendTerminal(" - Updating {" . count($endpoints) . "} endpoints...");
             foreach ($endpoints as $endpoint) {
                 $endpoint_key = $endpoint['KeyId'] ?? $endpoint['KeyName'] ?? null;
-                if (!$endpoint_key) continue;
-
-                $response = $this->core->request->put_json_decode(
-                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints/{$endpoint_key}?_raw&_timezone=UTC",
-                    $endpoint,
-                    $this->headers
-                );
+                if (!$endpoint_key) {
+                    $response = $this->core->request->post_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
+                        $endpoint,
+                        $this->headers
+                    );
+                } else {
+                    $response = $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints/{$endpoint_key}?_raw&_timezone=UTC",
+                        $endpoint,
+                        $this->headers
+                    );
+                }
 
                 if ($this->core->request->error || !($response['success'] ?? false)) {
-                    $this->sendTerminal("   # Warning: Failed to update endpoint [{$endpoint_key}]");
+                    $endpoint_title = $endpoint['EndPoint'] ?? $endpoint_key ?? 'unknown';
+                    $this->sendTerminal("   # Warning: Failed to update endpoint [{$endpoint_title}]");
                 }
             }
             $this->sendTerminal(" + Endpoints updated");
@@ -439,7 +494,7 @@ class Script extends CoreScripts
         //region VALIDATE $api_id (required parameter)
         $api_id = $this->formParams['id'] ?? null;
         if (!$api_id) {
-            return $this->addError("Missing required parameter: id. Usage: _backup/apis/insert-from-backup?id=/path/to/api");
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/apis/insert-from-backup?id=/path/to/api");
         }
         if (strpos($api_id, '/') !== 0) {
             $api_id = '/' . $api_id;
@@ -514,15 +569,24 @@ class Script extends CoreScripts
         if ($endpoints) {
             $this->sendTerminal(" - Inserting {" . count($endpoints) . "} endpoints...");
             foreach ($endpoints as $endpoint) {
-                $response = $this->core->request->post_json_decode(
-                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
-                    $endpoint,
-                    $this->headers
-                );
+                $endpoint_key = $endpoint['KeyId'] ?? $endpoint['KeyName'] ?? null;
+                if (!$endpoint_key) {
+                    $response = $this->core->request->post_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
+                        $endpoint,
+                        $this->headers
+                    );
+                } else {
+                    $response = $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints/{$endpoint_key}?_raw&_timezone=UTC",
+                        $endpoint,
+                        $this->headers
+                    );
+                }
 
                 if ($this->core->request->error || !($response['success'] ?? false)) {
-                    $endpoint_name = $endpoint['EndPoint'] ?? $endpoint['KeyName'] ?? 'unknown';
-                    $this->sendTerminal("   # Warning: Failed to insert endpoint [{$endpoint_name}]");
+                    $endpoint_title = $endpoint['EndPoint'] ?? $endpoint_key ?? 'unknown';
+                    $this->sendTerminal("   # Warning: Failed to insert endpoint [{$endpoint_title}]");
                 }
             }
             $this->sendTerminal(" + Endpoints inserted");
