@@ -51,7 +51,7 @@ composer credentials
 CloudIA is the solution for Generative IA connected with CLOUDFRAMEWORK EaaS (Enterprise as a Service) CLOUD Platform.
 
 ```bash
-# Verify you have credentials with CloudIA
+# Verify you have credentials with CloudIA and GET default email of the user
 composer script _cloudia/auth
 
 # GET X-DS-TOKEN to connect with EaaS CLOUD Platform

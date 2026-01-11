@@ -18,6 +18,7 @@ class Script extends CoreScripts
         $this->sendTerminal("Platform ID: {$this->platform_id}");
         //endregion
 
+
         //region AUTHENTICATE user and SET $this->headers (authentication headers for API requests)
         if (!$this->authPlatformUserWithLocalAccessToken($this->platform_id)) {
             $this->sendTerminal("Authentication failed");
@@ -27,10 +28,12 @@ class Script extends CoreScripts
         }
         //endregion
 
-
         //region EXECUTE METHOD_{$method} (dynamic method execution based on command)
         $method = ($this->params[2] ?? 'default');
         $this->sendTerminal(" - method: {$method}");
+
+        $user = $this->core->security->getGoogleEmailAccount();
+        $this->sendTerminal("GOOGLE-EMAIL-ACCOUNT: ".$user);
 
         if (!$this->useFunction('METHOD_' . str_replace('-', '_', $method))) {
             return $this->addError("   #/{$method} is not implemented");
@@ -53,7 +56,6 @@ class Script extends CoreScripts
 
     public function METHOD_access_token() {
         $user = $this->core->security->getGoogleEmailAccount();
-        $this->sendTerminal("GOOGLE-EMAIL-ACCOUNT: ".$user);
         $this->sendTerminal("GOOGLE-ACCESS-TOKEN: ".$this->getUserGoogleAccessToken($user)['token']??'error');
     }
 }

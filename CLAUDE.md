@@ -849,79 +849,80 @@ The `scripts/_cloudia/` directory contains scripts for managing CLOUD Documentum
 
 ### Available Scripts
 
+> **Note:** The platform is automatically determined from `core.erp.platform_id` in your config.json file.
+
 ```bash
 # APIs - Manage API documentation
-composer script -- _cloudia/apis/:platform/list-remote       # List remote APIs
-composer script -- _cloudia/apis/:platform/list-local        # List local backups
-composer script -- _cloudia/apis/:platform/backup-from-remote # Backup all APIs
-composer script -- "_cloudia/apis/:platform/backup-from-remote?id=/api/path" # Backup specific API
-composer script -- "_cloudia/apis/:platform/insert-from-backup?id=/api/path" # Insert from backup
-composer script -- "_cloudia/apis/:platform/update-from-backup?id=/api/path" # Update from backup
+composer script -- _cloudia/apis/list-remote              # List remote APIs
+composer script -- _cloudia/apis/list-local               # List local backups
+composer script -- _cloudia/apis/backup-from-remote       # Backup all APIs
+composer script -- "_cloudia/apis/backup-from-remote?id=/api/path" # Backup specific API
+composer script -- "_cloudia/apis/insert-from-backup?id=/api/path" # Insert from backup
+composer script -- "_cloudia/apis/update-from-backup?id=/api/path" # Update from backup
 
 # Libraries - Manage library documentation
-composer script -- _cloudia/libraries/:platform/list-remote
-composer script -- _cloudia/libraries/:platform/backup-from-remote
-composer script -- "_cloudia/libraries/:platform/backup-from-remote?id=/path/to/library"
+composer script -- _cloudia/libraries/list-remote
+composer script -- _cloudia/libraries/backup-from-remote
+composer script -- "_cloudia/libraries/backup-from-remote?id=/path/to/library"
 
 # Processes - Manage process documentation
-composer script -- _cloudia/processes/:platform/list-remote
-composer script -- _cloudia/processes/:platform/backup-from-remote
-composer script -- "_cloudia/processes/:platform/backup-from-remote?id=PROCESS-ID"
+composer script -- _cloudia/processes/list-remote
+composer script -- _cloudia/processes/backup-from-remote
+composer script -- "_cloudia/processes/backup-from-remote?id=PROCESS-ID"
 
 # Checks - Manage checks/tests
-composer script -- _cloudia/checks/:platform/list-remote
-composer script -- "_cloudia/checks/:platform/backup-from-remote?entity=CFOEntity&id=CFOId"
+composer script -- _cloudia/checks/list-remote
+composer script -- "_cloudia/checks/backup-from-remote?entity=CFOEntity&id=CFOId"
 
 # WebApps - Manage webapp documentation
-composer script -- _cloudia/webapps/:platform/list-remote
-composer script -- _cloudia/webapps/:platform/backup-from-remote
+composer script -- _cloudia/webapps/list-remote
+composer script -- _cloudia/webapps/backup-from-remote
 
 # Courses - Manage academy courses
-composer script -- _cloudia/courses/:platform/list-remote
-composer script -- _cloudia/courses/:platform/backup-from-remote
+composer script -- _cloudia/courses/list-remote
+composer script -- _cloudia/courses/backup-from-remote
 
 # WebPages - Manage ECM pages
-composer script -- _cloudia/webpages/:platform/list-remote
-composer script -- _cloudia/webpages/:platform/backup-from-remote
+composer script -- _cloudia/webpages/list-remote
+composer script -- _cloudia/webpages/backup-from-remote
 
 # CFOs - Manage CFO definitions
-composer script -- _cloudia/cfos/:platform/list-remote
-composer script -- _cloudia/cfos/:platform/backup-from-remote
-composer script -- "_cloudia/cfos/:platform/backup-from-remote?id=CFOKeyName"
+composer script -- _cloudia/cfos/list-remote
+composer script -- _cloudia/cfos/backup-from-remote
+composer script -- "_cloudia/cfos/backup-from-remote?id=CFOKeyName"
 
 # Resources - Manage infrastructure resources
-composer script -- _cloudia/resources/:platform/list-remote
-composer script -- _cloudia/resources/:platform/backup-from-remote
+composer script -- _cloudia/resources/list-remote
+composer script -- _cloudia/resources/backup-from-remote
 
 # Menu - Manage menu modules
-composer script -- _cloudia/menu/:platform/list-remote
-composer script -- _cloudia/menu/:platform/backup-from-remote
+composer script -- _cloudia/menu/list-remote
+composer script -- _cloudia/menu/backup-from-remote
 
 # Auth - Authentication utilities
-composer script -- _cloudia/auth/:platform/info          # Show auth info
-composer script -- _cloudia/auth/:platform/token         # Get/refresh token
+composer script -- _cloudia/auth/info          # Show auth info
+composer script -- _cloudia/auth/token         # Get/refresh token
 ```
 
 ### Script Parameters
 
 | Parameter | Description |
 |-----------|-------------|
-| `:platform` | Platform namespace (e.g., `cloudframework`, `freeme`) |
 | `id` | Entity identifier (KeyName for APIs/Libraries/Processes, KeyId for others) |
 | `entity` | CFO entity name (for Checks) |
 
 ### Example Usage
 
 ```bash
-# Backup all CloudFramework APIs
-composer script -- _cloudia/apis/cloudframework/backup-from-remote
+# Backup all APIs
+composer script -- _cloudia/apis/backup-from-remote
 
 # Backup specific API with its endpoints
-composer script -- "_cloudia/apis/cloudframework/backup-from-remote?id=/erp/projects"
+composer script -- "_cloudia/apis/backup-from-remote?id=/erp/projects"
 
-# List all libraries for freeme platform
-composer script -- _cloudia/libraries/freeme/list-remote
+# List all libraries
+composer script -- _cloudia/libraries/list-remote
 
 # Backup checks linked to a process
-composer script -- "_cloudia/checks/cloudframework/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=/cloud-hrms"
+composer script -- "_cloudia/checks/backup-from-remote?entity=CloudFrameWorkDevDocumentationForProcesses&id=/cloud-hrms"
 ```

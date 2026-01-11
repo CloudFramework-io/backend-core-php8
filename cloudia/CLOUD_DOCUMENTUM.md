@@ -13,11 +13,37 @@ CLOUD Documentum consists of several documentation modules:
 | **Libraries** | Code libraries, classes, and functions documentation | `CloudFrameWorkDevDocumentationForLibraries`, `CloudFrameWorkDevDocumentationForLibrariesModules` |
 | **Processes** | Business and technical processes | `CloudFrameWorkDevDocumentationForProcesses`, `CloudFrameWorkDevDocumentationForSubProcesses` |
 | **Checks** | Tests, objectives, and specifications linked to other documentation | `CloudFrameWorkDevDocumentationForProcessTests` |
+| **WebApps** | Front-end applications and their modules | `CloudFrameWorkDevDocumentationForWebApps`, `CloudFrameWorkDevDocumentationForWebAppsModules` |
 | **Resources** | Infrastructure resources (tangible and intangible assets) | `CloudFrameWorkInfrastructureResources` |
 | **Modules** | Menu configuration for platform solutions | `CloudFrameWorkModules` |
 | **WebPages** | Web content pages for internal or public publishing | `CloudFrameWorkECMPages` |
+| **Courses** | Academy courses for online learning and exams | `CloudFrameWorkAcademyGroups`, `CloudFrameWorkAcademyCourses`, `CloudFrameWorkAcademyContents`, `CloudFrameWorkAcademyAnswers` |
 
 All modules share a common lifecycle state system and backup infrastructure.
+
+### Important Rules
+
+> **MANDATORY: Always backup before modifying**
+>
+> Before updating or modifying ANY CLOUD Documentum element (APIs, Libraries, Processes, WebApps, Checks, etc.), you **MUST** first perform a backup from the remote server to ensure you have the latest version:
+>
+> ```bash
+> # Backup specific element before modification
+> composer script -- "_cloudia/apis/backup-from-remote?id=/api/path"
+> composer script -- "_cloudia/libraries/backup-from-remote?id=/library/path"
+> composer script -- "_cloudia/processes/backup-from-remote?id=PROCESS-ID"
+> composer script -- "_cloudia/webapps/backup-from-remote?id=/webapp/path"
+> composer script -- "_cloudia/checks/backup-from-remote?entity=CFOEntity&id=CFOId"
+> composer script -- "_cloudia/webpages/backup-from-remote?id=PAGE-ID"
+> composer script -- "_cloudia/resources/backup-from-remote?id=RESOURCE-KEY"
+> composer script -- "_cloudia/menu/backup-from-remote?id=MODULE-KEY"
+> composer script -- "_cloudia/courses/backup-from-remote?id=/course/path"
+> ```
+>
+> This ensures:
+> - You have the latest remote version before making changes
+> - You don't overwrite changes made by other team members
+> - You can restore the previous state if needed
 
 ---
 
@@ -385,17 +411,17 @@ buckets/backups/APIs/
 
 ```bash
 # Backup all APIs from all platforms
-composer run-script script _backup/apis/backup-from-remote
+composer run-script script _cloudia/apis/backup-from-remote
 
 # CRUD operations for individual APIs
-composer run-script script "_backup/apis/backup-from-remote\?id=:KeyName"
-composer run-script script "_backup/apis/insert-from-backup?id=:KeyName"
-composer run-script script "_backup/apis/update-from-backup?id=:KeyName"
-composer run-script script _backup/apis/list-remote
-composer run-script script _backup/apis/list-local
+composer run-script script "_cloudia/apis/backup-from-remote\?id=:KeyName"
+composer run-script script "_cloudia/apis/insert-from-backup?id=:KeyName"
+composer run-script script "_cloudia/apis/update-from-backup?id=:KeyName"
+composer run-script script _cloudia/apis/list-remote
+composer run-script script _cloudia/apis/list-local
 ```
 
-**Script location**: `scripts/_backup/api.php`
+**Script location**: `scripts/_cloudia/api.php`
 
 ### API Web Interface
 
@@ -532,11 +558,11 @@ buckets/backups/Libraries/
 composer run-script script backup_platforms_libraries
 
 # CRUD operations for individual Libraries
-composer run-script script "_cloudia/libraries/:platform/backup-from-remote?id=/backend-core-php8/src/RESTful"
-composer run-script script "_cloudia/libraries/:platform/insert-from-backup?id=/api-prod/class/CloudAcademy"
-composer run-script script "_cloudia/libraries/:platform/update-from-backup?id=/backend-core-php8/src/RESTful"
-composer run-script script _cloudia/libraries/:platform/list-remote
-composer run-script script _cloudia/libraries/:platform/list-local
+composer run-script script "_cloudia/libraries/backup-from-remote?id=/backend-core-php8/src/RESTful"
+composer run-script script "_cloudia/libraries/insert-from-backup?id=/api-prod/class/CloudAcademy"
+composer run-script script "_cloudia/libraries/update-from-backup?id=/backend-core-php8/src/RESTful"
+composer run-script script _cloudia/libraries/list-remote
+composer run-script script _cloudia/libraries/list-local
 ```
 
 **Script locations**:
@@ -773,18 +799,18 @@ in the remote platform
 
 ```bash
 # Backup all Processes from all platforms
-composer run-script script _backup/processes/backup-from-remote
+composer run-script script _cloudia/processes/backup-from-remote
 
 # CRUD operations for individual Processes
-composer run-script script "_backup/processes/backup-from-remote?id=:KeyName"
-composer run-script script "_backup/processes/insert-from-backup?id=:KeyName"
-composer run-script script "_backup/processes/update-from-backup?id=:KeyName"
-composer run-script script _backup/processes/list-remote
-composer run-script script _backup/processes/list-local
+composer run-script script "_cloudia/processes/backup-from-remote?id=:KeyName"
+composer run-script script "_cloudia/processes/insert-from-backup?id=:KeyName"
+composer run-script script "_cloudia/processes/update-from-backup?id=:KeyName"
+composer run-script script _cloudia/processes/list-remote
+composer run-script script _cloudia/processes/list-local
 ```
 
 **Script locations**:
-- Backup: `scripts/_backup/processes.php`
+- Backup: `scripts/_cloudia/processes.php`
 
 ### Process Web Interface
 
@@ -1014,14 +1040,14 @@ buckets/backups/Checks/
 
 ```bash
 # Backup all Checks from all platforms
-composer run-script script _backup/check/backup-from-remote
+composer run-script script _cloudia/check/backup-from-remote
 
 # CRUD operations for individual Checks (grouped by CFOEntity and CFOId)
-composer run-script script "_backup/check/backup-from-remote?entity=CFOEntity&id=CFOId"
-composer run-script script "_backup/check/insert-from-backup?entity=CFOEntity&id=CFOId"
-composer run-script script "_backup/check/update-from-backup?entity=CFOEntity&id=CFOId"
-composer run-script script _backup/check/list-remote
-composer run-script script _backup/check/list-local
+composer run-script script "_cloudia/check/backup-from-remote?entity=CFOEntity&id=CFOId"
+composer run-script script "_cloudia/check/insert-from-backup?entity=CFOEntity&id=CFOId"
+composer run-script script "_cloudia/check/update-from-backup?entity=CFOEntity&id=CFOId"
+composer run-script script _cloudia/check/list-remote
+composer run-script script _cloudia/check/list-local
 ```
 
 **Examples:**
@@ -1041,6 +1067,238 @@ composer run-script script "_cloudia/check/cloudframework/backup-from-remote?ent
 ### Check Web Interface
 
 - **Check Management**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkDevDocumentationForProcessTests`
+
+### Checks in WebApps and Modules
+
+Checks can be linked not only to Processes and SubProcesses, but also to **WebApps** and **WebApp Modules**. This allows tracking verification objectives, acceptance criteria, and test specifications for web applications.
+
+#### WebApp Level Checks
+
+At the WebApp level (`CloudFrameWorkDevDocumentationForWebApps`), the `JSON` field defines the main documentation structure with categories and route references:
+
+```json
+{
+    "Modelo de Datos": {
+        "CFO MP_HRMS_employee_absences": {"route": "/cfo-absences"},
+        "CFO MP_HRMS_absence_types": {"route": "/cfo-types"},
+        "Estados de la solicitud": {"route": "/status"}
+    },
+    "API Endpoints": {
+        "GET - Listar ausencias": {"route": "/api-list"},
+        "GET - Configuración y tipos": {"route": "/api-config"},
+        "POST - Crear solicitud": {"route": "/api-create"},
+        "PUT - Aprobar/Rechazar/Cancelar": {"route": "/api-actions"}
+    },
+    "Implementación Frontend": {
+        "Formulario de solicitud": {"route": "/frontend-form"},
+        "Vista de calendario": {"route": "/frontend-calendar"},
+        "Panel de aprobaciones": {"route": "/frontend-approvals"}
+    }
+}
+```
+
+**Check linkage for WebApps:**
+- `CFOEntity`: `CloudFrameWorkDevDocumentationForWebApps`
+- `CFOId`: WebApp KeyName (e.g., `/verticals/hrms/init-holidays`)
+- `Route`: Matches the route values in JSON (e.g., `/cfo-absences`, `/api-list`)
+
+#### Module Level Checks
+
+Each WebApp Module (`CloudFrameWorkDevDocumentationForWebAppsModules`) can also have its own `JSON` field with checks. A common pattern is to include a **"Verificaciones"** (Verifications) category with specific acceptance criteria:
+
+```json
+{
+    "Estados": {
+        "Estados de la Solicitud": {"route": "/status"}
+    },
+    "Verificaciones": {
+        "Validar transiciones de estado": {"route": "/check/transitions"},
+        "Validar rejection_reason obligatorio": {"route": "/check/rejection-reason"},
+        "Solo modificar solicitudes pendientes": {"route": "/check/modify-pending-only"}
+    }
+}
+```
+
+**Check linkage for Modules:**
+- `CFOEntity`: `CloudFrameWorkDevDocumentationForWebAppsModules`
+- `CFOId`: Module KeyId (e.g., `4519888378396672`)
+- `Route`: Matches the route values (e.g., `/check/transitions`)
+
+#### Complete Example: Vacation Request WebApp
+
+**WebApp:** `/verticals/hrms/init-holidays`
+
+| Level | CFOEntity | CFOId | Example Routes |
+|-------|-----------|-------|----------------|
+| WebApp | `CloudFrameWorkDevDocumentationForWebApps` | `/verticals/hrms/init-holidays` | `/cfo-absences`, `/api-list`, `/frontend-form` |
+| Module: Estados | `CloudFrameWorkDevDocumentationForWebAppsModules` | `4519888378396672` | `/status`, `/check/transitions` |
+| Module: CFO Types | `CloudFrameWorkDevDocumentationForWebAppsModules` | `4572519310295040` | `/cfo-types`, `/check/vacation-type-exists` |
+| Module: API Actions | `CloudFrameWorkDevDocumentationForWebAppsModules` | `4730699432591360` | `/api-actions`, `/check/approve-privileges` |
+
+#### Best Practices for WebApp Checks
+
+1. **Categorize checks logically**: Use categories like "Verificaciones", "Pruebas de Aceptación", "Criterios de Validación"
+
+2. **Use descriptive route prefixes**: Use `/check/` prefix for verification checks to distinguish them from documentation routes
+   ```json
+   "Verificaciones": {
+       "Validar campos obligatorios": {"route": "/check/required-fields"},
+       "Validar permisos de acceso": {"route": "/check/access-permissions"}
+   }
+   ```
+
+3. **Link checks to the appropriate level**:
+   - **WebApp level**: General acceptance criteria for the entire application
+   - **Module level**: Specific checks for individual features or components
+
+4. **Module JSON structure**: Each module can combine documentation references and verification checks:
+   ```json
+   {
+       "Documentación": {
+           "Descripción del módulo": {"route": "/module-description"}
+       },
+       "Verificaciones": {
+           "Check 1": {"route": "/check/check-1"},
+           "Check 2": {"route": "/check/check-2"}
+       }
+   }
+   ```
+
+5. **Creating Check records**: For each route defined in the JSON, create a corresponding Check in `CloudFrameWorkDevDocumentationForProcessTests`:
+   ```json
+   {
+       "CFOEntity": "CloudFrameWorkDevDocumentationForWebAppsModules",
+       "CFOId": "4519888378396672",
+       "Route": "/check/transitions",
+       "Title": "Validar transiciones de estado",
+       "Status": "pending",
+       "Description": "<p>Verificar que las transiciones de estado siguen el flujo definido...</p>"
+   }
+   ```
+
+#### Check Backup for WebApps
+
+Checks linked to WebApps and Modules are backed up using the same system:
+
+```bash
+# Backup checks for a WebApp
+composer script -- "_cloudia/checks/backup-from-remote?entity=CloudFrameWorkDevDocumentationForWebApps&id=/verticals/hrms/init-holidays"
+
+# Backup checks for a specific Module
+composer script -- "_cloudia/checks/backup-from-remote?entity=CloudFrameWorkDevDocumentationForWebAppsModules&id=4519888378396672"
+```
+
+**File naming:**
+- WebApp: `CloudFrameWorkDevDocumentationForWebApps___verticals_hrms_init-holidays.json`
+- Module: `CloudFrameWorkDevDocumentationForWebAppsModules__4519888378396672.json`
+
+---
+
+## WebApp Documentation
+
+WebApps document front-end applications, including their modules, components, and the API endpoints they consume. This helps track the relationship between user interfaces and backend services.
+
+### CloudFrameWorkDevDocumentationForWebApps
+
+**Key fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyName` | keyname | WebApp identifier (unique) |
+| `Title` | string | WebApp title |
+| `Description` | html | Detailed description |
+| `Status` | enum | Development status |
+| `DocumentationId` | string | Parent Development Group |
+| `Cat` | string | Category |
+| `Folder` | string | Folder grouping |
+| `TeamOwner` | string | Owner user |
+| `CloudFrameworkUser` | string | User who created/modified |
+
+### CloudFrameWorkDevDocumentationForWebAppsModules
+
+Represents individual modules/components within a WebApp, documenting their functionality and API dependencies.
+
+> **Important:** When creating new WebApp modules in local backup files:
+> - Do **NOT** include the `KeyId` field - it will be auto-generated when syncing to the remote server
+> - **DO** include all required attributes with proper values:
+>   - `CloudFrameworkUser`: Current user (obtain via `composer script -- _cloudia/auth/info`)
+>   - `DateInsertion`: Current date/time in format `YYYY-MM-DD HH:MM:SS`
+>   - `ENDPOINTs`: Array of KeyIds of API endpoints that this module calls
+>   - `WebApp`: Parent WebApp KeyName
+>   - `EndPoint`: Module path/identifier (e.g., `/dashboard`, `/settings`)
+>   - `Status`: Development status (e.g., `5.RUNNING`)
+>   - `TeamOwner`: Owner user KeyName
+
+**Key fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyId` | keyid | Auto-generated unique ID (do NOT set for new modules) |
+| `WebApp` | string | Parent WebApp KeyName |
+| `EndPoint` | string | Module path (e.g., `/dashboard`) |
+| `Title` | string | Module title |
+| `Description` | html | Module description |
+| `Status` | enum | Development status |
+| `ENDPOINTs` | list | Array of API endpoint KeyIds this module consumes |
+| `Libraries` | list | Related libraries |
+| `Cat` | string | Category |
+| `Folder` | string | Folder grouping |
+| `TeamOwner` | string | Module owner |
+| `TeamAsignation` | string | Assigned developer |
+| `CloudFrameworkUser` | string | User who created/modified |
+| `DateInsertion` | datetime | Creation timestamp |
+| `DateUpdated` | datetime | Last modification timestamp |
+| `JSON` | json | Objectives and documentation |
+| `PAYLOADJSON` | json | Expected input data |
+| `RETURNEDJSON` | json | Expected output data |
+
+### Example: Creating a New WebApp Module
+
+```json
+{
+    "WebApp": "/my-webapp",
+    "EndPoint": "/new-feature",
+    "Title": "New Feature Module",
+    "Description": "<p>Module description here</p>",
+    "Status": "2.IN DEVELOPMENT",
+    "Cat": "Features",
+    "Folder": "Core",
+    "TeamOwner": "user@example.com",
+    "CloudFrameworkUser": "user@example.com",
+    "DateInsertion": "2026-01-10 12:00:00",
+    "ENDPOINTs": [
+        "5629499534213120",
+        "5639445604728832"
+    ],
+    "JSON": {}
+}
+```
+
+> **Note:** The `ENDPOINTs` array contains the `KeyId` values of API endpoints from `CloudFrameWorkDevDocumentationForAPIEndPoints`. You can find these IDs by querying the endpoints or checking existing module definitions.
+
+### Getting Current User for CloudFrameworkUser
+
+To obtain the current authenticated user for the `CloudFrameworkUser` field:
+
+```bash
+# Get current user info
+composer script -- _cloudia/auth/info
+
+# This returns the authenticated user email that should be used
+# in CloudFrameworkUser field when creating new modules
+```
+
+### WebApp Web Interface
+
+- **WebApp Management**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkDevDocumentationForWebApps`
+- **Module Management**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkDevDocumentationForWebAppsModules`
+
+### Related CFOs
+
+| CFO | Description |
+|-----|-------------|
+| `CloudFrameWorkDevDocumentationForWebApps` | Main WebApp records |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp modules/components |
 
 ---
 
@@ -1150,12 +1408,12 @@ buckets/backups/Resources/
 composer run-script script backup_platforms_resources
 
 # CRUD operations for individual Resources
-composer run-script script "_cloudia/resources/:platform/list-remote"
-composer run-script script "_cloudia/resources/:platform/list-local"
-composer run-script script "_cloudia/resources/:platform/backup-from-remote?id=resource-key"
-composer run-script script "_cloudia/resources/:platform/backup-from-remote"  # all resources
-composer run-script script "_cloudia/resources/:platform/update-from-backup?id=resource-key"
-composer run-script script "_cloudia/resources/:platform/insert-from-backup?id=resource-key"
+composer run-script script "_cloudia/resources/list-remote"
+composer run-script script "_cloudia/resources/list-local"
+composer run-script script "_cloudia/resources/backup-from-remote?id=resource-key"
+composer run-script script "_cloudia/resources/backup-from-remote"  # all resources
+composer run-script script "_cloudia/resources/update-from-backup?id=resource-key"
+composer run-script script "_cloudia/resources/insert-from-backup?id=resource-key"
 ```
 
 **Script locations**:
@@ -1441,6 +1699,320 @@ $docPages = $this->cfos->ds('CloudFrameWorkECMPages')->fetch([
 - Integration with development documentation
 - Version tracking via DateUpdating
 - Tag-based organization and search
+
+---
+
+## CLOUD Academy (Courses)
+
+**CLOUD Academy** is CloudFramework's Learning Management System (LMS) for creating and managing online courses. It enables organizations to structure educational content, create exams with automatic grading, and track student progress.
+
+### Academy CFOs
+
+The Academy module uses 4 CFOs stored in Datastore:
+
+| CFO | Type | Description |
+|-----|------|-------------|
+| `CloudFrameWorkAcademyGroups` | ds | Course groups/categories for organizing courses |
+| `CloudFrameWorkAcademyCourses` | ds | Course definitions with exam questions and configuration |
+| `CloudFrameWorkAcademyContents` | ds | Course content pages/chapters with materials |
+| `CloudFrameWorkAcademyAnswers` | ds | User exam answers and progress tracking |
+
+**Backup location**: `buckets/backups/Courses/{platform}/`
+
+### CloudFrameWorkAcademyGroups
+
+Groups organize courses into categories. Each group has a name, description, image, and position for ordering.
+
+**Key Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyId` | string | Unique identifier (auto-generated) |
+| `GroupName` | string | Display name of the group |
+| `GroupDescription` | html | HTML description of the group |
+| `GroupImage` | url | Image URL for the group icon/banner |
+| `Position` | int | Order position (lower = higher priority) |
+
+**Example:**
+```json
+{
+    "GroupDescription": "<p>El objetivo de este curso es que saques una idea clara sobre la empresa.</p>",
+    "GroupImage": "https://storage.googleapis.com/cloudframework-public/ecm/cloudframework/ECM/image.png",
+    "GroupName": "Bienvenido/a a CloudFramework",
+    "KeyId": "4892277324906496",
+    "Position": 10
+}
+```
+
+### CloudFrameWorkAcademyCourses
+
+Courses contain metadata, exam questions, and access control settings.
+
+**Key Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyId` | string | Unique identifier (auto-generated) |
+| `Active` | boolean | Whether the course is available |
+| `CourseTitle` | string | Display title of the course |
+| `CourseDescription` | html | HTML introduction/description |
+| `CourseLogo` | url | Logo/image for the course |
+| `GroupId` | string | FK to CloudFrameWorkAcademyGroups.KeyId |
+| `DocumentationId` | string | FK to CloudFrameWorkDevDocumentation (optional) |
+| `Questions` | json | Exam questions with answers and grades |
+| `UserGroups` | list | User groups that can access the course |
+| `ExamTitle` | string | Title for the exam section |
+| `ExamIntroduction` | html | Introduction text for the exam |
+
+**Course Example:**
+```json
+{
+    "CloudFrameWorkAcademyCourses": {
+        "Active": true,
+        "CourseDescription": "<p>Este curso cubre cómo utilizar CLAUDE code...</p>",
+        "CourseLogo": "https://storage.googleapis.com/cloudframework-public/ecm/image.png",
+        "CourseTitle": "Utilizando CLAUDE code en api.cloudframework.io",
+        "GroupId": "6569948022833152",
+        "Questions": {
+            "¿Qué fichero debemos leer primero?": {
+                "answers": {
+                    "CLAUDE.md": 100,
+                    "package.json": 0,
+                    "config.json": 0,
+                    "README.md": 0
+                },
+                "type": "radio"
+            },
+            "¿Qué tipo de cosas podemos preguntar a Claude?": {
+                "answers": {
+                    "Acciones sobre ficheros": 50,
+                    "Acciones sobre git": 50,
+                    "Conocimientos de la vida": 0
+                },
+                "type": "checkbox"
+            }
+        },
+        "UserGroups": ["lms-backend"]
+    }
+}
+```
+
+### Question Types
+
+Exam questions support two types with automatic grading:
+
+| Type | Behavior | Grading |
+|------|----------|---------|
+| `radio` | Single selection (only one answer) | First correct answer = 100% |
+| `checkbox` | Multiple selection (multiple answers) | Sum of selected correct answers |
+
+**Question Structure:**
+```json
+{
+    "Question text goes here?": {
+        "type": "radio|checkbox",
+        "answers": {
+            "Answer option 1": 100,    // Grade value (0-100)
+            "Answer option 2": 0,      // Incorrect = 0
+            "Answer option 3": 50      // Partial credit for checkbox
+        }
+    }
+}
+```
+
+**Grading Rules:**
+- **radio**: Only one answer can have grade > 0 (typically 100)
+- **checkbox**: Multiple answers can have grades, they sum up to max 100
+
+### CloudFrameWorkAcademyContents
+
+Content sections define the course materials displayed to users.
+
+**Key Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyId` | string | Unique identifier (auto-generated) |
+| `CourseId` | string | FK to CloudFrameWorkAcademyCourses.KeyId |
+| `ContentTitle` | string | Section title |
+| `ContentIntro` | text | Brief section introduction |
+| `ContentInformation` | html | Main HTML content with CF tags |
+| `Position` | int | Order within course (1, 2, 3...) |
+| `Materials` | list | Additional materials (files, links) |
+
+**Content Example:**
+```json
+{
+    "ContentTitle": "Introducción a CLAUDE Code",
+    "ContentIntro": "En esta sección aprenderás los conceptos básicos.",
+    "ContentInformation": "<h2>Qué es CLAUDE Code</h2><p>CLAUDE Code es una herramienta de IA...</p><p>Para más información, consulta [CF:course-link:5123456789:Curso Avanzado]</p>",
+    "Position": 1,
+    "Materials": []
+}
+```
+
+### CF Tags in Content
+
+Course content supports special CloudFramework tags for linking and embedding:
+
+| Tag | Example | Description |
+|-----|---------|-------------|
+| `[CF:course-link:id:title]` | `[CF:course-link:5123456789:Curso Básico]` | Link to another course |
+| `[CF:youtube:id]` | `[CF:youtube:dQw4w9WgXcQ]` | Embedded YouTube video |
+| `[CF:iframe:url]` | `[CF:iframe:https://example.com]` | Embedded iframe |
+| `[CF:icon:name]` | `[CF:icon:check]` | FontAwesome icon |
+
+### Creating a New Course
+
+**Step 1: Identify or Create a Group**
+
+First, check existing groups in `buckets/backups/Courses/{platform}/groups.json`. Create a new group if needed:
+
+```json
+{
+    "GroupName": "My New Category",
+    "GroupDescription": "<p>Description of this category</p>",
+    "GroupImage": "https://storage.googleapis.com/bucket/image.png",
+    "Position": 50
+}
+```
+
+**Step 2: Create Course File**
+
+Create a new JSON file in `buckets/backups/Courses/{platform}/` with the course structure:
+
+```json
+{
+    "CloudFrameWorkAcademyCourses": {
+        "Active": true,
+        "CourseTitle": "My New Course",
+        "CourseDescription": "<p>Course description here</p>",
+        "CourseLogo": "https://storage.googleapis.com/bucket/logo.png",
+        "GroupId": "GROUP_KEY_ID",
+        "UserGroups": ["user-group-1", "user-group-2"],
+        "ExamTitle": "Evaluación Final",
+        "ExamIntroduction": "<p>Responde las siguientes preguntas:</p>",
+        "Questions": {
+            "First question?": {
+                "type": "radio",
+                "answers": {
+                    "Correct answer": 100,
+                    "Wrong answer 1": 0,
+                    "Wrong answer 2": 0
+                }
+            }
+        }
+    },
+    "CloudFrameWorkAcademyContents": [
+        {
+            "ContentTitle": "Introduction",
+            "ContentIntro": "Brief intro text",
+            "ContentInformation": "<h2>Welcome</h2><p>Content HTML here...</p>",
+            "Position": 1,
+            "Materials": []
+        },
+        {
+            "ContentTitle": "Advanced Topics",
+            "ContentIntro": "Deep dive into the subject",
+            "ContentInformation": "<h2>Chapter 2</h2><p>More content...</p>",
+            "Position": 2,
+            "Materials": []
+        }
+    ]
+}
+```
+
+**Step 3: Upload to Remote**
+
+```bash
+# Insert new course (no KeyId in file)
+composer script -- "_cloudia/courses/insert-from-backup?id=filename"
+
+# Or update existing course (with KeyId)
+composer script -- "_cloudia/courses/update-from-backup?id=COURSE_KEY_ID"
+```
+
+### Backup and Sync Commands
+
+**Backup Scripts:**
+
+```bash
+# Backup ALL courses from ALL platforms
+composer run-script script backup_platforms_courses
+
+# Backup specific course from remote
+composer script -- "_cloudia/courses/backup-from-remote?id=COURSE_KEY_ID"
+
+# Backup all courses from specific platform
+composer script -- "_cloudia/courses/backup-from-remote"
+```
+
+**List and View:**
+
+```bash
+# List courses in local backup
+composer script -- "_cloudia/courses/list-local"
+
+# List courses in remote platform
+composer script -- "_cloudia/courses/list-remote"
+```
+
+**Create and Update:**
+
+```bash
+# Insert NEW course to remote (file must NOT have KeyId)
+composer script -- "_cloudia/courses/insert-from-backup?id=filename"
+
+# Update EXISTING course in remote (file must have KeyId)
+composer script -- "_cloudia/courses/update-from-backup?id=COURSE_KEY_ID"
+```
+
+### File Structure
+
+```
+buckets/backups/Courses/{platform}/
+├── groups.json                    # CloudFrameWorkAcademyGroups array
+├── {KeyId}.json                   # Individual course files
+├── 4892277324906496.json
+├── 5123456789012345.json
+└── ...
+```
+
+**groups.json structure:**
+```json
+{
+    "CloudFrameWorkAcademyGroups": [
+        { "KeyId": "...", "GroupName": "...", "Position": 10 },
+        { "KeyId": "...", "GroupName": "...", "Position": 20 }
+    ]
+}
+```
+
+**Individual course file structure:**
+```json
+{
+    "CloudFrameWorkAcademyCourses": { /* course metadata */ },
+    "CloudFrameWorkAcademyContents": [ /* content array */ ]
+}
+```
+
+### Web Interface
+
+- **Academy dashboard**: `https://core20.web.app/app.html#__cfa?api=/erp/academy`
+- **Course viewer**: `https://core20.web.app/ajax/academy.html?course={CourseId}`
+- **Courses CFO**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkAcademyCourses`
+- **Groups CFO**: `https://core20.web.app/ajax/cfo.html?api=/cfi/CloudFrameWorkAcademyGroups`
+
+### Best Practices
+
+1. **Use meaningful GroupIds**: Always verify the GroupId exists before creating courses
+2. **Set proper Position**: Use consistent numbering (10, 20, 30) to allow inserting between sections
+3. **Active flag**: Set `Active: false` during development, enable when ready
+4. **UserGroups**: Define which user groups can access the course
+5. **HTML Content**: Use proper HTML structure with headings (h2, h3) for navigation
+6. **CF Tags**: Use `[CF:course-link:id:title]` to link related courses
+7. **Questions**: Mix radio and checkbox types for varied assessment
+8. **Backup first**: Always backup before modifying existing courses
 
 ---
 
@@ -2134,6 +2706,7 @@ $apis = $this->cfos->ds('CloudFrameWorkDevDocumentationForAPIs')->fetchAll('*');
 | Check Backups | `buckets/backups/Checks/` |
 | Resource Backups | `buckets/backups/Resources/` |
 | WebPages Backups | `buckets/backups/WebPages/` |
+| Courses Backups | `buckets/backups/Courses/` |
 | **Documentation** | |
 | CFOs Documentation | `CLAUDE.md` (CFOs section) |
 | CFI Class | `buckets/backups/CFOs/CFI.md` |
@@ -2145,6 +2718,7 @@ $apis = $this->cfos->ds('CloudFrameWorkDevDocumentationForAPIs')->fetchAll('*');
 | Check Backup Script | `buckets/scripts/backup_platforms_checks.php` |
 | Resource Backup Script | `buckets/scripts/backup_platforms_resources.php` |
 | WebPages Backup Script | `buckets/scripts/backup_platforms_webpages.php` |
+| Courses Backup Script | `buckets/scripts/backup_platforms_courses.php` |
 | **CRUD Scripts** | |
 | API CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/apis.php` |
 | Library CRUD Script | `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/libraries.php` |
