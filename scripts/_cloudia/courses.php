@@ -29,7 +29,7 @@
  *   _cloudia/courses/backup-groups                         - Backup Course Groups from remote
  *
  * @author CloudFramework Development Team
- * @version 1.0
+ * @version 1.1
  */
 class Script extends CoreScripts
 {
@@ -474,6 +474,12 @@ class Script extends CoreScripts
 
     /**
      * Update existing Course in remote platform from local backup
+     *
+     * This method compares local backup with remote data and:
+     * - Skips if data is identical
+     * - Updates if data is different
+     * - Inserts new contents that only exist in local
+     * - Deletes contents that only exist in remote
      */
     public function METHOD_update_from_backup()
     {
@@ -510,69 +516,194 @@ class Script extends CoreScripts
         //endregion
 
         //region VALIDATE $course_data has correct structure
-        $course = $course_data['CloudFrameWorkAcademyCourses'] ?? null;
-        if (!$course || ($course['KeyId'] ?? null) != $course_id) {
-            return $this->addError("KeyId mismatch: file contains '{$course['KeyId']}' but expected '{$course_id}'");
+        $local_course = $course_data['CloudFrameWorkAcademyCourses'] ?? null;
+        if (!$local_course || ($local_course['KeyId'] ?? null) != $course_id) {
+            return $this->addError("KeyId mismatch: file contains '{$local_course['KeyId']}' but expected '{$course_id}'");
         }
+        $local_contents = $course_data['CloudFrameWorkAcademyContents'] ?? [];
+        $this->sendTerminal(" - Local course loaded with " . count($local_contents) . " contents");
         //endregion
 
-        //region UPDATE Course in remote platform via API
-        $this->sendTerminal(" - Updating Course in remote platform...");
-        $response = $this->core->request->put_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyCourses/{$course_id}?_raw&_timezone=UTC",
-            $course,
+        //region FETCH remote Course for comparison
+        $this->sendTerminal(" - Fetching remote Course for comparison...");
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyCourses/display/{$course_id}?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
             $this->headers
         );
 
-        if ($this->core->request->error) {
-            return $this->addError("API request failed: " . $this->core->request->errorMsg);
+        $remote_course = null;
+        if (!$this->core->request->error && ($response['data'] ?? null)) {
+            $remote_course = $response['data'];
         }
-
-        if (!($response['success'] ?? false)) {
-            $error_msg = $response['errorMsg'] ?? 'Unknown error';
-            if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
-            return $this->addError("API returned error: {$error_msg}");
-        }
-        $this->sendTerminal(" + Course record updated");
         //endregion
 
-        //region UPDATE contents in remote platform
-        $contents = $course_data['CloudFrameWorkAcademyContents'] ?? [];
-        if ($contents) {
-            $this->sendTerminal(" - Updating {" . count($contents) . "} contents...");
-            foreach ($contents as $content) {
-                $content_key = $content['KeyId'] ?? null;
-                if (!$content_key) {
-                    $response = $this->core->request->post_json_decode(
-                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents?_raw&_timezone=UTC",
-                        $content,
-                        $this->headers
-                    );
-                } else {
-                    $response = $this->core->request->put_json_decode(
-                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$content_key}?_raw&_timezone=UTC",
-                        $content,
-                        $this->headers
-                    );
-                }
+        //region FETCH remote Contents for comparison
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents?_raw&_timezone=UTC",
+            ['filter_CourseId' => $course_id, 'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
 
+        $remote_contents = [];
+        if (!$this->core->request->error && ($response['data'] ?? null)) {
+            $remote_contents = $response['data'];
+        }
+        $this->sendTerminal(" - Remote course found with " . count($remote_contents) . " contents");
+        //endregion
+
+        //region COMPARE and UPDATE Course
+        $course_updated = false;
+        if ($remote_course) {
+            ksort($local_course);
+            ksort($remote_course);
+            if ($this->core->jsonEncode($local_course) === $this->core->jsonEncode($remote_course)) {
+                $this->sendTerminal(" - Course data is identical, skipping update");
+            } else {
+                $this->sendTerminal(" - Course data differs, updating...");
+                $response = $this->core->request->put_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyCourses/{$course_id}?_raw&_timezone=UTC",
+                    $local_course,
+                    $this->headers
+                );
                 if ($this->core->request->error || !($response['success'] ?? false)) {
-                    $content_title = $content['ContentTitle'] ?? $content_key ?? 'unknown';
-                    $this->sendTerminal("   # Warning: Failed to update content [{$content_title}]");
+                    $error_msg = $response['errorMsg'] ?? $this->core->request->errorMsg ?? 'Unknown error';
+                    if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
+                    return $this->addError("Failed to update Course: {$error_msg}");
                 }
+                $this->sendTerminal(" + Course record updated");
+                $course_updated = true;
             }
-            $this->sendTerminal(" + Contents updated");
+        } else {
+            // Remote course doesn't exist - insert it
+            $this->sendTerminal(" - Remote course not found, inserting...");
+            $response = $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyCourses?_raw&_timezone=UTC",
+                $local_course,
+                $this->headers
+            );
+            if ($this->core->request->error || !($response['success'] ?? false)) {
+                $error_msg = $response['errorMsg'] ?? $this->core->request->errorMsg ?? 'Unknown error';
+                if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
+                return $this->addError("Failed to insert Course: {$error_msg}");
+            }
+            $this->sendTerminal(" + Course record inserted");
+            $course_updated = true;
         }
         //endregion
 
-        //region SEND success message to terminal
-        $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" + Course [{$course_id}] updated successfully in remote platform");
+        //region BUILD indexed arrays for contents comparison
+        $local_indexed = [];
+        foreach ($local_contents as $content) {
+            $index = $content['KeyId'] ?? ($content['ContentTitle'] ?? null);
+            if (!$index) {
+                $this->sendTerminal("   # Warning: Content without KeyId or ContentTitle, skipping");
+                continue;
+            }
+            $local_indexed[$index] = $content;
+        }
+
+        $remote_indexed = [];
+        foreach ($remote_contents as $content) {
+            if ($content['KeyId'] ?? null) {
+                $remote_indexed[$content['KeyId']] = $content;
+            }
+        }
         //endregion
 
-        //region GET Last version of the Course
-        $this->formParams['id'] = $course_id;
-        $this->METHOD_backup_from_remote();
+        //region SYNC Contents (compare, update, insert, delete)
+        $this->sendTerminal(" - Syncing contents...");
+        $stats = ['same' => 0, 'updated' => 0, 'inserted' => 0, 'deleted' => 0];
+
+        // Process remote contents: update or delete
+        foreach ($remote_indexed as $keyId => $remote_content) {
+            if (!isset($local_indexed[$keyId])) {
+                // Remote content not in local - delete it
+                $content_title = $remote_content['ContentTitle'] ?? $keyId;
+                $this->sendTerminal("   - Deleting: [{$keyId}] {$content_title}");
+                $response = $this->core->request->delete_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$keyId}?_raw&_timezone=UTC",
+                    $this->headers
+                );
+                if ($this->core->request->error || !($response['success'] ?? false)) {
+                    $this->sendTerminal("     # Warning: Failed to delete");
+                } else {
+                    $stats['deleted']++;
+                }
+            } else {
+                // Content exists in both - compare and update if different
+                ksort($remote_content);
+                ksort($local_indexed[$keyId]);
+                if ($this->core->jsonEncode($local_indexed[$keyId]) !== $this->core->jsonEncode($remote_content)) {
+                    $content_title = $local_indexed[$keyId]['ContentTitle'] ?? $keyId;
+                    $this->sendTerminal("   - Updating: [{$keyId}] {$content_title}");
+                    $response = $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$keyId}?_raw&_timezone=UTC",
+                        $local_indexed[$keyId],
+                        $this->headers
+                    );
+                    if ($this->core->request->error || !($response['success'] ?? false)) {
+                        $this->sendTerminal("     # Warning: Failed to update");
+                    } else {
+                        $stats['updated']++;
+                    }
+                } else {
+                    $content_title = $remote_content['ContentTitle'] ?? $keyId;
+                    $this->sendTerminal("   - Same: [{$keyId}] {$content_title}");
+                    $stats['same']++;
+                }
+                // Remove from local to track what's left to insert
+                unset($local_indexed[$keyId]);
+            }
+        }
+
+        // Insert contents that exist only in local
+        foreach ($local_indexed as $index => $local_content) {
+            $content_title = $local_content['ContentTitle'] ?? $index;
+            $has_key_id = isset($local_content['KeyId']) && !empty($local_content['KeyId']);
+
+            if ($has_key_id) {
+                // Has KeyId but wasn't in remote - try to update (might exist with different CourseId)
+                $this->sendTerminal("   - Updating (new): [{$local_content['KeyId']}] {$content_title}");
+                $response = $this->core->request->put_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$local_content['KeyId']}?_raw&_timezone=UTC",
+                    $local_content,
+                    $this->headers
+                );
+            } else {
+                // No KeyId - insert as new
+                $this->sendTerminal("   - Inserting: {$content_title}");
+                $response = $this->core->request->post_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents?_raw&_timezone=UTC",
+                    $local_content,
+                    $this->headers
+                );
+            }
+
+            if ($this->core->request->error || !($response['success'] ?? false)) {
+                $this->sendTerminal("     # Warning: Failed to " . ($has_key_id ? 'update' : 'insert'));
+            } else {
+                $stats['inserted']++;
+            }
+        }
+        //endregion
+
+        //region SEND summary to terminal
+        $this->sendTerminal(str_repeat('-', 50));
+        $this->sendTerminal(" + Course [{$course_id}] sync complete:");
+        $this->sendTerminal("   - Course: " . ($course_updated ? "updated" : "unchanged"));
+        $this->sendTerminal("   - Contents same: {$stats['same']}");
+        $this->sendTerminal("   - Contents updated: {$stats['updated']}");
+        $this->sendTerminal("   - Contents inserted: {$stats['inserted']}");
+        $this->sendTerminal("   - Contents deleted: {$stats['deleted']}");
+        //endregion
+
+        //region GET Last version of the Course (only if changes were made)
+        if ($course_updated || $stats['updated'] > 0 || $stats['inserted'] > 0 || $stats['deleted'] > 0) {
+            $this->sendTerminal(" - Backing up latest version from remote...");
+            $this->formParams['id'] = $course_id;
+            $this->METHOD_backup_from_remote();
+        }
         //endregion
 
         return true;
