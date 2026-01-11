@@ -24,7 +24,7 @@
  *   _cloudia/checks/list-local                              - List all Checks in local backup
  *
  * @author CloudFramework Development Team
- * @version 1.1
+ * @version 1.0
  */
 class Script extends CoreScripts
 {
@@ -35,7 +35,7 @@ class Script extends CoreScripts
     var $headers = [];
 
     /** @var string Base API URL for remote platform */
-    var $api_base_url = 'https://api.cloudframework.io';
+    var $api_base_url = 'https://api.cloudframework.dev';
 
     /**
      * Main execution method
@@ -153,7 +153,7 @@ class Script extends CoreScripts
         $this->sendTerminal("Listing Checks in remote platform [{$this->platform_id}]:");
         $this->sendTerminal(str_repeat('-', 80));
 
-        $params = ['_fields' => 'KeyId,CFOEntity,CFOId,Route,Title,Status', '_order' => 'CFOEntity,CFOId', 'cfo_limit' => 2000];
+        $params = ['_fields' => 'KeyId,CFOEntity,CFOId,Route,Title,Status', '_order' => 'CFOEntity,CFOId', '_limit' => 1000];
         $response = $this->core->request->get_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw=1&_timezone=UTC",
             $params,
@@ -311,10 +311,10 @@ class Script extends CoreScripts
             //endregion
         } else {
             //region FETCH all Checks and group them
-            $this->sendTerminal(" - Fetching all Checks... [max 2000]");
+            $this->sendTerminal(" - Fetching all Checks...");
             $response = $this->core->request->get_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
-                ['cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                ['_limit' => 1000, '_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
             if ($this->core->request->error) {
@@ -427,9 +427,10 @@ class Script extends CoreScripts
         //region FETCH remote Checks for comparison
         $response = $this->core->request->get_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
-            ['filter_CFOEntity' => $cfo_entity, 'filter_CFOId' => $cfo_id, '_limit' => 500, '_raw' => 1, '_timezone' => 'UTC'],
+            ['filter_CFOEntity' => $cfo_entity, 'filter_CFOId' => $cfo_id, 'cfo_limit' => 500, '_raw' => 1, '_timezone' => 'UTC'],
             $this->headers
         );
+
         $remote_checks = [];
         if (!$this->core->request->error && ($response['data'] ?? null)) {
             $remote_checks = $response['data'];
@@ -440,8 +441,12 @@ class Script extends CoreScripts
         //region BUILD indexed arrays for comparison
         $local_indexed = [];
         foreach ($local_checks as $check) {
-            $local_indexed[$check['KeyId']] = $check;
+            if(!$index = $check['KeyId']??($check['Route']??null)) {
+                _printe('ERROR in local checks: missing KeyId or Route in check: '.$this->core->jsonEncode($check));
+            }
+            $local_indexed[$index] = $check;
         }
+
 
         $remote_indexed = [];
         foreach ($remote_checks as $check) {
@@ -456,13 +461,13 @@ class Script extends CoreScripts
         foreach ($remote_indexed as $keyId => $remote_check) {
             if (!isset($local_indexed[$keyId])) {
                 // Remote check not in local - delete it
-                $this->sendTerminal("   - Deleting [{$keyId}]: {$remote_check['Title']}");
+                $this->sendTerminal("   - Deleting [{$remote_check['CFOEntity']}/{$remote_check['CFOId']}][{$keyId}]: {$remote_check['Title']}");
                 $response = $this->core->request->delete_json_decode(
                     "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw&_timezone=UTC",
-                    [],
                     $this->headers
                 );
                 if ($this->core->request->error || !($response['success'] ?? false)) {
+                    _printe($this->core->request->errorMsg);
                     $this->sendTerminal("     # Warning: Failed to delete");
                 }
             } else {
@@ -470,7 +475,7 @@ class Script extends CoreScripts
                 ksort($remote_check);
                 ksort($local_indexed[$keyId]);
                 if ($this->core->jsonEncode($local_indexed[$keyId]) !== $this->core->jsonEncode($remote_check)) {
-                    $this->sendTerminal("   - Updating [{$keyId}]: {$local_indexed[$keyId]['Title']}");
+                    $this->sendTerminal("   - Updating  [{$local_indexed[$keyId]['CFOEntity']}/{$local_indexed[$keyId]['CFOId']}][{$keyId}: {$local_indexed[$keyId]['Route']}]: {$local_indexed[$keyId]['Title']}");
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw&_timezone=UTC",
                         $local_indexed[$keyId],
@@ -479,19 +484,31 @@ class Script extends CoreScripts
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("     # Warning: Failed to update");
                     }
+                } else {
+                    $this->sendTerminal("   - Are the same [{$remote_check['CFOEntity']}/{$remote_check['CFOId']}][{$keyId}: {$remote_check['Route']}]");
                 }
                 unset($local_indexed[$keyId]);
             }
         }
 
         // Insert checks that exist only in local
-        foreach ($local_indexed as $keyId => $local_check) {
-            $this->sendTerminal("   - Inserting [{$keyId}]: {$local_check['Title']}");
-            $response = $this->core->request->post_json_decode(
-                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
-                $local_check,
-                $this->headers
-            );
+        foreach ($local_indexed as $index => $local_check) {
+            if($local_check['KeyId']??null) {
+                $this->sendTerminal("   - Updating [{$local_check['CFOEntity']}/{$local_check['CFOId']}][{$index}: {$local_check['Route']}]: {$local_check['Title']}");
+                $response = $this->core->request->post_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                    $local_check,
+                    $this->headers
+                );
+            } else {
+                $this->sendTerminal("   - Inserting [{$local_check['CFOEntity']}/{$local_check['CFOId']}][{$index}: {$local_check['Route']}]: {$local_check['Title']}");
+                $response = $this->core->request->post_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                    $local_check,
+                    $this->headers
+                );
+            }
+
             if ($this->core->request->error || !($response['success'] ?? false)) {
                 $this->sendTerminal("     # Warning: Failed to insert");
             }
