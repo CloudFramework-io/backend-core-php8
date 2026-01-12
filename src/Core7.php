@@ -9413,6 +9413,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Resets the platform token for a given namespace and user.
+         * Deletes the cached token associated with the specified user and namespace.
+         *
+         * @param string $namespace The namespace identifier for the token.
+         * @param string $user The user identifier for the token.
+         * @return void
+         */
+        public function resetPlatformToken($namespace='', $user='') {
+            $hash = md5($namespace.$user);
+            $this->cache->delete('user-token-'.$hash);
+        }
+
+        /**
          * Try to authenticate $this->core->user using access token generated with local user configuration
          *
          * @param string $namespace The unique namespace identifier for the platform.
