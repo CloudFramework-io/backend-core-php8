@@ -20,6 +20,7 @@ class Script extends CoreScripts
 
 
         //region AUTHENTICATE user and SET $this->headers (authentication headers for API requests)
+        if(isset($this->formParams['_reset'])) $this->resetPlatformToken($this->platform_id);
         if (!$this->authPlatformUserWithLocalAccessToken($this->platform_id)) {
             $this->sendTerminal("Authentication failed");
             $this->sendTerminal($this->errorMsg);
@@ -48,10 +49,12 @@ class Script extends CoreScripts
         $this->sendTerminal("Available commands:");
         $this->sendTerminal("  /x-ds-token        - Return your token to connect with your EaaS");
         $this->sendTerminal("  /access-token      - Return your Google Access Token");
+        $this->sendTerminal("Send ?_reset to reset your token and re-authenticate");
+
     }
 
     public function METHOD_x_ds_token() {
-        $this->sendTerminal("X-DS-TOKEN: {$this->core->user->token}:");
+        $this->sendTerminal("X-DS-TOKEN: {$this->core->user->token}");
     }
 
     public function METHOD_access_token() {
