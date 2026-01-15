@@ -13,7 +13,7 @@ CFOs (Cloud Framework Objects) are JSON-based data model definitions stored in `
 1. **Data Model Definition**: Structure for Datastore (ds), MySQL/CloudSQL (db), or BigQuery (bq)
 2. **Web Interface Configuration**: Automatic CRUD UI via `cfo.html` webapp
 
-**Web Access**: `{cloud-platform-url}/app.html#__cfo/{KeyName}`
+**Web Access**: `https://core20.web.app/ajax/cfo.html?api=/cfi/{KeyName}`
 
 ## CFO Types
 
@@ -728,7 +728,7 @@ Profiles allow different UI configurations per user role:
 ## File Locations
 
 - **CFO Backups**: `buckets/backups/CFOs/{platform}/{CFOKeyName}.json`
-- **CFO Documentation**: `vendor/cloudframework-io/backend-core-php8/cloudia/CFOs.md`
+- **CFO Documentation**: `vendor/cloudframework-io/backend-core-php8/CFOs.md`
 - **Academy Courses**: `buckets/backups/Courses/{platform}/`
 - **Academy Documentation**: `buckets/cloudia/CLOUD_ACADEMY.md`
 
@@ -736,27 +736,27 @@ Profiles allow different UI configurations per user role:
 
 ```bash
 # Backup ALL CFOs from ALL platforms
-php vendor/cloudframework-io/backend-core-php8/runscript.php _cloudia/cfos/backup-from-remote
+composer run-script script backup_platforms_cfos
 
 # Backup single CFO from remote
 php vendor/cloudframework-io/backend-core-php8/runscript.php \
-  "_cloudia/cfos/backup-from-remote?id={CFO_KeyName}"
+  "cloud-documentum/crud-cfos/cloudframework/backup-from-remote?id={CFO_KeyName}"
 
 # Insert NEW CFO to remote
 php vendor/cloudframework-io/backend-core-php8/runscript.php \
-  "_cloudia/cfos/insert-from-backup?id={CFO_KeyName}"
+  "cloud-documentum/crud-cfos/cloudframework/insert-from-backup?id={CFO_KeyName}"
 
 # Update EXISTING CFO in remote
 php vendor/cloudframework-io/backend-core-php8/runscript.php \
-  "_cloudia/cfos/update-from-backup?id={CFO_KeyName}"
+  "cloud-documentum/crud-cfos/cloudframework/update-from-backup?id={CFO_KeyName}"
 
 # List remote CFOs
 php vendor/cloudframework-io/backend-core-php8/runscript.php \
-  "_cloudia/cfos/list-remote"
+  "cloud-documentum/crud-cfos/cloudframework/list-remote"
 
 # List local CFOs
 php vendor/cloudframework-io/backend-core-php8/runscript.php \
-  "_cloudia/cfos/list-local"
+  "cloud-documentum/crud-cfos/cloudframework/list-local"
 ```
 
 ## Academy Course Creation
@@ -808,7 +808,7 @@ php vendor/cloudframework-io/backend-core-php8/runscript.php \
 1. **ALWAYS download latest version first**:
    ```bash
    php vendor/cloudframework-io/backend-core-php8/runscript.php \
-     "_cloudia/cfos/backup-from-remote?id={CFO_KeyName}"
+     "cloud-documentum/crud-cfos/cloudframework/backup-from-remote?id={CFO_KeyName}"
    ```
 2. Apply requested changes
 3. Update DateUpdating timestamp

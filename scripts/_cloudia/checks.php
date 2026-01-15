@@ -467,8 +467,9 @@ class Script extends CoreScripts
                     $this->headers
                 );
                 if ($this->core->request->error || !($response['success'] ?? false)) {
-                    _printe($this->core->request->errorMsg);
                     $this->sendTerminal("     # Warning: Failed to delete");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             } else {
                 // Check exists in both - compare and update if different
@@ -483,6 +484,8 @@ class Script extends CoreScripts
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("     # Warning: Failed to update");
+                        $this->sendTerminal($this->core->request->errorMsg);
+                        return false;
                     }
                 } else {
                     $this->sendTerminal("   - Are the same [{$remote_check['CFOEntity']}/{$remote_check['CFOId']}][{$keyId}: {$remote_check['Route']}]");
@@ -495,8 +498,8 @@ class Script extends CoreScripts
         foreach ($local_indexed as $index => $local_check) {
             if($local_check['KeyId']??null) {
                 $this->sendTerminal("   - Updating [{$local_check['CFOEntity']}/{$local_check['CFOId']}][{$index}: {$local_check['Route']}]: {$local_check['Title']}");
-                $response = $this->core->request->post_json_decode(
-                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                $response = $this->core->request->put_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$local_check['KeyId']}?_raw&_timezone=UTC",
                     $local_check,
                     $this->headers
                 );
@@ -511,6 +514,8 @@ class Script extends CoreScripts
 
             if ($this->core->request->error || !($response['success'] ?? false)) {
                 $this->sendTerminal("     # Warning: Failed to insert");
+                $this->sendTerminal($this->core->request->errorMsg);
+                return false;
             }
         }
         //endregion
@@ -599,6 +604,8 @@ class Script extends CoreScripts
             if ($this->core->request->error || !($response['success'] ?? false)) {
                 $check_title = $check['Title'] ?? $check['KeyId'] ?? 'unknown';
                 $this->sendTerminal("   # Warning: Failed to insert check [{$check_title}]");
+                $this->sendTerminal($this->core->request->errorMsg);
+                return false;
             } else {
                 $inserted++;
             }

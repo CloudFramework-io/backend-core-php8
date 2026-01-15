@@ -469,6 +469,8 @@ class Script extends CoreScripts
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $module_title = $module['Title'] ?? $module_key ?? 'unknown';
                     $this->sendTerminal("   # Warning: Failed to update module [{$module_title}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Modules updated");
@@ -592,6 +594,8 @@ class Script extends CoreScripts
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $module_title = $module['Title'] ?? $module_key ?? 'unknown';
                     $this->sendTerminal("   # Warning: Failed to insert module [{$module_title}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Modules inserted");

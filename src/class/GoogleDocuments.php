@@ -1016,7 +1016,7 @@ if (!defined("_Google_CLASS_GoogleDocuments")) {
          * @param string $fileId
          * @return bool
          */
-        public function copyDriveFile($fileId, string $newName = null, string $newFolder = null)
+        public function copyDriveFile($fileId, ?string $newName = null, ?string $newFolder = null)
         {
             $start_time = microtime(true);
             $this->core->__p->add('copyDriveFile ', "{$fileId}->{$newFolder}", 'note');

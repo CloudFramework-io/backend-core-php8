@@ -627,6 +627,8 @@ class Script extends CoreScripts
                 );
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $this->sendTerminal("     # Warning: Failed to delete");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 } else {
                     $stats['deleted']++;
                 }
@@ -644,6 +646,8 @@ class Script extends CoreScripts
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("     # Warning: Failed to update");
+                        $this->sendTerminal($this->core->request->errorMsg);
+                        return false;
                     } else {
                         $stats['updated']++;
                     }
@@ -682,6 +686,8 @@ class Script extends CoreScripts
 
             if ($this->core->request->error || !($response['success'] ?? false)) {
                 $this->sendTerminal("     # Warning: Failed to " . ($has_key_id ? 'update' : 'insert'));
+                $this->sendTerminal($this->core->request->errorMsg);
+                return false;
             } else {
                 $stats['inserted']++;
             }
@@ -810,6 +816,8 @@ class Script extends CoreScripts
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $content_title = $content['ContentTitle'] ?? $content_key ?? 'unknown';
                     $this->sendTerminal("   # Warning: Failed to insert content [{$content_title}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Contents inserted");

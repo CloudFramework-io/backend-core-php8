@@ -442,6 +442,8 @@ class Script extends CoreScripts
 
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $this->sendTerminal("   # Warning: Failed to update subprocess [{$subprocess_key}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Subprocesses updated");
@@ -562,6 +564,8 @@ class Script extends CoreScripts
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $subprocess_name = $subprocess['Title'] ?? $subprocess['KeyName'] ?? 'unknown';
                     $this->sendTerminal("   # Warning: Failed to insert subprocess [{$subprocess_name}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Subprocesses inserted");

@@ -467,6 +467,8 @@ class Script extends CoreScripts
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $endpoint_title = $endpoint['EndPoint'] ?? $endpoint_key ?? 'unknown';
                     $this->sendTerminal("   # Warning: Failed to update endpoint [{$endpoint_title}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Endpoints updated");
@@ -587,6 +589,8 @@ class Script extends CoreScripts
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $endpoint_title = $endpoint['EndPoint'] ?? $endpoint_key ?? 'unknown';
                     $this->sendTerminal("   # Warning: Failed to insert endpoint [{$endpoint_title}]");
+                    $this->sendTerminal($this->core->request->errorMsg);
+                    return false;
                 }
             }
             $this->sendTerminal(" + Endpoints inserted");
