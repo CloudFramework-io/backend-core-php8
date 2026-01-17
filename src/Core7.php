@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.24';  // 2026-01-12 1
+        var $_version = '8.4.26';  // 2026-01-17 1
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -617,7 +617,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             // only setup datastorage if gc_project_id
-            if($this->gc_project_id && is_object($this->gc_datastorage_client)) {
+            if($this->gc_project_id) {
                 if(!isset($_GET['_no_register_stream_wrapper'])) {
                     try {
                         $this->gc_datastorage_client = new StorageClient(['projectId' => $this->gc_project_id]);
@@ -4338,14 +4338,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // Avoid to activate the same Cache Path
             if($this->dir == $path && is_object($this->cache) ) return true;
 
-            if($this->core->is->development() && !is_dir($this->core->system->root_path.'/local_data')) {
-                @mkdir($this->core->system->root_path.'/local_data');
-            }
             if (isset($_SESSION['Core_CacheFile_' . $path]) || is_dir($path) || @mkdir($path)) {
                 $this->type = 'directory';
                 $this->dir = $path;
                 if (strlen($spacename)) $spacename = '_' . $spacename;
-                $this->setNameSpace(basename($path) . $spacename);
+                $this->setSpaceName(basename($path) . $spacename);
                 $this->cache = null;
                 $this->init();
 
