@@ -617,7 +617,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             // only setup datastorage if gc_project_id
-            if($this->gc_project_id) {
+            if($this->gc_project_id && is_object($this->gc_datastorage_client)) {
                 if(!isset($_GET['_no_register_stream_wrapper'])) {
                     try {
                         $this->gc_datastorage_client = new StorageClient(['projectId' => $this->gc_project_id]);
@@ -4338,11 +4338,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // Avoid to activate the same Cache Path
             if($this->dir == $path && is_object($this->cache) ) return true;
 
+            if($this->core->is->development() && !is_dir($this->core->system->root_path.'/local_data')) {
+                @mkdir($this->core->system->root_path.'/local_data');
+            }
             if (isset($_SESSION['Core_CacheFile_' . $path]) || is_dir($path) || @mkdir($path)) {
                 $this->type = 'directory';
                 $this->dir = $path;
                 if (strlen($spacename)) $spacename = '_' . $spacename;
-                $this->setSpaceName(basename($path) . $spacename);
+                $this->setNameSpace(basename($path) . $spacename);
                 $this->cache = null;
                 $this->init();
 

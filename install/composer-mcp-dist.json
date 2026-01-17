@@ -1,0 +1,26 @@
+{
+  "name": "company-name/project-name",
+  "description": "Your description. More info https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8",
+  "require": {
+    "mcp/sdk": "^0.3.0",
+    "nyholm/psr7": "^1.8",
+    "nyholm/psr7-server": "^1.1",
+    "laminas/laminas-httphandlerrunner": "^2.10",
+    "cloudframework-io/backend-core-php8": "^8.4.24"
+  },
+  "scripts": {
+    "clean": [
+      "[ -d ./local_data ] && echo \"creating ./local_data\" || mkdir  ./local_data ",
+      "[ -d ./local_data/cache ] && rm -rf ./local_data/cache/* && echo \"cleaning ./local_data/cache\"  || mkdir  ./local_data/cache "
+    ],
+    "setup": [
+      "php vendor/cloudframework-io/backend-core-php8/runscript.php _setup"
+    ],
+    "serve": [
+      "php -S 0.0.0.0:8000 vendor/cloudframework-io/backend-core-php8/src/mcp-server.php"
+    ]
+  },
+  "config": {
+    "process-timeout": 0
+  }
+}

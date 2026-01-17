@@ -109,8 +109,6 @@ if (!defined("_RESTfull_CLASS_")) {
                 foreach ($this->formParams as $i=>$data) if(is_string($data)) $this->formParams[$i] = trim ($data);
             }
 
-
-
             // URL splits
             $this->url = (isset($_SERVER['REQUEST_URI']))?str_replace('/_eval/','/',$_SERVER['REQUEST_URI']):'';
             $this->urlParams = '';
@@ -119,7 +117,7 @@ if (!defined("_RESTfull_CLASS_")) {
 
             // API URL Split. If $this->core->system->url['parts_base_url'] take it out
             $url = $this->url;
-            if($this->url) list($foo, $url) = explode($this->core->system->url['parts_base_url'] . '/', $this->url, 2);
+            if($this->url && strpos($this->url,$this->core->system->url['parts_base_url'] . '/')!==false) list($foo, $url) = explode($this->core->system->url['parts_base_url'] . '/', $this->url, 2);
             $this->service = $url;
             $this->serviceParam = '';
             $this->params = [];
@@ -128,7 +126,7 @@ if (!defined("_RESTfull_CLASS_")) {
                 $this->core->logs->add("Url: [{$this->method}] ". $this->core->system->url['host_url_uri'],'RESTful');
             }
 
-            if (strpos($url, '/') !== false) {
+            if ($url && strpos($url, '/') !== false) {
                 list($this->service, $this->serviceParam) = explode('/', $url, 2);
                 $this->service = strtolower($this->service);
                 $this->params = explode('/', $this->serviceParam);
