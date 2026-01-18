@@ -302,10 +302,7 @@ class MCPOAuthValidator
         }
 
         // Set user from token data
-        $this->user = [
-            'KeyName' => $response['data']['client_id'] ?? 'mcp_oauth_user',
-            'scope' => $response['data']['scope'] ?? ''
-        ];
+        $this->user = $response['data'];
 
         return true;
     }
@@ -432,10 +429,13 @@ class MCPCore7
 
         //debug logs
         $this->core->logs->add($this->api->getHeaders(), 'headers');
+        $this->core->logs->add($_SESSION['user']??'no-user', 'user');
         $this->core->logs->add($this->sessionId, 'sessionId');
-        $this->core->logs->add($this->api->params, 'params');
-        unset($this->api->formParams['_raw_input_']);
-        $this->core->logs->add($this->api->formParams, 'formParams');
+        if($this->api->params) $this->core->logs->add($this->api->params, 'params');
+        if($this->api->formParams) {
+            unset($this->api->formParams['_raw_input_']);
+            $this->core->logs->add($this->api->formParams, 'formParams');
+        }
     }
 
     /**
