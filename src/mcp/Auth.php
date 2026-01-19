@@ -9,6 +9,7 @@ class Auth extends \MCPCore7
 {
 
     private $apiAuth='https://api.cloudframework.io/core/signin';
+    private $oauthServer = 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth';
 
     //region TOOLS
 
@@ -43,7 +44,7 @@ class Auth extends \MCPCore7
     }
     //endregion
 
-    //region user
+    //region clean_token
     /**
      * Clears the current session data by resetting platform, user, and token
      * information to their initial states.
@@ -54,6 +55,8 @@ class Auth extends \MCPCore7
     public function clean_token(): string
     {
         $_SESSION['dstoken'] = null;
+        $_SESSION['oauth_state'] = null;
+        $_SESSION['oauth_code_verifier'] = null;
 
         return "ok";
     }
@@ -94,6 +97,373 @@ class Auth extends \MCPCore7
     }
     //endregion
 
+    //region oauth_start
+    /**
+     * Starts an OAuth 2.1 authentication flow with CLOUD Platform.
+     * Returns a URL that the user must open in their browser to authenticate.
+     * After authentication, use oauth_complete with the authorization code received.
+     * 
+     * Uses PKCE (Proof Key for Code Exchange) for enhanced security.
+     *
+     * @param string $platform The platform identifier (e.g., 'cloudframework')
+     * @param string $redirect_uri The redirect URI for the OAuth callback (default: urn:ietf:wg:oauth:2.0:oob for manual copy)
+     * @return array Contains auth_url to open in browser, state for verification, and instructions
+     */
+    #[McpTool(name: 'oauth_start')]
+    public function oauthStart(string $platform = 'cloudframework', string $redirect_uri = 'urn:ietf:wg:oauth:2.0:oob'): array
+    {
+        // Generate PKCE code verifier and challenge
+        $codeVerifier = $this->generateCodeVerifier();
+        $codeChallenge = $this->generateCodeChallenge($codeVerifier);
+        
+        // Generate state for CSRF protection
+        $state = bin2hex(random_bytes(16));
+        
+        // Store in session for later verification
+        $_SESSION['oauth_state'] = $state;
+        $_SESSION['oauth_code_verifier'] = $codeVerifier;
+        $_SESSION['oauth_platform'] = $platform;
+        $_SESSION['oauth_redirect_uri'] = $redirect_uri;
+        
+        // Build authorization URL
+        $authParams = [
+            'response_type' => 'code',
+            'client_id' => 'cloudia-mcp',
+            'redirect_uri' => $redirect_uri,
+            'scope' => 'openid profile email projects tasks',
+            'state' => $state,
+            'code_challenge' => $codeChallenge,
+            'code_challenge_method' => 'S256',
+            'platform' => $platform
+        ];
+        
+        $authUrl = $this->oauthServer . '/authorize?' . http_build_query($authParams);
+        
+        return [
+            'status' => 'pending',
+            'auth_url' => $authUrl,
+            'state' => $state,
+            'instructions' => [
+                '1. Open the auth_url in your browser',
+                '2. Sign in with your CLOUD Platform credentials',
+                '3. After authorization, you will receive an authorization code',
+                '4. Call oauth_complete with the authorization code to finish authentication'
+            ],
+            'next_step' => 'Call oauth_complete(code) with the authorization code after user authenticates'
+        ];
+    }
+    //endregion
+
+    //region oauth_complete
+    /**
+     * Completes the OAuth 2.1 authentication flow by exchanging the authorization code for tokens.
+     * Must be called after oauth_start and user authentication.
+     *
+     * @param string $code The authorization code received after user authentication
+     * @param string $state Optional state parameter for verification (uses session state if not provided)
+     * @return array Contains access_token, user info, or error message
+     */
+    #[McpTool(name: 'oauth_complete')]
+    public function oauthComplete(string $code, string $state = ''): array
+    {
+        // Verify state if provided
+        if (!empty($state) && $state !== ($_SESSION['oauth_state'] ?? '')) {
+            return ['error' => true, 'message' => 'State mismatch - possible CSRF attack'];
+        }
+        
+        // Get stored values
+        $codeVerifier = $_SESSION['oauth_code_verifier'] ?? null;
+        $redirectUri = $_SESSION['oauth_redirect_uri'] ?? 'urn:ietf:wg:oauth:2.0:oob';
+        $platform = $_SESSION['oauth_platform'] ?? 'cloudframework';
+        
+        if (!$codeVerifier) {
+            return ['error' => true, 'message' => 'No pending OAuth flow. Call oauth_start first.'];
+        }
+        
+        // Exchange code for token
+        $tokenParams = [
+            'grant_type' => 'authorization_code',
+            'client_id' => 'cloudia-mcp',
+            'code' => $code,
+            'redirect_uri' => $redirectUri,
+            'code_verifier' => $codeVerifier
+        ];
+        
+        $response = $this->core->request->post_json_decode(
+            $this->oauthServer . '/token',
+            $tokenParams,
+            ['Content-Type' => 'application/x-www-form-urlencoded']
+        );
+        
+        if ($this->core->request->error) {
+            return [
+                'error' => true,
+                'message' => 'Token exchange failed',
+                'details' => $this->core->request->errorMsg
+            ];
+        }
+        
+        if (isset($response['error'])) {
+            return [
+                'error' => true,
+                'message' => $response['error_description'] ?? $response['error'],
+                'error_code' => $response['error']
+            ];
+        }
+        
+        // Store token in session
+        $accessToken = $response['access_token'] ?? null;
+        if ($accessToken) {
+            $_SESSION['token'] = $accessToken;
+            $_SESSION['platform'] = $platform;
+            
+            // Clear OAuth flow data
+            $_SESSION['oauth_state'] = null;
+            $_SESSION['oauth_code_verifier'] = null;
+            
+            // Try to get user info
+            $userInfo = $this->fetchUserInfo($accessToken);
+            if ($userInfo && !isset($userInfo['error'])) {
+                $_SESSION['user'] = $userInfo;
+                
+                // Set core user
+                $this->core->user->id = $userInfo['KeyName'] ?? $userInfo['email'] ?? 'unknown';
+                $this->core->user->token = $accessToken;
+                $this->core->user->data = ['User' => $userInfo];
+                $this->core->user->namespace = $platform;
+                $this->core->user->isAuth = true;
+            }
+            
+            return [
+                'success' => true,
+                'message' => 'Authentication successful',
+                'user' => $userInfo ?? null,
+                'platform' => $platform,
+                'token_type' => $response['token_type'] ?? 'Bearer',
+                'expires_in' => $response['expires_in'] ?? null
+            ];
+        }
+        
+        return ['error' => true, 'message' => 'No access token received'];
+    }
+    //endregion
+
+    //region oauth_status
+    /**
+     * Check the current OAuth authentication status.
+     * Returns whether there's an active session, pending OAuth flow, or no authentication.
+     *
+     * @return array Current authentication status and user info if authenticated
+     */
+    #[McpTool(name: 'oauth_status')]
+    public function oauthStatus(): array
+    {
+        $hasPendingOAuth = !empty($_SESSION['oauth_state']);
+        $hasToken = !empty($_SESSION['token']);
+        $isAuthenticated = $this->core->user->isAuth();
+        
+        $status = [
+            'authenticated' => $isAuthenticated,
+            'has_token' => $hasToken,
+            'pending_oauth_flow' => $hasPendingOAuth,
+            'platform' => $_SESSION['platform'] ?? null
+        ];
+        
+        if ($isAuthenticated) {
+            $status['user'] = [
+                'id' => $this->core->user->id,
+                'namespace' => $this->core->user->namespace
+            ];
+        }
+        
+        if ($hasPendingOAuth) {
+            $status['oauth_state'] = $_SESSION['oauth_state'];
+            $status['instructions'] = 'Complete authentication by calling oauth_complete with the authorization code';
+        }
+        
+        if (!$isAuthenticated && !$hasPendingOAuth) {
+            $status['instructions'] = 'Start authentication by calling oauth_start or set_dstoken';
+        }
+        
+        return $status;
+    }
+    //endregion
+
+    //region oauth_refresh
+    /**
+     * Refresh the OAuth access token using a refresh token.
+     * Only works if a refresh token was provided during initial authentication.
+     *
+     * @param string $refresh_token The refresh token to use
+     * @return array New access token or error message
+     */
+    #[McpTool(name: 'oauth_refresh')]
+    public function oauthRefresh(string $refresh_token): array
+    {
+        $tokenParams = [
+            'grant_type' => 'refresh_token',
+            'client_id' => 'cloudia-mcp',
+            'refresh_token' => $refresh_token
+        ];
+        
+        $response = $this->core->request->post_json_decode(
+            $this->oauthServer . '/token',
+            $tokenParams,
+            ['Content-Type' => 'application/x-www-form-urlencoded']
+        );
+        
+        if ($this->core->request->error) {
+            return [
+                'error' => true,
+                'message' => 'Token refresh failed',
+                'details' => $this->core->request->errorMsg
+            ];
+        }
+        
+        if (isset($response['error'])) {
+            return [
+                'error' => true,
+                'message' => $response['error_description'] ?? $response['error']
+            ];
+        }
+        
+        $accessToken = $response['access_token'] ?? null;
+        if ($accessToken) {
+            $_SESSION['token'] = $accessToken;
+            
+            return [
+                'success' => true,
+                'message' => 'Token refreshed successfully',
+                'token_type' => $response['token_type'] ?? 'Bearer',
+                'expires_in' => $response['expires_in'] ?? null
+            ];
+        }
+        
+        return ['error' => true, 'message' => 'No access token in refresh response'];
+    }
+    //endregion
+
+    //region get_oauth_config (Tool version of resource)
+    /**
+     * Get the OAuth 2.1 server configuration for CLOUD Platform.
+     * Returns endpoints, supported scopes, grant types, and authentication methods.
+     *
+     * @return array OAuth server configuration
+     */
+    #[McpTool(name: 'get_oauth_config')]
+    public function getOAuthConfigTool(): array
+    {
+        return $this->oauthConfig();
+    }
+    //endregion
+
+    //region session_ping
+    /**
+     * Ping the MCP session to verify it is active and renew it.
+     * Use this tool periodically to keep the session alive and prevent expiration.
+     * If the session has expired, the client must reconnect.
+     *
+     * @return array Session status with remaining TTL
+     */
+    #[McpTool(name: 'session_ping')]
+    public function sessionPing(): array
+    {
+        // Touch session to renew TTL
+        $_SESSION['mcp_last_ping'] = time();
+        
+        $sessionStart = $_SESSION['mcp_timestamp'] ?? time();
+        $ttl = 86400; // 24 hours // Default TTL
+        $elapsed = time() - $sessionStart;
+        $remaining = max(0, $ttl - $elapsed);
+        
+        return [
+            'status' => 'active',
+            'session_id' => session_id(),
+            'authenticated' => $this->core->user->isAuth(),
+            'user' => $this->core->user->id ?? null,
+            'session_age_seconds' => $elapsed,
+            'ttl_remaining_seconds' => $remaining,
+            'last_ping' => date('Y-m-d H:i:s'),
+            'message' => $remaining > 300 ? 'Session healthy' : 'Session expiring soon, consider reconnecting'
+        ];
+    }
+    //endregion
+
+    //region session_restore
+    /**
+     * Attempt to restore authentication after session loss.
+     * This tool tries to re-authenticate using:
+     * 1. OAuth token from Authorization header (automatic)
+     * 2. Previously stored dstoken
+     * 3. Provided token parameter
+     *
+     * Call this tool when you receive "Session not found or has expired" error.
+     *
+     * @param string $token Optional token to use for restoration (dstoken or OAuth token)
+     * @return array Restoration status and user info if successful
+     */
+    #[McpTool(name: 'session_restore')]
+    public function sessionRestore(string $token = ''): array
+    {
+        // Check if already authenticated via header
+        if ($this->core->user->isAuth()) {
+            return [
+                'status' => 'already_authenticated',
+                'method' => 'oauth_header',
+                'user' => $this->core->user->id,
+                'platform' => $this->core->user->namespace,
+                'message' => 'Session restored automatically via OAuth header'
+            ];
+        }
+        
+        // Try with provided token
+        if (!empty($token)) {
+            $result = $this->set_token($token);
+            if (is_string($result) && strpos($result, 'Error') === false) {
+                return [
+                    'status' => 'restored',
+                    'method' => 'provided_token',
+                    'user' => $result,
+                    'message' => 'Session restored with provided token'
+                ];
+            } elseif (is_array($result) && !isset($result['error'])) {
+                return [
+                    'status' => 'restored',
+                    'method' => 'provided_token',
+                    'user' => $this->core->user->id,
+                    'message' => 'Session restored with provided token'
+                ];
+            }
+        }
+        
+        // Check for stored dstoken in session
+        $storedToken = $_SESSION['dstoken'] ?? $_SESSION['token'] ?? null;
+        if ($storedToken) {
+            $result = $this->set_token($storedToken);
+            if (is_string($result) && strpos($result, 'Error') === false) {
+                return [
+                    'status' => 'restored',
+                    'method' => 'stored_token',
+                    'user' => $result,
+                    'message' => 'Session restored with stored token'
+                ];
+            }
+        }
+        
+        // No way to restore
+        return [
+            'status' => 'failed',
+            'error' => true,
+            'message' => 'Could not restore session. Please authenticate again using oauth_start or set_dstoken',
+            'options' => [
+                '1. Call oauth_start() to begin OAuth authentication',
+                '2. Call set_dstoken(token) with a valid dstoken',
+                '3. Configure mcp-remote with --header "Authorization: Bearer TOKEN"'
+            ]
+        ];
+    }
+    //endregion
+
     //endregion
 
     //region RESOURCES
@@ -109,12 +479,37 @@ class Auth extends \MCPCore7
     public function platform_user(): array
     {
         if(!$this->core->user->isAuth())
-            return ['error'=>true,'message'=>'Error: use set_dstoken first or send OAuth token in header'];
+            return ['error'=>true,'message'=>'Error: use set_dstoken, oauth_start/oauth_complete, or send OAuth token in header'];
         else
             return [
                 'id'=>$this->core->user->id ?? 'Error: missing',
                 'user'=>$this->core->user->data['User'],
             ];
+    }
+    //endregion
+
+    //region oauth_config
+    /**
+     * Returns the OAuth configuration for CLOUD Platform.
+     * Includes endpoints and supported features.
+     *
+     * @return array OAuth server configuration
+     */
+    #[McpResource(uri: 'auth://oauth/config', name: 'oauth_config', description: 'OAuth 2.1 server configuration for CLOUD Platform')]
+    public function oauthConfig(): array
+    {
+        return [
+            'issuer' => 'https://api.cloudframework.io',
+            'authorization_endpoint' => $this->oauthServer . '/authorize',
+            'token_endpoint' => $this->oauthServer . '/token',
+            'userinfo_endpoint' => $this->oauthServer . '/userinfo',
+            'registration_endpoint' => $this->oauthServer . '/register',
+            'scopes_supported' => ['openid', 'profile', 'email', 'projects', 'tasks'],
+            'response_types_supported' => ['code'],
+            'grant_types_supported' => ['authorization_code', 'refresh_token'],
+            'code_challenge_methods_supported' => ['S256'],
+            'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic']
+        ];
     }
     //endregion
 
@@ -144,6 +539,74 @@ class Auth extends \MCPCore7
         ];
     }
     //endregion
+
+    //region authenticate_oauth
+    /**
+     * Generates a prompt to guide the user through OAuth 2.1 authentication with CLOUD Platform.
+     *
+     * @param string $platform The platform to authenticate with (default: cloudframework)
+     * @return array Prompt messages for OAuth authentication flow
+     */
+    #[McpPrompt(name: 'authenticate_oauth', description: 'Authenticate with CLOUD Platform using OAuth 2.1 flow')]
+    public function authenticateOAuthPrompt(string $platform = 'cloudframework'): array
+    {
+        return [
+            [
+                'role' => 'assistant',
+                'content' => 'I will help you authenticate with CLOUD Platform using OAuth 2.1. This is a secure authentication flow that requires you to sign in through your browser.'
+            ],
+            [
+                'role' => 'user',
+                'content' => "Please start the OAuth authentication process for platform: {$platform}\n\nSteps:\n1. Call oauth_start to get the authorization URL\n2. I will open the URL in my browser and sign in\n3. After signing in, I'll receive an authorization code\n4. Call oauth_complete with the code to finish authentication\n5. Confirm my identity with get_platform_user"
+            ]
+        ];
+    }
+    //endregion
+
+    //endregion
+
+    //region PRIVATE METHODS
+
+    /**
+     * Generate a random code verifier for PKCE
+     * @return string
+     */
+    private function generateCodeVerifier(): string
+    {
+        $randomBytes = random_bytes(32);
+        return rtrim(strtr(base64_encode($randomBytes), '+/', '-_'), '=');
+    }
+
+    /**
+     * Generate code challenge from verifier using S256
+     * @param string $codeVerifier
+     * @return string
+     */
+    private function generateCodeChallenge(string $codeVerifier): string
+    {
+        $hash = hash('sha256', $codeVerifier, true);
+        return rtrim(strtr(base64_encode($hash), '+/', '-_'), '=');
+    }
+
+    /**
+     * Fetch user info from OAuth server
+     * @param string $accessToken
+     * @return array|null
+     */
+    private function fetchUserInfo(string $accessToken): ?array
+    {
+        $response = $this->core->request->get_json_decode(
+            $this->oauthServer . '/userinfo',
+            null,
+            ['Authorization' => 'Bearer ' . $accessToken]
+        );
+        
+        if ($this->core->request->error) {
+            return null;
+        }
+        
+        return $response['data'] ?? $response;
+    }
 
     //endregion
 
