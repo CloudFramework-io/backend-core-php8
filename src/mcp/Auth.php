@@ -59,6 +59,41 @@ class Auth extends \MCPCore7
     }
     //endregion
 
+    //region get_platform_user (Tool version of resource)
+    /**
+     * Get the current authenticated platform user information.
+     * Returns user ID and profile data. Requires prior authentication via set_dstoken or OAuth.
+     *
+     * @return array User data with id and profile, or error if not authenticated
+     */
+    #[McpTool(name: 'get_platform_user')]
+    public function getPlatformUserTool(): array
+    {
+        return $this->platform_user();
+    }
+    //endregion
+
+    //region get_authenticate_dstoken_prompt (Tool version of prompt)
+    /**
+     * Get instructions for authenticating with CLOUD Platform using a dstoken.
+     * Returns a structured prompt to guide through the authentication process.
+     *
+     * @param string $dstoken The dstoken provided by the user for authentication
+     * @return array Authentication prompt with instructions
+     */
+    #[McpTool(name: 'get_authenticate_prompt')]
+    public function getAuthenticatePromptTool(string $dstoken): array
+    {
+        $prompt = $this->authenticateDstokenPrompt($dstoken);
+        return [
+            'type' => 'prompt',
+            'name' => 'authenticate_dstoken',
+            'description' => 'Use these instructions to authenticate with CLOUD Platform',
+            'messages' => $prompt
+        ];
+    }
+    //endregion
+
     //endregion
 
     //region RESOURCES
