@@ -7,6 +7,7 @@ require_once  $root_path.'/vendor/autoload.php';
 
 use Mcp\Server;
 use Mcp\Server\Transport\StreamableHttpTransport;
+use Mcp\Capability\Attribute\McpTool;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Nyholm\Psr7Server\ServerRequestCreator;
 use Laminas\HttpHandlerRunner\Emitter\SapiEmitter;
@@ -193,197 +194,6 @@ if ($requestPath === '/.well-known/oauth-authorization-server') {
     exit;
 }
 
-//region OAuth 2.1 Resource Server Implementation
-/**
- * MCPOAuthValidator - Validates OAuth 2.1 tokens for MCP Resource Server
- * Implements RFC 8707 (Resource Indicators) and MCP Authorization spec
- */
-class MCPOAuthValidator
-{
-    private Core7 $core;
-    private array $secrets = [];
-    private string $platform = 'cloudframework';
-    private string $authApiUrl = 'https://api.cloudframework.io/core/signin';
-
-    public bool $error = false;
-    public ?string $errorCode = null;
-    public array $errorMsg = [];
-    public ?array $user = null;
-
-    public function __construct(Core7 $core)
-    {
-        $this->core = $core;
-    }
-
-    /**
-     * Validate an OAuth token against CloudFramework's auth API or MCP OAuth Datastore
-     * @param string $token The Bearer token to validate
-     * @return bool True if token is valid
-     */
-    public function validateToken(string $token): bool
-    {
-        if (empty($token)) {
-            $this->error = true;
-            $this->errorCode = 'invalid_token';
-            $this->errorMsg[] = 'Token is empty';
-            return false;
-        }
-
-        // Extract platform from token if present (format: platform__token_data)
-        if (strpos($token, '__') !== false) {
-            list($this->platform, ) = explode('__', $token, 2);
-        }
-
-        // Check if this is an MCP OAuth token (contains __mcp_)
-        if (strpos($token, '__mcp_') !== false) {
-            return $this->validateMCPOAuthToken($token);
-        }
-
-        // Read secrets for API validation
-        if (!$this->readSecrets()) {
-            return false;
-        }
-
-        // Validate token with CloudFramework API
-        $response = $this->core->request->get_json_decode(
-            "{$this->authApiUrl}/{$this->platform}/check",
-            null,
-            [
-                'X-WEB-KEY' => 'mcp-oauth',
-                'X-DS-TOKEN' => $token,
-                'X-EXTRA-INFO' => $this->secrets['api_login_integration_key']
-            ]
-        );
-
-        if ($this->core->request->error) {
-            $this->error = true;
-            $this->errorCode = 'invalid_token';
-            $this->errorMsg[] = 'Token validation failed: ' . json_encode($this->core->request->errorMsg);
-            return false;
-        }
-
-        if (!isset($response['data']['User']['KeyName'])) {
-            $this->error = true;
-            $this->errorCode = 'invalid_token';
-            $this->errorMsg[] = 'Token response missing user data';
-            return false;
-        }
-
-        $this->user = $response['data']['User'];
-        return true;
-    }
-
-    /**
-     * Validate an MCP OAuth token against Datastore
-     * @param string $token The MCP OAuth token to validate
-     * @return bool True if token is valid
-     */
-    private function validateMCPOAuthToken(string $token): bool
-    {
-        // Validate via API endpoint
-        $response = $this->core->request->get_json_decode(
-            "https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/validate",
-            null,
-            ['Authorization' => 'Bearer ' . $token]
-        );
-
-        if ($this->core->request->error) {
-            $this->error = true;
-            $this->errorCode = 'invalid_token';
-            $this->errorMsg[] = 'MCP OAuth token validation failed: ' . json_encode($this->core->request->errorMsg);
-            return false;
-        }
-
-        if (!($response['data']['valid'] ?? false)) {
-            $this->error = true;
-            $this->errorCode = 'invalid_token';
-            $this->errorMsg[] = $response['data']['error'] ?? 'Token is invalid or expired';
-            return false;
-        }
-
-        // Set user from token data
-        $this->user = $response['data'];
-
-        return true;
-    }
-
-    /**
-     * Read platform secrets for API authentication
-     */
-    private function readSecrets(): bool
-    {
-        if (!$this->core->security->readPlatformSecretVars('cfo-secrets', $this->platform)) {
-            $this->error = true;
-            $this->errorCode = 'server_error';
-            $this->errorMsg[] = 'Failed to read secrets: ' . json_encode($this->core->security->errorMsg);
-            return false;
-        }
-
-        $this->secrets['api_login_integration_key'] = $this->core->security->getPlatformSecretVar('api_login_integration_key');
-
-        if (empty($this->secrets['api_login_integration_key'])) {
-            $this->error = true;
-            $this->errorCode = 'server_error';
-            $this->errorMsg[] = 'Missing api_login_integration_key in secrets';
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Get the validated user data
-     */
-    public function getUser(): ?array
-    {
-        return $this->user;
-    }
-
-    /**
-     * Get the platform from the token
-     */
-    public function getPlatform(): string
-    {
-        return $this->platform;
-    }
-}
-
-
-// Validate OAuth token for MCP requests
-$authHeader = $request->getHeaderLine('Authorization');
-$oauthValidator = new MCPOAuthValidator($core);
-$oauthUser = null;
-
-if ($authHeader && str_starts_with($authHeader, 'Bearer ')) {
-    $token = substr($authHeader, 7);
-
-    if ($oauthValidator->validateToken($token)) {
-        $oauthUser = $oauthValidator->getUser();
-        // Store in a way that MCP handlers can access
-        $GLOBALS['mcp_oauth_user'] = $oauthUser;
-        $GLOBALS['mcp_oauth_token'] = $token;
-        $GLOBALS['mcp_oauth_platform'] = $oauthValidator->getPlatform();
-    } else {
-        // Invalid token - return 401
-        $errorResponse = [
-            'error' => $oauthValidator->errorCode,
-            'error_description' => implode('; ', $oauthValidator->errorMsg)
-        ];
-
-        $response = $psr17Factory->createResponse(401)
-            ->withHeader('WWW-Authenticate', 'Bearer realm="mcp", error="invalid_token", error_description="The token is invalid or expired"')
-            ->withHeader('Content-Type', 'application/json')
-            ->withHeader('Access-Control-Allow-Origin', '*')
-            ->withBody($psr17Factory->createStream(json_encode($errorResponse)));
-        (new SapiEmitter())->emit($response);
-        exit;
-    }
-}
-// Note: If no Authorization header, we allow the request to proceed
-// The MCP tools can check authentication status and respond accordingly
-// This allows tools like 'set_token' to work without prior auth
-//endregion
-
 //region Define MCPCore7 class BEFORE discovery (required for classes that extend it)
 /**
  * MCPCore7 - Base class for MCP capability handlers
@@ -415,45 +225,154 @@ class MCPCore7
         $this->core = &$core;
         $this->sessionStore = &$sessionStore;
         $this->api = new RESTful($this->core);
-
         $this->sessionId = $this->api->getHeader('MCP_SESSION_ID');
-        $this->platform = $_SESSION['platform'] ?? 'cloudframework';
 
-        // Auto-initialize from OAuth if available (Bearer token was validated)
-        if (isset($GLOBALS['mcp_oauth_user']) && isset($GLOBALS['mcp_oauth_token'])) {
-            $_SESSION['user'] = $GLOBALS['mcp_oauth_user'];
-            $_SESSION['token'] = $GLOBALS['mcp_oauth_token'];
-            $_SESSION['platform'] = $GLOBALS['mcp_oauth_platform'] ?? 'cloudframework';
-            $this->platform = $_SESSION['platform'];
+        // Authorization Token
+        if($token = substr($this->api->getHeader('Authorization') ?? '',7)) {
+            if ($_SESSION['token'] == $token && !empty($_SESSION['user']['KeyName'])) {
+                $this->core->user->token = $_SESSION['token'];
+                $this->core->user->id = $_SESSION['user']['KeyName'];
+                $this->core->user->data = ['User' => $_SESSION['user']];
+                $this->core->user->namespace = $this->platform = $_SESSION['platform']??'cloudframework';
+                $this->core->user->isAuth = true;
+
+            } else {
+                $this->validateOAuthToken();
+                if(!$this->core->user->isAuth())
+                    $this->error = true;
+                    $this->errorMsg = ['Invalid OAuth token'];
+            }
+        }
+        //X-DS-TOKEN
+        elseif($dstoken = $_SESSION['dstoken']??null) {
+            $this->readSecrets();
+            if(!empty($this->secrets['api_login_integration_key'])) {
+                $this->core->user->loadPlatformUserWithToken($dstoken, $this->secrets['api_login_integration_key']);
+                if ($this->core->user->error) {
+                    $_SESSION['dstoken'] = null;
+                    $_SESSION['user'] = null;
+                    return "Error: dstoken [{$dstoken}] is not valid: " . json_encode($this->core->user->errorMsg);
+                }
+            }
         }
 
         //debug logs
-        $this->core->logs->add($this->api->getHeaders(), 'headers');
-        $this->core->logs->add($_SESSION['user']??'no-user', 'user');
         $this->core->logs->add($this->sessionId, 'sessionId');
-        if($this->api->params) $this->core->logs->add($this->api->params, 'params');
-        if($this->api->formParams) {
+        $this->core->logs->add($this->api->getHeaders(), 'headers');
+        $this->core->logs->add($this->core->user->id??'no-user', 'user');
+        $this->core->logs->add($this->core->user->getPrivileges(), 'privileges');
+        if ($this->api->params) $this->core->logs->add($this->api->params, 'params');
+        if ($this->api->formParams) {
             unset($this->api->formParams['_raw_input_']);
             $this->core->logs->add($this->api->formParams, 'formParams');
         }
     }
 
     /**
-     * Check if the request was authenticated via OAuth Bearer token
-     * @return bool True if OAuth authentication is present
+     * Validate OAuth Bearer token from Authorization header
+     * Supports both MCP OAuth tokens and CloudFramework tokens
      */
-    public function isOAuthAuthenticated(): bool
+    protected function validateOAuthToken(): void
     {
-        return isset($GLOBALS['mcp_oauth_user']) && isset($GLOBALS['mcp_oauth_token']);
+        $authHeader = $this->api->getHeader('Authorization') ?? '';
+
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return; // No Bearer token, allow request to proceed (tools can check auth status)
+        }
+
+        $token = substr($authHeader, 7);
+        if (empty($token)) {
+            return;
+        }
+
+        // Extract platform from token if present (format: platform__token_data)
+        if (strpos($token, '__') !== false) {
+            list($this->platform,) = explode('__', $token, 2);
+        }
+
+        // Check if this is an MCP OAuth token (contains __mcp_)
+        if (strpos($token, '__mcp_') !== false) {
+            $this->validateMCPOAuthToken($token);
+        } else {
+            $this->validateCloudFrameworkToken($token);
+        }
     }
 
     /**
-     * Get the OAuth authenticated user data
-     * @return array|null User data or null if not authenticated
+     * Validate MCP OAuth token against the OAuth API
      */
-    public function getOAuthUser(): ?array
+    protected function validateMCPOAuthToken(string $token): void
     {
-        return $GLOBALS['mcp_oauth_user'] ?? null;
+        $response = $this->core->request->get_json_decode(
+            "https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/validate",
+            null,
+            ['Authorization' => 'Bearer ' . $token]
+        );
+
+        if ($this->core->request->error) {
+            $this->core->logs->add('MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg), 'oauth-error');
+            return;
+        }
+
+        if (!($response['data']['valid'] ?? false)) {
+            $this->core->logs->add('MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown'), 'oauth-error');
+            return;
+        }
+
+        $_SESSION['token'] = $token;
+        $_SESSION['user'] = $response['data']['data'];
+        $_SESSION['platform'] = $response['data']['platform'] ?? 'cloudframework';;
+
+        $this->core->user->id = $_SESSION['user']['KeyName'];
+        $this->core->user->token = $_SESSION['token'];
+        $this->core->user->data = ['User' => $_SESSION['user']];
+        $this->core->user->namespace = $this->platform = $_SESSION['platform'];
+        $this->core->user->isAuth = true;
+
+
+        $this->core->logs->add('MCP OAuth authenticated: ' . ($this->oauthUser['KeyName'] ?? 'unknown'), 'oauth');
+    }
+
+    /**
+     * Validate CloudFramework token against signin API
+     */
+    protected function validateCloudFrameworkToken(string $token): void
+    {
+        if (!$this->readSecrets()) {
+            return;
+        }
+
+        $response = $this->core->request->get_json_decode(
+            "https://api.cloudframework.io/core/signin/{$this->platform}/check",
+            null,
+            [
+                'X-WEB-KEY' => 'mcp-oauth',
+                'X-DS-TOKEN' => $token,
+                'X-EXTRA-INFO' => $this->secrets['api_login_integration_key']
+            ]
+        );
+
+        if ($this->core->request->error) {
+            $this->core->logs->add('CloudFramework token validation failed: ' . json_encode($this->core->request->errorMsg), 'oauth-error');
+            return;
+        }
+
+        if (!isset($response['data']['User']['KeyName'])) {
+            $this->core->logs->add('CloudFramework token response missing user data', 'oauth-error');
+            return;
+        }
+
+        $_SESSION['token'] = $token;
+        $_SESSION['user'] = $response['data'];
+        $_SESSION['platform'] = $response['data']['platform'] ?? 'cloudframework';;
+
+        $this->core->user->id = $_SESSION['user']['User']['KeyName'];
+        $this->core->user->token = $_SESSION['token'];
+        $this->core->user->data = ['User' => $_SESSION['user']['User']];
+        $this->core->user->namespace = $this->platform = $_SESSION['platform'];
+        $this->core->user->isAuth = true;
+
+        $this->core->logs->add('CloudFramework authenticated: ' .  $this->core->user->id, 'oauth');
     }
 
     /**
@@ -463,15 +382,15 @@ class MCPCore7
     public function initCFOs(): bool
     {
         // Avoid create the object multiple times
-        if(is_object($this->cfos)) return true;
+        if (is_object($this->cfos)) return true;
 
-        if($this->error) return false;
-        if(!($this->secrets['api_cfos_integration_key']??null))
-            if(!$this->readSecrets()) return false;
+        if ($this->error) return false;
+        if (!($this->secrets['api_cfos_integration_key'] ?? null))
+            if (!$this->readSecrets()) return false;
 
-        $this->cfos = $this->core->loadClass('CFOs',$this->secrets['api_cfos_integration_key']);
-        if($this->cfos->error) return($this->setErrorFromCodelib('system-error',$this->cfos->errorMsg));
-        if(isset($this->formParams['_reload_cache']) || isset($this->formParams['_reload_cfos'])) $this->cfos->resetCache();
+        $this->cfos = $this->core->loadClass('CFOs', $this->secrets['api_cfos_integration_key']);
+        if ($this->cfos->error) return ($this->setErrorFromCodelib('system-error', $this->cfos->errorMsg));
+        if (isset($this->formParams['_reload_cache']) || isset($this->formParams['_reload_cfos'])) $this->cfos->resetCache();
         $this->cfos->setNameSpace($this->platform);
 
         return true;
@@ -494,10 +413,10 @@ class MCPCore7
         if ($this->core->security->getPlatformSecretVar('api_cfos_integration_key'))
             $this->secrets['api_cfos_integration_key'] = $this->core->security->getPlatformSecretVar('api_cfos_integration_key');
 
-        if (!$this->secrets['api_login_integration_key'])
+        if (!($this->secrets['api_login_integration_key'] ?? null))
             $this->setErrorFromCodelib('configuration-error', "Missing api_login_integration_key in Platform Secret: cfo-secrets");
 
-        if (!$this->secrets['api_cfos_integration_key'])
+        if (!($this->secrets['api_cfos_integration_key'] ?? null))
             $this->setErrorFromCodelib('configuration-error', "Missing api_cfos_integration_key in Platform Secret: cfo-secrets");
 
         return !$this->error;
@@ -523,7 +442,7 @@ $sessionStore = new PhpSessionStore(3600);
 // Build the MCP server
 $server = Server::builder()
     ->setServerInfo('HTTP Server', '1.0.1')
-    ->setDiscovery($root_path, ['mcp'])
+    ->setDiscovery($root_path, ['mcp','vendor/cloudframework-io/backend-core-php8/src/mcp'])
     ->setSession($sessionStore)
     ->build();
 

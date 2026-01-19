@@ -6,21 +6,36 @@
     "nyholm/psr7": "^1.8",
     "nyholm/psr7-server": "^1.1",
     "laminas/laminas-httphandlerrunner": "^2.10",
-    "cloudframework-io/backend-core-php8": "^8.4.26"
+    "cloudframework-io/backend-core-php8": "^8.4"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\": ".",
+      "App\\Mcp\\": "mcp/",
+      "App\\CFMcp\\": "vendor/cloudframework-io/backend-core-php8/src/mcp/"
+    }
   },
   "scripts": {
-    "clean": [
-      "[ -d ./local_data ] && echo \"creating ./local_data\" || mkdir  ./local_data ",
-      "[ -d ./local_data/cache ] && rm -rf ./local_data/cache/* && echo \"cleaning ./local_data/cache\"  || mkdir  ./local_data/cache "
+    "serve": "php -S localhost:8000 vendor/cloudframework-io/backend-core-php8/src/mcp-server.php",
+    "credentials": [
+      "[ -d ./local_data ] && echo \"installing ./local_data\" || mkdir  ./local_data ",
+      "gcloud auth application-default login",
+      "mv ~/.config/gcloud/application_default_credentials.json local_data/"
     ],
-    "setup": [
-      "php vendor/cloudframework-io/backend-core-php8/runscript.php _setup"
+    "deploy-prod": [
+      "gcloud app deploy app-prod.yaml --project=cloudframework-io --version=prod"
     ],
-    "serve": [
-      "php -S 0.0.0.0:8000 vendor/cloudframework-io/backend-core-php8/src/mcp-server.php"
+    "deploy-dev": [
+      "gcloud app deploy app-dev.yaml --project=cloudframework-io --version=dev"
+    ],
+    "script": [
+      "php vendor/cloudframework-io/backend-core-php8/runscript.php"
     ]
   },
   "config": {
+    "allow-plugins": {
+      "php-http/discovery": true
+    },
     "process-timeout": 0
   }
 }
