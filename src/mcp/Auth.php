@@ -62,6 +62,26 @@ class Auth extends \MCPCore7
     }
     //endregion
 
+    //region clean_session
+    /**
+     * Clears all session variables and resets user authentication state.
+     * Use this to completely log out and start fresh.
+     *
+     * @return string Returns "ok" to indicate the session has been cleared.
+     */
+    #[McpTool(name: 'clean_session')]
+    public function clean_session(): string
+    {
+        // Clear all session variables
+        $_SESSION = [];
+
+        // Reset user state
+        $this->core->user->reset();
+
+        return "ok";
+    }
+    //endregion
+
     //region refresh_dstoken
     /**
      * Clean de current dstoken associated to an user
@@ -183,21 +203,46 @@ class Auth extends \MCPCore7
         ];
         
         $authUrl = $this->oauthServer . '/authorize?' . http_build_query($authParams);
-        
+
         return [
-            'status' => 'pending',
-            'auth_url' => $authUrl,
-            'state' => $state,
-            'instructions' => [
-                '1. Open the auth_url in your browser',
-                '2. Sign in with your CLOUD Platform credentials',
-                '3. After authorization, you will receive an authorization code',
-                '4. Call oauth_complete with the authorization code to finish authentication'
+            'status' => 'pending_user_action',
+            'action_required' => 'open_url_in_browser',
+
+            // URL prominente para Claude Desktop
+            'url' => $authUrl,
+            'auth_url' => $authUrl,  // Alias por compatibilidad
+
+            // Mensaje para mostrar al usuario
+            'user_message' => "Para autenticarte, abre esta URL en tu navegador:\n\n{$authUrl}\n\nDespués de iniciar sesión, recibirás un código de autorización. Copia ese código y dímelo para completar la autenticación.",
+
+            // Instrucciones para Claude
+            'assistant_instructions' => [
+                'Show the URL prominently to the user',
+                'Ask the user to open the URL in their browser',
+                'Wait for the user to provide the authorization code',
+                'Once received, call oauth_complete(code) with the provided code'
             ],
-            'next_step' => 'Call oauth_complete(code) with the authorization code after user authenticates'
+
+            // Pasos para el usuario
+            'steps' => [
+                '1. Abre la URL de arriba en tu navegador',
+                '2. Inicia sesión con tus credenciales de CLOUD Platform',
+                '3. Autoriza el acceso cuando se te solicite',
+                '4. Copia el código de autorización que recibirás',
+                '5. Pega el código aquí para completar la autenticación'
+            ],
+
+            'next_action' => [
+                'tool' => 'oauth_complete',
+                'parameter' => 'code',
+                'description' => 'Call oauth_complete with the authorization code provided by the user'
+            ],
+
+            'state' => $state
         ];
     }
     //endregion
+
 
     //region oauth_complete
     /**
@@ -258,9 +303,12 @@ class Auth extends \MCPCore7
         
         // Store token in session
         $accessToken = $response['access_token'] ?? null;
+        $refreshToken = $response['refresh_token'] ?? null;
         if ($accessToken) {
             $_SESSION['token'] = $accessToken;
             $_SESSION['platform'] = $platform;
+            if($refreshToken) $_SESSION['refresh_token'] = $refreshToken;
+
             
             // Clear OAuth flow data
             $_SESSION['oauth_state'] = null;
@@ -343,13 +391,18 @@ class Auth extends \MCPCore7
      * @return array New access token or error message
      */
     #[McpTool(name: 'oauth_refresh')]
-    public function oauthRefresh(string $current_access_token,string $refresh_token): array
+    public function oauthRefresh(string $current_access_token='',string $refresh_token=''): array
     {
+        if(empty($current_access_token) && empty($_SESSION['token']))
+            return ['error'=>true,'message'=>'Error: no refresh token provided'];
+        if(empty($refresh_token) && empty($_SESSION['refresh_token']))
+            return ['error'=>true,'message'=>'Error: no refresh token provided'];
+
         $tokenParams = [
             'grant_type' => 'refresh_token',
             'client_id' => 'cloudia-mcp',
-            'access_token' => $current_access_token,
-            'refresh_token' => $refresh_token
+            'access_token' => ($current_access_token??'')?:$_SESSION['token'],
+            'refresh_token' => $refresh_token??$_SESSION['refresh_token']
         ];
         
         $response = $this->core->request->post_json_decode(
@@ -369,7 +422,7 @@ class Auth extends \MCPCore7
         if (isset($response['error'])) {
             return [
                 'error' => true,
-                'message' => $response['error_description'] ?? $response['error']
+                'message' => $response['error_description'] ?? $response['error'],
             ];
         }
         
@@ -558,6 +611,20 @@ class Auth extends \MCPCore7
             'code_challenge_methods_supported' => ['S256'],
             'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic']
         ];
+    }
+    //endregion
+
+    //region oauth_status resource
+    /**
+     * Returns the current OAuth authentication status as a resource.
+     * Provides read-only access to session state and user info.
+     *
+     * @return array Current authentication status
+     */
+    #[McpResource(uri: 'auth://oauth/status', name: 'oauth_status', description: 'Current OAuth authentication status including session state and user info')]
+    public function oauthStatusResource(): array
+    {
+        return $this->oauthStatus();
     }
     //endregion
 

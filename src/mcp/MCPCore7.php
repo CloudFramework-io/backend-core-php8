@@ -36,6 +36,8 @@ class MCPCore7
 
         // Authorization Token
         $oauthToken = substr($this->api->getHeader('Authorization') ?? '',7);
+        if(!$oauthToken && !empty($_SESSION['token'] ))
+            $oauthToken = $_SESSION['token'];
         if($oauthToken && strpos($oauthToken, '__mcp_') !== false) {
             if (($_SESSION['token'] ?? null) !== $oauthToken
                 || !$this->initUserFromSession()
@@ -61,8 +63,8 @@ class MCPCore7
         }
 
         //debug logs
-        //        if($this->core->is->development())
-        //            $this->showLogs();
+//                if($this->core->is->development())
+//                    $this->showLogs();
 
     }
 
@@ -91,19 +93,19 @@ class MCPCore7
      * Logs session details, headers, user information, privileges, and request parameters.
      * @return void
      */
-    //    private function showLogs(): void
-    //    {
-    //        $this->core->logs->add($this->sessionId, 'sessionId');
-    //        $this->core->logs->add($this->api->getHeaders(), 'headers');
-    //        $this->core->logs->add($_SESSION, 'session');
-    //        $this->core->logs->add($this->core->user->id??'no-user', 'user');
-    //        $this->core->logs->add($this->core->user->getPrivileges(), 'privileges');
-    //        if ($this->api->params) $this->core->logs->add($this->api->params, 'params');
-    //        if ($this->api->formParams) {
-    //            unset($this->api->formParams['_raw_input_']);
-    //            $this->core->logs->add($this->api->formParams, 'formParams');
+    //        private function showLogs(): void
+    //        {
+    //            $this->core->logs->add($this->sessionId, 'sessionId');
+    //            $this->core->logs->add($this->api->getHeaders(), 'headers');
+    //            $this->core->logs->add($_SESSION, 'session');
+    //            $this->core->logs->add($this->core->user->id??'no-user', 'user');
+    //            $this->core->logs->add($this->core->user->getPrivileges(), 'privileges');
+    //            if ($this->api->params) $this->core->logs->add($this->api->params, 'params');
+    //            if ($this->api->formParams) {
+    //                unset($this->api->formParams['_raw_input_']);
+    //                $this->core->logs->add($this->api->formParams, 'formParams');
+    //            }
     //        }
-    //    }
 
     /**
      * Validate OAuth Bearer token from Authorization header
