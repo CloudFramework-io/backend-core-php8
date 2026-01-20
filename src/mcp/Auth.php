@@ -44,6 +44,43 @@ class Auth extends \MCPCore7
     }
     //endregion
 
+    //region clean_dstoken
+    /**
+     * Clean de current dstoken associated to an user
+     *
+     * @return string Returns an empty string to indicate the session has been cleared.
+     */
+    #[McpTool(name: 'clean_dstoken')]
+    public function clean_dstoken(): string
+    {
+        $_SESSION['dstoken'] = null;
+        $this->core->user->token = null;
+        //        $_SESSION['oauth_state'] = null;
+        //        $_SESSION['oauth_code_verifier'] = null;
+
+        return "ok";
+    }
+    //endregion
+
+    //region refresh_dstoken
+    /**
+     * Clean de current dstoken associated to an user
+     *
+     * @return string Returns an empty string to indicate the session has been cleared.
+     */
+    #[McpTool(name: 'refresh_dstoken')]
+    public function refresh_dstoken(): string
+    {
+        if(empty($_SESSION['token'])) return "error: no access_token not found";
+        $_SESSION['dstoken'] = null;
+        $this->validateMCPOAuthToken($_SESSION['token']);
+        if(!$this->core->user->isAuth()) {
+            return "error: current  access_token can not generate a valid dstoken";
+        }
+        return "ok";
+    }
+    //endregion
+
     //region clean_token
     /**
      * Clears the current session data by resetting platform, user, and token
@@ -51,14 +88,22 @@ class Auth extends \MCPCore7
      *
      * @return string Returns an empty string to indicate the session has been cleared.
      */
-    #[McpTool(name: 'clean_dstoken')]
-    public function clean_token(): string
+    #[McpTool(name: 'test_dstoken')]
+    public function test_dstoken(): string
     {
-        $_SESSION['dstoken'] = null;
-        $_SESSION['oauth_state'] = null;
-        $_SESSION['oauth_code_verifier'] = null;
 
-        return "ok";
+        if(!$dstoken = $this->core->user->token) return "Error: No token provided";
+        if(!$user = $this->core->user->id) return "Error: No id loaded";
+
+        if(!($this->secrets['api_login_integration_key']??null))
+            if(!$this->readSecrets())
+                return "Error [{$this->errorCode}] ".json_encode($this->errorMsg);
+
+        $this->core->user->loadPlatformUserWithToken($dstoken,$this->secrets['api_login_integration_key']);
+        if($this->core->user->error) return "Error: token [{$dstoken}] is not valid: ".json_encode($this->core->user->errorMsg);
+        if($user != $this->core->user->id) return "Error: token [{$dstoken}] is not valid for user [{$user}]";
+
+        return $this->core->user->id;
     }
     //endregion
 
@@ -298,11 +343,12 @@ class Auth extends \MCPCore7
      * @return array New access token or error message
      */
     #[McpTool(name: 'oauth_refresh')]
-    public function oauthRefresh(string $refresh_token): array
+    public function oauthRefresh(string $current_access_token,string $refresh_token): array
     {
         $tokenParams = [
             'grant_type' => 'refresh_token',
             'client_id' => 'cloudia-mcp',
+            'access_token' => $current_access_token,
             'refresh_token' => $refresh_token
         ];
         
@@ -330,12 +376,12 @@ class Auth extends \MCPCore7
         $accessToken = $response['access_token'] ?? null;
         if ($accessToken) {
             $_SESSION['token'] = $accessToken;
-            
             return [
                 'success' => true,
                 'message' => 'Token refreshed successfully',
                 'token_type' => $response['token_type'] ?? 'Bearer',
-                'expires_in' => $response['expires_in'] ?? null
+                'expires_in' => $response['expires_in'] ?? null,
+                'access_token' => $accessToken
             ];
         }
         
@@ -480,6 +526,8 @@ class Auth extends \MCPCore7
     {
         if(!$this->core->user->isAuth())
             return ['error'=>true,'message'=>'Error: use set_dstoken, oauth_start/oauth_complete, or send OAuth token in header'];
+        elseif(empty($this->core->user->data['User']))
+            return ['error'=>true,'message'=>'Error: missing user data info'];
         else
             return [
                 'id'=>$this->core->user->id ?? 'Error: missing',

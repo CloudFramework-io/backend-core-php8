@@ -35,16 +35,12 @@ class MCPCore7
         $this->sessionId = $this->api->getHeader('MCP_SESSION_ID');
 
         // Authorization Token
-        if($token = substr($this->api->getHeader('Authorization') ?? '',7)) {
-            if ($_SESSION['token'] == $token && !empty($_SESSION['user']['KeyName'])) {
-                $this->core->user->token = $_SESSION['token'];
-                $this->core->user->id = $_SESSION['user']['KeyName'];
-                $this->core->user->data = ['User' => $_SESSION['user']];
-                $this->core->user->namespace = $this->platform = $_SESSION['platform']??'cloudframework';
-                $this->core->user->isAuth = true;
-
-            } else {
-                $this->validateOAuthToken();
+        $oauthToken = substr($this->api->getHeader('Authorization') ?? '',7);
+        if($oauthToken && strpos($oauthToken, '__mcp_') !== false) {
+            if (($_SESSION['token'] ?? null) !== $oauthToken
+                || !$this->initUserFromSession()
+            ) {
+                $this->validateMCPOAuthToken($oauthToken);
                 if(!$this->core->user->isAuth()) {
                     $this->error = true;
                     $this->errorMsg = ['Invalid OAuth token'];
@@ -65,16 +61,49 @@ class MCPCore7
         }
 
         //debug logs
-        $this->core->logs->add($this->sessionId, 'sessionId');
-        $this->core->logs->add($this->api->getHeaders(), 'headers');
-        $this->core->logs->add($this->core->user->id??'no-user', 'user');
-        $this->core->logs->add($this->core->user->getPrivileges(), 'privileges');
-        if ($this->api->params) $this->core->logs->add($this->api->params, 'params');
-        if ($this->api->formParams) {
-            unset($this->api->formParams['_raw_input_']);
-            $this->core->logs->add($this->api->formParams, 'formParams');
-        }
+        //        if($this->core->is->development())
+        //            $this->showLogs();
+
     }
+
+    /**
+     * Initialize user from the current session data.
+     * @return bool true if the user is successfully initialized, false otherwise
+     */
+    private function initUserFromSession(): bool
+    {
+        $this->core->user->reset();
+        if ( !empty($_SESSION['user'])
+            && !empty($_SESSION['data'])
+            && !empty($_SESSION['platform'])
+        ) {
+            $this->core->user->token = $_SESSION['dstoken']??null;
+            $this->core->user->id = $_SESSION['user'];
+            $this->core->user->data = ['User'=>$_SESSION['data']];
+            $this->core->user->namespace = $_SESSION['platform'];
+            $this->core->user->isAuth = true;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Logs session details, headers, user information, privileges, and request parameters.
+     * @return void
+     */
+    //    private function showLogs(): void
+    //    {
+    //        $this->core->logs->add($this->sessionId, 'sessionId');
+    //        $this->core->logs->add($this->api->getHeaders(), 'headers');
+    //        $this->core->logs->add($_SESSION, 'session');
+    //        $this->core->logs->add($this->core->user->id??'no-user', 'user');
+    //        $this->core->logs->add($this->core->user->getPrivileges(), 'privileges');
+    //        if ($this->api->params) $this->core->logs->add($this->api->params, 'params');
+    //        if ($this->api->formParams) {
+    //            unset($this->api->formParams['_raw_input_']);
+    //            $this->core->logs->add($this->api->formParams, 'formParams');
+    //        }
+    //    }
 
     /**
      * Validate OAuth Bearer token from Authorization header
@@ -109,36 +138,57 @@ class MCPCore7
     /**
      * Validate MCP OAuth token against the OAuth API
      */
-    protected function validateMCPOAuthToken(string $token): void
+    protected function validateMCPOAuthToken(string $oauthToken): void
     {
+        $params = [];
+        if(empty($_SESSION['token'])
+            || empty($_SESSION['dstoken'])
+            || $_SESSION['token'] === $oauthToken  ) {
+            $params['dstoken'] = 1;
+        }
         $response = $this->core->request->get_json_decode(
             "https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/validate",
-            null,
-            ['Authorization' => 'Bearer ' . $token]
+            $params,
+            ['Authorization' => 'Bearer ' . $oauthToken]
         );
 
         if ($this->core->request->error) {
-            $this->core->logs->add('MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg), 'oauth-error');
+            $this->core->logs->add('MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg), 'oauth-access_token_verification-error');
             return;
         }
 
         if (!($response['data']['valid'] ?? false)) {
-            $this->core->logs->add('MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown'), 'oauth-error');
+            $this->core->logs->add('MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown'), 'oauth-access_token_verification-error');
             return;
         }
 
-        $_SESSION['token'] = $token;
-        $_SESSION['user'] = $response['data']['data'];
+        if (!($response['data']['user'] ?? false)) {
+            $this->core->logs->add('MCP OAuth token verification error. It missed [user] attribute','oauth-access_token_verification-error');
+            return;
+        }
+        if (!($response['data']['data'] ?? false)) {
+            $this->core->logs->add('MCP OAuth token verification error. It missed [data] attribute','oauth-access_token_verification-error');
+            return;
+        }
+        if (!($response['data']['platform'] ?? false)) {
+            $this->core->logs->add('MCP OAuth token verification error. It missed [platform] attribute','oauth-access_token_verification-error');
+            return;
+        }
+        if (!empty($params['dstoken']) &&  !($response['data']['dstoken'] ?? false)) {
+            $this->core->logs->add('MCP OAuth token verification error. It missed [dstoken] attribute','oauth-access_token_verification-error');
+            return;
+        }
+
+        $_SESSION['token'] = $oauthToken;
+        $_SESSION['user'] = $response['data']['user'];
+        $_SESSION['data'] = $response['data']['data'];
         $_SESSION['platform'] = $response['data']['platform'] ?? 'cloudframework';
+        if(!empty($params['dstoken']))
+            $_SESSION['dstoken'] = $response['data']['dstoken'];
 
-        $this->core->user->id = $_SESSION['user']['KeyName'];
-        $this->core->user->token = $_SESSION['token'];
-        $this->core->user->data = ['User' => $_SESSION['user']];
-        $this->core->user->namespace = $this->platform = $_SESSION['platform'];
-        $this->core->user->isAuth = true;
+        $this->initUserFromSession();
 
-
-        $this->core->logs->add('MCP OAuth authenticated: ' . $this->core->user->id, 'oauth');
+        $this->core->logs->add('MCP OAuth AccessToken authenticated: ' . $this->core->user->id, 'oauth');
     }
 
     /**
@@ -184,8 +234,11 @@ class MCPCore7
     }
 
     /**
-     * Initializes the CFOs class instance for the current object.
-     * @return bool Returns true if the CFOs object is successfully initialized
+     * Initializes the CFOs object.
+     * Ensures the object is only created once, loads necessary secrets,
+     * and configures the CFOs instance for the current platform.
+     *
+     * @return bool Returns true if initialization is successful, false on error.
      */
     public function initCFOs(): bool
     {
@@ -243,15 +296,34 @@ class MCPCore7
     }
 }
 
+/**
+ * Class PhpSessionStore
+ * Implements a session management system based on PHP sessions, using a UUID as a session identifier.
+ * Provides methods for starting sessions, checking existence, reading, writing, and destroying session data.
+ */
 class PhpSessionStore implements SessionStoreInterface
 {
     private const SESSION_KEY = 'mcp_data';
 
+    /**
+     * Constructor method for the class.
+     *
+     * @param int $ttl Time-to-live value in seconds. Default is 3600.
+     * @return void
+     */
     public function __construct(
         private readonly int $ttl = 3600
     ) {
     }
 
+    /**
+     * Starts a new session for the provided UUID.
+     * Closes any existing active session and initializes a new session using a
+     * sanitized version of the provided UUID as the session ID.
+     *
+     * @param Uuid $id The UUID used to generate a valid PHP session ID.
+     * @return void
+     */
     private function startSessionFor(Uuid $id): void
     {
         // Close any existing session
@@ -267,6 +339,14 @@ class PhpSessionStore implements SessionStoreInterface
         session_start();
     }
 
+    /**
+     * Checks whether a session exists and is valid for the provided UUID.
+     * Verifies the session's existence, its key, and validity based on the configured time-to-live (TTL).
+     * If the session is invalid or expired, it destroys the session and returns false.
+     *
+     * @param Uuid $id The UUID used to identify the session.
+     * @return bool Returns true if a valid session exists, false otherwise.
+     */
     public function exists(Uuid $id): bool
     {
         $this->startSessionFor($id);
@@ -285,6 +365,14 @@ class PhpSessionStore implements SessionStoreInterface
         return true;
     }
 
+    /**
+     * Reads the stored session value for the provided UUID.
+     * Verifies session existence and validates its age based on the TTL.
+     * Returns the session value or false if the session is invalid or expired.
+     *
+     * @param Uuid $id The UUID used to identify and access the session.
+     * @return string|false The session value if valid, or false if the session does not exist or has expired.
+     */
     public function read(Uuid $id): string|false
     {
         $this->startSessionFor($id);
@@ -303,6 +391,15 @@ class PhpSessionStore implements SessionStoreInterface
         return $_SESSION[self::SESSION_KEY];
     }
 
+    /**
+     * Writes data to the session for the given UUID.
+     * Initiates a session for the provided UUID, stores the given data and a timestamp
+     * in the session, and closes the session after writing.
+     *
+     * @param Uuid $id The UUID used to identify and start a specific session.
+     * @param string $data The data to be written to the session.
+     * @return bool Returns true upon successfully writing data to the session.
+     */
     public function write(Uuid $id, string $data): bool
     {
         $this->startSessionFor($id);
@@ -315,6 +412,14 @@ class PhpSessionStore implements SessionStoreInterface
         return true;
     }
 
+    /**
+     * Destroys the active session associated with the provided UUID.
+     * Starts a session for the given UUID before attempting to destroy it,
+     * ensuring the correct session is targeted.
+     *
+     * @param Uuid $id The UUID used to identify the session to be destroyed.
+     * @return bool Returns true after the session is successfully destroyed.
+     */
     public function destroy(Uuid $id): bool
     {
         $this->startSessionFor($id);
@@ -326,6 +431,14 @@ class PhpSessionStore implements SessionStoreInterface
         return true;
     }
 
+    /**
+     * Performs garbage collection for PHP sessions automatically.
+     *
+     * PHP's session garbage collection operates based on the configuration
+     * settings for session.gc_probability and session.gc_maxlifetime.
+     *
+     * @return array Returns an empty array as the result of garbage collection.
+     */
     public function gc(): array
     {
         // PHP's session garbage collection handles this automatically
