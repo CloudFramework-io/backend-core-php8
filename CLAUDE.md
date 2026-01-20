@@ -777,6 +777,94 @@ git checkout main && git pull origin main && git merge development && git push o
 git checkout development
 ```
 
+### Generar nueva release
+
+Para generar y publicar una nueva release en GitHub con documentación completa:
+
+1. **Identificar las versiones** a comparar:
+   ```bash
+   git tag --sort=-version:refname | head -5
+   ```
+
+2. **Analizar los cambios** entre la versión anterior y la actual:
+   ```bash
+   # Ver commits entre versiones
+   git log {VERSION_ANTERIOR}..{VERSION_ACTUAL} --oneline
+
+   # Ver resumen de ficheros modificados
+   git diff {VERSION_ANTERIOR}..{VERSION_ACTUAL} --stat
+
+   # Ver cambios detallados de ficheros específicos
+   git diff {VERSION_ANTERIOR}..{VERSION_ACTUAL} -- path/to/file.php
+   ```
+
+3. **Generar documentación** en inglés con las siguientes secciones:
+   - **Overview**: Resumen ejecutivo de la release
+   - **New Features**: Nuevas funcionalidades organizadas por categoría
+   - **Technical Improvements**: Mejoras técnicas y optimizaciones
+   - **Breaking Changes**: Cambios que rompen compatibilidad (si los hay)
+   - **File Changes**: Resumen de ficheros modificados (output de `--stat`)
+   - **Requirements**: Dependencias necesarias
+   - **Getting Started**: Instrucciones de uso básico
+   - **Documentation**: Enlaces a documentación relevante
+
+4. **Publicar la release** en GitHub:
+   ```bash
+   gh release create {VERSION} --title "Release {VERSION} - {TITULO}" --notes "{RELEASE_NOTES}"
+   ```
+
+**Ejemplo completo:**
+```bash
+# 1. Identificar versiones
+git tag --sort=-version:refname | head -3
+# Output: 8.4.27, 8.4.26, 8.4.25
+
+# 2. Analizar cambios
+git log 8.4.26..8.4.27 --oneline
+git diff 8.4.26..8.4.27 --stat
+
+# 3. Generar documentación (en inglés, formato Markdown)
+
+# 4. Publicar release
+gh release create 8.4.27 --title "Release 8.4.27 - MCP Server Support" --notes "## Overview
+...release notes en markdown..."
+```
+
+**Formato de Release Notes:**
+```markdown
+## Overview
+Brief description of the release highlights.
+
+## New Features
+### Feature Category
+- **Feature name**: Description
+
+## Technical Improvements
+### Category
+- Improvement description
+
+## Breaking Changes
+None. / List of breaking changes.
+
+## File Changes
+```
+ file1.php | 10 ++-
+ file2.php | 25 ++++++
+```
+
+## Requirements
+- Requirement 1
+- Requirement 2
+
+## Getting Started
+1. Step 1
+2. Step 2
+
+## Documentation
+- [Link 1](url)
+- [Link 2](url)
+```
+
 ## File Structure
 
 ```
