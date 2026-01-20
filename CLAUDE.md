@@ -728,6 +728,55 @@ Recent commits follow pattern:
 [check:{check_id}][task:{task_id}] Description with check reference
 ```
 
+### Sube la versión del framework
+
+Para crear una nueva release del framework, seguir estos pasos:
+
+1. **Actualizar versiones** en los siguientes ficheros (ejemplo: de 8.4.26 a 8.4.27):
+   - `src/Core7.php` - Variable `$_version` (línea ~171)
+   - `install/composer-dist.json` - Dependencia `cloudframework-io/backend-core-php8`
+   - `install/composer-mcp-dist.json` - Dependencia `cloudframework-io/backend-core-php8`
+
+2. **Commit de versión** en rama `development`:
+   ```bash
+   git add src/Core7.php install/composer-dist.json install/composer-mcp-dist.json
+   git commit -m "Bump version to X.Y.Z"
+   ```
+
+3. **Crear tag** con la nueva versión:
+   ```bash
+   git tag -a X.Y.Z -m "Version X.Y.Z - Descripción breve"
+   ```
+
+4. **Push a development** con tags:
+   ```bash
+   git push origin development --tags
+   ```
+
+5. **Merge a main** y push:
+   ```bash
+   git checkout main
+   git pull origin main
+   git merge development
+   git push origin main --tags
+   ```
+
+6. **Volver a development**:
+   ```bash
+   git checkout development
+   ```
+
+**Ejemplo completo:**
+```bash
+# En rama development
+git add src/Core7.php install/composer-dist.json install/composer-mcp-dist.json
+git commit -m "Bump version to 8.4.27"
+git tag -a 8.4.27 -m "Version 8.4.27 - MCP Server support"
+git push origin development --tags
+git checkout main && git pull origin main && git merge development && git push origin main --tags
+git checkout development
+```
+
 ## File Structure
 
 ```
