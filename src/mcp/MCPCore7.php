@@ -138,9 +138,12 @@ class MCPCore7
     }
 
     /**
-     * Validate MCP OAuth token against the OAuth API
+     * Validates the MCP OAuth token and initializes the user session upon successful authentication.
+     *
+     * @param string $oauthToken The OAuth token to be validated.
+     * @return bool
      */
-    protected function validateMCPOAuthToken(string $oauthToken): void
+    protected function validateMCPOAuthToken(string $oauthToken): bool
     {
         $params = [];
         if(empty($_SESSION['token'])
@@ -156,29 +159,47 @@ class MCPCore7
 
         if ($this->core->request->error) {
             $this->core->logs->add('MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg), 'oauth-access_token_verification-error');
-            return;
+            $this->error = true;
+            $this->errorCode = 'oauth-access_token_verification-error';
+            $this->errorMsg = ['MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg)];
+            return false;
         }
 
         if (!($response['data']['valid'] ?? false)) {
             $this->core->logs->add('MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown'), 'oauth-access_token_verification-error');
-            return;
+            $this->error = true;
+            $this->errorCode = 'oauth-access_token_verification-error';
+            $this->errorMsg = ['MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown')];
+            return false;
         }
 
         if (!($response['data']['user'] ?? false)) {
             $this->core->logs->add('MCP OAuth token verification error. It missed [user] attribute','oauth-access_token_verification-error');
-            return;
+            $this->error = true;
+            $this->errorCode = 'oauth-access_token_verification-error';
+            $this->errorMsg = ['MCP OAuth token verification error. It missed [user] attribute'];
+            return false;
         }
         if (!($response['data']['data'] ?? false)) {
             $this->core->logs->add('MCP OAuth token verification error. It missed [data] attribute','oauth-access_token_verification-error');
-            return;
+            $this->error = true;
+            $this->errorCode = 'oauth-access_token_verification-error';
+            $this->errorMsg = ['MCP OAuth token verification error. It missed [data] attribute'];
+            return false;
         }
         if (!($response['data']['platform'] ?? false)) {
             $this->core->logs->add('MCP OAuth token verification error. It missed [platform] attribute','oauth-access_token_verification-error');
-            return;
+            $this->error = true;
+            $this->errorCode = 'oauth-access_token_verification-error';
+            $this->errorMsg = ['MCP OAuth token verification error. It missed [platform] attribute'];
+            return false;
         }
         if (!empty($params['dstoken']) &&  !($response['data']['dstoken'] ?? false)) {
             $this->core->logs->add('MCP OAuth token verification error. It missed [dstoken] attribute','oauth-access_token_verification-error');
-            return;
+            $this->error = true;
+            $this->errorCode = 'oauth-access_token_verification-error';
+            $this->errorMsg = ['MCP OAuth token verification error. It missed [dstoken] attribute'];
+            return false;
         }
 
         $_SESSION['token'] = $oauthToken;
@@ -191,6 +212,8 @@ class MCPCore7
         $this->initUserFromSession();
 
         $this->core->logs->add('MCP OAuth AccessToken authenticated: ' . $this->core->user->id, 'oauth');
+
+        return true;
     }
 
     /**

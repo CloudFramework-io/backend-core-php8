@@ -24,7 +24,7 @@ class Auth extends \MCPCore7
      *                      or an error message if the process fails.
      */
     #[McpTool(name: 'set_dstoken')]
-    public function set_token(string $token): string|array
+    public function set_dstoken(string $token): string|array
     {
 
         if(!strpos($token,'__')) return "Error: Token is not valid";
@@ -43,6 +43,34 @@ class Auth extends \MCPCore7
 
     }
     //endregion
+
+    /**
+     * Set token and initialize session variables, validating the token in the process.
+     *
+     * @param string $token The primary token to be set and validated.
+     * @param string|null $refresh_token Optional refresh token to store in the session.
+     * @return string|array Returns the user ID on successful validation or an error message on failure.
+     */
+    private function set_token(string $token,?string $refresh_token=null): string|array
+    {
+
+        if(!strpos($token,'__')) return "Error: Token is not valid";
+        list($platform,$foom) = explode('__',$token,2);
+        $_SESSION['token'] = $token;
+        $_SESSION['platform'] = $platform;
+        $_SESSION['refresh_token'] = $refresh_token;
+        $_SESSION['dstoken'] = null;
+        $_SESSION['user'] = null;
+        $_SESSION['data'] = null;
+
+        if(!$this->validateMCPOAuthToken($token)) {
+            return "Error: token [{$this->errorCode}] ".json_encode($this->errorMsg);
+        }
+
+        return $this->core->user->id;
+
+
+    }
 
     //region clean_dstoken
     /**
@@ -112,16 +140,16 @@ class Auth extends \MCPCore7
     public function test_dstoken(): string
     {
 
-        if(!$dstoken = $this->core->user->token) return "Error: No token provided";
-        if(!$user = $this->core->user->id) return "Error: No id loaded";
+        if(empty($_SESSION['dstoken'])) return "error: no [dstoken] not found";
+        if(empty($_SESSION['user'])) return "error: no [user] not found";
 
         if(!($this->secrets['api_login_integration_key']??null))
             if(!$this->readSecrets())
                 return "Error [{$this->errorCode}] ".json_encode($this->errorMsg);
 
-        $this->core->user->loadPlatformUserWithToken($dstoken,$this->secrets['api_login_integration_key']);
-        if($this->core->user->error) return "Error: token [{$dstoken}] is not valid: ".json_encode($this->core->user->errorMsg);
-        if($user != $this->core->user->id) return "Error: token [{$dstoken}] is not valid for user [{$user}]";
+        $this->core->user->loadPlatformUserWithToken($_SESSION['dstoken'],$this->secrets['api_login_integration_key']);
+        if($this->core->user->error) return "Error: token [{$_SESSION['dstoken']}] is not valid: ".json_encode($this->core->user->errorMsg);
+        if($_SESSION['user'] != $this->core->user->id) return "Error: token [{$_SESSION['dstoken']}] is not valid for user [{$_SESSION['user']}]";
 
         return $this->core->user->id;
     }
@@ -396,9 +424,9 @@ class Auth extends \MCPCore7
         $this->core->logs->add('CALL oauthRefresh','debug');
 
         if(empty($current_access_token) && empty($_SESSION['token']))
-            return ['error'=>true,'message'=>'Error: no refresh token provided'];
+            return ['error'=>true,'message'=>'Error: no refresh token provided and Session token not found'];
         if(empty($refresh_token) && empty($_SESSION['refresh_token']))
-            return ['error'=>true,'message'=>'Error: no refresh token provided'];
+            return ['error'=>true,'message'=>'Error: no refresh token provided and Session refresh token not found'];
 
         $tokenParams = [
             'grant_type' => 'refresh_token',
@@ -505,22 +533,11 @@ class Auth extends \MCPCore7
      * @return array Restoration status and user info if successful
      */
     #[McpTool(name: 'session_restore')]
-    public function sessionRestore(string $token = ''): array
+    public function sessionRestore(string $token,?string $refresh_token=null): array
     {
-        // Check if already authenticated via header
-        if ($this->core->user->isAuth()) {
-            return [
-                'status' => 'already_authenticated',
-                'method' => 'oauth_header',
-                'user' => $this->core->user->id,
-                'platform' => $this->core->user->namespace,
-                'message' => 'Session restored automatically via OAuth header'
-            ];
-        }
-        
         // Try with provided token
         if (!empty($token)) {
-            $result = $this->set_token($token);
+            $result = $this->set_token($token,$refresh_token);
             if (is_string($result) && strpos($result, 'Error') === false) {
                 return [
                     'status' => 'restored',
@@ -537,20 +554,7 @@ class Auth extends \MCPCore7
                 ];
             }
         }
-        
-        // Check for stored dstoken in session
-        $storedToken = $_SESSION['dstoken'] ?? $_SESSION['token'] ?? null;
-        if ($storedToken) {
-            $result = $this->set_token($storedToken);
-            if (is_string($result) && strpos($result, 'Error') === false) {
-                return [
-                    'status' => 'restored',
-                    'method' => 'stored_token',
-                    'user' => $result,
-                    'message' => 'Session restored with stored token'
-                ];
-            }
-        }
+
         
         // No way to restore
         return [
