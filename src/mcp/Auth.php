@@ -33,11 +33,15 @@ class Auth extends \MCPCore7
 
         if(!($this->secrets['api_login_integration_key']??null))
             if(!$this->readSecrets())
-                return "Error [{$this->errorCode}] ".json_encode($this->errorMsg);
+                return "Error reading secrets [{$this->errorCode}] ".json_encode($this->errorMsg);
 
         $this->core->user->loadPlatformUserWithToken($token,$this->secrets['api_login_integration_key']);
-        if($this->core->user->error) return "Error: token [{$token}] is not valid: ".json_encode($this->core->user->errorMsg);
+        if($this->core->user->error) return "Error: token [{$token}] is not valid: [{$this->secrets['api_login_integration_key']}] ".json_encode($this->core->user->errorMsg);
+        if(($_SESSION['user']??null) && ($_SESSION['token']??null) && $_SESSION['user']!=$this->core->user->id) {
+            return "Error: dstoken [{$token}] is not valid for user [{$_SESSION['user']}]";
+        }
         $_SESSION['dstoken'] = $token;
+        if(!($_SESSION['user']??null) && !($_SESSION['token']??null)) $_SESSION['user'] = $this->core->user->id;
         return $this->core->user->id;
 
 

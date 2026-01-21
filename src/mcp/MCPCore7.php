@@ -43,10 +43,6 @@ class MCPCore7
                 || !$this->initUserFromSession()
             ) {
                 $this->validateMCPOAuthToken($oauthToken);
-                if(!$this->core->user->isAuth()) {
-                    $this->error = true;
-                    $this->errorMsg = ['Invalid OAuth token'];
-                }
             }
         }
         //X-DS-TOKEN
@@ -55,9 +51,9 @@ class MCPCore7
             if(!empty($this->secrets['api_login_integration_key'])) {
                 $this->core->user->loadPlatformUserWithToken($dstoken, $this->secrets['api_login_integration_key']);
                 if ($this->core->user->error) {
-                    $_SESSION['dstoken'] = null;
-                    $_SESSION['user'] = null;
-                    return "Error: dstoken [{$dstoken}] is not valid: " . json_encode($this->core->user->errorMsg);
+                    $this->error = true;
+                    $this->errorCode = 'dstoken-auth-error';
+                    $this->errorMsg = $this->core->user->errorMsg;
                 }
             }
         }
