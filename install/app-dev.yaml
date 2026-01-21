@@ -1,0 +1,40 @@
+service: mcp-php
+runtime: php84
+instance_class: F2
+automatic_scaling:
+  max_concurrent_requests: 10
+  max_instances: 3
+
+# mcp server entry point
+entrypoint: serve vendor/cloudframework-io/backend-core-php8/src/mcp-server.php
+
+handlers:
+
+  # Block access to config.json
+  - url: /config\.json
+    static_files: default_error_404.json
+    upload: default_error_404.json
+    secure: always
+
+  # Serve images and other static resources, excluding config.json.
+  - url: /(.+\.(gif|png|jpg|css|ico|txt|htm|js|ttf|woff|eot|svg|woff2|json|html|xml|mp4|ogg|webm|m4v|3gp|pdf))$
+    static_files: \1
+    upload: .+\.(gif|png|jpg|css|ico|txt|htm|js|ttf|woff|eot|svg|woff2|json|html|xml|mp4|ogg|webm|m4v|3gp|pdf)$
+    secure: optional
+
+  # Serve your app through a front controller at index.php or public/index.php.
+  - url: .*
+    script: auto
+
+env_variables:
+  PROJECT_ID: "your-project"
+  LOCATION_ID: "europe-west1|or other"
+  QUEUE_ID: "default"
+  DATASTORE_DATASET: "your-project"
+  # https://console.cloud.google.com/memorystore/redis/locations/europe-west1/instances/cloudframework-redis-es/details?project={your-project}
+  REDIS_HOST: "your-ip"
+  REDIS_PORT: "your-port"
+
+# https://cloud.google.com/appengine/docs/standard/php7/connecting-vpc#configuring
+vpc_access_connector:
+  name: "projects/{your-project}/locations/{your-location}/connectors/{connector-name-where-redis-has-access}
