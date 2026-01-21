@@ -362,25 +362,28 @@ class PhpSessionStore implements SessionStoreInterface
 
     /**
      * Checks whether a session exists and is valid for the provided UUID.
-     * Verifies the session's existence, its key, and validity based on the configured time-to-live (TTL).
-     * If the session is invalid or expired, it destroys the session and returns false.
+     * Auto-creates the session if it doesn't exist to avoid "Session not found" errors.
      *
      * @param Uuid $id The UUID used to identify the session.
-     * @return bool Returns true if a valid session exists, false otherwise.
+     * @return bool Always returns true (auto-creates session if needed).
      */
     public function exists(Uuid $id): bool
     {
         $this->startSessionFor($id);
 
+        // Auto-create session if it doesn't exist
         if (!isset($_SESSION[self::SESSION_KEY])) {
-            return false;
+            $_SESSION[self::SESSION_KEY] = '{}';
+            $_SESSION['mcp_timestamp'] = time();
+            return true;
         }
 
         $timestamp = $_SESSION['mcp_timestamp'] ?? 0;
 
+        // Renew expired sessions instead of destroying them
         if ((time() - $timestamp) > $this->ttl) {
-            session_destroy();
-            return false;
+            $_SESSION[self::SESSION_KEY] = '{}';
+            $_SESSION['mcp_timestamp'] = time();
         }
 
         return true;
@@ -388,25 +391,28 @@ class PhpSessionStore implements SessionStoreInterface
 
     /**
      * Reads the stored session value for the provided UUID.
-     * Verifies session existence and validates its age based on the TTL.
-     * Returns the session value or false if the session is invalid or expired.
+     * Auto-creates the session if it doesn't exist to avoid "Session not found" errors.
      *
      * @param Uuid $id The UUID used to identify and access the session.
-     * @return string|false The session value if valid, or false if the session does not exist or has expired.
+     * @return string The session value (auto-creates with empty JSON if not exists).
      */
     public function read(Uuid $id): string|false
     {
         $this->startSessionFor($id);
 
+        // Auto-create session if it doesn't exist
         if (!isset($_SESSION[self::SESSION_KEY])) {
-            return false;
+            $_SESSION[self::SESSION_KEY] = '{}';
+            $_SESSION['mcp_timestamp'] = time();
+            return $_SESSION[self::SESSION_KEY];
         }
 
         $timestamp = $_SESSION['mcp_timestamp'] ?? 0;
 
+        // Renew expired sessions instead of destroying them
         if ((time() - $timestamp) > $this->ttl) {
-            session_destroy();
-            return false;
+            $_SESSION[self::SESSION_KEY] = '{}';
+            $_SESSION['mcp_timestamp'] = time();
         }
 
         return $_SESSION[self::SESSION_KEY];
