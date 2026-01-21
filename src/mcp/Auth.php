@@ -393,6 +393,8 @@ class Auth extends \MCPCore7
     #[McpTool(name: 'oauth_refresh')]
     public function oauthRefresh(string $current_access_token='',string $refresh_token=''): array
     {
+        $this->core->logs->add('CALL oauthRefresh','debug');
+
         if(empty($current_access_token) && empty($_SESSION['token']))
             return ['error'=>true,'message'=>'Error: no refresh token provided'];
         if(empty($refresh_token) && empty($_SESSION['refresh_token']))
@@ -402,8 +404,9 @@ class Auth extends \MCPCore7
             'grant_type' => 'refresh_token',
             'client_id' => 'cloudia-mcp',
             'access_token' => ($current_access_token??'')?:$_SESSION['token'],
-            'refresh_token' => $refresh_token??$_SESSION['refresh_token']
+            'refresh_token' => ($refresh_token??'')?:$_SESSION['refresh_token']
         ];
+        $this->core->logs->add($tokenParams,'tokenParams');
         
         $response = $this->core->request->post_json_decode(
             $this->oauthServer . '/token',
