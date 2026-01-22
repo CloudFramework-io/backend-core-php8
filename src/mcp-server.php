@@ -57,53 +57,48 @@ if ($requestMethod === 'OPTIONS') {
     exit;
 }
 
-// OAuth Protected Resource Metadata (RFC 8707)
-if ($requestPath === '/.well-known/oauth-protected-resource') {
-    $serverUrl = $request->getUri()->getScheme() . '://' . $request->getUri()->getHost();
-    if ($request->getUri()->getPort() && !in_array($request->getUri()->getPort(), [80, 443])) {
-        $serverUrl .= ':' . $request->getUri()->getPort();
+// Load default WellKnown class from framework
+include_once(__DIR__ . "/mcp/WellKnown.php");
+
+// Check for custom WellKnown class in project (overrides default)
+$wellKnownClass = 'WellKnown';  // Default framework class
+$wellKnownFile = $root_path . '/mcp/WellKnown.php';
+if (file_exists($wellKnownFile)) {
+    require_once $wellKnownFile;
+    if (class_exists('App\\Mcp\\WellKnown')) {
+        $wellKnownClass = 'App\\Mcp\\WellKnown';
     }
-
-    $metadata = [
-        'resource' => $serverUrl,
-        'authorization_servers' => [
-            'https://api.cloudframework.io'  // CloudFramework OAuth server
-        ],
-        'bearer_methods_supported' => ['header'],
-        'resource_documentation' => 'https://docs.cloudframework.io/mcp',
-        'resource_signing_alg_values_supported' => ['RS256'],
-        'resource_name' => 'CloudFramework MCP Server',
-        'resource_policy_uri' => 'https://cloudframework.io/privacy'
-    ];
-
-    $response = $psr17Factory->createResponse(200)
-        ->withHeader('Content-Type', 'application/json')
-        ->withHeader('Access-Control-Allow-Origin', '*')
-        ->withBody($psr17Factory->createStream(json_encode($metadata, JSON_PRETTY_PRINT)));
-    (new SapiEmitter())->emit($response);
-    exit;
 }
 
-// OAuth Authorization Server Metadata (for clients that need it)
-if ($requestPath === '/.well-known/oauth-authorization-server') {
-    $metadata = [
-        'issuer' => 'https://api.cloudframework.io',
-        // Dynamic Client Registration not supported - use pre-registered client_id: 'cloudia-mcp'
-        //'registration_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/register',
-        'authorization_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/authorize',
-        'token_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/token',
-        'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic'],
-        'grant_types_supported' => ['authorization_code', 'refresh_token'],
-        'response_types_supported' => ['code'],
-        'code_challenge_methods_supported' => ['S256'],  // PKCE required
-        'scopes_supported' => ['openid', 'profile', 'email', 'projects', 'tasks'],
-        'service_documentation' => 'https://docs.cloudframework.io/oauth'
-    ];
+// Calculate server URL once for endpoints that need it
+$serverUrl = $request->getUri()->getScheme() . '://' . $request->getUri()->getHost();
+if ($request->getUri()->getPort() && !in_array($request->getUri()->getPort(), [80, 443])) {
+    $serverUrl .= ':' . $request->getUri()->getPort();
+}
+
+// Get supported endpoints from WellKnown class (custom or default)
+$wellKnownEndpoints = method_exists($wellKnownClass, 'getSupportedEndpoints')
+    ? $wellKnownClass::getSupportedEndpoints()
+    : WellKnown::getSupportedEndpoints();
+
+// Handle .well-known endpoints
+if (isset($wellKnownEndpoints[$requestPath])) {
+    $endpoint = $wellKnownEndpoints[$requestPath];
+    $method = $endpoint['method'];
+    $args = ($endpoint['needsServerUrl'] ?? false) ? [$serverUrl] : [];
+
+    // Check if custom class has the method, otherwise use default
+    if (method_exists($wellKnownClass, $method)) {
+        $metadata = call_user_func_array([$wellKnownClass, $method], $args);
+    } else {
+        $metadata = call_user_func_array(['WellKnown', $method], $args);
+    }
 
     $response = $psr17Factory->createResponse(200)
         ->withHeader('Content-Type', 'application/json')
         ->withHeader('Access-Control-Allow-Origin', '*')
-        ->withBody($psr17Factory->createStream(json_encode($metadata, JSON_PRETTY_PRINT)));
+        ->withHeader('Cache-Control', 'public, max-age=3600')
+        ->withBody($psr17Factory->createStream(json_encode($metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)));
     (new SapiEmitter())->emit($response);
     exit;
 }
