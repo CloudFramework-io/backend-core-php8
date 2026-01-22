@@ -151,16 +151,22 @@ class MCPCore7
         // If WellKnown returns empty, use default CloudFramework OAuth config
         if (empty($config)) {
             $config = [
-                'issuer' => 'https://api.cloudframework.io',
-                'authorization_endpoint' => self::MCP_OAUTH_SERVER . '/authorize',
-                'token_endpoint' => self::MCP_OAUTH_SERVER . '/token',
-                'userinfo_endpoint' => self::MCP_OAUTH_SERVER . '/userinfo',
-                'registration_endpoint' => self::MCP_OAUTH_SERVER . '/register',
-                'scopes_supported' => ['openid', 'profile', 'email', 'projects', 'tasks'],
-                'response_types_supported' => ['code'],
-                'grant_types_supported' => ['authorization_code', 'refresh_token'],
-                'code_challenge_methods_supported' => ['S256'],
-                'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic']
+                //'issuer' => 'https://api.cloudframework.io',
+                //'authorization_endpoint' => self::MCP_OAUTH_SERVER . '/authorize',
+                //'token_endpoint' => self::MCP_OAUTH_SERVER . '/token',
+                //'userinfo_endpoint' => self::MCP_OAUTH_SERVER . '/userinfo',
+                // 'registration_endpoint' => self::MCP_OAUTH_SERVER . '/register',
+                // 'revocation_endpoint' => self::AUTH_SERVER . self::OAUTH_PATH . '/revoke',
+                //'introspection_endpoint' => self::AUTH_SERVER . self::OAUTH_PATH . '/introspect',
+                // 'jwks_uri' => self::AUTH_SERVER . '/.well-known/jwks.json',
+                //'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic', 'client_secret_post'],
+                //'grant_types_supported' => ['authorization_code', 'refresh_token'],
+                //'response_types_supported' => ['code'],
+                //'response_modes_supported' => ['query', 'fragment'],
+                //'code_challenge_methods_supported' => ['S256'],
+                //'scopes_supported' => ['openid', 'profile', 'email', 'offline_access', 'projects', 'tasks'],
+                //'claims_supported' => ['sub', 'iss', 'aud', 'exp', 'iat', 'name', 'email', 'email_verified'],
+                //'service_documentation' => 'https://docs.cloudframework.io/cloudia/oauth'
             ];
         }
 
