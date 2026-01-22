@@ -8,6 +8,18 @@ use Symfony\Component\Uid\Uuid;
  */
 class MCPCore7
 {
+    // Session key constants for consistent access across MCP classes
+    protected const SESSION_TOKEN = 'token';
+    protected const SESSION_DSTOKEN = 'dstoken';
+    protected const SESSION_USER = 'user';
+    protected const SESSION_DATA = 'data';
+    protected const SESSION_PLATFORM = 'platform';
+    protected const SESSION_REFRESH_TOKEN = 'refresh_token';
+    protected const SESSION_OAUTH_STATE = 'oauth_state';
+    protected const SESSION_OAUTH_CODE_VERIFIER = 'oauth_code_verifier';
+    protected const SESSION_OAUTH_PLATFORM = 'oauth_platform';
+    protected const SESSION_OAUTH_REDIRECT_URI = 'oauth_redirect_uri';
+
     /** @var Core7 $core */
     protected $core;
     /** @var RESTful $api */
@@ -47,17 +59,17 @@ class MCPCore7
         //region EVALUATE Authentication
         // Authorization Token
         $oauthToken = substr($this->api->getHeader('Authorization') ?? '',7);
-        if(!$oauthToken && !empty($_SESSION['token'] ))
-            $oauthToken = $_SESSION['token'];
+        if(!$oauthToken && !empty($_SESSION[self::SESSION_TOKEN]))
+            $oauthToken = $_SESSION[self::SESSION_TOKEN];
         if($oauthToken && strpos($oauthToken, '__mcp_') !== false) {
-            if (($_SESSION['token'] ?? null) !== $oauthToken
+            if (($_SESSION[self::SESSION_TOKEN] ?? null) !== $oauthToken
                 || !$this->initUserFromSession()
             ) {
                 $this->validateMCPOAuthToken($oauthToken);
             }
         }
         //X-DS-TOKEN
-        elseif($dstoken = $_SESSION['dstoken']??null) {
+        elseif($dstoken = $_SESSION[self::SESSION_DSTOKEN] ?? null) {
             $this->readSecrets();
             if(!empty($this->secrets['api_login_integration_key'])) {
                 $this->core->user->loadPlatformUserWithToken($dstoken, $this->secrets['api_login_integration_key']);
@@ -83,14 +95,14 @@ class MCPCore7
     private function initUserFromSession(): bool
     {
         $this->core->user->reset();
-        if ( !empty($_SESSION['user'])
-            && !empty($_SESSION['data'])
-            && !empty($_SESSION['platform'])
+        if ( !empty($_SESSION[self::SESSION_USER])
+            && !empty($_SESSION[self::SESSION_DATA])
+            && !empty($_SESSION[self::SESSION_PLATFORM])
         ) {
-            $this->core->user->token = $_SESSION['dstoken']??null;
-            $this->core->user->id = $_SESSION['user'];
-            $this->core->user->data = ['User'=>$_SESSION['data']];
-            $this->core->user->namespace = $_SESSION['platform'];
+            $this->core->user->token = $_SESSION[self::SESSION_DSTOKEN] ?? null;
+            $this->core->user->id = $_SESSION[self::SESSION_USER];
+            $this->core->user->data = ['User' => $_SESSION[self::SESSION_DATA]];
+            $this->core->user->namespace = $_SESSION[self::SESSION_PLATFORM];
             $this->core->user->isAuth = true;
             return true;
         }
@@ -154,9 +166,9 @@ class MCPCore7
     protected function validateMCPOAuthToken(string $oauthToken): bool
     {
         $params = [];
-        if(empty($_SESSION['token'])
-            || empty($_SESSION['dstoken'])
-            || $_SESSION['token'] === $oauthToken  ) {
+        if(empty($_SESSION[self::SESSION_TOKEN])
+            || empty($_SESSION[self::SESSION_DSTOKEN])
+            || $_SESSION[self::SESSION_TOKEN] === $oauthToken) {
             $params['dstoken'] = 1;
         }
         $response = $this->core->request->get_json_decode(
@@ -210,12 +222,12 @@ class MCPCore7
             return false;
         }
 
-        $_SESSION['token'] = $oauthToken;
-        $_SESSION['user'] = $response['data']['user'];
-        $_SESSION['data'] = $response['data']['data'];
-        $_SESSION['platform'] = $response['data']['platform'] ?? 'cloudframework';
+        $_SESSION[self::SESSION_TOKEN] = $oauthToken;
+        $_SESSION[self::SESSION_USER] = $response['data']['user'];
+        $_SESSION[self::SESSION_DATA] = $response['data']['data'];
+        $_SESSION[self::SESSION_PLATFORM] = $response['data']['platform'] ?? 'cloudframework';
         if(!empty($params['dstoken']))
-            $_SESSION['dstoken'] = $response['data']['dstoken'];
+            $_SESSION[self::SESSION_DSTOKEN] = $response['data']['dstoken'];
 
         $this->initUserFromSession();
 
@@ -253,14 +265,14 @@ class MCPCore7
             return;
         }
 
-        $_SESSION['token'] = $token;
-        $_SESSION['user'] = $response['data'];
-        $_SESSION['platform'] = $response['data']['platform'] ?? 'cloudframework';
+        $_SESSION[self::SESSION_TOKEN] = $token;
+        $_SESSION[self::SESSION_USER] = $response['data'];
+        $_SESSION[self::SESSION_PLATFORM] = $response['data']['platform'] ?? 'cloudframework';
 
-        $this->core->user->id = $_SESSION['user']['User']['KeyName'];
-        $this->core->user->token = $_SESSION['token'];
-        $this->core->user->data = ['User' => $_SESSION['user']['User']];
-        $this->core->user->namespace = $this->platform = $_SESSION['platform'];
+        $this->core->user->id = $_SESSION[self::SESSION_USER]['User']['KeyName'];
+        $this->core->user->token = $_SESSION[self::SESSION_TOKEN];
+        $this->core->user->data = ['User' => $_SESSION[self::SESSION_USER]['User']];
+        $this->core->user->namespace = $this->platform = $_SESSION[self::SESSION_PLATFORM];
         $this->core->user->isAuth = true;
 
         $this->core->logs->add('CloudFramework authenticated: ' .  $this->core->user->id, 'oauth');

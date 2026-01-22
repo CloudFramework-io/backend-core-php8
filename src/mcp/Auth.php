@@ -30,7 +30,7 @@ class Auth extends \MCPCore7
         if (!$parsed) {
             return ['error' => true, 'code' => 'invalid-token-format', 'message' => 'Token format is not valid. Expected format: platform__token'];
         }
-        $_SESSION['dstoken'] = null;
+        $_SESSION[self::SESSION_DSTOKEN] = null;
 
         if (!$this->ensureSecrets()) {
             return ['error' => true, 'code' => $this->errorCode, 'message' => 'Error reading secrets', 'details' => $this->errorMsg];
@@ -40,11 +40,11 @@ class Auth extends \MCPCore7
         if($this->core->user->error) {
             return ['error' => true, 'code' => 'token-validation-failed', 'message' => 'Token is not valid', 'details' => $this->core->user->errorMsg];
         }
-        if(($_SESSION['user']??null) && ($_SESSION['token']??null) && $_SESSION['user']!=$this->core->user->id) {
-            return ['error' => true, 'code' => 'user-mismatch', 'message' => "Dstoken is not valid for user [{$_SESSION['user']}]"];
+        if(($_SESSION[self::SESSION_USER] ?? null) && ($_SESSION[self::SESSION_TOKEN] ?? null) && $_SESSION[self::SESSION_USER] != $this->core->user->id) {
+            return ['error' => true, 'code' => 'user-mismatch', 'message' => "Dstoken is not valid for user [{$_SESSION[self::SESSION_USER]}]"];
         }
-        $_SESSION['dstoken'] = $token;
-        if(!($_SESSION['user']??null) && !($_SESSION['token']??null)) $_SESSION['user'] = $this->core->user->id;
+        $_SESSION[self::SESSION_DSTOKEN] = $token;
+        if(!($_SESSION[self::SESSION_USER] ?? null) && !($_SESSION[self::SESSION_TOKEN] ?? null)) $_SESSION[self::SESSION_USER] = $this->core->user->id;
 
         return ['success' => true, 'user_id' => $this->core->user->id, 'message' => 'Token set successfully'];
     }
@@ -64,12 +64,12 @@ class Auth extends \MCPCore7
         if (!$parsed) {
             return ['error' => true, 'code' => 'invalid-token-format', 'message' => 'Token format is not valid. Expected format: platform__token'];
         }
-        $_SESSION['token'] = $token;
-        $_SESSION['platform'] = $parsed['platform'];
-        $_SESSION['refresh_token'] = $refresh_token;
-        $_SESSION['dstoken'] = null;
-        $_SESSION['user'] = null;
-        $_SESSION['data'] = null;
+        $_SESSION[self::SESSION_TOKEN] = $token;
+        $_SESSION[self::SESSION_PLATFORM] = $parsed['platform'];
+        $_SESSION[self::SESSION_REFRESH_TOKEN] = $refresh_token;
+        $_SESSION[self::SESSION_DSTOKEN] = null;
+        $_SESSION[self::SESSION_USER] = null;
+        $_SESSION[self::SESSION_DATA] = null;
 
         if(!$this->validateMCPOAuthToken($token)) {
             return ['error' => true, 'code' => $this->errorCode, 'message' => 'Token validation failed', 'details' => $this->errorMsg];
@@ -87,7 +87,7 @@ class Auth extends \MCPCore7
     #[McpTool(name: 'clean_dstoken')]
     public function clean_dstoken(): array
     {
-        $_SESSION['dstoken'] = null;
+        $_SESSION[self::SESSION_DSTOKEN] = null;
         $this->core->user->token = null;
 
         return ['success' => true, 'message' => 'Dstoken cleared successfully'];
@@ -124,11 +124,11 @@ class Auth extends \MCPCore7
     #[McpTool(name: 'refresh_dstoken')]
     public function refresh_dstoken(): array
     {
-        if(empty($_SESSION['token'])) {
+        if(empty($_SESSION[self::SESSION_TOKEN])) {
             return ['error' => true, 'code' => 'no-access-token', 'message' => 'No access token found in session'];
         }
-        $_SESSION['dstoken'] = null;
-        $this->validateMCPOAuthToken($_SESSION['token']);
+        $_SESSION[self::SESSION_DSTOKEN] = null;
+        $this->validateMCPOAuthToken($_SESSION[self::SESSION_TOKEN]);
         if(!$this->core->user->isAuth()) {
             return ['error' => true, 'code' => 'dstoken-generation-failed', 'message' => 'Current access token cannot generate a valid dstoken'];
         }
@@ -146,10 +146,10 @@ class Auth extends \MCPCore7
     #[McpTool(name: 'test_dstoken')]
     public function test_dstoken(): array
     {
-        if(empty($_SESSION['dstoken'])) {
+        if(empty($_SESSION[self::SESSION_DSTOKEN])) {
             return ['error' => true, 'code' => 'no-dstoken', 'message' => 'No dstoken found in session'];
         }
-        if(empty($_SESSION['user'])) {
+        if(empty($_SESSION[self::SESSION_USER])) {
             return ['error' => true, 'code' => 'no-user', 'message' => 'No user found in session'];
         }
 
@@ -157,12 +157,12 @@ class Auth extends \MCPCore7
             return ['error' => true, 'code' => $this->errorCode, 'message' => 'Error reading secrets', 'details' => $this->errorMsg];
         }
 
-        $this->core->user->loadPlatformUserWithToken($_SESSION['dstoken'], $this->secrets['api_login_integration_key']);
+        $this->core->user->loadPlatformUserWithToken($_SESSION[self::SESSION_DSTOKEN], $this->secrets['api_login_integration_key']);
         if($this->core->user->error) {
             return ['error' => true, 'code' => 'token-validation-failed', 'message' => 'Dstoken is not valid', 'details' => $this->core->user->errorMsg];
         }
-        if($_SESSION['user'] != $this->core->user->id) {
-            return ['error' => true, 'code' => 'user-mismatch', 'message' => "Dstoken is not valid for user [{$_SESSION['user']}]"];
+        if($_SESSION[self::SESSION_USER] != $this->core->user->id) {
+            return ['error' => true, 'code' => 'user-mismatch', 'message' => "Dstoken is not valid for user [{$_SESSION[self::SESSION_USER]}]"];
         }
 
         return ['success' => true, 'user_id' => $this->core->user->id, 'message' => 'Dstoken is valid'];
@@ -227,10 +227,10 @@ class Auth extends \MCPCore7
         $state = bin2hex(random_bytes(16));
         
         // Store in session for later verification
-        $_SESSION['oauth_state'] = $state;
-        $_SESSION['oauth_code_verifier'] = $codeVerifier;
-        $_SESSION['oauth_platform'] = $platform;
-        $_SESSION['oauth_redirect_uri'] = $redirect_uri;
+        $_SESSION[self::SESSION_OAUTH_STATE] = $state;
+        $_SESSION[self::SESSION_OAUTH_CODE_VERIFIER] = $codeVerifier;
+        $_SESSION[self::SESSION_OAUTH_PLATFORM] = $platform;
+        $_SESSION[self::SESSION_OAUTH_REDIRECT_URI] = $redirect_uri;
         
         // Build authorization URL
         $authParams = [
@@ -299,14 +299,14 @@ class Auth extends \MCPCore7
     public function oauthComplete(string $code, string $state = ''): array
     {
         // Verify state if provided
-        if (!empty($state) && $state !== ($_SESSION['oauth_state'] ?? '')) {
+        if (!empty($state) && $state !== ($_SESSION[self::SESSION_OAUTH_STATE] ?? '')) {
             return ['error' => true, 'message' => 'State mismatch - possible CSRF attack'];
         }
-        
+
         // Get stored values
-        $codeVerifier = $_SESSION['oauth_code_verifier'] ?? null;
-        $redirectUri = $_SESSION['oauth_redirect_uri'] ?? 'urn:ietf:wg:oauth:2.0:oob';
-        $platform = $_SESSION['oauth_platform'] ?? 'cloudframework';
+        $codeVerifier = $_SESSION[self::SESSION_OAUTH_CODE_VERIFIER] ?? null;
+        $redirectUri = $_SESSION[self::SESSION_OAUTH_REDIRECT_URI] ?? 'urn:ietf:wg:oauth:2.0:oob';
+        $platform = $_SESSION[self::SESSION_OAUTH_PLATFORM] ?? 'cloudframework';
         
         if (!$codeVerifier) {
             return ['error' => true, 'message' => 'No pending OAuth flow. Call oauth_start first.'];
@@ -347,19 +347,18 @@ class Auth extends \MCPCore7
         $accessToken = $response['access_token'] ?? null;
         $refreshToken = $response['refresh_token'] ?? null;
         if ($accessToken) {
-            $_SESSION['token'] = $accessToken;
-            $_SESSION['platform'] = $platform;
-            if($refreshToken) $_SESSION['refresh_token'] = $refreshToken;
+            $_SESSION[self::SESSION_TOKEN] = $accessToken;
+            $_SESSION[self::SESSION_PLATFORM] = $platform;
+            if($refreshToken) $_SESSION[self::SESSION_REFRESH_TOKEN] = $refreshToken;
 
-            
             // Clear OAuth flow data
-            $_SESSION['oauth_state'] = null;
-            $_SESSION['oauth_code_verifier'] = null;
-            
+            $_SESSION[self::SESSION_OAUTH_STATE] = null;
+            $_SESSION[self::SESSION_OAUTH_CODE_VERIFIER] = null;
+
             // Try to get user info
             $userInfo = $this->fetchUserInfo($accessToken);
             if ($userInfo && !isset($userInfo['error'])) {
-                $_SESSION['user'] = $userInfo;
+                $_SESSION[self::SESSION_USER] = $userInfo;
                 
                 // Set core user
                 $this->core->user->id = $userInfo['KeyName'] ?? $userInfo['email'] ?? 'unknown';
@@ -393,26 +392,26 @@ class Auth extends \MCPCore7
     #[McpTool(name: 'oauth_status')]
     public function oauthStatus(): array
     {
-        $hasPendingOAuth = !empty($_SESSION['oauth_state']);
-        $hasToken = !empty($_SESSION['token']);
+        $hasPendingOAuth = !empty($_SESSION[self::SESSION_OAUTH_STATE]);
+        $hasToken = !empty($_SESSION[self::SESSION_TOKEN]);
         $isAuthenticated = $this->core->user->isAuth();
-        
+
         $status = [
             'authenticated' => $isAuthenticated,
             'has_token' => $hasToken,
             'pending_oauth_flow' => $hasPendingOAuth,
-            'platform' => $_SESSION['platform'] ?? null
+            'platform' => $_SESSION[self::SESSION_PLATFORM] ?? null
         ];
-        
+
         if ($isAuthenticated) {
             $status['user'] = [
                 'id' => $this->core->user->id,
                 'namespace' => $this->core->user->namespace
             ];
         }
-        
+
         if ($hasPendingOAuth) {
-            $status['oauth_state'] = $_SESSION['oauth_state'];
+            $status['oauth_state'] = $_SESSION[self::SESSION_OAUTH_STATE];
             $status['instructions'] = 'Complete authentication by calling oauth_complete with the authorization code';
         }
         
@@ -433,20 +432,20 @@ class Auth extends \MCPCore7
      * @return array New access token or error message
      */
     #[McpTool(name: 'oauth_refresh')]
-    public function oauthRefresh(string $current_access_token='',string $refresh_token=''): array
+    public function oauthRefresh(string $current_access_token='', string $refresh_token=''): array
     {
         $this->core->logs->add('CALL oauthRefresh','debug');
 
-        if(empty($current_access_token) && empty($_SESSION['token']))
+        if(empty($current_access_token) && empty($_SESSION[self::SESSION_TOKEN]))
             return ['error'=>true,'message'=>'Error: no refresh token provided and Session token not found'];
-        if(empty($refresh_token) && empty($_SESSION['refresh_token']))
+        if(empty($refresh_token) && empty($_SESSION[self::SESSION_REFRESH_TOKEN]))
             return ['error'=>true,'message'=>'Error: no refresh token provided and Session refresh token not found'];
 
         $tokenParams = [
             'grant_type' => 'refresh_token',
             'client_id' => 'cloudia-mcp',
-            'access_token' => ($current_access_token??'')?:$_SESSION['token'],
-            'refresh_token' => ($refresh_token??'')?:$_SESSION['refresh_token']
+            'access_token' => ($current_access_token ?? '') ?: $_SESSION[self::SESSION_TOKEN],
+            'refresh_token' => ($refresh_token ?? '') ?: $_SESSION[self::SESSION_REFRESH_TOKEN]
         ];
         $this->core->logs->add($tokenParams,'tokenParams');
         
@@ -473,7 +472,7 @@ class Auth extends \MCPCore7
         
         $accessToken = $response['access_token'] ?? null;
         if ($accessToken) {
-            $_SESSION['token'] = $accessToken;
+            $_SESSION[self::SESSION_TOKEN] = $accessToken;
             return [
                 'success' => true,
                 'message' => 'Token refreshed successfully',
@@ -481,7 +480,7 @@ class Auth extends \MCPCore7
                 'expires_in' => $response['expires_in'] ?? null
             ];
         }
-        
+
         return ['error' => true, 'message' => 'No access token in refresh response'];
     }
     //endregion
