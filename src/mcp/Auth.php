@@ -608,26 +608,16 @@ class Auth extends \MCPCore7
 
     //region oauth_config
     /**
-     * Returns the OAuth configuration for CLOUD Platform.
-     * Includes endpoints and supported features.
+     * Returns the OAuth configuration from WellKnown class.
+     * Uses project's custom WellKnown if available, otherwise framework default.
+     * Falls back to CloudFramework OAuth config if WellKnown returns empty.
      *
      * @return array OAuth server configuration
      */
     #[McpResource(uri: 'auth://oauth/config', name: 'oauth_config', description: 'OAuth 2.1 server configuration for CLOUD Platform')]
     public function oauthConfig(): array
     {
-        return [
-            'issuer' => 'https://api.cloudframework.io',
-            'authorization_endpoint' => self::MCP_OAUTH_SERVER . '/authorize',
-            'token_endpoint' => self::MCP_OAUTH_SERVER . '/token',
-            'userinfo_endpoint' => self::MCP_OAUTH_SERVER . '/userinfo',
-            'registration_endpoint' => self::MCP_OAUTH_SERVER . '/register',
-            'scopes_supported' => ['openid', 'profile', 'email', 'projects', 'tasks'],
-            'response_types_supported' => ['code'],
-            'grant_types_supported' => ['authorization_code', 'refresh_token'],
-            'code_challenge_methods_supported' => ['S256'],
-            'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic']
-        ];
+        return $this->getOAuthConfigFromWellKnown();
     }
     //endregion
 

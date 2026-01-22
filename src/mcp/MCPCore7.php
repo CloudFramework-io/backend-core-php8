@@ -119,6 +119,55 @@ class MCPCore7
     }
 
     /**
+     * Get the WellKnown class to use (project override or framework default).
+     * Projects can override by creating mcp/WellKnown.php with namespace App\Mcp
+     *
+     * @return string The fully qualified class name to use
+     */
+    protected function getWellKnownClass(): string
+    {
+        if (class_exists('App\\Mcp\\WellKnown')) {
+            return 'App\\Mcp\\WellKnown';
+        }
+        return 'WellKnown';
+    }
+
+    /**
+     * Get OAuth configuration from WellKnown class.
+     * Returns authorization server metadata from custom or default WellKnown.
+     * Falls back to default config if WellKnown returns empty array.
+     *
+     * @return array OAuth configuration
+     */
+    protected function getOAuthConfigFromWellKnown(): array
+    {
+        $wellKnownClass = $this->getWellKnownClass();
+        $config = [];
+
+        if (method_exists($wellKnownClass, 'getAuthorizationServerMetadata')) {
+            $config = $wellKnownClass::getAuthorizationServerMetadata();
+        }
+
+        // If WellKnown returns empty, use default CloudFramework OAuth config
+        if (empty($config)) {
+            $config = [
+                'issuer' => 'https://api.cloudframework.io',
+                'authorization_endpoint' => self::MCP_OAUTH_SERVER . '/authorize',
+                'token_endpoint' => self::MCP_OAUTH_SERVER . '/token',
+                'userinfo_endpoint' => self::MCP_OAUTH_SERVER . '/userinfo',
+                'registration_endpoint' => self::MCP_OAUTH_SERVER . '/register',
+                'scopes_supported' => ['openid', 'profile', 'email', 'projects', 'tasks'],
+                'response_types_supported' => ['code'],
+                'grant_types_supported' => ['authorization_code', 'refresh_token'],
+                'code_challenge_methods_supported' => ['S256'],
+                'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic']
+            ];
+        }
+
+        return $config;
+    }
+
+    /**
      * Initialize user from the current session data.
      * @return bool true if the user is successfully initialized, false otherwise
      */
