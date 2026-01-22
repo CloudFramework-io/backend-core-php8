@@ -31,6 +31,8 @@ class MCPCore7
     protected $sessionStore;
     /** @var string $sessionId */
     protected $sessionId;
+    /** @var string|null $clientId - MCP client identifier from X-MCP-Client-Id header */
+    protected ?string $clientId = null;
     /** @var CFOs $cfos */
     protected $cfos;
     protected $secrets = [];
@@ -48,9 +50,11 @@ class MCPCore7
         $this->sessionStore = &$sessionStore;
         $this->api = new RESTful($this->core);
         $this->sessionId = $this->api->getHeader('MCP_SESSION_ID');
+        $this->clientId = $this->api->getHeader('X_MCP_Client_Id');
 
         //region LOG calls
-        //log the MCP method
+        //log the MCP client and method
+        if($this->clientId) $this->core->logs->add($this->clientId, 'mcp-client-id');
         if(isset($this->api->formParams['method'])) $this->core->logs->add($this->api->formParams['method'].': '.($this->api->formParams['params']['name']??''), 'mcp-method');
         //on in local environment
         if($this->core->is->development()) {
@@ -89,6 +93,16 @@ class MCPCore7
         //                if($this->core->is->development())
         //                    $this->showLogs();
 
+    }
+
+    /**
+     * Get the MCP client identifier from X-MCP-Client-Id header.
+     * Common values: "claude-desktop", "mcp-inspector", "claude-code", custom client names
+     * @return string|null The client ID or null if not provided
+     */
+    public function getClientId(): ?string
+    {
+        return $this->clientId;
     }
 
     /**
