@@ -361,6 +361,28 @@ class PhpSessionStore implements SessionStoreInterface
     }
 
     /**
+     * Ensures the session is initialized and not expired.
+     * Auto-creates the session if it doesn't exist or renews it if expired.
+     * This method centralizes session initialization logic to avoid duplication.
+     *
+     * @return void
+     */
+    private function ensureSessionInitialized(): void
+    {
+        if (!isset($_SESSION[self::SESSION_KEY])) {
+            $_SESSION[self::SESSION_KEY] = '{}';
+            $_SESSION['mcp_timestamp'] = time();
+            return;
+        }
+
+        $timestamp = $_SESSION['mcp_timestamp'] ?? 0;
+        if ((time() - $timestamp) > $this->ttl) {
+            $_SESSION[self::SESSION_KEY] = '{}';
+            $_SESSION['mcp_timestamp'] = time();
+        }
+    }
+
+    /**
      * Checks whether a session exists and is valid for the provided UUID.
      * Auto-creates the session if it doesn't exist to avoid "Session not found" errors.
      *
@@ -370,22 +392,7 @@ class PhpSessionStore implements SessionStoreInterface
     public function exists(Uuid $id): bool
     {
         $this->startSessionFor($id);
-
-        // Auto-create session if it doesn't exist
-        if (!isset($_SESSION[self::SESSION_KEY])) {
-            $_SESSION[self::SESSION_KEY] = '{}';
-            $_SESSION['mcp_timestamp'] = time();
-            return true;
-        }
-
-        $timestamp = $_SESSION['mcp_timestamp'] ?? 0;
-
-        // Renew expired sessions instead of destroying them
-        if ((time() - $timestamp) > $this->ttl) {
-            $_SESSION[self::SESSION_KEY] = '{}';
-            $_SESSION['mcp_timestamp'] = time();
-        }
-
+        $this->ensureSessionInitialized();
         return true;
     }
 
@@ -399,22 +406,7 @@ class PhpSessionStore implements SessionStoreInterface
     public function read(Uuid $id): string|false
     {
         $this->startSessionFor($id);
-
-        // Auto-create session if it doesn't exist
-        if (!isset($_SESSION[self::SESSION_KEY])) {
-            $_SESSION[self::SESSION_KEY] = '{}';
-            $_SESSION['mcp_timestamp'] = time();
-            return $_SESSION[self::SESSION_KEY];
-        }
-
-        $timestamp = $_SESSION['mcp_timestamp'] ?? 0;
-
-        // Renew expired sessions instead of destroying them
-        if ((time() - $timestamp) > $this->ttl) {
-            $_SESSION[self::SESSION_KEY] = '{}';
-            $_SESSION['mcp_timestamp'] = time();
-        }
-
+        $this->ensureSessionInitialized();
         return $_SESSION[self::SESSION_KEY];
     }
 
