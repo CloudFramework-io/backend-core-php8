@@ -51,7 +51,7 @@ class MCPCore7
 
         //region LOG calls
         //log the MCP method
-        if(isset($this->api->formParams['method'])) $this->core->logs->add($this->api->formParams['method'], 'mcp-method');
+        if(isset($this->api->formParams['method'])) $this->core->logs->add($this->api->formParams['method'].': '.($this->api->formParams['params']['name']??''), 'mcp-method');
         //on in local environment
         if($this->core->is->development()) {
             if(isset($this->api->formParams['_raw_input_'])) unset($this->api->formParams['_raw_input_']);
