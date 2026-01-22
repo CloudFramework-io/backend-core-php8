@@ -26,10 +26,10 @@ class Auth extends \MCPCore7
     #[McpTool(name: 'set_dstoken')]
     public function set_dstoken(string $token): array
     {
-        if(!strpos($token,'__')) {
+        $parsed = $this->parseToken($token);
+        if (!$parsed) {
             return ['error' => true, 'code' => 'invalid-token-format', 'message' => 'Token format is not valid. Expected format: platform__token'];
         }
-        list($platform,$foom) = explode('__',$token,2);
         $_SESSION['dstoken'] = null;
 
         if(!($this->secrets['api_login_integration_key']??null)) {
@@ -62,12 +62,12 @@ class Auth extends \MCPCore7
      */
     private function set_token(string $token, ?string $refresh_token = null): array
     {
-        if(!strpos($token,'__')) {
+        $parsed = $this->parseToken($token);
+        if (!$parsed) {
             return ['error' => true, 'code' => 'invalid-token-format', 'message' => 'Token format is not valid. Expected format: platform__token'];
         }
-        list($platform, ) = explode('__', $token, 2);
         $_SESSION['token'] = $token;
-        $_SESSION['platform'] = $platform;
+        $_SESSION['platform'] = $parsed['platform'];
         $_SESSION['refresh_token'] = $refresh_token;
         $_SESSION['dstoken'] = null;
         $_SESSION['user'] = null;
@@ -704,6 +704,22 @@ class Auth extends \MCPCore7
     //endregion
 
     //region PRIVATE METHODS
+
+    /**
+     * Parse and validate token format.
+     * Tokens must follow the format: platform__tokendata
+     *
+     * @param string $token The token to parse
+     * @return array|null Returns ['platform' => string, 'token' => string] on success, null on invalid format
+     */
+    private function parseToken(string $token): ?array
+    {
+        if (!strpos($token, '__')) {
+            return null;
+        }
+        list($platform, $tokenData) = explode('__', $token, 2);
+        return ['platform' => $platform, 'token' => $tokenData];
+    }
 
     /**
      * Generate a random code verifier for PKCE
