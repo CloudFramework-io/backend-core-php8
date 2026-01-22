@@ -88,7 +88,8 @@ if ($requestPath === '/.well-known/oauth-protected-resource') {
 if ($requestPath === '/.well-known/oauth-authorization-server') {
     $metadata = [
         'issuer' => 'https://api.cloudframework.io',
-        'registration_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/register',
+        // Dynamic Client Registration not supported - use pre-registered client_id: 'cloudia-mcp'
+        //'registration_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/register',
         'authorization_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/authorize',
         'token_endpoint' => 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/token',
         'token_endpoint_auth_methods_supported' => ['none', 'client_secret_basic'],
