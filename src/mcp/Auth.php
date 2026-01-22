@@ -468,8 +468,7 @@ class Auth extends \MCPCore7
                 'success' => true,
                 'message' => 'Token refreshed successfully',
                 'token_type' => $response['token_type'] ?? 'Bearer',
-                'expires_in' => $response['expires_in'] ?? null,
-                'access_token' => $accessToken
+                'expires_in' => $response['expires_in'] ?? null
             ];
         }
         
@@ -542,20 +541,16 @@ class Auth extends \MCPCore7
         // Try with provided token
         if (!empty($token)) {
             $result = $this->set_token($token,$refresh_token);
-            if (is_string($result) && strpos($result, 'Error') === false) {
-                return [
-                    'status' => 'restored',
-                    'method' => 'provided_token',
-                    'user' => $result,
-                    'message' => 'Session restored with provided token'
-                ];
-            } elseif (is_array($result) && !isset($result['error'])) {
-                return [
-                    'status' => 'restored',
-                    'method' => 'provided_token',
-                    'user' => $this->core->user->id,
-                    'message' => 'Session restored with provided token'
-                ];
+            $ret = [
+                'status' => 'restored',
+                'method' => 'provided_token',
+                'user' => $result,
+                'message' => 'Session restored with provided token'
+            ];
+            if($refresh_token)
+                $ret['has_refresh_token'] = true;
+            if ((is_string($result) && strpos($result, 'Error') === false) || (is_array($result) && !isset($result['error']))) {
+                return $ret;
             }
         }
 
