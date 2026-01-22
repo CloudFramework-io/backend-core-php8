@@ -11,6 +11,9 @@ class MCPCore7
     // OAuth server URL
     protected const MCP_OAUTH_SERVER = 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth';
 
+    // Default MCP client identifier
+    protected const DEFAULT_CLIENT_ID = 'cloudia-mcp';
+
     // Session key constants for consistent access across MCP classes
     protected const SESSION_TOKEN = 'token';
     protected const SESSION_DSTOKEN = 'dstoken';
@@ -59,7 +62,7 @@ class MCPCore7
             $this->errorCode = 'client-id-mismatch';
             $this->errorMsg[] = "X-MCP-Client-Id header '{$headerClientId}' does not match client_id parameter '{$paramClientId}'";
         }
-        $this->clientId = $headerClientId ?: $paramClientId;
+        $this->clientId = $headerClientId ?: $paramClientId ?: self::DEFAULT_CLIENT_ID;
         //endregion
 
         //region LOG calls
