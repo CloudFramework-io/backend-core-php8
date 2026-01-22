@@ -8,8 +8,7 @@ use Mcp\Capability\Attribute\McpPrompt;
 class Auth extends \MCPCore7
 {
 
-    private $apiAuth='https://api.cloudframework.io/core/signin';
-    private $oauthServer = 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth';
+    private $apiAuth = 'https://api.cloudframework.io/core/signin';
 
     //region TOOLS
 
@@ -244,7 +243,7 @@ class Auth extends \MCPCore7
             'platform' => $platform
         ];
         
-        $authUrl = $this->oauthServer . '/authorize?' . http_build_query($authParams);
+        $authUrl = self::MCP_OAUTH_SERVER . '/authorize?' . http_build_query($authParams);
 
         return [
             'status' => 'pending_user_action',
@@ -322,7 +321,7 @@ class Auth extends \MCPCore7
         ];
         
         $response = $this->core->request->post_json_decode(
-            $this->oauthServer . '/token?authorize_code',
+            self::MCP_OAUTH_SERVER . '/token?authorize_code',
             $tokenParams,
             ['Content-Type' => 'application/x-www-form-urlencoded']
         );
@@ -450,7 +449,7 @@ class Auth extends \MCPCore7
         $this->core->logs->add($tokenParams,'tokenParams');
         
         $response = $this->core->request->post_json_decode(
-            $this->oauthServer . '/token?refresh',
+            self::MCP_OAUTH_SERVER . '/token?refresh',
             $tokenParams,
             ['Content-Type' => 'application/x-www-form-urlencoded']
         );
@@ -619,10 +618,10 @@ class Auth extends \MCPCore7
     {
         return [
             'issuer' => 'https://api.cloudframework.io',
-            'authorization_endpoint' => $this->oauthServer . '/authorize',
-            'token_endpoint' => $this->oauthServer . '/token',
-            'userinfo_endpoint' => $this->oauthServer . '/userinfo',
-            'registration_endpoint' => $this->oauthServer . '/register',
+            'authorization_endpoint' => self::MCP_OAUTH_SERVER . '/authorize',
+            'token_endpoint' => self::MCP_OAUTH_SERVER . '/token',
+            'userinfo_endpoint' => self::MCP_OAUTH_SERVER . '/userinfo',
+            'registration_endpoint' => self::MCP_OAUTH_SERVER . '/register',
             'scopes_supported' => ['openid', 'profile', 'email', 'projects', 'tasks'],
             'response_types_supported' => ['code'],
             'grant_types_supported' => ['authorization_code', 'refresh_token'],
@@ -745,7 +744,7 @@ class Auth extends \MCPCore7
     private function fetchUserInfo(string $accessToken): ?array
     {
         $response = $this->core->request->get_json_decode(
-            $this->oauthServer . '/userinfo',
+            self::MCP_OAUTH_SERVER . '/userinfo',
             null,
             ['Authorization' => 'Bearer ' . $accessToken]
         );

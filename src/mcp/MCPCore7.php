@@ -8,6 +8,9 @@ use Symfony\Component\Uid\Uuid;
  */
 class MCPCore7
 {
+    // OAuth server URL
+    protected const MCP_OAUTH_SERVER = 'https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth';
+
     // Session key constants for consistent access across MCP classes
     protected const SESSION_TOKEN = 'token';
     protected const SESSION_DSTOKEN = 'dstoken';
@@ -172,54 +175,30 @@ class MCPCore7
             $params['dstoken'] = 1;
         }
         $response = $this->core->request->get_json_decode(
-            "https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/validate?oauthToken",
+            self::MCP_OAUTH_SERVER . '/validate',
             $params,
             ['Authorization' => 'Bearer ' . $oauthToken]
         );
 
         if ($this->core->request->error) {
-            $this->core->logs->add('MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg), 'oauth-access_token_verification-error');
-            $this->error = true;
-            $this->errorCode = 'oauth-access_token_verification-error';
-            $this->errorMsg = ['MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg)];
-            return false;
+            return $this->setOAuthError('MCP OAuth validation failed: ' . json_encode($this->core->request->errorMsg));
         }
 
         if (!($response['data']['valid'] ?? false)) {
-            $this->core->logs->add('MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown'), 'oauth-access_token_verification-error');
-            $this->error = true;
-            $this->errorCode = 'oauth-access_token_verification-error';
-            $this->errorMsg = ['MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown')];
-            return false;
+            return $this->setOAuthError('MCP OAuth token invalid: ' . ($response['data']['error'] ?? 'unknown'));
         }
 
         if (!($response['data']['user'] ?? false)) {
-            $this->core->logs->add('MCP OAuth token verification error. It missed [user] attribute','oauth-access_token_verification-error');
-            $this->error = true;
-            $this->errorCode = 'oauth-access_token_verification-error';
-            $this->errorMsg = ['MCP OAuth token verification error. It missed [user] attribute'];
-            return false;
+            return $this->setOAuthError('MCP OAuth token verification error. Missing [user] attribute');
         }
         if (!($response['data']['data'] ?? false)) {
-            $this->core->logs->add('MCP OAuth token verification error. It missed [data] attribute','oauth-access_token_verification-error');
-            $this->error = true;
-            $this->errorCode = 'oauth-access_token_verification-error';
-            $this->errorMsg = ['MCP OAuth token verification error. It missed [data] attribute'];
-            return false;
+            return $this->setOAuthError('MCP OAuth token verification error. Missing [data] attribute');
         }
         if (!($response['data']['platform'] ?? false)) {
-            $this->core->logs->add('MCP OAuth token verification error. It missed [platform] attribute','oauth-access_token_verification-error');
-            $this->error = true;
-            $this->errorCode = 'oauth-access_token_verification-error';
-            $this->errorMsg = ['MCP OAuth token verification error. It missed [platform] attribute'];
-            return false;
+            return $this->setOAuthError('MCP OAuth token verification error. Missing [platform] attribute');
         }
-        if (!empty($params['dstoken']) &&  !($response['data']['dstoken'] ?? false)) {
-            $this->core->logs->add('MCP OAuth token verification error. It missed [dstoken] attribute','oauth-access_token_verification-error');
-            $this->error = true;
-            $this->errorCode = 'oauth-access_token_verification-error';
-            $this->errorMsg = ['MCP OAuth token verification error. It missed [dstoken] attribute'];
-            return false;
+        if (!empty($params['dstoken']) && !($response['data']['dstoken'] ?? false)) {
+            return $this->setOAuthError('MCP OAuth token verification error. Missing [dstoken] attribute');
         }
 
         $_SESSION[self::SESSION_TOKEN] = $oauthToken;
@@ -352,6 +331,19 @@ class MCPCore7
         $this->errorCode = $code;
         $this->errorMsg[] = $msg;
         return false;
+    }
+
+    /**
+     * Sets an OAuth verification error with logging.
+     * Convenience method for consistent OAuth error handling.
+     *
+     * @param string $message Error message to log and store
+     * @return bool Always returns false
+     */
+    protected function setOAuthError(string $message): bool
+    {
+        $this->core->logs->add($message, 'oauth-access_token_verification-error');
+        return $this->setErrorFromCodelib('oauth-access_token_verification-error', $message);
     }
 }
 
