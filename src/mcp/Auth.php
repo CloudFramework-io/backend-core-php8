@@ -32,13 +32,11 @@ class Auth extends \MCPCore7
         }
         $_SESSION['dstoken'] = null;
 
-        if(!($this->secrets['api_login_integration_key']??null)) {
-            if(!$this->readSecrets()) {
-                return ['error' => true, 'code' => $this->errorCode, 'message' => 'Error reading secrets', 'details' => $this->errorMsg];
-            }
+        if (!$this->ensureSecrets()) {
+            return ['error' => true, 'code' => $this->errorCode, 'message' => 'Error reading secrets', 'details' => $this->errorMsg];
         }
 
-        $this->core->user->loadPlatformUserWithToken($token,$this->secrets['api_login_integration_key']);
+        $this->core->user->loadPlatformUserWithToken($token, $this->secrets['api_login_integration_key']);
         if($this->core->user->error) {
             return ['error' => true, 'code' => 'token-validation-failed', 'message' => 'Token is not valid', 'details' => $this->core->user->errorMsg];
         }
@@ -155,10 +153,8 @@ class Auth extends \MCPCore7
             return ['error' => true, 'code' => 'no-user', 'message' => 'No user found in session'];
         }
 
-        if(!($this->secrets['api_login_integration_key']??null)) {
-            if(!$this->readSecrets()) {
-                return ['error' => true, 'code' => $this->errorCode, 'message' => 'Error reading secrets', 'details' => $this->errorMsg];
-            }
+        if (!$this->ensureSecrets()) {
+            return ['error' => true, 'code' => $this->errorCode, 'message' => 'Error reading secrets', 'details' => $this->errorMsg];
         }
 
         $this->core->user->loadPlatformUserWithToken($_SESSION['dstoken'], $this->secrets['api_login_integration_key']);

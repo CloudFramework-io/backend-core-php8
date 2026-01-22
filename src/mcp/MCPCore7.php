@@ -291,6 +291,20 @@ class MCPCore7
     }
 
     /**
+     * Ensures secrets are loaded. Loads them if not already present.
+     * This is a convenience wrapper around readSecrets() for cleaner code.
+     *
+     * @return bool true if secrets are available, false on error
+     */
+    protected function ensureSecrets(): bool
+    {
+        if (!($this->secrets['api_login_integration_key'] ?? null)) {
+            return $this->readSecrets();
+        }
+        return true;
+    }
+
+    /**
      * Read secrets from cfo-secrets
      * @return bool false on error
      */
