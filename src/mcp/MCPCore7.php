@@ -34,6 +34,17 @@ class MCPCore7
         $this->api = new RESTful($this->core);
         $this->sessionId = $this->api->getHeader('MCP_SESSION_ID');
 
+        //region LOG calls
+        //log the MCP method
+        if(isset($this->api->formParams['method'])) $this->core->logs->add($this->api->formParams['method'], 'mcp-method');
+        //on in local environment
+        if($this->core->is->development()) {
+            if(isset($this->api->formParams['_raw_input_'])) unset($this->api->formParams['_raw_input_']);
+            $this->core->logs->add($this->api->formParams, 'mcp-data');
+        }
+        //endregion
+
+        //region EVALUATE Authentication
         // Authorization Token
         $oauthToken = substr($this->api->getHeader('Authorization') ?? '',7);
         if(!$oauthToken && !empty($_SESSION['token'] ))
@@ -57,6 +68,7 @@ class MCPCore7
                 }
             }
         }
+        //endregion
 
         // debug logs
         //                if($this->core->is->development())
@@ -148,7 +160,7 @@ class MCPCore7
             $params['dstoken'] = 1;
         }
         $response = $this->core->request->get_json_decode(
-            "https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/validate",
+            "https://api.cloudframework.io/cloud-solutions/directory/mcp-oauth/validate?oauthToken",
             $params,
             ['Authorization' => 'Bearer ' . $oauthToken]
         );
