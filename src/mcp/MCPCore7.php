@@ -50,7 +50,17 @@ class MCPCore7
         $this->sessionStore = &$sessionStore;
         $this->api = new RESTful($this->core);
         $this->sessionId = $this->api->getHeader('MCP_SESSION_ID');
-        $this->clientId = $this->api->getHeader('X_MCP_Client_Id');
+
+        //region EVALUATE Client ID (header takes precedence, URL param as fallback)
+        $headerClientId = $this->api->getHeader('X_MCP_Client_Id');
+        $paramClientId = $this->api->formParams['client_id'] ?? null;
+        if ($headerClientId && $paramClientId && $headerClientId !== $paramClientId) {
+            $this->error = true;
+            $this->errorCode = 'client-id-mismatch';
+            $this->errorMsg[] = "X-MCP-Client-Id header '{$headerClientId}' does not match client_id parameter '{$paramClientId}'";
+        }
+        $this->clientId = $headerClientId ?: $paramClientId;
+        //endregion
 
         //region LOG calls
         //log the MCP client and method
