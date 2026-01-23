@@ -6,6 +6,7 @@
  * - List tasks assigned to the current user
  * - List tasks for today
  * - List tasks in the current sprint
+ * - List tasks for a specific person
  * - Get detailed information about a specific task
  * - Filter tasks by project, status, or priority
  *
@@ -14,6 +15,7 @@
  *   _cloudia/tasks/today                              - List tasks for today
  *   _cloudia/tasks/sprint                             - List tasks in current sprint
  *   _cloudia/tasks/project?id=project-keyname         - List tasks for a specific project
+ *   _cloudia/tasks/person?email=user@example.com      - List tasks for a specific person
  *   _cloudia/tasks/get?id=TASK_KEYID                  - Get task details
  *   _cloudia/tasks/search?status=in-progress          - Search tasks by filters
  *
@@ -88,6 +90,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  /today                         - List tasks active for today");
         $this->sendTerminal("  /sprint                        - List tasks in current sprint");
         $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project");
+        $this->sendTerminal("  /person?email=EMAIL            - List tasks for a specific person");
         $this->sendTerminal("  /get?id=TASK_KEYID             - Get detailed task information");
         $this->sendTerminal("  /search?status=STATE           - Search tasks by filters");
         $this->sendTerminal("");
@@ -100,6 +103,7 @@ class Script extends CoreScripts
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script _cloudia/tasks/my-tasks");
         $this->sendTerminal("  composer run-script script _cloudia/tasks/today");
+        $this->sendTerminal("  composer run-script script \"_cloudia/tasks/person?email=user@example.com\"");
         $this->sendTerminal("  composer run-script script \"_cloudia/tasks/get?id=5734953457745920\"");
         $this->sendTerminal("  composer run-script script \"_cloudia/tasks/search?status=in-progress&priority=high\"");
     }
@@ -132,6 +136,8 @@ class Script extends CoreScripts
         if ($this->core->request->error) {
             return $this->addError($this->core->request->errorMsg);
         }
+
+
 
         $tasks = $response['data'] ?? [];
         $this->displayTaskList($tasks);
@@ -293,6 +299,65 @@ class Script extends CoreScripts
     }
 
     /**
+     * List tasks for a specific person
+     */
+    public function METHOD_person()
+    {
+        //region VALIDATE email parameter
+        $email = $this->formParams['email'] ?? null;
+        if (!$email) {
+            return $this->addError("Missing required parameter: email. Usage: _cloudia/tasks/person?email=user@example.com");
+        }
+        //endregion
+
+        //region SET filter options from parameters
+        $only_open = ($this->formParams['open'] ?? 'true') === 'true';
+        $status = $this->formParams['status'] ?? null;
+        $project = $this->formParams['project'] ?? null;
+        //endregion
+
+        //region FETCH tasks for the person
+        $this->sendTerminal("");
+        $this->sendTerminal("Tasks for person [{$email}]" . ($only_open ? " (open only)" : "") . ":");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $params = [
+            'filter_PlayerId' => $email,
+            '_order' => '-Priority,Status,DateDeadLine',
+            'cfo_limit' => 500,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        // Add optional filters
+        if ($only_open) {
+            $params['filter_Open'] = 'true';
+        }
+        if ($status) {
+            $params['filter_Status'] = $status;
+        }
+        if ($project) {
+            $params['filter_ProjectId'] = $project;
+        }
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+            $params,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $tasks = $response['data'] ?? [];
+        $this->displayTaskList($tasks, $email);
+        //endregion
+
+        return true;
+    }
+
+    /**
      * Get detailed task information
      */
     public function METHOD_get()
@@ -394,8 +459,9 @@ class Script extends CoreScripts
      * Display a list of tasks in table format
      *
      * @param array $tasks Array of task records
+     * @param string|null $person_email Optional email to display instead of current user
      */
-    private function displayTaskList(array $tasks)
+    private function displayTaskList(array $tasks, ?string $person_email = null)
     {
         if (!$tasks) {
             $this->sendTerminal("No tasks found");
@@ -472,7 +538,8 @@ class Script extends CoreScripts
         }
 
         // User info
-        $this->sendTerminal("User: {$this->user_email}");
+        $display_email = $person_email ?? $this->user_email;
+        $this->sendTerminal("User: {$display_email}");
     }
 
     /**
