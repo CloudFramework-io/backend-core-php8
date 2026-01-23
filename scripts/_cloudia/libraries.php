@@ -479,7 +479,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForLibraries/" . urlencode($library_id) . "?_raw&_timezone=UTC",
             $library,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if ($this->core->request->error) {
@@ -510,7 +511,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForLibrariesModules/{$module_key}?_raw&_timezone=UTC",
                         $module,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 
@@ -632,7 +634,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForLibrariesModules/{$module_key}?_raw&_timezone=UTC",
                         $module,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 

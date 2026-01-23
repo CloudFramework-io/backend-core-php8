@@ -524,7 +524,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw&_timezone=UTC",
                         $local_indexed[$keyId],
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("     # Warning: Failed to update");
@@ -545,7 +546,8 @@ class Script extends CoreScripts
                 $response = $this->core->request->put_json_decode(
                     "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$local_check['KeyId']}?_raw&_timezone=UTC",
                     $local_check,
-                    $this->headers
+                    $this->headers,
+                    true
                 );
             } else {
                 $this->sendTerminal("   - Inserting [{$local_check['CFOEntity']}/{$local_check['CFOId']}][{$index}: {$local_check['Route']}]: {$local_check['Title']}");

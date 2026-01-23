@@ -451,7 +451,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcesses/" . urlencode($process_id) . "?_raw&_timezone=UTC",
             $process,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if ($this->core->request->error) {
@@ -482,7 +483,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses/{$subprocess_key}?_raw&_timezone=UTC",
                         $subprocess,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 
@@ -603,7 +605,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses/{$subprocess_key}?_raw&_timezone=UTC",
                         $subprocess,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 

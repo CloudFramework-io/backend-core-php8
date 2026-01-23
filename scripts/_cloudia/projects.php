@@ -582,7 +582,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsEntries/" . urlencode($project_id) . "?_raw&_timezone=UTC",
             $project,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if ($this->core->request->error) {
@@ -695,7 +696,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/{$milestone_key}?_raw&_timezone=UTC",
                         $milestone,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("   # Warning: Failed to update milestone [{$milestone['Title']}]");
@@ -802,7 +804,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_key}?_raw&_timezone=UTC",
                         $task,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("   # Warning: Failed to update task [{$task['Title']}]");

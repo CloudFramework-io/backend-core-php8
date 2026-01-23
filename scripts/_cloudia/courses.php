@@ -622,6 +622,7 @@ class Script extends CoreScripts
                     "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyCourses/{$course_id}?_raw&_timezone=UTC",
                     $local_course,
                     $this->headers
+                    ,true
                 );
                 if ($this->core->request->error || !($response['success'] ?? false)) {
                     $error_msg = $response['errorMsg'] ?? $this->core->request->errorMsg ?? 'Unknown error';
@@ -699,7 +700,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$keyId}?_raw&_timezone=UTC",
                         $local_indexed[$keyId],
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
                         $this->sendTerminal("     # Warning: Failed to update");
@@ -729,7 +731,8 @@ class Script extends CoreScripts
                 $response = $this->core->request->put_json_decode(
                     "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$local_content['KeyId']}?_raw&_timezone=UTC",
                     $local_content,
-                    $this->headers
+                    $this->headers,
+                    true
                 );
             } else {
                 // No KeyId - insert as new
@@ -866,7 +869,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkAcademyContents/{$content_key}?_raw&_timezone=UTC",
                         $content,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 

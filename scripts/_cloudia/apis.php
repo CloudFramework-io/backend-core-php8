@@ -489,7 +489,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIs/" . urlencode($api_id) . "?_raw&_timezone=UTC",
             $api,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if ($this->core->request->error) {
@@ -520,7 +521,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints/{$endpoint_key}?_raw&_timezone=UTC",
                         $endpoint,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 
@@ -642,7 +644,8 @@ class Script extends CoreScripts
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints/{$endpoint_key}?_raw&_timezone=UTC",
                         $endpoint,
-                        $this->headers
+                        $this->headers,
+                        true
                     );
                 }
 

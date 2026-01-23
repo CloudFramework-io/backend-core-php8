@@ -284,7 +284,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             $api_url,
             $cfo_data,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if($this->core->request->error) {

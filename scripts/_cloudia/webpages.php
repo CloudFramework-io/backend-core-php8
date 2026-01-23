@@ -419,7 +419,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages/{$key_id}?_raw&_timezone=UTC",
             $webpage,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if ($this->core->request->error) {

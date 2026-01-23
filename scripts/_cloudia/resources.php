@@ -434,7 +434,8 @@ class Script extends CoreScripts
         $response = $this->core->request->put_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkInfrastructureResources/" . urlencode($resource_id) . "?_raw&_timezone=UTC",
             $resource,
-            $this->headers
+            $this->headers,
+            true
         );
 
         if ($this->core->request->error) {
