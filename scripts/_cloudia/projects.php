@@ -282,6 +282,18 @@ class Script extends CoreScripts
             if ($this->core->request->error) {
                 return $this->addError($this->core->request->errorMsg);
             }
+            //region VERIFY all milestones have the correct ProjectId
+            $milestones_data = $all_milestones['data'] ?? [];
+            if (count($milestones_data) > 1) {
+                $invalid_milestones = array_filter($milestones_data, function($m) use ($project_id) {
+                    return ($m['ProjectId'] ?? '') !== $project_id;
+                });
+                if ($invalid_milestones) {
+                    $invalid_ids = array_column($invalid_milestones, 'KeyId');
+                    return $this->addError("Found " . count($invalid_milestones) . " milestones with incorrect ProjectId (expected '{$project_id}'): " . implode(', ', $invalid_ids));
+                }
+            }
+            //endregion
             //endregion
 
             //region READ tasks associated
