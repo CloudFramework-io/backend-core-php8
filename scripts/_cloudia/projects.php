@@ -306,6 +306,18 @@ class Script extends CoreScripts
             if ($this->core->request->error) {
                 return $this->addError($this->core->request->errorMsg);
             }
+            //region VERIFY all tasks have the correct ProjectId
+            $tasks_data = $all_tasks['data'] ?? [];
+            if (count($tasks_data) > 1) {
+                $invalid_tasks = array_filter($tasks_data, function($t) use ($project_id) {
+                    return ($t['ProjectId'] ?? '') !== $project_id;
+                });
+                if ($invalid_tasks) {
+                    $invalid_ids = array_column($invalid_tasks, 'KeyId');
+                    return $this->addError("Found " . count($invalid_tasks) . " tasks with incorrect ProjectId (expected '{$project_id}'): " . implode(', ', $invalid_ids));
+                }
+            }
+            //endregion
             //endregion
 
         } else {
