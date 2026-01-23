@@ -253,6 +253,30 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region FETCH remote CFO and COMPARE with local backup
+        $this->sendTerminal(" - Fetching remote CFO for comparison...");
+        $remote_response = $this->core->request->get_json_decode(
+            "https://api.cloudframework.dev/core/cfo/cfi/CloudFrameWorkCFOsLocal/display/{$cfo_id}",
+            ['_timezone' => 'UTC', '_raw' => 1],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_cfo = $remote_response['data'];
+            ksort($remote_cfo);
+            ksort($cfo_data);
+
+            $remote_json = $this->core->jsonEncode($remote_cfo, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            $local_json = $this->core->jsonEncode($cfo_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            if ($remote_json === $local_json) {
+                $this->sendTerminal(str_repeat('-', 50));
+                $this->sendTerminal(" = CFO [{$cfo_id}] is unchanged (local backup equals remote)");
+                return true;
+            }
+        }
+        //endregion
+
         //region UPDATE CFO in remote platform via API
         $this->sendTerminal(" - Updating CFO in remote platform...");
         $api_url = "https://api.cloudframework.dev/core/cfo/cfi/CloudFrameWorkCFOsLocal/{$cfo_id}?_raw";
@@ -280,6 +304,7 @@ class Script extends CoreScripts
         //endregion
 
         //region GET Last version of the cfo
+        $this->formParams['id'] = $cfo_id;
         $this->METHOD_backup_from_remote();
         //endregion
 
