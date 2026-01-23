@@ -409,6 +409,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each Course to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($courses as $course) {
             //region VALIDATE Course has KeyId
@@ -449,10 +450,22 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $course_data to JSON file
+            //region SAVE $course_data to JSON file (skip if unchanged)
             $filename = $this->courseIdToFilename($key_id);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($course_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing local file
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $title = $course['CourseTitle'] ?? 'N/A';
+                    $this->sendTerminal("   = Unchanged: {$filename} - {$title}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write Course [{$key_id}] to file");
             }
@@ -466,7 +479,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total Courses/Contents saved: {$tot_courses}/{$tot_contents}");
+        $this->sendTerminal(" - Total Courses/Contents: {$tot_courses}/{$tot_contents} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -550,6 +563,50 @@ class Script extends CoreScripts
             $remote_contents = $response['data'];
         }
         $this->sendTerminal(" - Remote course found with " . count($remote_contents) . " contents");
+        //endregion
+
+        //region CHECK if local backup equals remote (skip update if unchanged)
+        if ($remote_course) {
+            // Build remote data structure for comparison
+            $remote_course_sorted = $remote_course;
+            ksort($remote_course_sorted);
+
+            $remote_contents_sorted = $remote_contents;
+            foreach ($remote_contents_sorted as &$content) {
+                ksort($content);
+            }
+            usort($remote_contents_sorted, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+
+            $remote_data = [
+                'CloudFrameWorkAcademyCourses' => $remote_course_sorted,
+                'CloudFrameWorkAcademyContents' => $remote_contents_sorted
+            ];
+
+            // Build local data structure for comparison
+            $local_course_sorted = $local_course;
+            ksort($local_course_sorted);
+
+            $local_contents_sorted = $local_contents;
+            foreach ($local_contents_sorted as &$content) {
+                ksort($content);
+            }
+            usort($local_contents_sorted, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+
+            $local_data = [
+                'CloudFrameWorkAcademyCourses' => $local_course_sorted,
+                'CloudFrameWorkAcademyContents' => $local_contents_sorted
+            ];
+
+            // Compare JSON representations
+            if ($this->core->jsonEncode($local_data) === $this->core->jsonEncode($remote_data)) {
+                $this->sendTerminal(" = Course [{$course_id}] is unchanged (local backup equals remote)");
+                return true;
+            }
+        }
         //endregion
 
         //region COMPARE and UPDATE Course

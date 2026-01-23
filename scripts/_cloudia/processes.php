@@ -294,6 +294,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each Process to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($processes as $process) {
             //region VALIDATE Process has KeyName
@@ -334,10 +335,21 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $process_data to JSON file
+            //region SAVE $process_data to JSON file (skip if unchanged)
             $filename = $this->processIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($process_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing local file
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write Process [{$key_name}] to file");
             }
@@ -350,7 +362,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total Processes/Subprocesses saved: {$tot_processes}/{$tot_subprocesses}");
+        $this->sendTerminal(" - Total Processes/Subprocesses: {$tot_processes}/{$tot_subprocesses} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -397,6 +409,27 @@ class Script extends CoreScripts
         $process = $process_data['CloudFrameWorkDevDocumentationForProcesses'] ?? null;
         if (!$process || ($process['KeyName'] ?? null) !== $process_id) {
             return $this->addError("KeyName mismatch: file contains '{$process['KeyName']}' but expected '{$process_id}'");
+        }
+        //endregion
+
+        //region FETCH remote Process and COMPARE with local backup
+        $this->sendTerminal(" - Fetching remote Process for comparison...");
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcesses/display/" . urlencode($process_id) . '?_raw&_timezone=UTC',
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_process = $remote_response['data'];
+            ksort($remote_process);
+            $local_process = $process;
+            ksort($local_process);
+
+            if ($this->core->jsonEncode($local_process) === $this->core->jsonEncode($remote_process)) {
+                $this->sendTerminal(" = [CloudFrameWorkDevDocumentationForProcesses] is unchanged (local backup equals remote)");
+                return true;
+            }
         }
         //endregion
 

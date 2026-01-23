@@ -419,6 +419,7 @@ class Script extends CoreScripts
             $status = $task['Status'] ?? 'N/A';
             $priority = $task['Priority'] ?? 'medium';
             $deadline = $task['DateDeadLine'] ?? '';
+            $dueDate = $task['DateDueDate'] ?? '';
             $estimated = $task['TimeEstimated'] ?? 0;
             $spent = $task['TimeSpent'] ?? 0;
             $open = ($task['Open'] ?? false) ? 'Open' : 'Closed';
@@ -446,10 +447,15 @@ class Script extends CoreScripts
             $milestone = $task['MilestoneId'] ?? '';
             $milestoneInfo = $milestone ? " | Milestone: {$milestone}" : "";
 
+            // Format dates info - always show both fields
+            $deadlineDisplay = $deadline ?: '-';
+            $dueDateDisplay = $dueDate ?: '-';
+            $datesInfo = " | Deadline: {$deadlineDisplay} | DueDate: {$dueDateDisplay}";
+
             // Format output line
             $statusPad = str_pad($status, 12);
             $this->sendTerminal(" {$priorityIcon} [{$keyId}] [{$statusPad}] {$title}");
-            $this->sendTerminal("     Project: {$project}{$milestoneInfo} | Deadline: {$deadline} | Time: {$timeInfo}");
+            $this->sendTerminal("     Project: {$project}{$milestoneInfo}{$datesInfo} | Time: {$timeInfo}");
         }
 
         // Summary

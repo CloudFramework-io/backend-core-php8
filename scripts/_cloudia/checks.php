@@ -266,6 +266,11 @@ class Script extends CoreScripts
         $cfo_id = $this->formParams['id'] ?? null;
         //endregion
 
+        //region INITIALIZE counters
+        $saved_count = 0;
+        $unchanged_count = 0;
+        //endregion
+
         //region READ Checks from remote API
         if ($cfo_entity && $cfo_id) {
             //region FETCH Checks for specific CFOEntity and CFOId
@@ -304,10 +309,18 @@ class Script extends CoreScripts
             $filename = $this->groupKeyToFilename($cfo_entity, $cfo_id);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($checksData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-            if (file_put_contents($filepath, $json_content) === false) {
-                return $this->addError("Failed to write Checks to file");
+
+            // Compare with existing file before saving
+            if (is_file($filepath) && file_get_contents($filepath) === $json_content) {
+                $unchanged_count++;
+                $this->sendTerminal("   = Unchanged: {$filename}");
+            } else {
+                if (file_put_contents($filepath, $json_content) === false) {
+                    return $this->addError("Failed to write Checks to file");
+                }
+                $saved_count++;
+                $this->sendTerminal("   + Saved: {$filename} (" . count($checks) . " checks)");
             }
-            $this->sendTerminal("   + Saved: {$filename} (" . count($checks) . " checks)");
             //endregion
         } else {
             //region FETCH all Checks and group them
@@ -347,7 +360,6 @@ class Script extends CoreScripts
             }
 
             // Save each group to a file
-            $saved_count = 0;
             foreach ($grouped as $key => $checksData) {
                 // Sort checks within group
                 usort($checksData['CloudFrameWorkDevDocumentationForProcessTests'], function ($a, $b) {
@@ -357,6 +369,14 @@ class Script extends CoreScripts
                 $filename = $this->groupKeyToFilename($checksData['CFOEntity'], $checksData['CFOId']);
                 $filepath = "{$backup_dir}/{$filename}";
                 $json_content = $this->core->jsonEncode($checksData, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+                // Compare with existing file before saving
+                if (is_file($filepath) && file_get_contents($filepath) === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+
                 if (file_put_contents($filepath, $json_content) === false) {
                     $this->sendTerminal("   # Failed to write: {$filename}");
                     continue;
@@ -371,7 +391,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Backup complete");
+        $this->sendTerminal(" - Backup complete (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -436,6 +456,30 @@ class Script extends CoreScripts
             $remote_checks = $response['data'];
         }
         $this->sendTerminal(" - Remote checks: " . count($remote_checks));
+        //endregion
+
+        //region COMPARE local backup with remote data before updating
+        // Sort and normalize both local and remote checks for comparison
+        $local_sorted = $local_checks;
+        foreach ($local_sorted as &$check) {
+            ksort($check);
+        }
+        usort($local_sorted, function ($a, $b) {
+            return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+        });
+
+        $remote_sorted = $remote_checks;
+        foreach ($remote_sorted as &$check) {
+            ksort($check);
+        }
+        usort($remote_sorted, function ($a, $b) {
+            return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+        });
+
+        if ($this->core->jsonEncode($local_sorted) === $this->core->jsonEncode($remote_sorted)) {
+            $this->sendTerminal(" = [{$cfo_entity}/{$cfo_id}] is unchanged (local backup equals remote)");
+            return true;
+        }
         //endregion
 
         //region BUILD indexed arrays for comparison

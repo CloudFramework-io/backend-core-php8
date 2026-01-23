@@ -347,6 +347,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each Project to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($projects as $project) {
             //region VALIDATE Project has KeyName
@@ -407,10 +408,21 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $project_data to JSON file
+            //region SAVE $project_data to JSON file (only if changed)
             $filename = $this->projectIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($project_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing file to detect changes
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write Project [{$key_name}] to file");
             }
@@ -424,7 +436,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total Projects/Milestones/Tasks saved: {$tot_projects}/{$tot_milestones}/{$tot_tasks}");
+        $this->sendTerminal(" - Total Projects/Milestones/Tasks: {$tot_projects}/{$tot_milestones}/{$tot_tasks} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -474,6 +486,73 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region FETCH remote data and COMPARE with local backup
+        $this->sendTerminal(" - Fetching remote data to compare...");
+
+        // Fetch remote project
+        $remote_project_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsEntries/display/" . urlencode($project_id) . '?_raw&_timezone=UTC',
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+        if ($this->core->request->error || !($remote_project_response['data'] ?? null)) {
+            $this->sendTerminal(" - Remote project not found, proceeding with update...");
+        } else {
+            // Fetch remote milestones
+            $remote_milestones_response = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones?_raw&_timezone=UTC",
+                ['filter_ProjectId' => $project_id, 'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+            $remote_milestones = $remote_milestones_response['data'] ?? [];
+
+            // Fetch remote tasks
+            $remote_tasks_response = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+                ['filter_ProjectId' => $project_id, 'cfo_limit' => 5000, '_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+            $remote_tasks = $remote_tasks_response['data'] ?? [];
+
+            // Sort remote project keys
+            $remote_project = $remote_project_response['data'];
+            ksort($remote_project);
+
+            // Sort remote milestones
+            foreach ($remote_milestones as &$milestone) {
+                ksort($milestone);
+            }
+            usort($remote_milestones, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+
+            // Sort remote tasks
+            foreach ($remote_tasks as &$task) {
+                ksort($task);
+            }
+            usort($remote_tasks, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+
+            // Build remote data structure for comparison
+            $remote_data = [
+                'CloudFrameWorkProjectsEntries' => $remote_project,
+                'CloudFrameWorkProjectsMilestones' => $remote_milestones,
+                'CloudFrameWorkProjectsTasks' => $remote_tasks
+            ];
+
+            // Compare JSON representations
+            $local_json = $this->core->jsonEncode($project_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+            $remote_json = $this->core->jsonEncode($remote_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            if ($local_json === $remote_json) {
+                $this->sendTerminal(" = Project [{$project_id}] is unchanged (local backup equals remote)");
+                return true;
+            }
+            $this->sendTerminal(" - Changes detected, proceeding with update...");
+        }
+        //endregion
+
         //region UPDATE Project in remote platform via API
         $this->sendTerminal(" - Updating Project in remote platform...");
         $response = $this->core->request->put_json_decode(
@@ -494,6 +573,10 @@ class Script extends CoreScripts
         $this->sendTerminal(" + Project record updated");
         //endregion
 
+        //region CHECK $confirm parameter for destructive operations
+        $confirm_delete = ($this->formParams['confirm'] ?? '') === '1';
+        //endregion
+
         //region SYNC milestones in remote platform
         $milestones = $project_data['CloudFrameWorkProjectsMilestones'] ?? [];
         if ($milestones) {
@@ -506,19 +589,64 @@ class Script extends CoreScripts
                 $this->headers
             );
             $existing_milestones = $existing_response['data'] ?? [];
+            //endregion
+
+            //region VALIDATE milestones belong to the correct project
+            $invalid_milestones = [];
+            foreach ($existing_milestones as $milestone) {
+                if (($milestone['ProjectId'] ?? '') !== $project_id) {
+                    $invalid_milestones[] = "[{$milestone['KeyId']}] {$milestone['Title']} (ProjectId: {$milestone['ProjectId']})";
+                }
+            }
+            if ($invalid_milestones) {
+                $this->sendTerminal("");
+                $this->sendTerminal("   ❌ CRITICAL ERROR: API filter_ProjectId is not working correctly!");
+                $this->sendTerminal("   The API returned {" . count($invalid_milestones) . "} milestones from OTHER projects:");
+                foreach (array_slice($invalid_milestones, 0, 5) as $inv) {
+                    $this->sendTerminal("      - {$inv}");
+                }
+                if (count($invalid_milestones) > 5) {
+                    $this->sendTerminal("      ... and " . (count($invalid_milestones) - 5) . " more");
+                }
+                $this->sendTerminal("");
+                return $this->addError("API BUG: filter_ProjectId={$project_id} returned milestones from other projects. Aborting to prevent data loss.");
+            }
+            //endregion
+
             $existing_by_keyid = $this->core->utils->convertArrayIndexedByColumn($existing_milestones, 'KeyId');
             $local_by_keyid = $this->core->utils->convertArrayIndexedByColumn($milestones, 'KeyId');
             //endregion
 
-            //region DELETE milestones that exist remotely but not locally
+            //region IDENTIFY milestones to delete (exist remotely but not locally)
+            $milestones_to_delete = [];
             foreach ($existing_by_keyid as $key_id => $existing) {
                 if (!isset($local_by_keyid[$key_id])) {
-                    $this->sendTerminal("   - Deleting remote milestone: {$existing['Title']}");
-                    $this->core->request->delete(
-                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/{$key_id}?_raw",
-                        [],
-                        $this->headers
-                    );
+                    $milestones_to_delete[$key_id] = $existing;
+                }
+            }
+            //endregion
+
+            //region DELETE milestones (only if confirmed or none to delete)
+            if ($milestones_to_delete) {
+                $this->sendTerminal("   ⚠️  {" . count($milestones_to_delete) . "} milestones will be DELETED from remote:");
+                foreach ($milestones_to_delete as $key_id => $existing) {
+                    $this->sendTerminal("      - [{$key_id}] {$existing['Title']}");
+                }
+
+                if (!$confirm_delete) {
+                    $this->sendTerminal("");
+                    $this->sendTerminal("   ❌ DELETION SKIPPED: Add 'confirm=1' parameter to confirm deletion");
+                    $this->sendTerminal("      Example: _cloudia/projects/update-from-backup?id={$project_id}&confirm=1");
+                } else {
+                    $this->sendTerminal("   ✓ Deletion confirmed, proceeding...");
+                    foreach ($milestones_to_delete as $key_id => $existing) {
+                        $this->sendTerminal("   - Deleting remote milestone: {$existing['Title']}");
+                        $this->core->request->delete(
+                            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/{$key_id}?_raw",
+                            [],
+                            $this->headers
+                        );
+                    }
                 }
             }
             //endregion
@@ -568,19 +696,64 @@ class Script extends CoreScripts
                 $this->headers
             );
             $existing_tasks = $existing_response['data'] ?? [];
+            //endregion
+
+            //region VALIDATE tasks belong to the correct project
+            $invalid_tasks = [];
+            foreach ($existing_tasks as $task) {
+                if (($task['ProjectId'] ?? '') !== $project_id) {
+                    $invalid_tasks[] = "[{$task['KeyId']}] {$task['Title']} (ProjectId: {$task['ProjectId']})";
+                }
+            }
+            if ($invalid_tasks) {
+                $this->sendTerminal("");
+                $this->sendTerminal("   ❌ CRITICAL ERROR: API filter_ProjectId is not working correctly!");
+                $this->sendTerminal("   The API returned {" . count($invalid_tasks) . "} tasks from OTHER projects:");
+                foreach (array_slice($invalid_tasks, 0, 5) as $inv) {
+                    $this->sendTerminal("      - {$inv}");
+                }
+                if (count($invalid_tasks) > 5) {
+                    $this->sendTerminal("      ... and " . (count($invalid_tasks) - 5) . " more");
+                }
+                $this->sendTerminal("");
+                return $this->addError("API BUG: filter_ProjectId={$project_id} returned tasks from other projects. Aborting to prevent data loss.");
+            }
+            //endregion
+
             $existing_by_keyid = $this->core->utils->convertArrayIndexedByColumn($existing_tasks, 'KeyId');
             $local_by_keyid = $this->core->utils->convertArrayIndexedByColumn($tasks, 'KeyId');
             //endregion
 
-            //region DELETE tasks that exist remotely but not locally
+            //region IDENTIFY tasks to delete (exist remotely but not locally)
+            $tasks_to_delete = [];
             foreach ($existing_by_keyid as $key_id => $existing) {
                 if (!isset($local_by_keyid[$key_id])) {
-                    $this->sendTerminal("   - Deleting remote task: {$existing['Title']}");
-                    $this->core->request->delete(
-                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$key_id}?_raw",
-                        [],
-                        $this->headers
-                    );
+                    $tasks_to_delete[$key_id] = $existing;
+                }
+            }
+            //endregion
+
+            //region DELETE tasks (only if confirmed or none to delete)
+            if ($tasks_to_delete) {
+                $this->sendTerminal("   ⚠️  {" . count($tasks_to_delete) . "} tasks will be DELETED from remote:");
+                foreach ($tasks_to_delete as $key_id => $existing) {
+                    $this->sendTerminal("      - [{$key_id}] {$existing['Title']}");
+                }
+
+                if (!$confirm_delete) {
+                    $this->sendTerminal("");
+                    $this->sendTerminal("   ❌ DELETION SKIPPED: Add 'confirm=1' parameter to confirm deletion");
+                    $this->sendTerminal("      Example: _cloudia/projects/update-from-backup?id={$project_id}&confirm=1");
+                } else {
+                    $this->sendTerminal("   ✓ Deletion confirmed, proceeding...");
+                    foreach ($tasks_to_delete as $key_id => $existing) {
+                        $this->sendTerminal("   - Deleting remote task: {$existing['Title']}");
+                        $this->core->request->delete(
+                            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$key_id}?_raw",
+                            [],
+                            $this->headers
+                        );
+                    }
                 }
             }
             //endregion

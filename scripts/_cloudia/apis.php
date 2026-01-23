@@ -315,6 +315,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each API to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($apis as $api) {
             //region VALIDATE API has KeyName
@@ -355,10 +356,21 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $api_data to JSON file
+            //region SAVE $api_data to JSON file (skip if unchanged)
             $filename = $this->apiIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($api_data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing file before saving
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write API [{$key_name}] to file");
             }
@@ -371,7 +383,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total APIs/Endpoints saved: {$tot_apis}/{$tot_endpoints}");
+        $this->sendTerminal(" - Total APIs/Endpoints: {$tot_apis}/{$tot_endpoints} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -421,6 +433,41 @@ class Script extends CoreScripts
         $api = $api_data['CloudFrameWorkDevDocumentationForAPIs'] ?? null;
         if (!$api || ($api['KeyName'] ?? null) !== $api_id) {
             return $this->addError("KeyName mismatch: file contains '{$api['KeyName']}' but expected '{$api_id}'");
+        }
+        //endregion
+
+        //region CHECK if remote data is unchanged (compare with local backup)
+        $this->sendTerminal(" - Fetching remote API for comparison...");
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIs/display/" . urlencode($api_id) . '?_raw&_timezone=UTC',
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_api = $remote_response['data'];
+            ksort($remote_api);
+            ksort($api);
+            if ($this->core->jsonEncode($remote_api) === $this->core->jsonEncode($api)) {
+                // Also check endpoints
+                $remote_endpoints_response = $this->core->request->get_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForAPIEndPoints?_raw&_timezone=UTC",
+                    ['filter_API' => $api_id, 'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+                    $this->headers
+                );
+                $remote_endpoints = $remote_endpoints_response['data'] ?? [];
+                $local_endpoints = $api_data['CloudFrameWorkDevDocumentationForAPIEndPoints'] ?? [];
+
+                // Sort both for comparison
+                foreach ($remote_endpoints as &$ep) { ksort($ep); }
+                foreach ($local_endpoints as &$ep) { ksort($ep); }
+                usort($remote_endpoints, function ($a, $b) { return strcmp($a['KeyName'] ?? '', $b['KeyName'] ?? ''); });
+                usort($local_endpoints, function ($a, $b) { return strcmp($a['KeyName'] ?? '', $b['KeyName'] ?? ''); });
+
+                if ($this->core->jsonEncode($remote_endpoints) === $this->core->jsonEncode($local_endpoints)) {
+                    $this->sendTerminal(" = API [{$api_id}] is unchanged (local backup equals remote)");
+                    return true;
+                }
+            }
         }
         //endregion
 

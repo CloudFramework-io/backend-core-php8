@@ -303,6 +303,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each Menu Module to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
         $activeCount = 0;
         $inactiveCount = 0;
 
@@ -325,10 +326,22 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $module_data to JSON file
+            //region COMPARE with existing local file and SAVE if changed
             $filename = $this->moduleIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($module_data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            // Check if file exists and content is unchanged
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
+            // Save the file (new or changed)
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write Menu Module [{$key_name}] to file");
             }
@@ -345,7 +358,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total Menu Modules saved: {$saved_count} ({$activeCount} active, {$inactiveCount} inactive)");
+        $this->sendTerminal(" - Total Menu Modules processed: " . ($saved_count + $unchanged_count) . " (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -392,6 +405,29 @@ class Script extends CoreScripts
         $module = $module_data['CloudFrameWorkModules'] ?? $module_data;
         if (!$module || ($module['KeyName'] ?? null) !== $module_id) {
             return $this->addError("KeyName mismatch: file contains '{$module['KeyName']}' but expected '{$module_id}'");
+        }
+        //endregion
+
+        //region FETCH remote Menu Module and COMPARE with local backup
+        $this->sendTerminal(" - Fetching remote Menu Module for comparison...");
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkModules/display/" . urlencode($module_id) . '?_raw&_timezone=UTC',
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_module = $remote_response['data'];
+            ksort($remote_module);
+            ksort($module);
+
+            $remote_json = $this->core->jsonEncode($remote_module, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            $local_json = $this->core->jsonEncode($module, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            if ($remote_json === $local_json) {
+                $this->sendTerminal(" = Menu Module [{$module_id}] is unchanged (local backup equals remote)");
+                return true;
+            }
         }
         //endregion
 

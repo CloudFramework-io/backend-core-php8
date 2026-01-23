@@ -317,6 +317,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each WebApp to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($webapps as $webapp) {
             //region VALIDATE WebApp has KeyName
@@ -357,10 +358,21 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $webapp_data to JSON file
+            //region SAVE $webapp_data to JSON file (if changed)
             $filename = $this->webappIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($webapp_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing local file
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write WebApp [{$key_name}] to file");
             }
@@ -373,7 +385,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total WebApps/Modules saved: {$tot_webapps}/{$tot_modules}");
+        $this->sendTerminal(" - Total WebApps/Modules: {$tot_webapps}/{$tot_modules} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -423,6 +435,30 @@ class Script extends CoreScripts
         $webapp = $webapp_data['CloudFrameWorkDevDocumentationForWebApps'] ?? null;
         if (!$webapp || ($webapp['KeyName'] ?? null) !== $webapp_id) {
             return $this->addError("KeyName mismatch: file contains '{$webapp['KeyName']}' but expected '{$webapp_id}'");
+        }
+        //endregion
+
+        //region FETCH remote WebApp and COMPARE with local backup
+        $this->sendTerminal(" - Fetching remote WebApp for comparison...");
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebApps/display/" . urlencode($webapp_id) . '?_raw&_timezone=UTC',
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_webapp = $remote_response['data'];
+            ksort($remote_webapp);
+            $local_webapp = $webapp;
+            ksort($local_webapp);
+
+            $remote_json = $this->core->jsonEncode($remote_webapp, JSON_UNESCAPED_SLASHES);
+            $local_json = $this->core->jsonEncode($local_webapp, JSON_UNESCAPED_SLASHES);
+
+            if ($remote_json === $local_json) {
+                $this->sendTerminal(" = [CloudFrameWorkDevDocumentationForWebApps] is unchanged (local backup equals remote)");
+                return true;
+            }
         }
         //endregion
 

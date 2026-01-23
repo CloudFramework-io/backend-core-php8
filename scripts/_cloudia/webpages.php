@@ -286,6 +286,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each WebPage to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($webpages as $webpage) {
             //region VALIDATE WebPage has PageRoute
@@ -306,10 +307,21 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $webpage_data to JSON file
+            //region SAVE $webpage_data to JSON file (if changed)
             $filename = $this->pageRouteToFilename($page_route);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($webpage_data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing local file
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write WebPage [{$page_route}] to file");
             }
@@ -321,7 +333,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total WebPages saved: {$saved_count}");
+        $this->sendTerminal(" - Total WebPages processed: {$tot_webpages} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -378,6 +390,27 @@ class Script extends CoreScripts
         $key_id = $webpage['KeyId'] ?? null;
         if (!$key_id) {
             return $this->addError("KeyId not found in WebPage data. Cannot update.");
+        }
+        //endregion
+
+        //region FETCH remote data and COMPARE with local backup
+        $this->sendTerminal(" - Fetching remote WebPage to compare...");
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages/{$key_id}?_raw&_timezone=UTC",
+            [],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_webpage = $remote_response['data'];
+            ksort($remote_webpage);
+            ksort($webpage);
+            $remote_json = $this->core->jsonEncode($remote_webpage, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            $local_json = $this->core->jsonEncode($webpage, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            if ($remote_json === $local_json) {
+                $this->sendTerminal(" = [CloudFrameWorkECMPages] is unchanged (local backup equals remote)");
+                return true;
+            }
         }
         //endregion
 

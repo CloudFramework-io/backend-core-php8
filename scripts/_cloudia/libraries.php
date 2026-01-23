@@ -317,6 +317,7 @@ class Script extends CoreScripts
 
         //region PROCESS and SAVE each Library to backup directory
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($libraries as $library) {
             //region VALIDATE Library has KeyName
@@ -357,10 +358,21 @@ class Script extends CoreScripts
             ];
             //endregion
 
-            //region SAVE $library_data to JSON file
+            //region SAVE $library_data to JSON file (only if changed)
             $filename = $this->libraryIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";
             $json_content = $this->core->jsonEncode($library_data, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            // Compare with existing local file
+            if (is_file($filepath)) {
+                $existing_content = file_get_contents($filepath);
+                if ($existing_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$filename}");
+                    continue;
+                }
+            }
+
             if (file_put_contents($filepath, $json_content) === false) {
                 return $this->addError("Failed to write Library [{$key_name}] to file");
             }
@@ -373,7 +385,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total Libraries/Modules saved: {$tot_libraries}/{$tot_modules}");
+        $this->sendTerminal(" - Total Libraries/Modules processed: {$tot_libraries}/{$tot_modules} (saved: {$saved_count}, unchanged: {$unchanged_count})");
         //endregion
 
         return true;
@@ -423,6 +435,29 @@ class Script extends CoreScripts
         $library = $library_data['CloudFrameWorkDevDocumentationForLibraries'] ?? null;
         if (!$library || ($library['KeyName'] ?? null) !== $library_id) {
             return $this->addError("KeyName mismatch: file contains '{$library['KeyName']}' but expected '{$library_id}'");
+        }
+        //endregion
+
+        //region FETCH remote Library data and compare with local backup
+        $this->sendTerminal(" - Fetching remote Library data for comparison...");
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForLibraries/display/" . urlencode($library_id) . "?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
+            $remote_library = $remote_response['data'];
+            ksort($remote_library);
+            ksort($library);
+
+            $remote_json = $this->core->jsonEncode($remote_library, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            $local_json = $this->core->jsonEncode($library, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            if ($remote_json === $local_json) {
+                $this->sendTerminal(" = [CloudFrameWorkDevDocumentationForLibraries] is unchanged (local backup equals remote)");
+                return true;
+            }
         }
         //endregion
 
