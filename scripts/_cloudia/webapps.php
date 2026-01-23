@@ -281,6 +281,19 @@ class Script extends CoreScripts
             }
             //endregion
 
+            //region VERIFY all modules have the correct WebApp
+            $modules_data = $all_modules['data'] ?? [];
+            if (count($modules_data) > 0) {
+                $invalid_modules = array_filter($modules_data, function($m) use ($webapp_id) {
+                    return ($m['WebApp'] ?? '') !== $webapp_id;
+                });
+                if ($invalid_modules) {
+                    $invalid_keys = array_map(function($m) { return $m['KeyId'] ?? $m['KeyName'] ?? 'unknown'; }, $invalid_modules);
+                    return $this->addError("Found " . count($invalid_modules) . " modules with incorrect WebApp (expected '{$webapp_id}'): " . implode(', ', $invalid_keys));
+                }
+            }
+            //endregion
+
         } else {
             //region FETCH all WebApps
             $this->sendTerminal(" - Fetching all WebApps... [max 2000]");

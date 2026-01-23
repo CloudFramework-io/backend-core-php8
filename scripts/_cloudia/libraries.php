@@ -281,6 +281,19 @@ class Script extends CoreScripts
             }
             //endregion
 
+            //region VERIFY all modules have the correct Library
+            $modules_data = $all_modules['data'] ?? [];
+            if (count($modules_data) > 0) {
+                $invalid_modules = array_filter($modules_data, function($m) use ($library_id) {
+                    return ($m['Library'] ?? '') !== $library_id;
+                });
+                if ($invalid_modules) {
+                    $invalid_keys = array_map(function($m) { return $m['KeyId'] ?? $m['KeyName'] ?? 'unknown'; }, $invalid_modules);
+                    return $this->addError("Found " . count($invalid_modules) . " modules with incorrect Library (expected '{$library_id}'): " . implode(', ', $invalid_keys));
+                }
+            }
+            //endregion
+
         } else {
             //region FETCH all Libraries
             $this->sendTerminal(" - Fetching all Libraries... [max 2000]");

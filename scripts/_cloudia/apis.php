@@ -279,6 +279,19 @@ class Script extends CoreScripts
             }
             //endregion
 
+            //region VERIFY all endpoints have the correct API
+            $endpoints_data = $all_endpoints['data'] ?? [];
+            if (count($endpoints_data) > 0) {
+                $invalid_endpoints = array_filter($endpoints_data, function($e) use ($api_id) {
+                    return ($e['API'] ?? '') !== $api_id;
+                });
+                if ($invalid_endpoints) {
+                    $invalid_keys = array_map(function($e) { return $e['KeyId'] ?? $e['KeyName'] ?? 'unknown'; }, $invalid_endpoints);
+                    return $this->addError("Found " . count($invalid_endpoints) . " endpoints with incorrect API (expected '{$api_id}'): " . implode(', ', $invalid_keys));
+                }
+            }
+            //endregion
+
         } else {
             //region FETCH all APIs
             $this->sendTerminal(" - Fetching all APIs... [max 2000]");

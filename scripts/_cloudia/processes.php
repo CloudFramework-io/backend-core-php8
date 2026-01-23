@@ -260,6 +260,19 @@ class Script extends CoreScripts
             }
             //endregion
 
+            //region VERIFY all subprocesses have the correct Process
+            $subprocesses_data = $all_subprocesses['data'] ?? [];
+            if (count($subprocesses_data) > 0) {
+                $invalid_subprocesses = array_filter($subprocesses_data, function($s) use ($process_id) {
+                    return ($s['Process'] ?? '') !== $process_id;
+                });
+                if ($invalid_subprocesses) {
+                    $invalid_keys = array_map(function($s) { return $s['KeyId'] ?? $s['KeyName'] ?? 'unknown'; }, $invalid_subprocesses);
+                    return $this->addError("Found " . count($invalid_subprocesses) . " subprocesses with incorrect Process (expected '{$process_id}'): " . implode(', ', $invalid_keys));
+                }
+            }
+            //endregion
+
         } else {
             //region FETCH all Processes
             $this->sendTerminal(" - Fetching all Processes... [max 2000]");
