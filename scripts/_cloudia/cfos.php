@@ -135,6 +135,7 @@ class Script extends CoreScripts
         $no_secrets = [];
         $no_date_updating = [];
         $saved_count = 0;
+        $unchanged_count = 0;
 
         foreach ($cfos as $cfo) {
             //region VALIDATE CFO has KeyName
@@ -163,9 +164,21 @@ class Script extends CoreScripts
             }
             //endregion
 
-            //region SAVE $cfo to individual JSON file
+            //region COMPARE with local file and SAVE if different
             $filename = "{$backup_dir}/{$key_name}.json";
             $json_content = $this->core->jsonEncode($cfo, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            // Check if local file exists and compare content
+            if (is_file($filename)) {
+                $local_content = file_get_contents($filename);
+                if ($local_content === $json_content) {
+                    $unchanged_count++;
+                    $this->sendTerminal("   = Unchanged: {$key_name}.json");
+                    continue;
+                }
+            }
+
+            // Save only if content is different or file doesn't exist
             if(file_put_contents($filename, $json_content) === false) {
                 return $this->addError("Failed to write CFO [{$key_name}] to file");
             }
@@ -177,7 +190,7 @@ class Script extends CoreScripts
 
         //region SEND summary to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" - Total CFOs saved: {$saved_count}");
+        $this->sendTerminal(" - Total CFOs: " . count($cfos) . " (saved: {$saved_count}, unchanged: {$unchanged_count})");
 
         if($no_secrets) {
             $this->sendTerminal("   # CFOs without secrets: ".implode(', ', $no_secrets));
