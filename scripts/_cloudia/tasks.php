@@ -3,15 +3,15 @@
  * Tasks Query Script
  *
  * This script provides functionality to query and display task information:
+ * - List my open tasks
  * - List tasks for today
  * - List tasks in the current sprint
  * - List tasks for a specific person
  * - Get detailed information about a specific task
  * - Filter tasks by project, status, or priority
  *
- * Note: Use _cloudia/projects/my-tasks for listing your open tasks across all projects.
- *
  * Usage:
+ *   _cloudia/tasks/list                               - List my open tasks
  *   _cloudia/tasks/today                              - List tasks for today
  *   _cloudia/tasks/sprint                             - List tasks in current sprint
  *   _cloudia/tasks/project?id=project-keyname         - List tasks for a specific project
@@ -86,14 +86,13 @@ class Script extends CoreScripts
     {
         $this->sendTerminal("");
         $this->sendTerminal("Available commands:");
+        $this->sendTerminal("  /list                          - List my open tasks");
         $this->sendTerminal("  /today                         - List tasks active for today");
         $this->sendTerminal("  /sprint                        - List tasks in current sprint");
         $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project");
         $this->sendTerminal("  /person?email=EMAIL            - List tasks for a specific person");
         $this->sendTerminal("  /get?id=TASK_KEYID             - Get detailed task information");
         $this->sendTerminal("  /search?status=STATE           - Search tasks by filters");
-        $this->sendTerminal("");
-        $this->sendTerminal("Note: Use _cloudia/projects/my-tasks for listing your open tasks.");
         $this->sendTerminal("");
         $this->sendTerminal("Filter parameters for /search:");
         $this->sendTerminal("  status    - Task status (pending, in-progress, in-qa, closed, blocked, etc.)");
@@ -102,10 +101,47 @@ class Script extends CoreScripts
         $this->sendTerminal("  assigned  - Assigned user email");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
+        $this->sendTerminal("  composer run-script script _cloudia/tasks/list");
         $this->sendTerminal("  composer run-script script _cloudia/tasks/today");
         $this->sendTerminal("  composer run-script script \"_cloudia/tasks/person?email=user@example.com\"");
         $this->sendTerminal("  composer run-script script \"_cloudia/tasks/get?id=5734953457745920\"");
         $this->sendTerminal("  composer run-script script \"_cloudia/tasks/search?status=in-progress&priority=high\"");
+    }
+
+    /**
+     * List my open tasks
+     */
+    public function METHOD_list()
+    {
+        //region FETCH tasks assigned to current user
+        $this->sendTerminal("");
+        $this->sendTerminal("My open tasks [{$this->user_email}]:");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $params = [
+            'filter_Open' => 'true',
+            'filter_PlayerId' => $this->user_email,
+            '_order' => '-Priority,DateDeadLine',
+            'cfo_limit' => 100,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+            $params,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $tasks = $response['data'] ?? [];
+        $this->displayTaskList($tasks);
+        //endregion
+
+        return true;
     }
 
     /**
