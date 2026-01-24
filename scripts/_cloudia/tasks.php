@@ -257,7 +257,7 @@ class Script extends CoreScripts
     /**
      * List tasks for a specific project
      */
-    public function METHOD_project()
+    public function METHOD_project(): bool
     {
         //region VALIDATE project ID
         $project_id = $this->formParams['id'] ?? null;
