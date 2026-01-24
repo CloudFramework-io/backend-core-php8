@@ -38,6 +38,9 @@ class Script extends CoreScripts
     /** @var string Base API URL for remote platform */
     var $api_base_url = 'https://api.cloudframework.io';
 
+    /** @var string Current user email */
+    var $user_email = '';
+
     /**
      * Main execution method
      */
@@ -54,6 +57,7 @@ class Script extends CoreScripts
         if (!$this->authPlatformUserWithLocalAccessToken($this->platform_id)) {
             return false;
         }
+        $this->user_email = $this->core->user->id;
         //endregion
 
         //region VERIFY privileges
@@ -86,6 +90,7 @@ class Script extends CoreScripts
     public function METHOD_default()
     {
         $this->sendTerminal("Available commands:");
+        $this->sendTerminal("  /my-tasks                      - List my open tasks across all projects");
         $this->sendTerminal("  /backup-from-remote            - Backup all Projects from remote platform");
         $this->sendTerminal("  /backup-from-remote?id=KEY     - Backup specific Project from remote platform");
         $this->sendTerminal("  /insert-from-backup?id=KEY     - Insert new Project in remote platform from local backup");
@@ -94,6 +99,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  /list-local                    - List all Projects in local backup");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
+        $this->sendTerminal("  composer run-script script _cloudia/projects/my-tasks");
         $this->sendTerminal("  composer run-script script \"_cloudia/projects/backup-from-remote?id=cloud-platform\"");
         $this->sendTerminal("  composer run-script script _cloudia/projects/list-remote");
         $this->sendTerminal("");
@@ -967,5 +973,127 @@ class Script extends CoreScripts
         //endregion
 
         return true;
+    }
+
+    /**
+     * List my open tasks across all projects
+     */
+    public function METHOD_my_tasks()
+    {
+        //region FETCH tasks assigned to current user
+        $this->sendTerminal("");
+        $this->sendTerminal("My open tasks [{$this->user_email}]:");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $params = [
+            'filter_Open' => 'true',
+            'filter_PlayerId' => $this->user_email,
+            '_order' => '-Priority,DateDeadLine',
+            'cfo_limit' => 100,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+            $params,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $tasks = $response['data'] ?? [];
+        $this->displayTaskList($tasks);
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Display a list of tasks in table format
+     *
+     * @param array $tasks Array of task records
+     * @param string|null $person_email Optional email to display instead of current user
+     */
+    private function displayTaskList(array $tasks, ?string $person_email = null)
+    {
+        if (!$tasks) {
+            $this->sendTerminal("No tasks found");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal("Total: 0 tasks");
+            return;
+        }
+
+        // Group tasks by status for summary
+        $byStatus = [];
+        foreach ($tasks as $task) {
+            $status = $task['Status'] ?? 'unknown';
+            $byStatus[$status] = ($byStatus[$status] ?? 0) + 1;
+        }
+
+        // Display tasks
+        foreach ($tasks as $task) {
+            $keyId = $task['KeyId'] ?? 'N/A';
+            $title = $task['Title'] ?? 'Untitled';
+            $project = $task['ProjectId'] ?? '';
+            $status = $task['Status'] ?? 'N/A';
+            $priority = $task['Priority'] ?? 'medium';
+            $deadline = $task['DateDeadLine'] ?? '';
+            $dueDate = $task['DateDueDate'] ?? '';
+            $estimated = $task['TimeEstimated'] ?? 0;
+            $spent = $task['TimeSpent'] ?? 0;
+
+            // Priority indicator
+            $priorityIcon = match($priority) {
+                'very_high' => '!!!',
+                'high' => '!! ',
+                'medium' => '!  ',
+                'low' => '.  ',
+                'very_low' => '   ',
+                default => '   '
+            };
+
+            // Truncate title if too long
+            $maxTitleLen = 50;
+            if (strlen($title) > $maxTitleLen) {
+                $title = substr($title, 0, $maxTitleLen - 3) . '...';
+            }
+
+            // Format time
+            $timeInfo = "{$spent}h/{$estimated}h";
+
+            // Milestone info
+            $milestone = $task['MilestoneId'] ?? '';
+            $milestoneInfo = $milestone ? " | Milestone: {$milestone}" : "";
+
+            // Format dates info
+            $deadlineDisplay = $deadline ?: '-';
+            $dueDateDisplay = $dueDate ?: '-';
+            $datesInfo = " | Deadline: {$deadlineDisplay} | DueDate: {$dueDateDisplay}";
+
+            // Format output line
+            $statusPad = str_pad($status, 12);
+            $this->sendTerminal(" {$priorityIcon} [{$keyId}] [{$statusPad}] {$title}");
+            $this->sendTerminal("     Project: {$project}{$milestoneInfo}{$datesInfo} | Time: {$timeInfo}");
+        }
+
+        // Summary
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal("Total: " . count($tasks) . " tasks");
+
+        // Status breakdown
+        if ($byStatus) {
+            $statusSummary = [];
+            foreach ($byStatus as $status => $count) {
+                $statusSummary[] = "{$status}: {$count}";
+            }
+            $this->sendTerminal("By status: " . implode(' | ', $statusSummary));
+        }
+
+        // User info
+        $display_email = $person_email ?? $this->user_email;
+        $this->sendTerminal("User: {$display_email}");
     }
 }
