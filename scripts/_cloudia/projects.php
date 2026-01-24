@@ -166,6 +166,205 @@ class Script extends CoreScripts
     }
 
     /**
+     * Display milestones report separated by open/closed status
+     *
+     * @param array $milestones Array of milestone data from backup
+     * @param int $inserted Number of inserted milestones (0 for unchanged report)
+     * @param int $updated Number of updated milestones (0 for unchanged report)
+     * @param int $unchanged Number of unchanged milestones
+     */
+    private function displayMilestonesReport(array $milestones, int $inserted = 0, int $updated = 0, int $unchanged = 0): void
+    {
+        // Build report items with open/closed classification
+        $report_open = [];
+        $report_closed = [];
+
+        foreach ($milestones as $m) {
+            $item = [
+                'id' => $m['id'] ?? $m['KeyId'] ?? 'N/A',
+                'title' => $m['title'] ?? $m['Title'] ?? 'Untitled',
+                'player' => $m['player'] ?? $m['PlayerId'] ?? '-',
+                'status' => $m['status'] ?? $m['Status'] ?? '-',
+                'deadline' => $m['deadline'] ?? $m['DateDeadline'] ?? '-',
+                'sync' => $m['sync'] ?? '-'
+            ];
+
+            // Determine if closed
+            $status = $m['status'] ?? $m['Status'] ?? '';
+            $open = $m['Open'] ?? $m['is_closed'] ?? null;
+            $is_closed = isset($m['is_closed']) ? $m['is_closed'] : (in_array($status, ['closed', 'canceled']) || $open === false);
+
+            if ($is_closed) {
+                $report_closed[] = $item;
+            } else {
+                $report_open[] = $item;
+            }
+        }
+
+        // Display OPEN milestones
+        $this->sendTerminal("");
+        $this->sendTerminal("   Milestones OPEN (" . count($report_open) . "):");
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        $this->sendTerminal(sprintf("   %-12s %-30s %-25s %-12s %-12s %s", "KeyId", "Title", "Assignee", "Status", "Deadline", "Sync"));
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        foreach ($report_open as $m) {
+            $title_display = strlen($m['title']) > 27 ? substr($m['title'], 0, 24) . '...' : $m['title'];
+            $player_display = strlen($m['player']) > 22 ? substr($m['player'], 0, 19) . '...' : $m['player'];
+            $deadline_display = $m['deadline'] !== '-' ? substr($m['deadline'], 0, 10) : '-';
+            $this->sendTerminal(sprintf("   %-12s %-30s %-25s %-12s %-12s %s", $m['id'], $title_display, $player_display, $m['status'], $deadline_display, $m['sync']));
+        }
+
+        // Display CLOSED milestones
+        $this->sendTerminal("");
+        $this->sendTerminal("   Milestones CLOSED (" . count($report_closed) . "):");
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        foreach ($report_closed as $m) {
+            $title_display = strlen($m['title']) > 27 ? substr($m['title'], 0, 24) . '...' : $m['title'];
+            $player_display = strlen($m['player']) > 22 ? substr($m['player'], 0, 19) . '...' : $m['player'];
+            $deadline_display = $m['deadline'] !== '-' ? substr($m['deadline'], 0, 10) : '-';
+            $this->sendTerminal(sprintf("   %-12s %-30s %-25s %-12s %-12s %s", $m['id'], $title_display, $player_display, $m['status'], $deadline_display, $m['sync']));
+        }
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        $this->sendTerminal(" + Milestones: {$inserted} created, {$updated} updated, {$unchanged} unchanged");
+    }
+
+    /**
+     * Display tasks report separated by open/closed status
+     *
+     * @param array $tasks Array of task data from backup
+     * @param int $inserted Number of inserted tasks (0 for unchanged report)
+     * @param int $updated Number of updated tasks (0 for unchanged report)
+     * @param int $unchanged Number of unchanged tasks
+     */
+    private function displayTasksReport(array $tasks, int $inserted = 0, int $updated = 0, int $unchanged = 0): void
+    {
+        // Build report items with open/closed classification
+        $report_open = [];
+        $report_closed = [];
+
+        // Totals for hours (open vs closed)
+        $total_spent_open = 0;
+        $total_estimated_open = 0;
+        $total_spent_closed = 0;
+        $total_estimated_closed = 0;
+
+        // Stats by PlayerId
+        $stats_by_player = [];
+
+        foreach ($tasks as $t) {
+            // Handle PlayerId as array or string
+            $players = $t['player'] ?? $t['PlayerId'] ?? [];
+            $player = is_array($players) ? implode(',', $players) : $players;
+            $player = $player ?: '-';
+
+            // Get hours values
+            $time_spent = floatval($t['TimeSpent'] ?? 0);
+            $time_estimated = floatval($t['TimeEstimated'] ?? 0);
+
+            // If hours already formatted as string, parse it
+            if (isset($t['hours']) && is_string($t['hours']) && strpos($t['hours'], '/') !== false) {
+                list($spent_str, $estimated_str) = explode('/', $t['hours']);
+                $time_spent = floatval($spent_str);
+                $time_estimated = floatval($estimated_str);
+            }
+
+            $item = [
+                'id' => $t['id'] ?? $t['KeyId'] ?? 'N/A',
+                'title' => $t['title'] ?? $t['Title'] ?? 'Untitled',
+                'player' => $player,
+                'status' => $t['status'] ?? $t['Status'] ?? '-',
+                'deadline' => $t['deadline'] ?? $t['DateDeadline'] ?? '-',
+                'hours' => sprintf("%.1f/%.1f", $time_spent, $time_estimated),
+                'sync' => $t['sync'] ?? '-'
+            ];
+
+            // Determine if closed
+            $status = $t['status'] ?? $t['Status'] ?? '';
+            $open = $t['Open'] ?? $t['is_closed'] ?? null;
+            $is_closed = isset($t['is_closed']) ? $t['is_closed'] : (in_array($status, ['closed', 'canceled']) || $open === false);
+
+            // Initialize player stats if not exists
+            if (!isset($stats_by_player[$player])) {
+                $stats_by_player[$player] = [
+                    'tasks_open' => 0,
+                    'tasks_closed' => 0,
+                    'spent_open' => 0,
+                    'estimated_open' => 0,
+                    'spent_closed' => 0,
+                    'estimated_closed' => 0
+                ];
+            }
+
+            if ($is_closed) {
+                $report_closed[] = $item;
+                $total_spent_closed += $time_spent;
+                $total_estimated_closed += $time_estimated;
+                $stats_by_player[$player]['tasks_closed']++;
+                $stats_by_player[$player]['spent_closed'] += $time_spent;
+                $stats_by_player[$player]['estimated_closed'] += $time_estimated;
+            } else {
+                $report_open[] = $item;
+                $total_spent_open += $time_spent;
+                $total_estimated_open += $time_estimated;
+                $stats_by_player[$player]['tasks_open']++;
+                $stats_by_player[$player]['spent_open'] += $time_spent;
+                $stats_by_player[$player]['estimated_open'] += $time_estimated;
+            }
+        }
+
+        // Display OPEN tasks
+        $this->sendTerminal("");
+        $this->sendTerminal("   Tasks OPEN (" . count($report_open) . "):");
+        $this->sendTerminal("   " . str_repeat('-', 145));
+        $this->sendTerminal(sprintf("   %-12s %-25s %-22s %-12s %-12s %-10s %s", "KeyId", "Title", "Assignee", "Status", "Deadline", "Hours", "Sync"));
+        $this->sendTerminal("   " . str_repeat('-', 145));
+        foreach ($report_open as $t) {
+            $title_display = strlen($t['title']) > 22 ? substr($t['title'], 0, 19) . '...' : $t['title'];
+            $player_display = strlen($t['player']) > 19 ? substr($t['player'], 0, 16) . '...' : $t['player'];
+            $deadline_display = $t['deadline'] !== '-' ? substr($t['deadline'], 0, 10) : '-';
+            $this->sendTerminal(sprintf("   %-12s %-25s %-22s %-12s %-12s %-10s %s", $t['id'], $title_display, $player_display, $t['status'], $deadline_display, $t['hours'], $t['sync']));
+        }
+        $this->sendTerminal(sprintf("   %90s %-10s", "Subtotal:", sprintf("%.1f/%.1f", $total_spent_open, $total_estimated_open)));
+
+        // Display CLOSED tasks
+        $this->sendTerminal("");
+        $this->sendTerminal("   Tasks CLOSED (" . count($report_closed) . "):");
+        $this->sendTerminal("   " . str_repeat('-', 145));
+        foreach ($report_closed as $t) {
+            $title_display = strlen($t['title']) > 22 ? substr($t['title'], 0, 19) . '...' : $t['title'];
+            $player_display = strlen($t['player']) > 19 ? substr($t['player'], 0, 16) . '...' : $t['player'];
+            $deadline_display = $t['deadline'] !== '-' ? substr($t['deadline'], 0, 10) : '-';
+            $this->sendTerminal(sprintf("   %-12s %-25s %-22s %-12s %-12s %-10s %s", $t['id'], $title_display, $player_display, $t['status'], $deadline_display, $t['hours'], $t['sync']));
+        }
+        $this->sendTerminal(sprintf("   %90s %-10s", "Subtotal:", sprintf("%.1f/%.1f", $total_spent_closed, $total_estimated_closed)));
+
+        // Display totals
+        $total_spent = $total_spent_open + $total_spent_closed;
+        $total_estimated = $total_estimated_open + $total_estimated_closed;
+        $this->sendTerminal("   " . str_repeat('-', 145));
+        $this->sendTerminal(sprintf("   %90s %-10s", "TOTAL Hours (Spent/Estimated):", sprintf("%.1f/%.1f", $total_spent, $total_estimated)));
+
+        // Display summary by PlayerId
+        $this->sendTerminal("");
+        $this->sendTerminal("   Summary by Assignee:");
+        $this->sendTerminal("   " . str_repeat('-', 100));
+        $this->sendTerminal(sprintf("   %-30s %12s %12s %15s %15s", "Assignee", "Tasks Open", "Tasks Closed", "Hours Open", "Hours Closed"));
+        $this->sendTerminal("   " . str_repeat('-', 100));
+        ksort($stats_by_player);
+        foreach ($stats_by_player as $player_id => $stats) {
+            $player_display = strlen($player_id) > 27 ? substr($player_id, 0, 24) . '...' : $player_id;
+            $hours_open = sprintf("%.1f/%.1f", $stats['spent_open'], $stats['estimated_open']);
+            $hours_closed = sprintf("%.1f/%.1f", $stats['spent_closed'], $stats['estimated_closed']);
+            $this->sendTerminal(sprintf("   %-30s %12d %12d %15s %15s", $player_display, $stats['tasks_open'], $stats['tasks_closed'], $hours_open, $hours_closed));
+        }
+        $this->sendTerminal("   " . str_repeat('-', 100));
+        $this->sendTerminal(sprintf("   %-30s %12d %12d %15s %15s", "TOTAL", count($report_open), count($report_closed), sprintf("%.1f/%.1f", $total_spent_open, $total_estimated_open), sprintf("%.1f/%.1f", $total_spent_closed, $total_estimated_closed)));
+
+        $this->sendTerminal("");
+        $this->sendTerminal(" + Tasks: {$inserted} created, {$updated} updated, {$unchanged} unchanged");
+    }
+
+    /**
      * Get backup directory path
      *
      * @return string|false Directory path on success, false on error
@@ -612,6 +811,23 @@ class Script extends CoreScripts
 
             if ($local_json === $remote_json) {
                 $this->sendTerminal(" = Project [{$project_id}] is unchanged (local backup equals remote)");
+
+                //region DISPLAY report for unchanged milestones
+                $milestones = $project_data['CloudFrameWorkProjectsMilestones'] ?? [];
+                if ($milestones) {
+                    $this->displayMilestonesReport($milestones, 0, 0, count($milestones));
+                }
+                //endregion
+
+                //region DISPLAY report for unchanged tasks
+                $tasks = $project_data['CloudFrameWorkProjectsTasks'] ?? [];
+                if ($tasks) {
+                    $this->displayTasksReport($tasks, 0, 0, count($tasks));
+                }
+                //endregion
+
+                $this->sendTerminal(str_repeat('-', 50));
+                $this->sendTerminal(" = No updates needed for project [{$project_id}]");
                 return true;
             }
             $this->sendTerminal(" - Changes detected, proceeding with update...");
@@ -726,7 +942,11 @@ class Script extends CoreScripts
             foreach ($milestones as $milestone) {
                 $milestone_key = $milestone['KeyId'] ?? null;
                 $milestone_title = $milestone['Title'] ?? 'Untitled';
-                $milestone_date = $milestone['DateUpdating'] ?? $milestone['DateInserting'] ?? '-';
+                $milestone_player = $milestone['PlayerId'] ?? '-';
+                $milestone_status = $milestone['Status'] ?? '-';
+                $milestone_deadline = $milestone['DateDeadline'] ?? '-';
+                $milestone_open = $milestone['Open'] ?? true;
+                $is_closed = in_array($milestone_status, ['closed', 'canceled']) || $milestone_open === false;
 
                 if (!$milestone_key) {
                     // New milestone (no KeyId) - insert
@@ -736,11 +956,11 @@ class Script extends CoreScripts
                         $this->headers
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
-                        $milestones_report[] = ['id' => 'NEW', 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'ERROR'];
+                        $milestones_report[] = ['id' => 'NEW', 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => 'ERROR', 'is_closed' => $is_closed];
                     } else {
                         $milestones_inserted++;
                         $new_key = $response['data']['KeyId'] ?? 'NEW';
-                        $milestones_report[] = ['id' => $new_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'CREATED'];
+                        $milestones_report[] = ['id' => $new_key, 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => 'CREATED', 'is_closed' => $is_closed];
                     }
                 } else {
                     // Check if milestone exists remotely and compare
@@ -754,10 +974,10 @@ class Script extends CoreScripts
                             $this->headers
                         );
                         if ($this->core->request->error || !($response['success'] ?? false)) {
-                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'ERROR'];
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => 'ERROR', 'is_closed' => $is_closed];
                         } else {
                             $milestones_inserted++;
-                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'CREATED'];
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => 'CREATED', 'is_closed' => $is_closed];
                         }
                     } elseif ($this->recordsAreDifferent($milestone, $remote_milestone)) {
                         // Milestone exists and is different - update
@@ -768,33 +988,22 @@ class Script extends CoreScripts
                             true
                         );
                         if ($this->core->request->error || !($response['success'] ?? false)) {
-                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'ERROR'];
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => 'ERROR', 'is_closed' => $is_closed];
                         } else {
                             $milestones_updated++;
-                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'UPDATED'];
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => 'UPDATED', 'is_closed' => $is_closed];
                         }
                     } else {
                         // Milestone exists and is identical - skip
                         $milestones_unchanged++;
-                        $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => '-'];
+                        $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'player' => $milestone_player, 'status' => $milestone_status, 'deadline' => $milestone_deadline, 'sync' => '-', 'is_closed' => $is_closed];
                     }
                 }
             }
             //endregion
 
             //region DISPLAY milestones report
-            $this->sendTerminal("");
-            $this->sendTerminal("   Milestones Report:");
-            $this->sendTerminal("   " . str_repeat('-', 90));
-            $this->sendTerminal(sprintf("   %-20s %-45s %-12s %s", "KeyId", "Title", "DateUpdating", "Status"));
-            $this->sendTerminal("   " . str_repeat('-', 90));
-            foreach ($milestones_report as $m) {
-                $title_display = strlen($m['title']) > 42 ? substr($m['title'], 0, 39) . '...' : $m['title'];
-                $date_display = substr($m['date'], 0, 10);
-                $this->sendTerminal(sprintf("   %-20s %-45s %-12s %s", $m['id'], $title_display, $date_display, $m['status']));
-            }
-            $this->sendTerminal("   " . str_repeat('-', 90));
-            $this->sendTerminal(" + Milestones: {$milestones_inserted} created, {$milestones_updated} updated, {$milestones_unchanged} unchanged");
+            $this->displayMilestonesReport($milestones_report, $milestones_inserted, $milestones_updated, $milestones_unchanged);
             //endregion
         }
         //endregion
@@ -882,8 +1091,13 @@ class Script extends CoreScripts
             foreach ($tasks as $task) {
                 $task_key = $task['KeyId'] ?? null;
                 $task_title = $task['Title'] ?? 'Untitled';
-                $task_date = $task['DateUpdating'] ?? $task['DateInserting'] ?? '-';
+                $task_players = $task['PlayerId'] ?? [];
+                $task_player = is_array($task_players) ? implode(',', $task_players) : $task_players;
+                $task_status = $task['Status'] ?? '-';
+                $task_deadline = $task['DateDeadline'] ?? '-';
                 $task_hours = sprintf("%.1f/%.1f", floatval($task['TimeSpent'] ?? 0), floatval($task['TimeEstimated'] ?? 0));
+                $task_open = $task['Open'] ?? true;
+                $is_closed = in_array($task_status, ['closed', 'canceled']) || $task_open === false;
 
                 if (!$task_key) {
                     // New task (no KeyId) - insert
@@ -893,11 +1107,11 @@ class Script extends CoreScripts
                         $this->headers
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
-                        $tasks_report[] = ['id' => 'NEW', 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'ERROR'];
+                        $tasks_report[] = ['id' => 'NEW', 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => 'ERROR', 'is_closed' => $is_closed];
                     } else {
                         $tasks_inserted++;
                         $new_key = $response['data']['KeyId'] ?? 'NEW';
-                        $tasks_report[] = ['id' => $new_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'CREATED'];
+                        $tasks_report[] = ['id' => $new_key, 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => 'CREATED', 'is_closed' => $is_closed];
                     }
                 } else {
                     // Check if task exists remotely and compare
@@ -911,10 +1125,10 @@ class Script extends CoreScripts
                             $this->headers
                         );
                         if ($this->core->request->error || !($response['success'] ?? false)) {
-                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'ERROR'];
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => 'ERROR', 'is_closed' => $is_closed];
                         } else {
                             $tasks_inserted++;
-                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'CREATED'];
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => 'CREATED', 'is_closed' => $is_closed];
                         }
                     } elseif ($this->recordsAreDifferent($task, $remote_task)) {
                         // Task exists and is different - update
@@ -925,33 +1139,22 @@ class Script extends CoreScripts
                             true
                         );
                         if ($this->core->request->error || !($response['success'] ?? false)) {
-                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'ERROR'];
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => 'ERROR', 'is_closed' => $is_closed];
                         } else {
                             $tasks_updated++;
-                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'UPDATED'];
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => 'UPDATED', 'is_closed' => $is_closed];
                         }
                     } else {
                         // Task exists and is identical - skip
                         $tasks_unchanged++;
-                        $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => '-'];
+                        $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'player' => $task_player, 'status' => $task_status, 'deadline' => $task_deadline, 'hours' => $task_hours, 'sync' => '-', 'is_closed' => $is_closed];
                     }
                 }
             }
             //endregion
 
             //region DISPLAY tasks report
-            $this->sendTerminal("");
-            $this->sendTerminal("   Tasks Report:");
-            $this->sendTerminal("   " . str_repeat('-', 105));
-            $this->sendTerminal(sprintf("   %-20s %-40s %-12s %-12s %s", "KeyId", "Title", "DateUpdating", "Hours(S/E)", "Status"));
-            $this->sendTerminal("   " . str_repeat('-', 105));
-            foreach ($tasks_report as $t) {
-                $title_display = strlen($t['title']) > 37 ? substr($t['title'], 0, 34) . '...' : $t['title'];
-                $date_display = substr($t['date'], 0, 10);
-                $this->sendTerminal(sprintf("   %-20s %-40s %-12s %-12s %s", $t['id'], $title_display, $date_display, $t['hours'], $t['status']));
-            }
-            $this->sendTerminal("   " . str_repeat('-', 105));
-            $this->sendTerminal(" + Tasks: {$tasks_inserted} created, {$tasks_updated} updated, {$tasks_unchanged} unchanged");
+            $this->displayTasksReport($tasks_report, $tasks_inserted, $tasks_updated, $tasks_unchanged);
             //endregion
         }
         //endregion

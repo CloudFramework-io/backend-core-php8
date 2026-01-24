@@ -47,10 +47,15 @@ class Script extends CoreScripts
 
     public function METHOD_default() {
         $this->sendTerminal("Available commands:");
+        $this->sendTerminal("  /info              - Return authenticated user email");
         $this->sendTerminal("  /x-ds-token        - Return your token to connect with your EaaS");
         $this->sendTerminal("  /access-token      - Return your Google Access Token");
         $this->sendTerminal("Send ?_reset to reset your token and re-authenticate");
+    }
 
+    public function METHOD_info() {
+        $email = $this->core->security->getGoogleEmailAccount();
+        $this->sendTerminal("Authenticated user: {$email}");
     }
 
     public function METHOD_x_ds_token() {
