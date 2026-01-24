@@ -16,6 +16,10 @@
  * - CloudFrameWorkProjectsMilestones: Individual Milestone documentation
  * - CloudFrameWorkProjectsTasks: Tasks linked to projects via ProjectId and to milestones via MilestoneId
  *
+ * Optimization: The update-from-backup command only updates/inserts milestones and tasks that have
+ * differences with the remote version. Records that are identical are skipped to minimize API calls.
+ * Comparison ignores auto-updated fields (DateUpdating, DateInserting).
+ *
  * Usage:
  *   _cloudia/projects/backup-from-remote                    - Backup all Projects from remote
  *   _cloudia/projects/backup-from-remote?id=cloud-platform  - Backup specific Project
@@ -94,16 +98,19 @@ class Script extends CoreScripts
         $this->sendTerminal("  /backup-from-remote            - Backup all Projects from remote platform");
         $this->sendTerminal("  /backup-from-remote?id=KEY     - Backup specific Project from remote platform");
         $this->sendTerminal("  /insert-from-backup?id=KEY     - Insert new Project in remote platform from local backup");
-        $this->sendTerminal("  /update-from-backup?id=KEY     - Update existing Project in remote platform from local backup");
+        $this->sendTerminal("  /update-from-backup?id=KEY     - Update existing Project (only changed records)");
         $this->sendTerminal("  /list-remote                   - List all Projects in remote platform");
         $this->sendTerminal("  /list-local                    - List all Projects in local backup");
+        $this->sendTerminal("");
+        $this->sendTerminal("Notes:");
+        $this->sendTerminal("  - The ?id= parameter is the Project KeyName (e.g., cloud-platform)");
+        $this->sendTerminal("  - update-from-backup only updates milestones/tasks that differ from remote");
+        $this->sendTerminal("  - Identical records are skipped to minimize API calls");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script _cloudia/projects/my-tasks");
         $this->sendTerminal("  composer run-script script \"_cloudia/projects/backup-from-remote?id=cloud-platform\"");
-        $this->sendTerminal("  composer run-script script _cloudia/projects/list-remote");
-        $this->sendTerminal("");
-        $this->sendTerminal("Note: The ?id= parameter is the Project KeyName (e.g., cloud-platform)");
+        $this->sendTerminal("  composer run-script script \"_cloudia/projects/update-from-backup?id=cloud-platform\"");
     }
 
     /**
@@ -128,6 +135,34 @@ class Script extends CoreScripts
     private function filenameToProjectId($filename)
     {
         return basename($filename, '.json');
+    }
+
+    /**
+     * Compare two records and determine if they are different
+     * Ignores fields that are auto-updated by the system (DateUpdating, DateInserting)
+     *
+     * @param array $local Local record from backup
+     * @param array $remote Remote record from API
+     * @param array $ignore_fields Fields to ignore in comparison (default: DateUpdating, DateInserting)
+     * @return bool True if records are different, false if identical
+     */
+    private function recordsAreDifferent(array $local, array $remote, array $ignore_fields = ['DateUpdating', 'DateInserting']): bool
+    {
+        // Create copies to avoid modifying originals
+        $local_copy = $local;
+        $remote_copy = $remote;
+
+        // Remove ignored fields from both
+        foreach ($ignore_fields as $field) {
+            unset($local_copy[$field], $remote_copy[$field]);
+        }
+
+        // Sort keys for consistent comparison
+        ksort($local_copy);
+        ksort($remote_copy);
+
+        // Compare JSON representations
+        return json_encode($local_copy) !== json_encode($remote_copy);
     }
 
     /**
@@ -682,37 +717,85 @@ class Script extends CoreScripts
             }
             //endregion
 
-            //region UPDATE or INSERT each milestone
+            //region UPDATE or INSERT each milestone (only if different from remote)
+            $milestones_inserted = 0;
+            $milestones_updated = 0;
+            $milestones_unchanged = 0;
+            $milestones_report = [];
+
             foreach ($milestones as $milestone) {
                 $milestone_key = $milestone['KeyId'] ?? null;
+                $milestone_title = $milestone['Title'] ?? 'Untitled';
+                $milestone_date = $milestone['DateUpdating'] ?? $milestone['DateInserting'] ?? '-';
+
                 if (!$milestone_key) {
-                    // New milestone - insert
+                    // New milestone (no KeyId) - insert
                     $response = $this->core->request->post_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones?_raw&_timezone=UTC",
                         $milestone,
                         $this->headers
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
-                        $this->sendTerminal("   # Warning: Failed to insert milestone [{$milestone['Title']}]");
+                        $milestones_report[] = ['id' => 'NEW', 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'ERROR'];
                     } else {
-                        $this->sendTerminal("   + Inserted milestone: {$milestone['Title']}");
+                        $milestones_inserted++;
+                        $new_key = $response['data']['KeyId'] ?? 'NEW';
+                        $milestones_report[] = ['id' => $new_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'CREATED'];
                     }
                 } else {
-                    // Existing milestone - update
-                    $response = $this->core->request->put_json_decode(
-                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/{$milestone_key}?_raw&_timezone=UTC",
-                        $milestone,
-                        $this->headers,
-                        true
-                    );
-                    if ($this->core->request->error || !($response['success'] ?? false)) {
-                        $this->sendTerminal("   # Warning: Failed to update milestone [{$milestone['Title']}]");
+                    // Check if milestone exists remotely and compare
+                    $remote_milestone = $existing_by_keyid[$milestone_key] ?? null;
+
+                    if (!$remote_milestone) {
+                        // Milestone doesn't exist remotely (has KeyId but not found) - insert
+                        $response = $this->core->request->post_json_decode(
+                            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones?_raw&_timezone=UTC",
+                            $milestone,
+                            $this->headers
+                        );
+                        if ($this->core->request->error || !($response['success'] ?? false)) {
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'ERROR'];
+                        } else {
+                            $milestones_inserted++;
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'CREATED'];
+                        }
+                    } elseif ($this->recordsAreDifferent($milestone, $remote_milestone)) {
+                        // Milestone exists and is different - update
+                        $response = $this->core->request->put_json_decode(
+                            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/{$milestone_key}?_raw&_timezone=UTC",
+                            $milestone,
+                            $this->headers,
+                            true
+                        );
+                        if ($this->core->request->error || !($response['success'] ?? false)) {
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'ERROR'];
+                        } else {
+                            $milestones_updated++;
+                            $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => 'UPDATED'];
+                        }
+                    } else {
+                        // Milestone exists and is identical - skip
+                        $milestones_unchanged++;
+                        $milestones_report[] = ['id' => $milestone_key, 'title' => $milestone_title, 'date' => $milestone_date, 'status' => '-'];
                     }
                 }
             }
             //endregion
 
-            $this->sendTerminal(" + Milestones synced");
+            //region DISPLAY milestones report
+            $this->sendTerminal("");
+            $this->sendTerminal("   Milestones Report:");
+            $this->sendTerminal("   " . str_repeat('-', 90));
+            $this->sendTerminal(sprintf("   %-20s %-45s %-12s %s", "KeyId", "Title", "DateUpdating", "Status"));
+            $this->sendTerminal("   " . str_repeat('-', 90));
+            foreach ($milestones_report as $m) {
+                $title_display = strlen($m['title']) > 42 ? substr($m['title'], 0, 39) . '...' : $m['title'];
+                $date_display = substr($m['date'], 0, 10);
+                $this->sendTerminal(sprintf("   %-20s %-45s %-12s %s", $m['id'], $title_display, $date_display, $m['status']));
+            }
+            $this->sendTerminal("   " . str_repeat('-', 90));
+            $this->sendTerminal(" + Milestones: {$milestones_inserted} created, {$milestones_updated} updated, {$milestones_unchanged} unchanged");
+            //endregion
         }
         //endregion
 
@@ -790,43 +873,92 @@ class Script extends CoreScripts
             }
             //endregion
 
-            //region UPDATE or INSERT each task
+            //region UPDATE or INSERT each task (only if different from remote)
+            $tasks_inserted = 0;
+            $tasks_updated = 0;
+            $tasks_unchanged = 0;
+            $tasks_report = [];
+
             foreach ($tasks as $task) {
                 $task_key = $task['KeyId'] ?? null;
+                $task_title = $task['Title'] ?? 'Untitled';
+                $task_date = $task['DateUpdating'] ?? $task['DateInserting'] ?? '-';
+                $task_hours = sprintf("%.1f/%.1f", floatval($task['TimeSpent'] ?? 0), floatval($task['TimeEstimated'] ?? 0));
+
                 if (!$task_key) {
-                    // New task - insert
+                    // New task (no KeyId) - insert
                     $response = $this->core->request->post_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
                         $task,
                         $this->headers
                     );
                     if ($this->core->request->error || !($response['success'] ?? false)) {
-                        $this->sendTerminal("   # Warning: Failed to insert task [{$task['Title']}]");
+                        $tasks_report[] = ['id' => 'NEW', 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'ERROR'];
                     } else {
-                        $this->sendTerminal("   + Inserted task: {$task['Title']}");
+                        $tasks_inserted++;
+                        $new_key = $response['data']['KeyId'] ?? 'NEW';
+                        $tasks_report[] = ['id' => $new_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'CREATED'];
                     }
                 } else {
-                    // Existing task - update
-                    $response = $this->core->request->put_json_decode(
-                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_key}?_raw&_timezone=UTC",
-                        $task,
-                        $this->headers,
-                        true
-                    );
-                    if ($this->core->request->error || !($response['success'] ?? false)) {
-                        $this->sendTerminal("   # Warning: Failed to update task [{$task['Title']}]");
+                    // Check if task exists remotely and compare
+                    $remote_task = $existing_by_keyid[$task_key] ?? null;
+
+                    if (!$remote_task) {
+                        // Task doesn't exist remotely (has KeyId but not found) - insert
+                        $response = $this->core->request->post_json_decode(
+                            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+                            $task,
+                            $this->headers
+                        );
+                        if ($this->core->request->error || !($response['success'] ?? false)) {
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'ERROR'];
+                        } else {
+                            $tasks_inserted++;
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'CREATED'];
+                        }
+                    } elseif ($this->recordsAreDifferent($task, $remote_task)) {
+                        // Task exists and is different - update
+                        $response = $this->core->request->put_json_decode(
+                            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_key}?_raw&_timezone=UTC",
+                            $task,
+                            $this->headers,
+                            true
+                        );
+                        if ($this->core->request->error || !($response['success'] ?? false)) {
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'ERROR'];
+                        } else {
+                            $tasks_updated++;
+                            $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => 'UPDATED'];
+                        }
+                    } else {
+                        // Task exists and is identical - skip
+                        $tasks_unchanged++;
+                        $tasks_report[] = ['id' => $task_key, 'title' => $task_title, 'date' => $task_date, 'hours' => $task_hours, 'status' => '-'];
                     }
                 }
             }
             //endregion
 
-            $this->sendTerminal(" + Tasks synced");
+            //region DISPLAY tasks report
+            $this->sendTerminal("");
+            $this->sendTerminal("   Tasks Report:");
+            $this->sendTerminal("   " . str_repeat('-', 105));
+            $this->sendTerminal(sprintf("   %-20s %-40s %-12s %-12s %s", "KeyId", "Title", "DateUpdating", "Hours(S/E)", "Status"));
+            $this->sendTerminal("   " . str_repeat('-', 105));
+            foreach ($tasks_report as $t) {
+                $title_display = strlen($t['title']) > 37 ? substr($t['title'], 0, 34) . '...' : $t['title'];
+                $date_display = substr($t['date'], 0, 10);
+                $this->sendTerminal(sprintf("   %-20s %-40s %-12s %-12s %s", $t['id'], $title_display, $date_display, $t['hours'], $t['status']));
+            }
+            $this->sendTerminal("   " . str_repeat('-', 105));
+            $this->sendTerminal(" + Tasks: {$tasks_inserted} created, {$tasks_updated} updated, {$tasks_unchanged} unchanged");
+            //endregion
         }
         //endregion
 
         //region SEND success message to terminal
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(" + Project [{$project_id}] updated successfully in remote platform");
+        $this->sendTerminal(" + Project [{$project_id}] sync completed");
         //endregion
 
         //region GET Last version of the Project
