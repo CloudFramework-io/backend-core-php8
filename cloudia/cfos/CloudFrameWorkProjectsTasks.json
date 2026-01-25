@@ -1,0 +1,1132 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2026-01-24 12:56:38",
+    "Description": "<p>Sistema para la gestión de tareas de un proyecto.</p>",
+    "GroupName": "PROJECTS",
+    "KeyName": "CloudFrameWorkProjectsTasks",
+    "Owner": "info@adrianmm.com",
+    "Tags": "",
+    "Title": "Gestión de Tareas de proyecto",
+    "_search": [
+        "CLOUDFRAMEWORKPROJECTSTASKS",
+        "PROJECTS"
+    ],
+    "entity": "CloudFrameWorkProjectsTasks",
+    "environment": "",
+    "events": {
+        "workflows": {
+            "on.insert": [
+                {
+                    "action": "hook",
+                    "active": false,
+                    "id": "task_on_insert_dev",
+                    "name": "Actualiza procesos para la tarea {{KeyId}} en DEV",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.dev/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}"
+                },
+                {
+                    "action": "hook",
+                    "active": false,
+                    "id": "task_on_insert",
+                    "name": "Actualiza procesos para la tarea {{KeyId}}",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}"
+                }
+            ],
+            "on.update": {
+                "Call Project Hooks (DEV)": {
+                    "action": "hook",
+                    "active": true,
+                    "id": "project_hook_on_update_task_dev",
+                    "name": "Actualiza procesos para la tarea {{KeyId}} en DEV",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.dev/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}"
+                },
+                "Call Project Hooks": {
+                    "action": "hook",
+                    "active": true,
+                    "id": "project_hook_on_update_task",
+                    "name": "Actualiza procesos para la tarea {{KeyId}}",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}"
+                }
+            },
+            "on.delete": [
+                {
+                    "code": "task_on_delete_dev",
+                    "name": "Actualiza procesos para el proyecto {{ProjectId}} en DEV",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.dev/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsEntries/{{ProjectId}}"
+                },
+                {
+                    "code": "task_on_delete",
+                    "name": "Actualiza procesos para el proyecto {{ProjectId}}",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsEntries/{{ProjectId}}"
+                }
+            ]
+        }
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Projects Tasks",
+        "plural": "Projects Tasks",
+        "ico": "person-sign",
+        "tabs": {
+            "default": {
+                "title": "Info. Task",
+                "ico": "person-sign"
+            },
+            "development": {
+                "title": "Relaciones con Desarrollo"
+            }
+        },
+        "filters": [
+            {
+                "field": "Open",
+                "field_name": "Open",
+                "type": "select",
+                "values": [
+                    {
+                        "id": true,
+                        "value": "Abiertas"
+                    },
+                    {
+                        "id": false,
+                        "value": "Cerradas"
+                    }
+                ],
+                "allow_empty": true,
+                "empty_value": "Open?"
+            },
+            {
+                "field": "ProjectId",
+                "field_name": "Project",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkProjectsEntries/fields?server_limit=10&fields=Type,Title,KeyName&_search=1",
+                "allow_empty": true,
+                "empty_value": "Project?"
+            },
+            {
+                "field": "Status",
+                "field_name": "Status",
+                "type": "select",
+                "values": [
+                    {
+                        "id": "pending",
+                        "value": "Pending"
+                    },
+                    {
+                        "id": "in-progress",
+                        "value": "In Progress"
+                    },
+                    {
+                        "id": "in-qa",
+                        "value": "In QA"
+                    },
+                    {
+                        "id": "closing",
+                        "value": "Closing Required"
+                    },
+                    {
+                        "id": "closed",
+                        "value": "Closed"
+                    },
+                    {
+                        "id": "blocked",
+                        "value": "Blocked"
+                    },
+                    {
+                        "id": "backlog",
+                        "value": "Backlog"
+                    }
+                ],
+                "allow_empty": true,
+                "empty_value": "Status?",
+                "defaultvalue": null
+            },
+            {
+                "field": "PlayerId",
+                "field_name": "Asignado a",
+                "type": "text",
+                "placeholder": "chema@cloudframework.io"
+            },
+            {
+                "field": "Company",
+                "field_name": "Company",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkCompanies/fields?server_limit=10&fields=CompanyName,CompanyId",
+                "allow_empty": true,
+                "empty_value": "Company?",
+                "defaultvalue": null
+            }
+        ],
+        "_buttons": [
+            {
+                "title": "Insert Project Task",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "server_order": "DateUpdated DESC",
+                "server_limit": 100,
+                "_only_if_filters": [
+                    {
+                        "ProjectId": "__notnull__"
+                    }
+                ],
+                "conditional_rows_background_color": {
+                    "default": "",
+                    "fields": [
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#CCCCCC",
+                            "values": [
+                                "open"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#f0f7a8",
+                            "values": [
+                                "in-progress"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#d9fba2",
+                            "values": [
+                                "closed"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#f8f0a1",
+                            "values": [
+                                "in-qa"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#fa8ca6",
+                            "values": [
+                                "canceled"
+                            ]
+                        }
+                    ]
+                },
+                "fields": {
+                    "KeyId": {
+                        "field": "KeyId",
+                        "display_cfo": true
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated",
+                        "order": "desc"
+                    },
+                    "PlayerIdSource": {
+                        "field": "PlayerIdSource"
+                    },
+                    "DateInitTask": {
+                        "field": "DateInitTask"
+                    },
+                    "PlayerId": {
+                        "field": "PlayerId"
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "SprintIds": {
+                        "field": "SprintIds"
+                    },
+                    "Tags": {
+                        "field": "Tags",
+                        "update_cfo": true,
+                        "id_field": "KeyId"
+                    },
+                    "Priority": {
+                        "field": "Priority"
+                    },
+                    "Status": {
+                        "field": "Status",
+                        "update_cfo": true,
+                        "api": "/cfi/CloudFrameWorkProjectsTasks?fields=KeyId,Priority,Status,Category,Title",
+                        "id_field": "KeyId"
+                    },
+                    "DateDeadline": {
+                        "field": "DateDeadline"
+                    },
+                    "DateDueDate": {
+                        "field": "DateDueDate"
+                    },
+                    "ProjectId": {
+                        "field": "ProjectId",
+                        "row_group": true,
+                        "display_cfo": true,
+                        "api": "/cfi/CloudFrameWorkProjectsEntries"
+                    },
+                    "MilestoneId": {
+                        "field": "MilestoneId",
+                        "display_cfo": true,
+                        "cfo": "CloudFrameWorkProjectsMilestones"
+                    },
+                    "Category": {
+                        "field": "Category"
+                    },
+                    "TimeEstimated": {
+                        "field": "TimeEstimated"
+                    },
+                    "TimeSpent": {
+                        "field": "TimeSpent"
+                    },
+                    "Open": {
+                        "field": "Open"
+                    },
+                    "PlayersLinked": {
+                        "field": "PlayersLinked",
+                        "update_cfo": true,
+                        "api": "/cfi/CloudFrameWorkProjectsTasks?fields=KeyId,PlayerIdSource,PlayerId,PlayersLinked",
+                        "id_field": "KeyId"
+                    },
+                    "CompanyId": {
+                        "field": "CompanyId",
+                        "display_cfo": true,
+                        "api": "/cfi/CloudFrameWorkCompanies"
+                    },
+                    "IncidenceId": {
+                        "field": "IncidenceId",
+                        "display_cfo": true,
+                        "cfo": "CloudFrameWorkProjectsIncidences"
+                    },
+                    "ButtonEvent": {
+                        "field": "ButtonEvent",
+                        "type": "virtual",
+                        "name": "Events",
+                        "external_apis": [
+                            {
+                                "title": "New Event",
+                                "method": "GET",
+                                "url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkCRMEvents/insert?filter_ProjectId={{KeyName}}&filter_ProposalId={{ProposalId}}&filter_CompanyId={{Company}}"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "PlayerIdSource": {
+                "field": "PlayerIdSource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "DateInitTask": {
+                "field": "DateInitTask",
+                "defaultvalue": "now"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "TimeEstimated": {
+                "field": "TimeEstimated"
+            },
+            "SprintIds": {
+                "field": "SprintIds"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "Priority": {
+                "field": "Priority"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "ProjectId": {
+                "field": "ProjectId"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId",
+                "allow_empty": true
+            },
+            "Open": {
+                "field": "Open",
+                "type": "boolean"
+            },
+            "Solution": {
+                "field": "Solution"
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "CRMId": {
+                "field": "CRMId",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "SendEmailWorkflow": {
+                "field": "SendEmailWorkflow"
+            },
+            "WebApps": {
+                "field": "WebApps"
+            }
+        },
+        "display_fields": {
+            "PlayerIdSource": {
+                "field": "PlayerIdSource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "DateInitTask": {
+                "field": "DateInitTask"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "TimeEstimated": {
+                "field": "TimeEstimated"
+            },
+            "SprintIds": {
+                "field": "SprintIds"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "DateDueDate": {
+                "field": "DateDueDate"
+            },
+            "Priority": {
+                "field": "Priority"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "ProjectId": {
+                "field": "ProjectId"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId",
+                "allow_empty": true
+            },
+            "Open": {
+                "field": "Open",
+                "type": "boolean"
+            },
+            "Solution": {
+                "field": "Solution"
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "CRMId": {
+                "field": "CRMId",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "SendEmailWorkflow": {
+                "field": "SendEmailWorkflow"
+            },
+            "WebApps": {
+                "field": "WebApps"
+            }
+        },
+        "update_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "hidden": true
+            },
+            "PlayerIdSource": {
+                "field": "PlayerIdSource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "DateInitTask": {
+                "field": "DateInitTask"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "TimeEstimated": {
+                "field": "TimeEstimated"
+            },
+            "SprintIds": {
+                "field": "SprintIds"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "DateDueDate": {
+                "field": "DateDueDate"
+            },
+            "Priority": {
+                "field": "Priority"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "ProjectId": {
+                "field": "ProjectId"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId",
+                "allow_empty": true
+            },
+            "Open": {
+                "field": "Open",
+                "type": "boolean"
+            },
+            "Solution": {
+                "field": "Solution"
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "CRMId": {
+                "field": "CRMId",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "SendEmailWorkflow": {
+                "field": "SendEmailWorkflow"
+            },
+            "WebApps": {
+                "field": "WebApps"
+            }
+        },
+        "copy_fields": {
+            "PlayerIdSource": {
+                "field": "PlayerIdSource"
+            },
+            "Category": {
+                "field": "Category"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "DateInitTask": {
+                "field": "DateInitTask"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "TimeEstimated": {
+                "field": "TimeEstimated"
+            },
+            "SprintIds": {
+                "field": "SprintIds"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "Priority": {
+                "field": "Priority"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "ProjectId": {
+                "field": "ProjectId"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId",
+                "allow_empty": true
+            },
+            "Open": {
+                "field": "Open",
+                "type": "boolean"
+            },
+            "Solution": {
+                "field": "Solution"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "CRMId": {
+                "field": "CRMId",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "SendEmailWorkflow": {
+                "field": "SendEmailWorkflow"
+            },
+            "WebApps": {
+                "field": "WebApps"
+            }
+        },
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "read_only": true
+            }
+        },
+        "_hooks": {
+            "on.insert": [
+                {
+                    "code": "task_on_insert",
+                    "name": "Actualiza procesos para la tarea {{KeyId}}",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}"
+                }
+            ],
+            "_on.update": [
+                {
+                    "code": "task_on_update",
+                    "name": "Actualiza procesos para la tarea {{KeyId}}",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsTasks/{{KeyId}}"
+                }
+            ],
+            "on.delete": [
+                {
+                    "code": "task_on_delete",
+                    "name": "Actualiza procesos para el proyecto {{ProjectId}}",
+                    "method": "PUT",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkProjectsEntries/{{ProjectId}}"
+                }
+            ]
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "IdCounter": [
+                "integer",
+                "index|allownull"
+            ],
+            "CompanyId": [
+                "string",
+                "index|allownull|minlength:2"
+            ],
+            "PlayerIdSource": [
+                "string",
+                "index|minlength:2"
+            ],
+            "PlayerId": [
+                "list",
+                "index|minlength:2"
+            ],
+            "PlayersLinked": [
+                "list",
+                "index|allownull"
+            ],
+            "ProjectId": [
+                "string",
+                "index|allownull|minlength:2"
+            ],
+            "MilestoneId": [
+                "string",
+                "index|minlength:2|allownull"
+            ],
+            "IncidenceId": [
+                "string",
+                "index|minlength:2|allownull"
+            ],
+            "SprintIds": [
+                "list",
+                "index|minlength:2|allownull"
+            ],
+            "Title": [
+                "string",
+                "index|minlength:2"
+            ],
+            "Category": [
+                "string",
+                "index|allownull|minlength:2"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull|description:Tags associated to the task"
+            ],
+            "DateInitTask": [
+                "date",
+                "index|allownull"
+            ],
+            "DateDeadline": [
+                "date",
+                "index|allownull"
+            ],
+            "DateDueDate": [
+                "date",
+                "index|allownull"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "index|allownull|forcevalue:now"
+            ],
+            "Status": [
+                "string",
+                "index|minlength=3"
+            ],
+            "Priority": [
+                "string",
+                "index|minlength=3|defaultvalue:medium"
+            ],
+            "TimeSpent": [
+                "float",
+                "index|allownull|defaultvalue:0"
+            ],
+            "TimeEstimated": [
+                "float",
+                "index|allownull|defaultvalue:0"
+            ],
+            "SendEmailWorkflow": [
+                "boolean",
+                "index|allownull|defaultvalue:false"
+            ],
+            "Open": [
+                "boolean",
+                "index|defaultvalue:true"
+            ],
+            "Docs": [
+                "string",
+                "allownull"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ],
+            "Description": [
+                "zip",
+                "allownull"
+            ],
+            "Solution": [
+                "zip",
+                "allownull"
+            ],
+            "WebApps": [
+                "list",
+                "index|allownull|description:WebApps associated to this subprocess"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkProjectsEntries",
+            "CloudFrameWorkCompanies",
+            "CloudFrameWorkProjectsContacts",
+            "CloudFrameWorkProjectsStatus",
+            "CloudFrameWorkProjectsPlayersRoles",
+            "CloudFrameWorkProjectsPlayers",
+            "CloudFrameWorkProjectsTasksInputs",
+            "CloudFrameWorkPeoplePlayers",
+            "CloudFrameWorkDevDocumentationForWebApps",
+            "CloudFrameWorkProjectsSprints"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "user_privileges": [
+                "directory-admin",
+                "localization-admin"
+            ]
+        },
+        "fields": {
+            "KeyId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;key_name",
+                "header": {
+                    "title": "Relaciones de la Tarea",
+                    "type": "h2"
+                },
+                "wrap": false
+            },
+            "Title": {
+                "name": "$namespace:cloudframework,cfo;project;variables;task_title",
+                "header": {
+                    "title": "Descripción de la tarea",
+                    "type": "h2"
+                },
+                "new_row": true,
+                "full_col_width": true,
+                "cols": 3
+            },
+            "Category": {
+                "name": "$namespace:cloudframework,cfo;project;variables;category",
+                "type": "autoselect",
+                "allow_empty": true
+            },
+            "Tags": {
+                "name": "$namespace:cloudframework,cfo;project;variables;tags",
+                "allow_empty": true,
+                "full_col_width": true
+            },
+            "TimeSpent": {
+                "name": "$namespace:cloudframework,cfo;project;variables;time_spent",
+                "disabled": true
+            },
+            "PlayersLinked": {
+                "name": "$namespace:cloudframework,cfo;project;variables;watchers",
+                "allow_empty": true
+            },
+            "TimeEstimated": {
+                "name": "$namespace:cloudframework,cfo;project;variables;time_estimated",
+                "allow_empty": true,
+                "defaultvalue": 0,
+                "input_type": "number"
+            },
+            "PlayerIdSource": {
+                "name": "$namespace:cloudframework,cfo;project;variables;player_id_source",
+                "type": "autocomplete",
+                "placeholder": "Añadir otro",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkPeoplePlayers",
+                "fields": "KeyName,PlayerName,PlayerSurname,PlayerAvatar",
+                "linked_field": "KeyName",
+                "input_type": "users"
+            },
+            "PlayerId": {
+                "header": {
+                    "title": "Asignación de la tarea",
+                    "type": "h2"
+                },
+                "name": "$namespace:cloudframework,cfo;project;variables;player_assignee",
+                "type": "multiselect",
+                "placeholder": "Añadir otro",
+                "_type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkPeoplePlayers",
+                "fields": "KeyName,PlayerName,PlayerSurname,PlayerAvatar",
+                "linked_field": "KeyName",
+                "input_type": "users"
+            },
+            "SprintIds": {
+                "name": "Sprints",
+                "type": "multiselect",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkProjectsSprints",
+                "select_fields": "Title",
+                "query_fields": "*",
+                "fields": "KeyId,Title",
+                "linked_field": "KeyId",
+                "id_field": "SprintIds",
+                "external_order": "DateInit DESC",
+                "allow_empty": true,
+                "load_in_memory": true,
+                "data_format": "{{Title}}"
+            },
+            "DateInitTask": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_init_task",
+                "type": "date",
+                "allow_empty": true
+            },
+            "DateDeadline": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_deadline",
+                "type": "date",
+                "allow_empty": true,
+                "show_dropdowns": true
+            },
+            "DateDueDate": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_due_date",
+                "type": "date",
+                "allow_empty": true,
+                "show_dropdowns": true
+            },
+            "Status": {
+                "name": "$namespace:cloudframework,cfo;project;variables;status",
+                "box": "info",
+                "type": "select",
+                "defaultvalue": "pending",
+                "new_row": true,
+                "values": [
+                    {
+                        "id": "backlog",
+                        "value": "Backlog"
+                    },
+                    {
+                        "id": "new",
+                        "value": "New Task"
+                    },
+                    {
+                        "id": "pending",
+                        "value": "Pending"
+                    },
+                    {
+                        "id": "in-progress",
+                        "value": "In Progress"
+                    },
+                    {
+                        "id": "in-qa",
+                        "value": "In QA"
+                    },
+                    {
+                        "id": "closing",
+                        "value": "Closing Required"
+                    },
+                    {
+                        "id": "closed",
+                        "value": "Closed"
+                    },
+                    {
+                        "id": "canceled",
+                        "value": "Canceled"
+                    },
+                    {
+                        "id": "blocked",
+                        "value": "Blocked"
+                    }
+                ]
+            },
+            "ProjectId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;project",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkProjectsEntries",
+                "fields": "Type,ProjectId,KeyName",
+                "linked_field": "KeyName",
+                "defaultvalue": null,
+                "wrap": false,
+                "allow_empty": false,
+                "empty_value": "-- Select a Project --"
+            },
+            "MilestoneId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;milestone",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkProjectsMilestones",
+                "fields": "Title,DateDeadline,PlayerId,Status",
+                "linked_field": "KeyId",
+                "filter_fields": "ProjectId",
+                "server_limit": 1000,
+                "limit": 500,
+                "defaultvalue": null,
+                "wrap": false,
+                "allow_empty": true,
+                "empty_value": "-- Select a Milestone --",
+                "new_row": true
+            },
+            "IncidenceId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;incidence",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkProjectsIncidences/fields?server_limit=10&fields=CompanyId,ProjectId",
+                "defaultvalue": null,
+                "wrap": false,
+                "allow_empty": true
+            },
+            "Priority": {
+                "name": "$namespace:cloudframework,cfo;project;variables;priority",
+                "box": "info",
+                "type": "select",
+                "defaultvalue": "medium",
+                "values": [
+                    {
+                        "id": "very_low",
+                        "value": "Very low"
+                    },
+                    {
+                        "id": "low",
+                        "value": "Low"
+                    },
+                    {
+                        "id": "medium",
+                        "value": "Medium"
+                    },
+                    {
+                        "id": "high",
+                        "value": "High"
+                    },
+                    {
+                        "id": "very_high",
+                        "value": "Very High"
+                    }
+                ]
+            },
+            "Open": {
+                "name": "$namespace:cloudframework,cfo;project;variables;open",
+                "internal_replacement": true,
+                "value": true,
+                "conditional_value": {
+                    "Status == closed or canceled": {
+                        "value": false,
+                        "condition": [
+                            "{{Status}}",
+                            "equals",
+                            [
+                                "closed",
+                                "canceled",
+                                "backlog"
+                            ]
+                        ]
+                    }
+                },
+                "values": [
+                    {
+                        "id": "pending",
+                        "value": "Pending"
+                    },
+                    {
+                        "id": "in-progress",
+                        "value": "In Progress"
+                    },
+                    {
+                        "id": "closed",
+                        "value": "Closed"
+                    }
+                ]
+            },
+            "CompanyId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;company_id",
+                "internal_replacement_if_found": true,
+                "internal_source": "datastore",
+                "entity": "CloudFrameWorkProjectsEntries",
+                "linked_field": "KeyName",
+                "linked_value": "{{ProjectId}}",
+                "value": "{{CompanyId}}",
+                "allow_empty": true
+            },
+            "Service": {
+                "name": "$namespace:cloudframework,cfo;project;variables;invoice_title"
+            },
+            "SendEmailWorkflow": {
+                "name": "$namespace:cloudframework,cfo;project;variables;send_email_workflow",
+                "type": "boolean",
+                "defaultvalue": false
+            },
+            "Docs": {
+                "name": "$namespace:cloudframework,cfo;project;variables;task_documents",
+                "type": "server_documents",
+                "bucket": "gs://cloudframework.io/documents/files/{{Platform:spacename}}",
+                "cf_bucket": "KeyName",
+                "wrap": true,
+                "allow_empty": true,
+                "multiple": true,
+                "limit_chars": {
+                    "max_chars": 20
+                }
+            },
+            "JSON": {
+                "name": "Objetives & Documentation",
+                "type": "json",
+                "defaultvalue": "{}"
+            },
+            "Description": {
+                "name": "$namespace:cloudframework,cfo;project;variables;task_description",
+                "type": "html",
+                "defaultvalue": "Your Task description"
+            },
+            "Solution": {
+                "name": "$namespace:cloudframework,cfo;project;variables;solution_description",
+                "type": "html",
+                "allow_empty": true
+            },
+            "WebApps": {
+                "name": "Apps Relacionadas",
+                "type": "multiselect",
+                "external_values": "ds",
+                "entity": "CloudFrameWorkDevDocumentationForWebApps",
+                "fields": "KeyName,Title",
+                "linked_field": "KeyName",
+                "limit": 1000,
+                "cols": 3,
+                "allow_empty": true,
+                "tab": "development"
+            },
+            "VirtualTaksInputs": {
+                "name": "$namespace:cloudframework,cfo;project;variables;taks_inputs",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkProjectsTasksInputs",
+                "linked_field": "TaskId",
+                "field_value": "KeyId",
+                "order": "DateInput DESC",
+                "fields": "*",
+                "summary_line": "[{{DateInput}}] - [{{TimeSpent}}h] ({{PlayerId}}) {{Title}} ",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs/insert?filter_TaskId={{KeyId}}"
+            }
+        }
+    },
+    "status": "",
+    "type": "ds"
+}

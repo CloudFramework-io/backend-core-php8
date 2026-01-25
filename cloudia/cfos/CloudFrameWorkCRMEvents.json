@@ -1,0 +1,648 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "fran@cloudframework.io",
+    "Connections": "",
+    "DateUpdating": "2025-10-08 15:29:56",
+    "Description": "<p>Event management is managed through this entity, where an event is related to different entities such as<br>* Tasks<br>* Milestones<br>* Projects<br>* Proposals<br>* Leads<br><br>This entity is a fundamental element of the CLOUD Platform, as it allows the aggregation of both platform and portal users, as well as commercial and supplier contacts.</p>",
+    "GroupName": "CRM",
+    "KeyName": "CloudFrameWorkCRMEvents",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "events",
+        "crm"
+    ],
+    "Title": "User events in CLOUD Platform",
+    "_search": [
+        "CLOUDFRAMEWORKCRMEVENTS",
+        "CRM",
+        "EVENTS"
+    ],
+    "entity": "CloudFrameWorkCRMEvents",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": {
+            "on.update": {
+                "Evaluate LeadId": {
+                    "action": "workflows",
+                    "conditional": "'{{LeadId}}' != ''",
+                    "active": true,
+                    "workflows": {
+                        "Read CloudFrameWorkCRMLeads": {
+                            "action": "readRelations",
+                            "id": "readLeadId",
+                            "active": true,
+                            "relations": [
+                                {
+                                    "cfo": "CloudFrameWorkCRMLeads",
+                                    "key": "KeyId",
+                                    "value": "{{LeadId}}",
+                                    "fields": "LeadLastInterationDate,KeyId"
+                                }
+                            ]
+                        },
+                        "Update LeadLastInterationDate Lead if LeadLastInterationDate < DateInsertion": {
+                            "action": "updateCFOData",
+                            "id": "update-LeadLastInterationDate",
+                            "active": true,
+                            "conditional": "'{{CloudFrameWorkCRMLeads.LeadLastInterationDate}}'!='' && '{{CloudFrameWorkCRMLeads.LeadLastInterationDate}}' < substr('{{DateInsertion}}',0,10)",
+                            "cfo": "CloudFrameWorkCRMLeads",
+                            "key": "KeyId",
+                            "value": "{{CloudFrameWorkCRMLeads.KeyId}}",
+                            "data": {
+                                "LeadLastInterationDate": "{{DateInsertion}}"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "CRM Event",
+        "plural": "CRM Events",
+        "ico": "dot-circle",
+        "html_info": "<h1>CRM Events</h1>",
+        "buttons": [
+            {
+                "title": "New CRM Event",
+                "type": "api-insert"
+            }
+        ],
+        "filters": [],
+        "views": {
+            "default": {
+                "server_order": "DateInsertion DESC",
+                "fields": {
+                    "KeyId": {
+                        "field": "KeyId",
+                        "update_cfo": true
+                    },
+                    "DateInsertion": {
+                        "field": "DateInsertion",
+                        "order": "desc"
+                    },
+                    "Source": {
+                        "field": "Source"
+                    },
+                    "SourcePlayerId": {
+                        "field": "SourcePlayerId"
+                    },
+                    "SourceContactId": {
+                        "field": "SourceContactId"
+                    },
+                    "PlayersLinked": {
+                        "field": "PlayersLinked"
+                    },
+                    "ContactsId": {
+                        "field": "ContactsId"
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "TimeSpent": {
+                        "field": "TimeSpent"
+                    },
+                    "LeadId": {
+                        "field": "LeadId"
+                    },
+                    "CompanyId": {
+                        "field": "CompanyId"
+                    },
+                    "ProposalId": {
+                        "field": "ProposalId"
+                    },
+                    "ProjectId": {
+                        "field": "ProjectId"
+                    },
+                    "MilestoneId": {
+                        "field": "MilestoneId"
+                    },
+                    "IncidenceId": {
+                        "field": "IncidenceId"
+                    },
+                    "TaskId": {
+                        "field": "TaskId"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "Source": {
+                "field": "Source"
+            },
+            "TimeSpent": {
+                "field": "TimeSpent"
+            },
+            "SourceContactId": {
+                "field": "SourceContactId"
+            },
+            "SourcePlayerId": {
+                "field": "SourcePlayerId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "ContactsId": {
+                "field": "ContactsId"
+            },
+            "LeadId": {
+                "field": "LeadId"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ProposalId": {
+                "field": "ProposalId"
+            },
+            "ProjectId": {
+                "field": "ProjectId"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId"
+            },
+            "TaskId": {
+                "field": "TaskId"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "TextContent": {
+                "field": "TextContent"
+            },
+            "JSON": {
+                "field": "JSON"
+            }
+        },
+        "update_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "read_only": true
+            },
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "Source": {
+                "field": "Source"
+            },
+            "SourcePlayerId": {
+                "field": "SourcePlayerId"
+            },
+            "SourceContactId": {
+                "field": "SourceContactId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "TimeSpent": {
+                "field": "TimeSpent"
+            },
+            "LeadId": {
+                "field": "LeadId"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ContactsId": {
+                "field": "ContactsId"
+            },
+            "ProposalId": {
+                "field": "ProposalId"
+            },
+            "ProjectId": {
+                "field": "ProjectId",
+                "api": "/cfi/CloudFrameWorkProjectsEntries/fields?server_limit=10&fields=CompanyId,Title,ProjectId&_search=1"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId"
+            },
+            "TaskId": {
+                "field": "TaskId"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "TextContent": {
+                "field": "TextContent"
+            },
+            "JSON": {
+                "field": "JSON"
+            }
+        },
+        "display_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "read_only": true
+            },
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "Source": {
+                "field": "Source"
+            },
+            "SourceContactId": {
+                "field": "SourceContactId",
+                "new_row": true
+            },
+            "SourcePlayerId": {
+                "field": "SourcePlayerId",
+                "new_row": true
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked",
+                "new_row": true
+            },
+            "TimeSpent": {
+                "field": "TimeSpent"
+            },
+            "LeadId": {
+                "field": "LeadId"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ContactsId": {
+                "field": "ContactsId"
+            },
+            "ProposalId": {
+                "field": "ProposalId",
+                "link": true,
+                "type": "virtual",
+                "link_content": "/core/cfo/cfi/CloudFrameWorkCRMProposals/display/{{ProposalId}}"
+            },
+            "ProjectId": {
+                "field": "ProjectId",
+                "link": true,
+                "type": "virtual",
+                "link_content": "app.html#https://core20.web.app/ajax/cfa.html?api=/erp/projects&p=/project/{{ProjectId}}/left_panel_body"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId"
+            },
+            "TaskId": {
+                "field": "TaskId"
+            },
+            "Title": {
+                "field": "Title",
+                "cols": 3
+            },
+            "TextContent": {
+                "field": "TextContent"
+            },
+            "JSON": {
+                "field": "JSON"
+            }
+        },
+        "copy_fields": {
+            "DateInsertion": {
+                "field": "DateInsertion"
+            },
+            "Source": {
+                "field": "Source"
+            },
+            "SourcePlayerId": {
+                "field": "SourcePlayerId"
+            },
+            "SourceContactId": {
+                "field": "SourceContactId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "TimeSpent": {
+                "field": "TimeSpent"
+            },
+            "LeadId": {
+                "field": "LeadId"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ContactsId": {
+                "field": "ContactsId"
+            },
+            "ProposalId": {
+                "field": "ProposalId"
+            },
+            "ProjectId": {
+                "field": "ProjectId"
+            },
+            "MilestoneId": {
+                "field": "MilestoneId"
+            },
+            "IncidenceId": {
+                "field": "IncidenceId"
+            },
+            "TaskId": {
+                "field": "TaskId"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "TextContent": {
+                "field": "TextContent"
+            },
+            "JSON": {
+                "field": "JSON"
+            }
+        },
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId"
+            }
+        },
+        "hooks": {
+            "on.insert": [
+                {
+                    "code": "project_hook_on_insert",
+                    "name": "Update hours of the event associated",
+                    "method": "GET",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkCRMEvents/{{KeyId}}"
+                }
+            ],
+            "on.update": [
+                {
+                    "code": "project_hook_on_update",
+                    "name": "Update hours of the event associated",
+                    "method": "GET",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkCRMEvents/{{KeyId}}"
+                }
+            ],
+            "on.delete": [
+                {
+                    "code": "project_hook_on_update",
+                    "name": "Update hours of the event associated",
+                    "method": "GET",
+                    "url": "https://api.cloudframework.io/erp/projects/{{Platform:namespace}}/{{User:KeyName}}/hooks/CloudFrameWorkCRMEvents/{{KeyId}}?TaskId={{TaskId}}&MilestoneId={{MilestoneId}}"
+                }
+            ]
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "DateInsertion": [
+                "datetime",
+                "index|defaultvalue:now"
+            ],
+            "Source": [
+                "string",
+                "index"
+            ],
+            "SourceContactId": [
+                "string",
+                "index|allownull",
+                "cfo_relation:CloudFrameWorkContacts.KeyName"
+            ],
+            "SourcePlayerId": [
+                "string",
+                "index|allownull"
+            ],
+            "PlayersLinked": [
+                "list",
+                "index|allownull"
+            ],
+            "Title": [
+                "string",
+                "allownull"
+            ],
+            "SalesId": [
+                "list",
+                "index|allownull"
+            ],
+            "CompanyId": [
+                "string",
+                "index|allownull",
+                "cfo_relation:CloudFrameWorkCompanies.KeyName"
+            ],
+            "LeadId": [
+                "string",
+                "index|allownull|description:Id of relationship with CloudFrameWorkCRMLeads",
+                "cfo_relation:CloudFrameWorkCRMLeads.KeyId"
+            ],
+            "ContactsId": [
+                "list",
+                "index|allownull",
+                "cfo_relation:CloudFrameWorkContacts.KeyName"
+            ],
+            "ProposalId": [
+                "string",
+                "index|allownull",
+                "cfo_relation:CloudFrameWorkCRMProposals.KeyName"
+            ],
+            "ProjectId": [
+                "string",
+                "index|allownull"
+            ],
+            "MilestoneId": [
+                "string",
+                "index|allownull"
+            ],
+            "IncidenceId": [
+                "string",
+                "index|allownull"
+            ],
+            "TaskId": [
+                "string",
+                "index|allownull"
+            ],
+            "TimeSpent": [
+                "float",
+                "index|default:0"
+            ],
+            "TextContent": [
+                "text",
+                "allownull"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkContacts",
+            "CloudFrameWorkCompanies",
+            "CloudFrameWorkCRMProposals",
+            "CloudFrameWorkPeoplePlayers",
+            "CloudFrameWorkCRMLeads",
+            "CloudFrameWorkProjectsMilestones"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "user_privileges": [
+                "directory-admin",
+                "documents-admin",
+                "projects-admin",
+                "crm-admin"
+            ]
+        },
+        "fields": {
+            "KeyId": {
+                "name": "Event Id",
+                "update_cfo": true
+            },
+            "DateInsertion": {
+                "name": "Event Date",
+                "type": "datetime",
+                "defaultvalue": "now"
+            },
+            "SourcePlayerId": {
+                "name": "Source Player",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkPeoplePlayers",
+                "external_where": {
+                    "PlayerActive": true
+                },
+                "fields": "KeyName,PlayerName,PlayerSurname,PlayerAvatar",
+                "linked_field": "KeyName",
+                "input_type": "users",
+                "allow_empty": true,
+                "defaultvalue": "{{User:PeopleUser}}"
+            },
+            "PlayersLinked": {
+                "name": "Attendant Players",
+                "type": "multiselect",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkPeoplePlayers",
+                "external_where": {
+                    "PlayerActive": true
+                },
+                "input_type": "users",
+                "fields": "KeyName,PlayerName,PlayerSurname,PlayerAvatar",
+                "linked_field": "KeyName",
+                "allow_empty": true
+            },
+            "Title": {
+                "name": "Title",
+                "cols": 1.5
+            },
+            "Source": {
+                "name": "Source/Media",
+                "type": "autoselect"
+            },
+            "ContactsId": {
+                "name": "Contacts",
+                "new_row": true,
+                "allow_empty": true
+            },
+            "CompanyId": {
+                "name": "Company",
+                "type": "api_select_partial",
+                "cfo": "CloudFrameWorkCompanies",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkCompanies/fields?server_limit=10&fields=CompanyName,CompanyLegalId&_search=1",
+                "empty_value": "Company",
+                "defaultvalue": null,
+                "allow_empty": true,
+                "display_cfo": true
+            },
+            "LeadId": {
+                "name": "Lead",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "cfo": "CloudFrameWorkCRMLeads",
+                "linked_field": "KeyId",
+                "select_fields": "LeadName,LeadContactName,LeadContactEmail",
+                "search_fields": "_search",
+                "_api": "/cfi/CloudFrameWorkCRMLeads/fields?server_limit=10&fields=LeadContactName,LeadContactEmail&_search=1",
+                "empty_value": "Lead",
+                "defaultvalue": null,
+                "allow_empty": true,
+                "display_cfo": true
+            },
+            "ProjectId": {
+                "name": "Project",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkProjectsEntries/display/{ProjectId}?server_limit=10&fields=KeyName,Title&_search=1",
+                "empty_value": "Project",
+                "defaultvalue": null,
+                "allow_empty": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkProjectsEntries"
+            },
+            "MilestoneId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;milestone",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkProjectsMilestones",
+                "fields": "Title,DateDeadline,PlayerId,Status",
+                "linked_field": "KeyId",
+                "filter_fields": "ProjectId",
+                "server_limit": 1000,
+                "limit": 500,
+                "defaultvalue": null,
+                "wrap": false,
+                "allow_empty": true,
+                "empty_value": "-- Select a Milestone --",
+                "new_row": true
+            },
+            "SourceContactId": {
+                "name": "Source contact",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkContacts/fields?server_limit=10&fields=ContactCompanyId,ContactEmail,ContactFullName&_search=1",
+                "empty_value": "Contact",
+                "defaultvalue": null,
+                "allow_empty": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkContacts"
+            },
+            "ProposalId": {
+                "name": "Proposal",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkCRMProposals/fields?server_limit=10&fields=Title,ProposalId&_search=1",
+                "empty_value": "Proposal",
+                "defaultvalue": null,
+                "allow_empty": true,
+                "cfo": "CloudFrameWorkCRMProposals"
+            },
+            "IncidenceId": {
+                "name": "Incidence",
+                "allow_empty": true
+            },
+            "TaskId": {
+                "name": "Task",
+                "allow_empty": true
+            },
+            "TextContent": {
+                "name": "HTML Info",
+                "type": "html",
+                "allow_empty": true,
+                "defaultvalue": "<p>lorem impsum</p>"
+            },
+            "JSON": {
+                "name": "Resources",
+                "type": "json",
+                "allow_empty": true,
+                "defaultvalue": "{\"info\":\"value\"}"
+            }
+        },
+        "behaviour": {
+            "after_insert": "display",
+            "after_update": "display"
+        }
+    },
+    "status": "",
+    "type": "ds"
+}

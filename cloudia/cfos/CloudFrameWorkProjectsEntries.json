@@ -1,0 +1,1309 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2026-01-16 05:34:38",
+    "Description": "<p><br></p>",
+    "GroupName": "PROJECTS",
+    "KeyName": "CloudFrameWorkProjectsEntries",
+    "Owner": "info@adrianmm.com",
+    "Tags": [
+        "projects",
+        "proyectos"
+    ],
+    "Title": "Listado de Proyectos",
+    "_search": [
+        "CLOUDFRAMEWORKPROJECTSENTRIES",
+        "PROJECTS",
+        "PROYECTOS"
+    ],
+    "entity": "CloudFrameWorkProjectsEntries",
+    "environment": "",
+    "events": {
+        "hooks": null,
+        "workflows": null
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Project",
+        "plural": "Projects",
+        "ico": "person-carry",
+        "tabs": {
+            "main": {
+                "title": "Main",
+                "ico": "person-carry"
+            },
+            "roles": {
+                "title": "Roles&Events",
+                "ico": "users-crown"
+            },
+            "events": {
+                "title": "Events",
+                "ico": "dot-circle"
+            },
+            "development": {
+                "title": "Development relations",
+                "ico": "code"
+            }
+        },
+        "filters": [
+            {
+                "field": "Open",
+                "name": "Opened projects?",
+                "type": "select",
+                "values": [
+                    {
+                        "id": true,
+                        "value": "Only open projects"
+                    },
+                    {
+                        "id": false,
+                        "value": "Only closed projects"
+                    }
+                ],
+                "defaultvalue": true,
+                "allow_empty": true,
+                "empty_value": "-- Select Opened or Closed projects --"
+            },
+            {
+                "field": "PlayerId",
+                "name": "Project Owner",
+                "type": "text",
+                "placeholder": "carmen@cloudframe.."
+            },
+            {
+                "field": "Type",
+                "name": "Type",
+                "type": "select",
+                "values": [
+                    {
+                        "id": "crm",
+                        "value": "CRM Sales Projects"
+                    },
+                    {
+                        "id": "it",
+                        "value": "IT Projects"
+                    },
+                    {
+                        "id": "people",
+                        "value": "People Projects"
+                    },
+                    {
+                        "id": "finances",
+                        "value": "Finance Projects"
+                    }
+                ],
+                "defaultvalue": null,
+                "allow_empty": true,
+                "empty_value": "-- Select a project Type --"
+            },
+            {
+                "field": "Status",
+                "name": "Status",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkCRMProposalsStatus",
+                "fields": "Title,PercentConversion",
+                "order": "OrderPosition ASC",
+                "linked_field": "KeyName",
+                "allow_empty": true,
+                "empty_value": "Status?",
+                "defaultvalue": null
+            },
+            {
+                "field": "Company",
+                "name": "Company",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "api": "/cfi/CloudFrameWorkCompanies/fields?server_limit=10&fields=CompanyName,CompanyLegalId&_search=1",
+                "allow_empty": true,
+                "empty_value": "Company?",
+                "defaultvalue": null
+            }
+        ],
+        "buttons": [
+            {
+                "title": "Insert Project",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "table_fixed_header": true,
+                "server_order": "DateInitProject DESC",
+                "server_limit": 100,
+                "conditional_rows_background_color": {
+                    "default": "",
+                    "fields": [
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#CCCCCC",
+                            "values": [
+                                "first-contact"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#f0f7a8",
+                            "values": [
+                                "requiremements-received",
+                                "proposal-sent"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#d9fba2",
+                            "values": [
+                                "purchases-order-sent"
+                            ]
+                        },
+                        {
+                            "field": "Status",
+                            "condition": "equals",
+                            "color": "#82f790",
+                            "values": [
+                                "proposal-signed"
+                            ]
+                        }
+                    ]
+                },
+                "fields": {
+                    "DocumentationId": {
+                        "field": "Type DocumentationId"
+                    },
+                    "Type": {
+                        "row_group": true,
+                        "field": "Type",
+                        "align": "center",
+                        "id_field": "KeyName",
+                        "api": "/cfi/CloudFrameWorkProjectsEntries",
+                        "order": "asc",
+                        "update_cfo": true,
+                        "js_conditional_cell_color": [
+                            {
+                                "color": "#7676fb",
+                                "font_color": "black",
+                                "condition": "'{{Type}}'=='it'"
+                            },
+                            {
+                                "color": "#fb76a3",
+                                "font_color": "black",
+                                "condition": "'{{Type}}'=='crm'"
+                            },
+                            {
+                                "color": "#aafdd2fa",
+                                "font_color": "black",
+                                "condition": "'{{Type}}'=='finances'"
+                            }
+                        ]
+                    },
+                    "ProjectId": {
+                        "field": "ProjectId",
+                        "link": true,
+                        "link_content": "/app.html#https://core20.web.app/ajax/cfa.html?api=/erp/projects&p=/project/{{ProjectId}}/left_panel_body"
+                    },
+                    "PlayerId": {
+                        "field": "PlayerId"
+                    },
+                    "Title": {
+                        "field": "Title"
+                    },
+                    "DateInitProject": {
+                        "order": "desc",
+                        "field": "DateInitProject"
+                    },
+                    "DateDeadline": {
+                        "field": "DateDeadline"
+                    },
+                    "Open": {
+                        "field": "Open"
+                    },
+                    "Status": {
+                        "field": "Status",
+                        "update_cfo": true,
+                        "api": "/cfi/CloudFrameWorkProjectsEntries?fields=KeyName,Status",
+                        "id_field": "KeyName"
+                    },
+                    "PercentConversion": {
+                        "field": "PercentConversion"
+                    },
+                    "CompanyId": {
+                        "field": "CompanyId",
+                        "crm-company": true
+                    },
+                    "DateUpdated": {
+                        "field": "DateUpdated"
+                    },
+                    "ProposalId": {
+                        "field": "ProposalId"
+                    },
+                    "ButtonEvent": {
+                        "field": "ButtonEvent",
+                        "type": "virtual",
+                        "name": "Events",
+                        "external_apis": [
+                            {
+                                "title": "New Event",
+                                "method": "GET",
+                                "url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkCRMEvents/insert?filter_ProjectId={{KeyName}}&filter_ProposalId={{ProposalId}}&filter_CompanyId={{CompanyId}}"
+                            }
+                        ]
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "DateInitProject": {
+                "field": "DateInitProject"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ProposalId": {
+                "field": "ProposalId"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "TotalIncomesBase": {
+                "field": "TotalIncomesBase"
+            },
+            "TotalOutcomesBase": {
+                "field": "TotalOutcomesBase"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            }
+        },
+        "display_fields": {
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "DateInitProject": {
+                "field": "DateInitProject"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ProposalId": {
+                "field": "ProposalId",
+                "api": ""
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "TotalIncomesBase": {
+                "field": "TotalIncomesBase"
+            },
+            "TotalOutcomesBase": {
+                "field": "TotalOutcomesBase"
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "VirtualMilestones": {
+                "field": "VirtualMilestones"
+            },
+            "VirtualIncidences": {
+                "field": "VirtualIncidences"
+            },
+            "VirtualPlayers": {
+                "field": "VirtualPlayers"
+            },
+            "VirtualContacts": {
+                "field": "VirtualContacts"
+            },
+            "VirtualEvents": {
+                "field": "VirtualEvents"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "_search": {
+                "field": "_search"
+            }
+        },
+        "update_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "hidden": true
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "DateInitProject": {
+                "field": "DateInitProject"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "ProposalId": {
+                "field": "ProposalId"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "TotalIncomesBase": {
+                "field": "TotalIncomesBase"
+            },
+            "TotalOutcomesBase": {
+                "field": "TotalOutcomesBase"
+            },
+            "Docs": {
+                "field": "Docs"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Tags": {
+                "field": "Tags"
+            }
+        },
+        "delete_fields": {
+            "KeyName": {
+                "field": "KeyName",
+                "read_only": true
+            }
+        },
+        "copy_fields": {
+            "KeyName": {
+                "field": "KeyName"
+            },
+            "PlayerId": {
+                "field": "PlayerId"
+            },
+            "PlayersLinked": {
+                "field": "PlayersLinked"
+            },
+            "DocumentationId": {
+                "field": "DocumentationId"
+            },
+            "Type": {
+                "field": "Type"
+            },
+            "Title": {
+                "field": "Title"
+            },
+            "DateInitProject": {
+                "field": "DateInitProject"
+            },
+            "DateDeadline": {
+                "field": "DateDeadline"
+            },
+            "Status": {
+                "field": "Status"
+            },
+            "ProposalId": {
+                "field": "ProposalId"
+            },
+            "CompanyId": {
+                "field": "CompanyId"
+            },
+            "Description": {
+                "field": "Description"
+            },
+            "JSON": {
+                "field": "JSON",
+                "allow_empty": true,
+                "new_row": true
+            },
+            "Tags": {
+                "field": "Tags"
+            },
+            "TotalIncomesBase": {
+                "field": "TotalIncomesBase"
+            },
+            "TotalOutcomesBase": {
+                "field": "TotalOutcomesBase"
+            }
+        }
+    },
+    "lowCode": {
+        "name": "Project",
+        "plural": "Projects",
+        "description": "",
+        "ico": "person-carry",
+        "secret": "",
+        "model": {
+            "KeyName": {
+                "name": "$namespace:cloudframework,cfo;project;variables;key_name",
+                "description": "No description",
+                "type": "string",
+                "allow_null": false,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": false,
+                "update": true,
+                "copy": true
+            },
+            "ProjectId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;project_id",
+                "description": "No description",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "minlength": 2,
+                "view": true,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "Organization": {
+                "name": "$namespace:cloudframework,cfo;project;variables;organization",
+                "description": "No description",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "minlength": 2,
+                "view": false,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "DocumentationId": {
+                "name": "Documentation Group",
+                "description": "Grupo de Documentación al que pertence",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "CompanyId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;company_id",
+                "description": "No description",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "minlength": 2,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "api_select_partial"
+                }
+            },
+            "PlayerId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;player_id",
+                "description": "No description",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "minlength": 2,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "autocomplete"
+                }
+            },
+            "PlayersLinked": {
+                "name": "$namespace:cloudframework,cfo;project;variables;players_linked",
+                "description": "No description",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "multiselect"
+                }
+            },
+            "ProposalId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;proposal_id",
+                "description": "No description",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "minlength": 2,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "api_select_partial"
+                }
+            },
+            "Title": {
+                "name": "$namespace:cloudframework,cfo;project;variables;project_title",
+                "description": "No description",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "minlength": 2,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "DateInitProject": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_init_project",
+                "description": "No description",
+                "type": "date",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "date"
+                }
+            },
+            "DateDeadline": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_deadline",
+                "description": "No description",
+                "type": "date",
+                "allow_null": true,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "date"
+                }
+            },
+            "DateUpdated": {
+                "name": "DateUpdated",
+                "description": "No description",
+                "type": "datetime",
+                "allow_null": true,
+                "index": true,
+                "forcevalue": "now",
+                "view": true,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "TotalIncomesBase": {
+                "name": "$namespace:cloudframework,cfo;project;variables;total_incomes_base",
+                "description": "No description",
+                "type": "float",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "TotalOutcomesBase": {
+                "name": "$namespace:cloudframework,cfo;project;variables;total_outcomes_base",
+                "description": "No description",
+                "type": "float",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true
+            },
+            "Status": {
+                "name": "$namespace:cloudframework,cfo;project;variables;status",
+                "description": "No description",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "Open": {
+                "name": "$namespace:cloudframework,cfo;project;variables;open",
+                "description": "No description",
+                "type": "boolean",
+                "allow_null": false,
+                "index": true,
+                "defaultvalue": "true",
+                "view": true,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "PercentConversion": {
+                "name": "$namespace:cloudframework,cfo;project;variables;percent_conversion",
+                "description": "No description",
+                "type": "integer",
+                "allow_null": false,
+                "index": true,
+                "defaultvalue": "10",
+                "view": true,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "Type": {
+                "name": "$namespace:cloudframework,cfo;project;variables;type",
+                "description": "No description",
+                "type": "string",
+                "allow_null": false,
+                "index": true,
+                "view": true,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "select"
+                }
+            },
+            "Docs": {
+                "name": "$namespace:cloudframework,cfo;project;variables;docs",
+                "description": "No description",
+                "type": "string",
+                "allow_null": true,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": false,
+                "interface": {
+                    "type": "server_documents"
+                }
+            },
+            "CRMId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;crm_id",
+                "description": "No description",
+                "type": "string",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": false,
+                "display": false,
+                "update": false,
+                "copy": false
+            },
+            "Description": {
+                "name": "$namespace:cloudframework,cfo;project;variables;description",
+                "description": "No description",
+                "type": "txt",
+                "allow_null": true,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "html"
+                }
+            },
+            "JSON": {
+                "name": "$namespace:cloudframework,cfo;project;variables;resources",
+                "description": "No description",
+                "type": "json",
+                "allow_null": true,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "Tags": {
+                "name": "Tags",
+                "description": "Tags to faciliate the search",
+                "type": "list",
+                "allow_null": true,
+                "index": false,
+                "view": false,
+                "insert": true,
+                "display": true,
+                "update": true,
+                "copy": true,
+                "interface": {
+                    "type": "json"
+                }
+            },
+            "_search": {
+                "name": "$namespace:cloudframework,cfo;project;variables;_search",
+                "description": "No description",
+                "type": "list",
+                "allow_null": true,
+                "index": true,
+                "view": false,
+                "insert": false,
+                "display": true,
+                "update": true,
+                "copy": false
+            }
+        },
+        "dependencies": []
+    },
+    "model": {
+        "model": {
+            "KeyName": [
+                "string",
+                "keyname"
+            ],
+            "ProjectId": [
+                "string",
+                "index|minlength:2|allownull"
+            ],
+            "Organization": [
+                "string",
+                "index|minlength:2|allownull"
+            ],
+            "DocumentationId": [
+                "string",
+                "index|allownull|description:Grupo de Documentación al que pertence"
+            ],
+            "CompanyId": [
+                "string",
+                "index|allownull|minlength:2"
+            ],
+            "PlayerId": [
+                "string",
+                "index|minlength:2"
+            ],
+            "PlayersLinked": [
+                "list",
+                "index|allownull"
+            ],
+            "ProposalId": [
+                "string",
+                "index|allownull|minlength:2"
+            ],
+            "Title": [
+                "string",
+                "index|minlength:2"
+            ],
+            "DateInitProject": [
+                "date",
+                "index|allownull"
+            ],
+            "DateDeadline": [
+                "date",
+                "index|allownull"
+            ],
+            "DateUpdated": [
+                "datetime",
+                "index|allownull|forcevalue:now"
+            ],
+            "TotalIncomesBase": [
+                "float",
+                "index|allownull"
+            ],
+            "TotalOutcomesBase": [
+                "float",
+                "index|allownull"
+            ],
+            "Status": [
+                "string",
+                "index|minlength=3"
+            ],
+            "Open": [
+                "boolean",
+                "index|defaultvalue:true"
+            ],
+            "PercentConversion": [
+                "integer",
+                "index|defaultvalue:10"
+            ],
+            "Type": [
+                "string",
+                "index|minlength=3"
+            ],
+            "Docs": [
+                "string",
+                "allownull"
+            ],
+            "CRMId": [
+                "string",
+                "index|allownull"
+            ],
+            "Description": [
+                "txt",
+                "allownull"
+            ],
+            "JSON": [
+                "json",
+                "allownull"
+            ],
+            "Tags": [
+                "list",
+                "index|allownull"
+            ],
+            "_search": [
+                "list",
+                "index|allownull"
+            ]
+        },
+        "dependencies": [
+            "CloudFrameWorkOrganizations",
+            "CloudFrameWorkCompanies",
+            "CloudFrameWorkProjectsContacts",
+            "CloudFrameWorkProjectsStatus",
+            "CloudFrameWorkProjectsPlayersRoles",
+            "CloudFrameWorkProjectsMilestones",
+            "CloudFrameWorkProjectsIncidences",
+            "CloudFrameWorkCRMEvents",
+            "CloudFrameWorkCRMPlayers",
+            "CloudFrameWorkCRMProposals",
+            "CloudFrameWorkDevDocumentation"
+        ]
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "user_privileges": [
+                "directory-admin",
+                "localization-admin"
+            ]
+        },
+        "fields": {
+            "KeyName": {
+                "name": "$namespace:cloudframework,cfo;project;variables;key_name",
+                "wrap": false
+            },
+            "DocumentationId": {
+                "name": "Documentation Group",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkDevDocumentation",
+                "fields": "KeyName,Title",
+                "linked_field": "KeyName",
+                "nowrap": true,
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkDevDocumentation",
+                "cols": 3,
+                "allow_empty": true,
+                "tab": "development"
+            },
+            "Type": {
+                "name": "$namespace:cloudframework,cfo;project;variables;type",
+                "type": "select",
+                "allow_empty": true,
+                "empty_value": "--- Select  a Project Type ---",
+                "defaultvalue": null,
+                "values": [
+                    {
+                        "id": "crm",
+                        "value": "CRM Sales Projects"
+                    },
+                    {
+                        "id": "it",
+                        "value": "IT Projects"
+                    },
+                    {
+                        "id": "people",
+                        "value": "People Projects"
+                    },
+                    {
+                        "id": "finances",
+                        "value": "Finance Projects"
+                    },
+                    {
+                        "id": "legal",
+                        "value": "Legal Projects"
+                    },
+                    {
+                        "id": "admin",
+                        "value": "Adminitrative Projects"
+                    },
+                    {
+                        "id": "marketing",
+                        "value": "Marketing Projects"
+                    },
+                    {
+                        "id": "training",
+                        "value": "Training Projects"
+                    },
+                    {
+                        "id": "business",
+                        "value": "Business Projects"
+                    }
+                ]
+            },
+            "ProjectId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;project_id",
+                "value": "{{KeyName}}",
+                "internal_replacement": true
+            },
+            "Organization": {
+                "name": "$namespace:cloudframework,cfo;project;variables;organization",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkOrganizations",
+                "fields": "OrganizationName",
+                "linked_field": "KeyName"
+            },
+            "PlayerId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;player_id",
+                "type": "autocomplete",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkProjectsPlayers",
+                "fields": "KeyName",
+                "linked_field": "KeyName",
+                "external_where": {
+                    "PlayerActive": true
+                },
+                "input_type": "users"
+            },
+            "ProposalId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;proposal_id",
+                "display_cfo": true,
+                "cfo": "CloudFrameWorkCRMProposals",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "linked_field": "KeyName",
+                "fields": "ProposalId,CompanyId,PlayerId",
+                "api": "/cfi/CloudFrameWorkCRMProposals/fields?server_limit=10&fields=ProposalId,CompanyId,PlayerId&_search=1",
+                "empty_value": "Proposal",
+                "defaultvalue": null,
+                "wrap": false,
+                "allow_empty": true,
+                "new_row": true
+            },
+            "CompanyId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;company_id",
+                "type": "api_select_partial",
+                "external_values": "datastore",
+                "cfo": "CloudFrameWorkCompanies",
+                "linked_field": "KeyName",
+                "search_fields": "_search",
+                "search_limit": 10,
+                "select_fields": "KeyName,CompanyName,CompanyLegalId",
+                "placeholder": "Search a company",
+                "_comments": "Select the company of the project",
+                "_api_search": "/cfi/CloudFrameWorkCompanies/fields?server_limit=10&fields=CompanyName,CompanyLegalId&_search=1",
+                "_fields": "KeyName,CompanyName,CompanyLegalId",
+                "display_cfo": true,
+                "empty_value": "Company?",
+                "defaultvalue": null,
+                "allow_empty": true
+            },
+            "Title": {
+                "name": "$namespace:cloudframework,cfo;project;variables;project_title",
+                "cols": 2
+            },
+            "PlayersLinked": {
+                "name": "$namespace:cloudframework,cfo;project;variables;players_linked",
+                "type": "multiselect",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkPeoplePlayers",
+                "fields": "KeyName,PlayerName,PlayerSurname,PlayerAvatar",
+                "linked_field": "KeyName",
+                "external_where": {
+                    "PlayerActive": true
+                },
+                "allow_empty": true,
+                "input_type": "users"
+            },
+            "DateInitProject": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_init_project",
+                "type": "date",
+                "defaultvalue": "now"
+            },
+            "DateDeadline": {
+                "name": "$namespace:cloudframework,cfo;project;variables;date_deadline",
+                "type": "date"
+            },
+            "Service": {
+                "name": "$namespace:cloudframework,cfo;project;variables;service"
+            },
+            "CRMId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;crm_id"
+            },
+            "Status": {
+                "name": "$namespace:cloudframework,cfo;project;variables;status",
+                "type": "select",
+                "external_values": "datastore",
+                "entity": "CloudFrameWorkProjectsStatus",
+                "fields": "KeyName,Title,PercentConversion",
+                "linked_field": "KeyName",
+                "order": "OrderPosition"
+            },
+            "Open": {
+                "name": "$namespace:cloudframework,cfo;project;variables;open",
+                "internal_replacement": true,
+                "value": "{{Open}}",
+                "internal_source": "datastore",
+                "entity": "CloudFrameWorkProjectsStatus",
+                "linked_field": "KeyName",
+                "linked_value": "{{Status}}"
+            },
+            "PercentConversion": {
+                "name": "$namespace:cloudframework,cfo;project;variables;percent_conversion",
+                "internal_replacement": true,
+                "value": "{{PercentConversion}}",
+                "internal_source": "datastore",
+                "entity": "CloudFrameWorkProjectsStatus",
+                "linked_field": "KeyName",
+                "linked_value": "{{Status}}"
+            },
+            "TotalIncomesBase": {
+                "name": "$namespace:cloudframework,cfo;project;variables;total_incomes_base",
+                "align": "right",
+                "input_type": "number",
+                "append_icon": "fa-euro-sign",
+                "defaultvalue": 0
+            },
+            "TotalOutcomesBase": {
+                "name": "$namespace:cloudframework,cfo;project;variables;total_outcomes_base",
+                "align": "right",
+                "defaultvalue": 0,
+                "append_icon": "fa-euro-sign",
+                "input_type": "number"
+            },
+            "Docs": {
+                "name": "$namespace:cloudframework,cfo;project;variables;docs",
+                "type": "server_documents",
+                "bucket": "gs://cloudframework.io/documents/files/{{Platform:spacename}}",
+                "cf_bucket": "KeyName",
+                "wrap": true,
+                "allow_empty": true,
+                "limit_chars": {
+                    "max_chars": 20
+                }
+            },
+            "JSON": {
+                "name": "$namespace:cloudframework,cfo;project;variables;resources",
+                "type": "json",
+                "defaultvalue": "{\"first-contact\":\"Description\",\"next-steps\":\"Call the client\"}"
+            },
+            "Description": {
+                "name": "$namespace:cloudframework,cfo;project;variables;description",
+                "type": "html",
+                "defaultvalue": "<h1>Your Project title</h1><p>your content</p>"
+            },
+            "Tags": {
+                "name": "Tags",
+                "allow_empty": true,
+                "tab": "development"
+            },
+            "_search": {
+                "name": "$namespace:cloudframework,cfo;project;variables;_search",
+                "search_fields": "CompanyId,ProjectId,Tags",
+                "read_only": true,
+                "tab": "development"
+            },
+            "VirtualPlayers": {
+                "tab": "roles",
+                "name": "$namespace:cloudframework,cfo;project;variables;virtual_players",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkProjectsPlayersRoles",
+                "linked_field": "ProjectId",
+                "field_value": "KeyName",
+                "fields": "*",
+                "summary_line": "{{PlayerId}} [{{Role}}]",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsPlayersRoles/insert?filter_ProjectId={{KeyName}}"
+            },
+            "VirtualContacts": {
+                "tab": "roles",
+                "name": "$namespace:cloudframework,cfo;project;variables;virtual_contacts",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkProjectsContacts",
+                "linked_field": "ProjectId",
+                "field_value": "KeyName",
+                "fields": "*",
+                "summary_line": "{{ProjectId}}: {{ContactId}} [{{Role}}]",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsContacts/insert?filter_ProjectId={{KeyName}}&filter_ProposalId={{ProposalId}}"
+            },
+            "VirtualEvents": {
+                "tab": "events",
+                "name": "$namespace:cloudframework,cfo;project;variables;virtual_events",
+                "type": "virtual",
+                "modal_size": "xxl",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkCRMEvents",
+                "linked_field": "ProjectId",
+                "field_value": "KeyName",
+                "order": "DateInsertion DESC",
+                "fields": "*",
+                "summary_line": "{{DateInsertion}} - {{Source}}:[{{SourceContactId}}] {{Title}}",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkCRMEvents/insert?filter_ProjectId={{KeyName}}&filter_ProposalId={{ProposalId}}&filter_CompanyId={{Company}}"
+            },
+            "VirtualMilestones": {
+                "name": "$namespace:cloudframework,cfo;project;variables;virtual_milestones",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkProjectsMilestones",
+                "linked_field": "ProjectId",
+                "field_value": "KeyName",
+                "order": "DateInitMilestone DESC",
+                "fields": "*",
+                "summary_line": "[{{DateInitMilestone}}/{{DateDeadline}}] - [{{Status}}] {{PlayerId}}:{{Title}}",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsMilestones/insert?filter_ProjectId={{KeyName}}&filter_CompanyId={{Company}}"
+            },
+            "VirtualIncidences": {
+                "name": "$namespace:cloudframework,cfo;project;variables;virtual_incidences",
+                "type": "virtual",
+                "external_info": "datastore",
+                "entity": "CloudFrameWorkProjectsIncidences",
+                "linked_field": "ProjectId",
+                "field_value": "KeyName",
+                "order": "DateInitIncidence DESC",
+                "fields": "*",
+                "summary_line": "[{{DateInitIncidence}}/{{DateDeadline}}] - [{{Status}}] {{PlayerId}}:{{Title}}",
+                "external_new_entity_url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsIncidences/insert?filter_ProjectId={{KeyName}}&filter_CompanyId={{Company}}"
+            },
+            "ButtonNewPlayerRole": {
+                "name": "$namespace:cloudframework,cfo;project;variables;button_new_player_role",
+                "type": "virtual",
+                "external_apis": [
+                    {
+                        "title": "New Player/Role",
+                        "url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsPlayersRoles/insert?filter_ProjectId={{KeyName}}&_returnButton=https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsEntries/display/{{KeyName}}&_returnButtonTitle=Return+Project+{{KeyName}}",
+                        "method": "GET"
+                    }
+                ]
+            },
+            "ButtonNewContactRole": {
+                "name": "$namespace:cloudframework,cfo;project;variables;button_new_contact_role",
+                "type": "virtual",
+                "external_apis": [
+                    {
+                        "title": "New Project Contact / Role",
+                        "url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsContacts/insert?filter_ProjectId={{KeyName}}&filter_ProposalId={{ProposalId}}",
+                        "method": "GET"
+                    }
+                ]
+            },
+            "ButtonNewEvent": {
+                "name": "$namespace:cloudframework,cfo;project;variables;button_new_event",
+                "type": "virtual",
+                "external_apis": [
+                    {
+                        "title": "New Project Event",
+                        "url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkCRMEvents/insert?filter_ProjectId={{KeyName}}&filter_ProposalId={{ProposalId}}&filter_CompanyId={{Company}}",
+                        "method": "GET"
+                    }
+                ]
+            },
+            "ButtonNewMilestone": {
+                "name": "$namespace:cloudframework,cfo;project;variables;button_new_milestone",
+                "type": "virtual",
+                "external_apis": [
+                    {
+                        "title": "New Project Milestones",
+                        "url": "https://api.cloudframework.io/core/cfo/cfi/CloudFrameWorkProjectsMilestones/insert?filter_ProjectId={{KeyName}}&filter_CompanyId={{Company}}",
+                        "modal_size": "xxl",
+                        "method": "GET"
+                    }
+                ]
+            }
+        }
+    },
+    "status": "IN PRODUCTION",
+    "type": "ds"
+}

@@ -115,6 +115,10 @@ class Script extends CoreScripts
         $this->sendTerminal("  /summary                       - Show activity summary for current week");
         $this->sendTerminal("  /summary?from=DATE&to=DATE     - Show activity summary for date range");
         $this->sendTerminal("");
+        $this->sendTerminal("  Combined View:");
+        $this->sendTerminal("  /all                           - List all activity (events + inputs) last 30 days");
+        $this->sendTerminal("  /all?from=DATE&to=DATE         - List all activity in date range");
+        $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script _cloudia/activity/events");
         $this->sendTerminal("  composer run-script script \"_cloudia/activity/events?from=2025-01-01&to=2025-01-31\"");
@@ -514,6 +518,193 @@ class Script extends CoreScripts
         }
 
         $this->sendTerminal(str_repeat('=', 100));
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * List all activity (events + inputs) combined and ordered by date
+     * Events filtered by DateInserting, Inputs filtered by DateInput
+     */
+    public function METHOD_all(): bool
+    {
+        //region SET date range parameters
+        $from = $this->formParams['from'] ?? null;
+        $to = $this->formParams['to'] ?? null;
+
+        // Default to last 30 days if no from date specified
+        if (!$from) {
+            $from = date('Y-m-d', strtotime('-30 days'));
+        }
+        // Default to today if no to date specified
+        if (!$to) {
+            $to = date('Y-m-d');
+        }
+        $toTimestamp = strtotime($to . ' 23:59:59');
+        //endregion
+
+        $this->sendTerminal("");
+        $this->sendTerminal("All Activity [{$this->user_email}]");
+        $this->sendTerminal("Period: {$from} to {$to}");
+        $this->sendTerminal(str_repeat('=', 120));
+
+        //region FETCH events (filtered by DateInserting)
+        $eventParams = [
+            'filter_UserEmail' => $this->user_email,
+            'filter_DateInserting' => ['>=', $from],
+            '_order' => '-DateInserting',
+            'cfo_limit' => 500,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $eventsResponse = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents?_raw&_timezone=UTC",
+            $eventParams,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $events = $eventsResponse['data'] ?? [];
+
+        // Filter by 'to' date (DateInserting upper bound)
+        $events = array_filter($events, function($event) use ($toTimestamp) {
+            $insertDate = $event['DateInserting'] ?? '';
+            if (!$insertDate) return true;
+            return strtotime($insertDate) <= $toTimestamp;
+        });
+        $events = array_values($events);
+        //endregion
+
+        //region FETCH inputs (filtered by DateInput)
+        $inputParams = [
+            'filter_UserEmail' => $this->user_email,
+            'filter_DateInput' => ['>=', $from],
+            '_order' => '-DateInput',
+            'cfo_limit' => 500,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $inputsResponse = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs?_raw&_timezone=UTC",
+            $inputParams,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $inputs = $inputsResponse['data'] ?? [];
+
+        // Filter by 'to' date (DateInput upper bound)
+        $inputs = array_filter($inputs, function($input) use ($toTimestamp) {
+            $inputDate = $input['DateInput'] ?? '';
+            if (!$inputDate) return true;
+            return strtotime($inputDate) <= $toTimestamp;
+        });
+        $inputs = array_values($inputs);
+        //endregion
+
+        //region COMBINE and GROUP by date
+        $byDate = [];
+        $totalHours = 0;
+        $totalTimeSpent = 0;
+
+        // Add events to byDate
+        foreach ($events as $event) {
+            $date = substr($event['DateTimeInit'] ?? $event['DateInserting'] ?? '', 0, 10);
+            if (!$date) continue;
+            $byDate[$date]['events'][] = $event;
+        }
+
+        // Add inputs to byDate
+        foreach ($inputs as $input) {
+            $date = substr($input['DateInput'] ?? '', 0, 10);
+            if (!$date) continue;
+            $byDate[$date]['inputs'][] = $input;
+            $totalHours += floatval($input['Hours'] ?? 0);
+            $totalTimeSpent += floatval($input['TimeSpent'] ?? 0);
+        }
+
+        // Sort by date descending
+        krsort($byDate);
+        //endregion
+
+        //region DISPLAY combined activity by date
+        foreach ($byDate as $date => $dayData) {
+            $dayName = date('l', strtotime($date));
+            $dayEvents = $dayData['events'] ?? [];
+            $dayInputs = $dayData['inputs'] ?? [];
+
+            $dayTotalHours = array_sum(array_map(fn($i) => floatval($i['Hours'] ?? 0), $dayInputs));
+            $dayTotalTimeSpent = array_sum(array_map(fn($i) => floatval($i['TimeSpent'] ?? 0), $dayInputs));
+
+            $this->sendTerminal("");
+            $hoursInfo = $dayTotalHours > 0 ? sprintf(" | Hours: %.1fh", $dayTotalHours) : "";
+            $timeSpentInfo = $dayTotalTimeSpent > 0 ? sprintf(" | TimeSpent: %.1fh", $dayTotalTimeSpent) : "";
+            $this->sendTerminal(" {$date} ({$dayName}) - Events: " . count($dayEvents) . " | Inputs: " . count($dayInputs) . $hoursInfo . $timeSpentInfo);
+            $this->sendTerminal(" " . str_repeat('-', 115));
+
+            // Display events for this day
+            if ($dayEvents) {
+                foreach ($dayEvents as $event) {
+                    $title = $event['Title'] ?? 'Untitled';
+                    $timeInit = substr($event['DateTimeInit'] ?? '', 11, 5);
+                    $timeEnd = substr($event['DateTimeEnd'] ?? '', 11, 5);
+                    $type = $event['Type'] ?? '';
+
+                    $title = strlen($title) > 50 ? substr($title, 0, 47) . '...' : $title;
+                    $timeRange = $timeInit ? "{$timeInit}-{$timeEnd}" : "All day";
+
+                    $typeIcon = match(strtolower($type)) {
+                        'meeting' => '[MTG]',
+                        'call' => '[CAL]',
+                        'task' => '[TSK]',
+                        'reminder' => '[REM]',
+                        'deadline' => '[DLN]',
+                        default => '[EVT]'
+                    };
+
+                    $this->sendTerminal(sprintf("   %s %s %s", $timeRange, $typeIcon, $title));
+                }
+            }
+
+            // Display inputs for this day
+            if ($dayInputs) {
+                foreach ($dayInputs as $input) {
+                    $hours = floatval($input['Hours'] ?? 0);
+                    $timeSpent = floatval($input['TimeSpent'] ?? 0);
+                    $project = $input['ProjectId'] ?? '';
+                    $description = $input['Description'] ?? '';
+
+                    $description = strlen($description) > 40 ? substr($description, 0, 37) . '...' : $description;
+                    $project = strlen($project) > 25 ? substr($project, 0, 22) . '...' : $project;
+
+                    $hoursStr = sprintf("%.1fh", $hours);
+                    $timeSpentStr = $timeSpent > 0 ? sprintf(" (spent: %.1fh)", $timeSpent) : "";
+
+                    $this->sendTerminal(sprintf("   [INP] [%s%s] %-40s | %s", $hoursStr, $timeSpentStr, $description ?: '(no description)', $project));
+                }
+            }
+        }
+        //endregion
+
+        //region DISPLAY summary
+        $this->sendTerminal("");
+        $this->sendTerminal(str_repeat('=', 120));
+        $this->sendTerminal(sprintf(" TOTAL: %d events | %d inputs | Hours: %.1f | TimeSpent: %.1f",
+            count($events), count($inputs), $totalHours, $totalTimeSpent));
+        if ($totalTimeSpent > 0 && $totalHours > 0) {
+            $efficiency = ($totalTimeSpent / $totalHours) * 100;
+            $this->sendTerminal(sprintf(" TimeSpent/Hours ratio: %.1f%%", $efficiency));
+        }
+        $this->sendTerminal(" Period: {$from} to {$to} | User: {$this->user_email}");
         //endregion
 
         return true;

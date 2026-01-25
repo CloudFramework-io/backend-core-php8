@@ -1,0 +1,187 @@
+{
+    "Active": true,
+    "CloudFrameworkUser": "info@adrianmm.com",
+    "Connections": "",
+    "DateUpdating": "2025-09-29 17:45:41",
+    "Description": "<p><br></p>",
+    "GroupName": "PROJECTS",
+    "KeyName": "CloudFrameWorkProjectsSprints",
+    "Owner": "",
+    "Tags": "",
+    "Title": "",
+    "_search": [
+        "CLOUDFRAMEWORKPROJECTSSPRINTS",
+        "PROJECTS"
+    ],
+    "entity": "CloudFrameWorkProjectsSprints",
+    "environment": "",
+    "events": {
+        "workflows": []
+    },
+    "extends": "",
+    "hasExternalWorkflows": false,
+    "interface": {
+        "name": "Projects Sprints",
+        "plural": "Projects Sprints",
+        "ico": "running",
+        "tabs": {
+            "default": {
+                "title": "Info. Task",
+                "ico": "person-sign"
+            },
+            "development": {
+                "title": "Relaciones con Desarrollo"
+            }
+        },
+        "filters": [],
+        "buttons": [
+            {
+                "title": "Insert Sprint",
+                "type": "api-insert"
+            }
+        ],
+        "views": {
+            "default": {
+                "name": "General View",
+                "all_fields": true,
+                "server_order": "DateInit DESC",
+                "server_limit": 100,
+                "fields": {
+                    "Title": {
+                        "field": "Title",
+                        "update_cfo": true,
+                        "id_field": "KeyId"
+                    },
+                    "DateInit": {
+                        "order": "desc",
+                        "field": "DateInit"
+                    },
+                    "DateEnd": {
+                        "field": "DateEnd"
+                    }
+                }
+            }
+        },
+        "insert_fields": {
+            "Title": {
+                "field": "Title"
+            },
+            "DateInit": {
+                "order": "desc",
+                "field": "DateInit"
+            },
+            "DateEnd": {
+                "field": "DateEnd"
+            },
+            "Description": {
+                "field": "Description"
+            }
+        },
+        "copy_fields": {
+            "Title": {
+                "field": "Title"
+            },
+            "DateInit": {
+                "order": "desc",
+                "field": "DateInit"
+            },
+            "DateEnd": {
+                "field": "DateEnd"
+            },
+            "Description": {
+                "field": "Description"
+            }
+        },
+        "update_fields": {
+            "Title": {
+                "field": "Title"
+            },
+            "KeyId": {
+                "field": "KeyId",
+                "hidden": true
+            },
+            "DateInit": {
+                "order": "desc",
+                "field": "DateInit"
+            },
+            "DateEnd": {
+                "field": "DateEnd"
+            },
+            "Description": {
+                "field": "Description"
+            }
+        },
+        "delete_fields": {
+            "KeyId": {
+                "field": "KeyId",
+                "read_only": true
+            }
+        }
+    },
+    "lowCode": [],
+    "model": {
+        "model": {
+            "Title": [
+                "string",
+                "index|minlength:2"
+            ],
+            "DateInit": [
+                "date",
+                "index|allownull"
+            ],
+            "DateEnd": [
+                "date",
+                "index|allownull"
+            ],
+            "Description": [
+                "zip",
+                "allownull"
+            ]
+        },
+        "dependencies": []
+    },
+    "securityAndFields": {
+        "security": {
+            "user_spacenames": null,
+            "user_organizations": null,
+            "cfo_locked": true,
+            "user_privileges": [
+                "directory-admin",
+                "localization-admin"
+            ]
+        },
+        "fields": {
+            "KeyId": {
+                "name": "$namespace:cloudframework,cfo;project;variables;key_name",
+                "header": {
+                    "title": "Relaciones de la Tarea",
+                    "type": "h2"
+                },
+                "wrap": false
+            },
+            "Title": {
+                "name": "Sprint Title",
+                "new_row": true,
+                "full_col_width": true
+            },
+            "DateInit": {
+                "name": "First day",
+                "type": "date",
+                "allow_empty": true
+            },
+            "DateEnd": {
+                "name": "Last day",
+                "type": "date",
+                "allow_empty": true,
+                "show_dropdowns": true
+            },
+            "Description": {
+                "name": "$namespace:cloudframework,cfo;project;variables;task_description",
+                "type": "html",
+                "defaultvalue": "Your Task description"
+            }
+        }
+    },
+    "status": "",
+    "type": "ds"
+}
