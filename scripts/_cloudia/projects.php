@@ -672,6 +672,11 @@ class Script extends CoreScripts
             ];
             //endregion
 
+            //region DISPLAY milestones and tasks reports
+            $this->displayMilestonesReport($milestones, 0, 0, count($milestones));
+            $this->displayTasksReport($tasks, 0, 0, count($tasks));
+            //endregion
+
             //region SAVE $project_data to JSON file (only if changed)
             $filename = $this->projectIdToFilename($key_name);
             $filepath = "{$backup_dir}/{$filename}";

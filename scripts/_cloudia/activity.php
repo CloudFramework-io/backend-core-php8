@@ -150,14 +150,15 @@ class Script extends CoreScripts
 
         //region FETCH events filtered by DateInserting
         $this->sendTerminal("");
-        $this->sendTerminal("My events [{$this->user_email}] (DateInserting: {$from} to {$to}):");
+        $this->sendTerminal("My events [{$this->user_email} - max 1000 records] (DateInserting: {$from} to {$to}):");
         $this->sendTerminal(str_repeat('-', 100));
 
         $params = [
-            'filter_UserEmail' => $this->user_email,
-            'filter_DateInserting' => ['>=', $from],
+            'filter__search' => $this->user_email,
+            'filter_DateInserting' =>$from.'/'.($to??''),
+
             '_order' => '-DateInserting',
-            'cfo_limit' => 100,
+            'cfo_limit' => 1000,
             '_raw' => 1,
             '_timezone' => 'UTC'
         ];
@@ -255,14 +256,13 @@ class Script extends CoreScripts
         $filterInfo = "(DateInput: {$from} to {$to})";
         if ($task_id) $filterInfo .= " task: {$task_id}";
         if ($project_id) $filterInfo .= " project: {$project_id}";
-        $this->sendTerminal("My activity inputs [{$this->user_email}] {$filterInfo}:");
+        $this->sendTerminal("My activity inputs [{$this->user_email} max 1000 records] {$filterInfo}:");
         $this->sendTerminal(str_repeat('-', 100));
 
         $params = [
-            'filter_UserEmail' => $this->user_email,
-            'filter_DateInput' => ['>=', $from],
-            '_order' => '-DateInput',
-            'cfo_limit' => 100,
+            'filter__search' => $this->user_email,
+            'filter_DateInput' =>$from.'/'.($to??''),
+            'cfo_limit' => 1000,
             '_raw' => 1,
             '_timezone' => 'UTC'
         ];
@@ -275,7 +275,7 @@ class Script extends CoreScripts
         }
 
         $response = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs",
             $params,
             $this->headers
         );
@@ -319,7 +319,7 @@ class Script extends CoreScripts
         $this->sendTerminal(str_repeat('=', 100));
 
         $response = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs/display/{$input_id}?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs/display/{$input_id}",
             ['_raw' => 1, '_timezone' => 'UTC'],
             $this->headers
         );
@@ -374,7 +374,7 @@ class Script extends CoreScripts
         ];
 
         $eventsResponse = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents",
             $eventParams,
             $this->headers
         );
@@ -405,7 +405,7 @@ class Script extends CoreScripts
         ];
 
         $inputsResponse = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs",
             $inputParams,
             $this->headers
         );
@@ -552,7 +552,7 @@ class Script extends CoreScripts
         //region FETCH events (filtered by DateInserting)
         $eventParams = [
             'filter_UserEmail' => $this->user_email,
-            'filter_DateInserting' => ['>=', $from],
+            'filter_DateInserting' => $from.'/'.($to??''),
             '_order' => '-DateInserting',
             'cfo_limit' => 500,
             '_raw' => 1,
@@ -560,7 +560,7 @@ class Script extends CoreScripts
         ];
 
         $eventsResponse = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents",
             $eventParams,
             $this->headers
         );
@@ -583,7 +583,7 @@ class Script extends CoreScripts
         //region FETCH inputs (filtered by DateInput)
         $inputParams = [
             'filter_UserEmail' => $this->user_email,
-            'filter_DateInput' => ['>=', $from],
+            'filter_DateInput' => $from.'/'.($to??''),
             '_order' => '-DateInput',
             'cfo_limit' => 500,
             '_raw' => 1,
@@ -591,7 +591,7 @@ class Script extends CoreScripts
         ];
 
         $inputsResponse = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs",
             $inputParams,
             $this->headers
         );

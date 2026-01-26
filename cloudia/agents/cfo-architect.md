@@ -1,6 +1,52 @@
 ---
 name: cfo-architect
-description: Use this agent when the user needs to create, modify, manage, or understand CFOs (CloudFramework Objects). This includes: creating new CFO JSON definitions, modifying existing CFO structures, adding or updating fields in securityAndFields, configuring lowCode interfaces, setting up model definitions with proper field types and validations, managing CFO dependencies, configuring interface settings (views, tabs, filters, buttons), setting up security privileges, creating Academy courses about CFOs, and explaining CFO configuration options. Examples:\n\n<example>\nContext: User wants to create a new CFO for employee management\nuser: "Necesito crear un CFO para gestionar los empleados de una empresa"\nassistant: "Voy a usar el agente cfo-architect para crear el CFO de empleados con la estructura completa"\n<commentary>\nSince the user needs to create a new CFO data model, use the cfo-architect agent which has deep knowledge of CFO structure, field types, and best practices.\n</commentary>\n</example>\n\n<example>\nContext: User needs to add a new field to an existing CFO\nuser: "Añade un campo de fecha de nacimiento al CFO MP_HRMS_employees"\nassistant: "Utilizaré el agente cfo-architect para añadir el campo de fecha de nacimiento correctamente configurado"\n<commentary>\nThe user wants to modify an existing CFO by adding a field. Use cfo-architect to ensure proper field configuration in both model and securityAndFields sections.\n</commentary>\n</example>\n\n<example>\nContext: User asks about CFO configuration options\nuser: "¿Qué tipos de campos puedo usar en un CFO?"\nassistant: "Voy a consultar con el agente cfo-architect que tiene conocimiento profundo de todas las opciones de configuración de CFOs"\n<commentary>\nUser needs documentation/explanation about CFO capabilities. The cfo-architect agent can provide comprehensive information about field types, validations, and configuration options.\n</commentary>\n</example>\n\n<example>\nContext: User wants to create a course about CFOs\nuser: "Crea un curso de formación sobre cómo configurar CFOs"\nassistant: "Usaré el agente cfo-architect para diseñar un curso completo sobre configuración de CFOs usando el sistema CLOUD Academy"\n<commentary>\nThe user wants educational content about CFOs. The cfo-architect agent can create Academy courses with proper structure (groups, courses, contents, questions) about CFO topics.\n</commentary>\n</example>\n\n<example>\nContext: User needs to fix dependencies in a CFO\nuser: "El CFO MP_HRMS_employees tiene errores de dependencias"\nassistant: "Voy a usar el agente cfo-architect para revisar y corregir las dependencias del CFO"\n<commentary>\nDependency management is a critical CFO configuration task. Use cfo-architect to ensure all foreign keys and external selects are properly declared in dependencies arrays.\n</commentary>\n</example>
+description: |
+  Use this agent when the user needs to create, modify, manage, or understand CFOs (CloudFramework Objects). This includes: creating new CFO JSON definitions, modifying existing CFO structures, adding or updating fields in securityAndFields, configuring lowCode interfaces, setting up model definitions with proper field types and validations, managing CFO dependencies, configuring interface settings (views, tabs, filters, buttons), setting up security privileges, creating Academy courses about CFOs, and explaining CFO configuration options.
+
+  <example>
+  Context: User wants to create a new CFO for employee management
+  user: "Necesito crear un CFO para gestionar los empleados de una empresa"
+  assistant: "Voy a usar el agente cfo-architect para crear el CFO de empleados con la estructura completa"
+  <commentary>
+  Since the user needs to create a new CFO data model, use the cfo-architect agent which has deep knowledge of CFO structure, field types, and best practices.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User needs to add a new field to an existing CFO
+  user: "Añade un campo de fecha de nacimiento al CFO MP_HRMS_employees"
+  assistant: "Utilizaré el agente cfo-architect para añadir el campo de fecha de nacimiento correctamente configurado"
+  <commentary>
+  The user wants to modify an existing CFO by adding a field. Use cfo-architect to ensure proper field configuration in both model and securityAndFields sections.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User asks about CFO configuration options
+  user: "¿Qué tipos de campos puedo usar en un CFO?"
+  assistant: "Voy a consultar con el agente cfo-architect que tiene conocimiento profundo de todas las opciones de configuración de CFOs"
+  <commentary>
+  User needs documentation/explanation about CFO capabilities. The cfo-architect agent can provide comprehensive information about field types, validations, and configuration options.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User wants to create a course about CFOs
+  user: "Crea un curso de formación sobre cómo configurar CFOs"
+  assistant: "Usaré el agente cfo-architect para diseñar un curso completo sobre configuración de CFOs usando el sistema CLOUD Academy"
+  <commentary>
+  The user wants educational content about CFOs. The cfo-architect agent can create Academy courses with proper structure (groups, courses, contents, questions) about CFO topics.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User needs to fix dependencies in a CFO
+  user: "El CFO MP_HRMS_employees tiene errores de dependencias"
+  assistant: "Voy a usar el agente cfo-architect para revisar y corregir las dependencias del CFO"
+  <commentary>
+  Dependency management is a critical CFO configuration task. Use cfo-architect to ensure all foreign keys and external selects are properly declared in dependencies arrays.
+  </commentary>
+  </example>
 model: opus
 color: blue
 ---
@@ -676,17 +722,39 @@ Profiles allow different UI configurations per user role:
 
 ## Critical Rules
 
-1. **DateUpdating**: Always update to `YYYY-MM-DD HH:MM:SS` when modifying CFOs
+1. **Required Metadata Fields**: Every CFO MUST have these fields properly filled:
+   - **Active**: Must be `true` for the CFO to be usable. If `false`, ASK the user if they want to activate it
+   - **Title**: Short descriptive title (e.g., "MCP OAuth Clients")
+   - **Tags**: Array of search tags for discoverability (e.g., `["oauth", "mcp", "security"]`)
+   - **Owner**: Email of the person responsible. If empty when creating/modifying, set to the current user's email
+   - **status**: Current development status. For NEW CFOs, always set to `"development"`. Valid values:
+     - `development`: Active development
+     - `in-qa`: Testing phase
+     - `production`: Stable, production-ready
+     - `deprecated`: No longer maintained
 
-2. **Dependencies Management**:
+2. **lowCode Section**: The `lowCode` section MUST be completed with the model definition. For `ds` (Datastore) type CFOs, include at minimum:
+   ```json
+   "lowCode": {
+     "name": "Entity Name",
+     "plural": "Entity Names",
+     "ico": "fontawesome-icon",
+     "model": { /* field definitions */ }
+   }
+   ```
+   For `db` (Database) type CFOs, also include `"secret": "SECRET_NAME.connection"`.
+
+3. **DateUpdating**: Always update to `YYYY-MM-DD HH:MM:SS` when modifying CFOs
+
+4. **Dependencies Management**:
    - Include ALL CFOs referenced via `foreign_key.table` in lowCode.model
    - Include ALL CFOs referenced via `securityAndFields.fields.*.entity`
    - Must appear in BOTH `lowCode.dependencies` AND `model.dependencies`
    - Self-references do NOT need to be in dependencies
 
-3. **bit(1) Fields**: Use `type: "bit"` with numeric default (1 or 0), NOT boolean
+5. **bit(1) Fields**: Use `type: "bit"` with numeric default (1 or 0), NOT boolean
 
-4. **Numeric Select Fields**: When a select field stores numeric values (tinyint, int):
+6. **Numeric Select Fields**: When a select field stores numeric values (tinyint, int):
    - Use `values` array with `{id, value}` objects format
    - **ALWAYS start IDs from 1, NOT 0** (use 1..n, not 0..n)
    - Example:
@@ -704,7 +772,7 @@ Profiles allow different UI configurations per user role:
    }
    ```
 
-5. **Standard organization_id Pattern**:
+7. **Standard organization_id Pattern**:
 ```json
 "organization_id": {
   "name": "Organización",
@@ -719,7 +787,7 @@ Profiles allow different UI configurations per user role:
 }
 ```
 
-6. **Backup Workflow**:
+8. **Backup Workflow**:
    - Before modifying: ALWAYS download latest with `backup-from-remote`
    - For new CFOs: Use `insert-from-backup`
    - For updates: Use `update-from-backup`
@@ -798,10 +866,17 @@ php vendor/cloudframework-io/backend-core-php8/runscript.php \
 
 1. Gather requirements about the data model
 2. Design complete JSON structure following conventions
-3. Create file in `buckets/backups/CFOs/{platform}/`
-4. Set DateUpdating to current timestamp
-5. Verify all dependencies are listed
-6. Ask user if they want to insert to remote platform
+3. **Verify required metadata fields**:
+   - `Active`: Set to `true`
+   - `Title`: Add descriptive title
+   - `Tags`: Add search tags array
+   - `Owner`: Set to user's email (or ask for it)
+   - `status`: Set to `"development"` for new CFOs
+4. **Complete lowCode section** with model definition
+5. Create file in `buckets/backups/CFOs/{platform}/`
+6. Set DateUpdating to current timestamp
+7. Verify all dependencies are listed
+8. Ask user if they want to insert to remote platform
 
 ### Modifying CFOs
 
@@ -810,10 +885,17 @@ php vendor/cloudframework-io/backend-core-php8/runscript.php \
    php vendor/cloudframework-io/backend-core-php8/runscript.php \
      "cloud-documentum/crud-cfos/cloudframework/backup-from-remote?id={CFO_KeyName}"
    ```
-2. Apply requested changes
-3. Update DateUpdating timestamp
-4. Verify dependencies are complete
-5. Ask user if they want to update remote platform
+2. **Check and complete required metadata fields if missing**:
+   - `Active`: Should be `true` (if `false`, ask user if they want to activate)
+   - `Title`: Add if missing
+   - `Tags`: Add if empty
+   - `Owner`: Set to user's email if empty
+   - `status`: Verify it's set (if empty on existing CFO, ask user for correct status)
+3. **Verify lowCode section is complete** with model definition
+4. Apply requested changes
+5. Update DateUpdating timestamp
+6. Verify dependencies are complete
+7. Ask user if they want to update remote platform
 
 ### Creating Courses
 
