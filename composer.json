@@ -18,7 +18,8 @@
     "zbateson/mail-mime-parser": "^3.0",
     "google/cloud-pubsub": "^2.16",
     "google/cloud-kms": "^2.5",
-    "google/cloud-iam": "^1.2"
+    "google/cloud-iam": "^1.2",
+    "mustache/mustache": "^3.0"
   },
   "authors": [
     { "name": "Héctor López", "email": "hl@cloudframework.io"},
