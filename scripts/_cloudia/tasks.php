@@ -1,13 +1,14 @@
 <?php
 /**
- * Tasks Query Script
+ * Tasks Query and Update Script
  *
- * This script provides functionality to query and display task information:
+ * This script provides functionality to query, display, and update task information:
  * - List my open tasks
  * - List tasks for today
  * - List tasks in the current sprint
  * - List tasks for a specific person
  * - Get detailed information about a specific task
+ * - Update a task from JSON input
  * - Filter tasks by project, status, or priority
  *
  * Usage:
@@ -16,11 +17,12 @@
  *   _cloudia/tasks/sprint                             - List tasks in current sprint
  *   _cloudia/tasks/project?id=project-keyname         - List tasks for a specific project
  *   _cloudia/tasks/person?email=user@example.com      - List tasks for a specific person
- *   _cloudia/tasks/get?id=TASK_KEYID                  - Get task details
+ *   _cloudia/tasks/get?id=TASK_KEYID                  - Get task details (includes raw JSON)
+ *   _cloudia/tasks/put?id=TASK_KEYID&json={...}       - Update task from JSON
  *   _cloudia/tasks/search?status=in-progress          - Search tasks by filters
  *
  * @author CloudFramework Development Team
- * @version 1.0
+ * @version 1.1
  */
 class Script extends CoreScripts
 {
@@ -92,6 +94,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project");
         $this->sendTerminal("  /person?email=EMAIL            - List tasks for a specific person");
         $this->sendTerminal("  /get?id=TASK_KEYID             - Get detailed task information");
+        $this->sendTerminal("  /put?id=TASK_KEYID&json={...}  - Update a task from JSON");
         $this->sendTerminal("  /search?status=STATE           - Search tasks by filters");
         $this->sendTerminal("");
         $this->sendTerminal("Filter parameters for /search:");
@@ -101,11 +104,12 @@ class Script extends CoreScripts
         $this->sendTerminal("  assigned  - Assigned user email");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
-        $this->sendTerminal("  composer run-script script _cloudia/tasks/list");
-        $this->sendTerminal("  composer run-script script _cloudia/tasks/today");
-        $this->sendTerminal("  composer run-script script \"_cloudia/tasks/person?email=user@example.com\"");
-        $this->sendTerminal("  composer run-script script \"_cloudia/tasks/get?id=5734953457745920\"");
-        $this->sendTerminal("  composer run-script script \"_cloudia/tasks/search?status=in-progress&priority=high\"");
+        $this->sendTerminal("  composer script -- _cloudia/tasks/list");
+        $this->sendTerminal("  composer script -- _cloudia/tasks/today");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/person?email=user@example.com\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/get?id=5734953457745920\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/put?id=5734953457745920&json={\\\"Status\\\":\\\"closed\\\"}\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/search?status=in-progress&priority=high\"");
     }
 
     /**
@@ -394,6 +398,138 @@ class Script extends CoreScripts
         $this->sendTerminal("Raw JSON:");
         $this->sendTerminal(str_repeat('-', 100));
         $this->sendTerminal(json_encode($task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $this->sendTerminal(str_repeat('=', 100));
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Update a task from JSON input
+     *
+     * Receives task data via:
+     * - Form parameter 'json' containing the JSON string
+     * - Or reads from stdin if 'json' param not provided
+     *
+     * Required: 'id' parameter with the task KeyId
+     *
+     * Usage:
+     *   _cloudia/tasks/put?id=TASK_KEYID&json={"Status":"in-progress","Title":"Updated"}
+     *   echo '{"Status":"closed"}' | composer script -- "_cloudia/tasks/put?id=TASK_KEYID"
+     */
+    public function METHOD_put(): bool
+    {
+        //region VALIDATE task ID
+        $task_id = $this->formParams['id'] ?? null;
+        if (!$task_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/put?id=TASK_KEYID&json={...}");
+        }
+        //endregion
+
+        //region GET JSON data from parameter or stdin
+        $json_string = $this->formParams['json'] ?? null;
+
+        if (!$json_string) {
+            // Try to read from stdin
+            $stdin = file_get_contents('php://stdin');
+            if ($stdin && trim($stdin)) {
+                $json_string = trim($stdin);
+            }
+        }
+
+        if (!$json_string) {
+            return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
+        }
+
+        $task_data = json_decode($json_string, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->addError("Invalid JSON: " . json_last_error_msg());
+        }
+
+        if (!is_array($task_data) || empty($task_data)) {
+            return $this->addError("JSON must be a non-empty object with fields to update");
+        }
+        //endregion
+
+        //region FETCH current task to verify it exists
+        $this->sendTerminal("");
+        $this->sendTerminal("Updating task [{$task_id}]...");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/display/{$task_id}",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $current_task = $response['data'] ?? null;
+        if (!$current_task) {
+            return $this->addError("Task [{$task_id}] not found");
+        }
+
+        $this->sendTerminal(" - Current task: {$current_task['Title']}");
+        $this->sendTerminal(" - Status: {$current_task['Status']} | Open: " . ($current_task['Open'] ? 'Yes' : 'No'));
+        //endregion
+
+        //region SHOW fields being updated
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Fields to update:");
+        foreach ($task_data as $field => $value) {
+            $displayValue = is_array($value) ? json_encode($value) : (string)$value;
+            if (strlen($displayValue) > 80) {
+                $displayValue = substr($displayValue, 0, 77) . '...';
+            }
+            $this->sendTerminal("   * {$field}: {$displayValue}");
+        }
+        //endregion
+
+        //region UPDATE task via API
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Sending update to remote platform...");
+
+        $response = $this->core->request->put_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_id}?_raw&_timezone=UTC",
+            $task_data,
+            $this->headers,
+            true // JSON body flag
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        if (!($response['success'] ?? false)) {
+            $errorMsg = $response['errorMsg'] ?? $response['error'] ?? 'Unknown error';
+            if (is_array($errorMsg)) {
+                $errorMsg = implode(', ', $errorMsg);
+            }
+            return $this->addError("Update failed: {$errorMsg}");
+        }
+        //endregion
+
+        //region SHOW updated task
+        $updated_task = $response['data'] ?? null;
+        if ($updated_task) {
+            $this->sendTerminal("");
+            $this->sendTerminal("Task updated successfully!");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(" - Title: {$updated_task['Title']}");
+            $this->sendTerminal(" - Status: {$updated_task['Status']}");
+            $this->sendTerminal(" - Open: " . (($updated_task['Open'] ?? false) ? 'Yes' : 'No'));
+            $this->sendTerminal(" - Updated: {$updated_task['DateUpdating']}");
+
+            $this->sendTerminal("");
+            $this->sendTerminal("Updated JSON:");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(json_encode($updated_task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        } else {
+            $this->sendTerminal("");
+            $this->sendTerminal("Task updated (no data returned)");
+        }
         $this->sendTerminal(str_repeat('=', 100));
         //endregion
 
