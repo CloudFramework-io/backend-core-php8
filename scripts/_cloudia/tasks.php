@@ -388,6 +388,13 @@ class Script extends CoreScripts
         }
 
         $this->displayTaskDetail($task);
+
+        //region SHOW raw JSON
+        $this->sendTerminal("");
+        $this->sendTerminal("Raw JSON:");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(json_encode($task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        $this->sendTerminal(str_repeat('=', 100));
         //endregion
 
         return true;
