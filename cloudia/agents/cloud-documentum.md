@@ -252,7 +252,7 @@ composer script -- "_cloudia/{type}/{action}?{params}"
 | `resources` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=resource-key` |
 | `menu` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=MODULE-KEY` |
 | `projects` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup`, `my_tasks` | `id=project-keyname` |
-| `tasks` | `list`, `today`, `sprint`, `project`, `person`, `get`, `search` | `id`, `email`, `status`, `priority`, `project`, `assigned` |
+| `tasks` | `list`, `today`, `sprint`, `project`, `person`, `get`, `insert`, `update`, `search` | `id`, `email`, `json`, `status`, `priority`, `project`, `assigned` |
 | `activity` | `events`, `event`, `inputs`, `input`, `summary`, `all` | `from`, `to`, `id`, `task`, `project` |
 | `auth` | `info`, `x-ds-token`, `access-token` | `_reset` (form param to reset token) |
 
@@ -1057,9 +1057,9 @@ Additional project-related CFOs:
 | `CloudFrameWorkProjectsTasksCats` | Task categories |
 | `CloudFrameWorkProjectsStatus` | Custom statuses |
 
-## Tasks Query Script
+## Tasks CRUD Script
 
-The `_cloudia/tasks.php` script provides functionality to query and display task information for the authenticated user. Unlike other _cloudia scripts, this one is focused on **querying** tasks, not backup/sync operations.
+The `_cloudia/tasks.php` script provides **full CRUD functionality** for tasks: querying, creating, and updating tasks directly without needing to manipulate backup files.
 
 ### Available Commands
 
@@ -1070,10 +1070,59 @@ The `_cloudia/tasks.php` script provides functionality to query and display task
 | `/sprint` | List tasks in the current active sprint |
 | `/project?id=KEY` | List all tasks for a specific project |
 | `/person?email=EMAIL` | List tasks for a specific person |
-| `/get?id=TASK_KEYID` | Get detailed information about a specific task |
+| `/get?id=TASK_KEYID` | Get detailed information about a specific task (includes raw JSON) |
+| `/insert?json={...}` | **CREATE** a new task from JSON |
+| `/update?id=KEYID&json={...}` | **UPDATE** an existing task from JSON |
 | `/search?params` | Search tasks with filters |
 
-### Search Parameters
+### Create Task (`/insert`)
+
+Creates a new task directly in the remote platform.
+
+**Required fields:**
+- `ProjectId` - Project KeyName
+- `Title` - Task title
+
+**Default values (if not provided):**
+- `Status`: `pending`
+- `Priority`: `medium`
+- `Open`: `true`
+
+**⚠️ KeyId is auto-generated** - Never include KeyId when creating tasks.
+
+```bash
+# Create a simple task
+composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"cloud-development\",\"Title\":\"New Task\"}"
+
+# Create task with more fields
+composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"cloud-development\",\"Title\":\"Implement feature\",\"Status\":\"in-progress\",\"Priority\":\"high\",\"PlayerId\":[\"dev@example.com\"],\"MilestoneId\":\"5734953457745920\"}"
+
+# Create task from stdin (useful for complex JSON)
+echo '{"ProjectId":"cloud-development","Title":"Complex Task","Description":"<p>Detailed description</p>"}' | composer script -- "_cloudia/tasks/insert"
+```
+
+### Update Task (`/update`)
+
+Updates an existing task by KeyId.
+
+**Required:**
+- `id` parameter - Task KeyId
+- `json` parameter - Fields to update (only include fields that should change)
+
+```bash
+# Update task status
+composer script -- "_cloudia/tasks/update?id=5734953457745920&json={\"Status\":\"closed\",\"Open\":false}"
+
+# Update task title and priority
+composer script -- "_cloudia/tasks/update?id=5734953457745920&json={\"Title\":\"Updated Title\",\"Priority\":\"high\"}"
+
+# Update from stdin (useful for complex updates)
+echo '{"Status":"in-qa","Solution":"<p>Implementation complete</p>"}' | composer script -- "_cloudia/tasks/update?id=5734953457745920"
+```
+
+### Query Commands
+
+#### Search Parameters
 
 | Parameter | Description | Example |
 |-----------|-------------|---------|
@@ -1083,7 +1132,7 @@ The `_cloudia/tasks.php` script provides functionality to query and display task
 | `assigned` | Filter by assigned user email | `user@example.com` |
 | `open` | Filter by open/closed state | `true`, `false` |
 
-### Usage Examples
+#### Query Examples
 
 ```bash
 # List my open tasks
@@ -1101,7 +1150,7 @@ composer script -- "_cloudia/tasks/project?id=cloud-development"
 # List tasks for a specific person
 composer script -- "_cloudia/tasks/person?email=user@example.com"
 
-# Get details of a specific task
+# Get details of a specific task (includes raw JSON output)
 composer script -- "_cloudia/tasks/get?id=6705991164362752"
 
 # Search tasks by status
@@ -1118,12 +1167,24 @@ The task listing displays:
 - Task KeyId
 - Status
 - Title
-- Project, Milestone (if assigned), Deadline, and Time (spent/estimated)
+- Project, Milestone (if assigned), Deadline, DueDate, and Time (spent/estimated)
 
 At the end of each report, it shows:
 - Total number of tasks
 - Breakdown by status
 - User email used for filtering
+
+### When to Use `/insert` and `/update` vs Project Backup
+
+| Operation | Use `_cloudia/tasks/` | Use `_cloudia/projects/` |
+|-----------|----------------------|--------------------------|
+| Create single task | ✅ `/insert` (faster) | ❌ |
+| Update single task | ✅ `/update` (faster) | When updating multiple tasks |
+| Bulk task operations | ❌ | ✅ `update-from-backup` |
+| Create task + checks | ❌ | ✅ (backup includes CHECKs) |
+| Sync all project data | ❌ | ✅ `backup-from-remote` |
+
+**Recommendation:** Use `_cloudia/tasks/insert` and `_cloudia/tasks/update` for **single task operations** as they are faster and don't require file manipulation. Use project backup/sync for bulk operations or when tasks have associated CHECKs.
 
 ## Activity Script
 
@@ -1531,6 +1592,16 @@ The task Description MUST include:
 
 ### Workflow
 
+**Option A - Using `_cloudia/tasks/insert` (Recommended for single tasks):**
+
+1. **Get authenticated user**: Run `composer script -- "_cloudia/auth/info"` to get PlayerIdSource
+2. **Create task via API**:
+   ```bash
+   composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"project-keyname\",\"MilestoneId\":\"milestone-keyid\",\"Title\":\"[CloudIA] Work description\",\"Status\":\"closed\",\"Open\":false,\"PlayerId\":[\"cloudia@cloudframework.io\"],\"PlayerIdSource\":\"user@example.com\",\"Description\":\"<p>Work summary...</p>\",\"Tags\":[\"cloudia\",\"automation\"]}"
+   ```
+
+**Option B - Using project backup (for complex tasks with CHECKs):**
+
 1. **Get authenticated user**: Run `composer script -- "_cloudia/auth/info"` to get PlayerIdSource
 2. **Read project backup**: Load `buckets/backups/Projects/{platform}/{project-keyname}.json`
 3. **Create or modify task** in the backup file:
@@ -1556,6 +1627,172 @@ Always include these tags for CloudIA tasks:
 - `cloudia`
 - `automation`
 - Any relevant technical tags (e.g., `cfos`, `indexes`, `backups`)
+
+## CFO Interface - Multiselect in Views
+
+### Description
+
+The `multiselect` attribute in CFO views enables bulk actions on multiple selected rows in a DataTable. When activated, a checkbox appears in the first column allowing row selection, and a dropdown menu displays the available actions.
+
+### Structure
+
+```json
+"views": {
+    "default": {
+        "name": "General View",
+        "multiselect": {
+            "active": true,
+            "menu": [
+                { /* menu item 1 */ },
+                { /* menu item 2 */ }
+            ]
+        }
+    }
+}
+```
+
+### Menu Attributes
+
+| Attribute | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `title` | string | **Yes** | Menu item title. Supports localization (`$namespace:`) |
+| `type` | string | **Yes** | Action type: `delete`, `cfo-update-fields`, `external-api` |
+| `ico` | string | No | FontAwesome icon (without `fa-` prefix) |
+| `color` | string | No | Color: `green`, `red`, `orange`, `blue` |
+| `api` | string | external-api only | Endpoint URL (receives `?_ids=id1,id2,id3`) |
+| `values` | object | cfo-update-fields only | Fields and values to update |
+| `security` | object | No | Access restrictions (see below) |
+| `only_if_filters` | object | No | Shows element only with certain filters |
+
+### Action Types
+
+| Type | Description |
+|------|-------------|
+| `delete` | Deletes each selected row |
+| `cfo-update-fields` | Updates specific fields to determined values |
+| `external-api` | Calls an external API passing the selected IDs |
+
+### Security
+
+The `security` object can contain:
+
+```json
+{
+    "security": {
+        "user_privileges": ["finance-admin", "super-admin"],
+        "field_values": {
+            "Status": ["equals", "draft"]
+        }
+    }
+}
+```
+
+- `user_privileges`: Array of required privileges
+- `field_values`: Condition based on field values
+
+### Conditional Filters
+
+The `only_if_filters` object restricts visibility based on active filters:
+
+```json
+{
+    "only_if_filters": {
+        "Active": [true, "__null__"]
+    }
+}
+```
+
+**Special values:**
+- `__null__`: The filter has no value selected
+- `__notnull__`: The filter has some value selected
+
+### Practical Examples
+
+#### 1. Simple Delete (CloudFrameWorkLogs)
+
+```json
+"multiselect": {
+    "active": true,
+    "menu": [
+        {
+            "type": "delete",
+            "title": "Delete"
+        }
+    ]
+}
+```
+
+#### 2. Update with Conditional Filters (CloudFrameWorkCompanies)
+
+```json
+"multiselect": {
+    "active": true,
+    "menu": [
+        {
+            "only_if_filters": {
+                "Active": ["__null__", true]
+            },
+            "type": "cfo-update-fields",
+            "title": "Deactivate",
+            "ico": "hand-middle-finger",
+            "color": "red",
+            "values": {
+                "Active": false
+            }
+        },
+        {
+            "only_if_filters": {
+                "Active": ["__null__", false]
+            },
+            "type": "cfo-update-fields",
+            "title": "Activate",
+            "ico": "hand-peace",
+            "color": "green",
+            "values": {
+                "Active": true
+            }
+        }
+    ]
+}
+```
+
+#### 3. Complete Example with Security (FINANCE_documents)
+
+```json
+"multiselect": {
+    "active": true,
+    "menu": [
+        {
+            "title": "Delete",
+            "type": "delete",
+            "ico": "trash-alt",
+            "security": {
+                "field_values": {
+                    "FinancialInvoice_FinancialInvoicesState_Id": ["equals", 1]
+                }
+            }
+        },
+        {
+            "title": "Bulk Update Fields",
+            "type": "external-api",
+            "api": "/erp/finance/{{Platform:namespace}}/{{User:KeyName}}/cfo/filter-invoices-update",
+            "ico": "list-alt"
+        },
+        {
+            "title": "Assign to Project",
+            "type": "external-api",
+            "api": "/erp/finance/{{Platform:namespace}}/{{User:KeyName}}/cfo/assign-to-project/update",
+            "ico": "people-carry"
+        }
+    ]
+}
+```
+### WebPage Documentation
+
+Complete multiselect documentation is available in the WebPage:
+- **ID**: `6342756595662848`
+- **Route**: `/training/cfos/cfi/views/multiselect`
+- **Title**: `{\"multiselect\":{..} Multi-row Actions`
 
 ## Communication Style
 

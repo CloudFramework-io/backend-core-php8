@@ -1,13 +1,14 @@
 <?php
 /**
- * Tasks Query and Update Script
+ * Tasks CRUD Script
  *
- * This script provides functionality to query, display, and update task information:
+ * This script provides full CRUD functionality for tasks:
  * - List my open tasks
  * - List tasks for today
  * - List tasks in the current sprint
  * - List tasks for a specific person
  * - Get detailed information about a specific task
+ * - Create a new task from JSON input
  * - Update a task from JSON input
  * - Filter tasks by project, status, or priority
  *
@@ -18,11 +19,12 @@
  *   _cloudia/tasks/project?id=project-keyname         - List tasks for a specific project
  *   _cloudia/tasks/person?email=user@example.com      - List tasks for a specific person
  *   _cloudia/tasks/get?id=TASK_KEYID                  - Get task details (includes raw JSON)
- *   _cloudia/tasks/put?id=TASK_KEYID&json={...}       - Update task from JSON
+ *   _cloudia/tasks/insert?json={...}                  - Create new task from JSON
+ *   _cloudia/tasks/update?id=TASK_KEYID&json={...}       - Update task from JSON
  *   _cloudia/tasks/search?status=in-progress          - Search tasks by filters
  *
  * @author CloudFramework Development Team
- * @version 1.1
+ * @version 1.2
  */
 class Script extends CoreScripts
 {
@@ -43,6 +45,7 @@ class Script extends CoreScripts
      */
     function main()
     {
+
         //region SET $this->platform_id from configuration
         $this->platform_id = $this->core->config->get('core.erp.platform_id');
         if (!$this->platform_id) {
@@ -94,6 +97,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project");
         $this->sendTerminal("  /person?email=EMAIL            - List tasks for a specific person");
         $this->sendTerminal("  /get?id=TASK_KEYID             - Get detailed task information");
+        $this->sendTerminal("  /insert?json={...}             - Create a new task from JSON");
         $this->sendTerminal("  /put?id=TASK_KEYID&json={...}  - Update a task from JSON");
         $this->sendTerminal("  /search?status=STATE           - Search tasks by filters");
         $this->sendTerminal("");
@@ -108,7 +112,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  composer script -- _cloudia/tasks/today");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/person?email=user@example.com\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/get?id=5734953457745920\"");
-        $this->sendTerminal("  composer script -- \"_cloudia/tasks/put?id=5734953457745920&json={\\\"Status\\\":\\\"closed\\\"}\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/insert?json={\\\"ProjectId\\\":\\\"my-project\\\",\\\"Title\\\":\\\"New Task\\\"}\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/update?id=5734953457745920&json={\\\"Status\\\":\\\"closed\\\"}\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/search?status=in-progress&priority=high\"");
     }
 
@@ -414,15 +419,15 @@ class Script extends CoreScripts
      * Required: 'id' parameter with the task KeyId
      *
      * Usage:
-     *   _cloudia/tasks/put?id=TASK_KEYID&json={"Status":"in-progress","Title":"Updated"}
-     *   echo '{"Status":"closed"}' | composer script -- "_cloudia/tasks/put?id=TASK_KEYID"
+     *   _cloudia/tasks/update?id=TASK_KEYID&json={"Status":"in-progress","Title":"Updated"}
+     *   echo '{"Status":"closed"}' | composer script -- "_cloudia/tasks/update?id=TASK_KEYID"
      */
-    public function METHOD_put(): bool
+    public function METHOD_update(): bool
     {
         //region VALIDATE task ID
         $task_id = $this->formParams['id'] ?? null;
         if (!$task_id) {
-            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/put?id=TASK_KEYID&json={...}");
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/update?id=TASK_KEYID&json={...}");
         }
         //endregion
 
@@ -432,10 +437,12 @@ class Script extends CoreScripts
         if (!$json_string) {
             // Try to read from stdin
             $stdin = file_get_contents('php://stdin');
+
             if ($stdin && trim($stdin)) {
                 $json_string = trim($stdin);
             }
         }
+
 
         if (!$json_string) {
             return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
@@ -529,6 +536,151 @@ class Script extends CoreScripts
         } else {
             $this->sendTerminal("");
             $this->sendTerminal("Task updated (no data returned)");
+        }
+        $this->sendTerminal(str_repeat('=', 100));
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Create a new task from JSON input
+     *
+     * Receives task data via:
+     * - Form parameter 'json' containing the JSON string
+     * - Or reads from stdin if 'json' param not provided
+     *
+     * Required fields: ProjectId, Title
+     * KeyId must NOT be included (will be auto-generated)
+     *
+     * Usage:
+     *   _cloudia/tasks/insert?json={"ProjectId":"my-project","Title":"New Task","Status":"pending"}
+     *   echo '{"ProjectId":"my-project","Title":"New Task"}' | composer script -- "_cloudia/tasks/insert"
+     */
+    public function METHOD_insert(): bool
+    {
+        //region GET JSON data from parameter or stdin
+        $json_string = $this->formParams['json'] ?? null;
+
+        if (!$json_string) {
+            // Try to read from stdin
+            $stdin = file_get_contents('php://stdin');
+            if ($stdin && trim($stdin)) {
+                $json_string = trim($stdin);
+            }
+        }
+
+        if (!$json_string) {
+            return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
+        }
+
+        $task_data = json_decode($json_string, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->addError("Invalid JSON: " . json_last_error_msg());
+        }
+
+        if (!is_array($task_data) || empty($task_data)) {
+            return $this->addError("JSON must be a non-empty object with task fields");
+        }
+        //endregion
+
+        //region VALIDATE required fields and remove KeyId if present
+        if (isset($task_data['KeyId'])) {
+            $this->sendTerminal("");
+            $this->sendTerminal("Warning: KeyId will be ignored (auto-generated on insert)");
+            unset($task_data['KeyId']);
+        }
+
+        if (empty($task_data['ProjectId'])) {
+            return $this->addError("Missing required field: ProjectId");
+        }
+
+        if (empty($task_data['Title'])) {
+            return $this->addError("Missing required field: Title");
+        }
+
+        // Set defaults if not provided
+        if (!isset($task_data['Status'])) {
+            $task_data['Status'] = 'pending';
+        }
+        if (!isset($task_data['Priority'])) {
+            $task_data['Priority'] = 'medium';
+        }
+        if (!isset($task_data['Open'])) {
+            $task_data['Open'] = true;
+        }
+        //endregion
+
+        //region SHOW task data being created
+        $this->sendTerminal("");
+        $this->sendTerminal("Creating new task...");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(" - Project: {$task_data['ProjectId']}");
+        $this->sendTerminal(" - Title: {$task_data['Title']}");
+        $this->sendTerminal(" - Status: {$task_data['Status']}");
+        $this->sendTerminal(" - Priority: {$task_data['Priority']}");
+
+        if (!empty($task_data['MilestoneId'])) {
+            $this->sendTerminal(" - Milestone: {$task_data['MilestoneId']}");
+        }
+        if (!empty($task_data['PlayerId'])) {
+            $assigned = is_array($task_data['PlayerId']) ? implode(', ', $task_data['PlayerId']) : $task_data['PlayerId'];
+            $this->sendTerminal(" - Assigned: {$assigned}");
+        }
+
+        $this->sendTerminal("");
+        $this->sendTerminal(" - All fields:");
+        foreach ($task_data as $field => $value) {
+            $displayValue = is_array($value) ? json_encode($value) : (string)$value;
+            if (strlen($displayValue) > 80) {
+                $displayValue = substr($displayValue, 0, 77) . '...';
+            }
+            $this->sendTerminal("   * {$field}: {$displayValue}");
+        }
+        //endregion
+
+        //region INSERT task via API
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Sending to remote platform...");
+
+        $response = $this->core->request->post_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+            $task_data,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        if (!($response['success'] ?? false)) {
+            $errorMsg = $response['errorMsg'] ?? $response['error'] ?? 'Unknown error';
+            if (is_array($errorMsg)) {
+                $errorMsg = implode(', ', $errorMsg);
+            }
+            return $this->addError("Insert failed: {$errorMsg}");
+        }
+        //endregion
+
+        //region SHOW created task
+        $created_task = $response['data'] ?? null;
+        if ($created_task) {
+            $this->sendTerminal("");
+            $this->sendTerminal("Task created successfully!");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(" - KeyId: {$created_task['KeyId']}");
+            $this->sendTerminal(" - Title: {$created_task['Title']}");
+            $this->sendTerminal(" - Project: {$created_task['ProjectId']}");
+            $this->sendTerminal(" - Status: {$created_task['Status']}");
+            $this->sendTerminal(" - Created: {$created_task['DateInserting']}");
+
+            $this->sendTerminal("");
+            $this->sendTerminal("Created task JSON:");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(json_encode($created_task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        } else {
+            $this->sendTerminal("");
+            $this->sendTerminal("Task created (no data returned)");
         }
         $this->sendTerminal(str_repeat('=', 100));
         //endregion

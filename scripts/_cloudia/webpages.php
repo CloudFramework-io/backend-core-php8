@@ -252,7 +252,7 @@ class Script extends CoreScripts
             //region FETCH single WebPage by PageRoute
             $this->sendTerminal(" - Fetching WebPage: {$page_id}");
             $response = $this->core->request->get_json_decode(
-                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages?_raw&_timezone=UTC",
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages?_cloudia=".$this->core->user->id,
                 ['filter_PageRoute' => $page_id, '_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
@@ -269,7 +269,7 @@ class Script extends CoreScripts
             //region FETCH all WebPages
             $this->sendTerminal(" - Fetching all WebPages... [max 2000]");
             $response = $this->core->request->get_json_decode(
-                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages?_raw&_timezone=UTC",
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages?_cloudia=".$this->core->user->id,
                 ['cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
                 $this->headers
             );
@@ -396,7 +396,7 @@ class Script extends CoreScripts
         //region FETCH remote data and COMPARE with local backup
         $this->sendTerminal(" - Fetching remote WebPage to compare...");
         $remote_response = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages/{$key_id}?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkECMPages/display/{$key_id}?_raw&_timezone=UTC",
             [],
             $this->headers
         );
@@ -424,7 +424,9 @@ class Script extends CoreScripts
         );
 
         if ($this->core->request->error) {
-            return $this->addError("API request failed: " . $this->core->request->errorMsg);
+            $error_msg = $this->core->request->errorMsg;
+            if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
+            return $this->addError("API request failed: " . $error_msg);
         }
 
         if (!($response['success'] ?? false)) {
@@ -519,7 +521,9 @@ class Script extends CoreScripts
         );
 
         if ($this->core->request->error) {
-            return $this->addError("API request failed: " . $this->core->request->errorMsg);
+            $error_msg = $this->core->request->errorMsg;
+            if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
+            return $this->addError("API request failed: " . $error_msg);
         }
 
         if (!($response['success'] ?? false)) {
