@@ -103,8 +103,7 @@ class MCPCore7
         //endregion
 
         // debug logs
-        if($this->core->is->development())
-            $this->showLogs();
+        $this->showLogs();
 
     }
 
