@@ -1,0 +1,12 @@
+{
+  "--:ERP": "--- ERP Configuration ---",
+  "core.erp.platform_id": "cloudframework",
+
+  "--:Local Development": " --- REWRITE variables when you are DEVELOPING ---",
+  "development: Vars to work in development": {
+    "--:comment1": "Variables when you are developing in your computer or development environment",
+    "--:comment2": "To get access DATA REPOSITORY use: export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/local_data/service-account.json",
+    "--:comment3": "Use cache in directory to avoid installing REDIS when you are developing",
+    "core.cache.cache_path": "{{rootPath}}/local_data/cache"
+  }
+}

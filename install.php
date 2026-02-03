@@ -13,27 +13,51 @@ echo "---------\n";
 
 $replit = ($argv[1]??'') == 'replit';
 $appengine = ($argv[1]??'') == 'appengine';
+$cloudia = ($argv[1]??'') == 'cloudia';
 $mcp = ($argv[1]??'') == 'mcp';
 
 if($replit)
-    echo "Installing CloudFramework PHP 8.1 for replit\n";
+    echo "Installing CloudFramework PHP 8.4 for replit\n";
 elseif($appengine)
-    echo "Installing CloudFramework for PHP 8.1 for GCP Appengine\n";
+    echo "Installing CloudFramework for PHP 8.4 for GCP Appengine\n";
+elseif($cloudia)
+    echo "Installing CloudIA for PHP 8.4\n";
 elseif($mcp)
     echo "MCP (Model Context Protocol) Setup Instructions\n";
 else{
-    echo "Missing parameter. Use [php vendor/cloudframework-io/backend-core-php8/install.php appengine|replit|mcp]\n";
+    echo "Missing parameter. Use [php vendor/cloudframework-io/backend-core-php8/install.php appengine|replit|mcp|cloudia]\n";
 }
 echo "---------\n";
 
 // MCP only shows instructions, skip file operations
 if($mcp) {
     // MCP instructions are shown at the end of the file
-} elseif($replit || $appengine) {
+} elseif($replit || $appengine || $cloudia) {
     echo " - mkdir ./local_data/cache\n";
     if(!is_dir("./local_data")) mkdir($_root_path.'/local_data');
     if(!is_dir("./local_data/cache")) mkdir($_root_path.'/local_data/cache');
     if(!is_dir("./local_data/cache")) die('ERROR trying to create [./local_data/cache]. Verify privileges');
+}
+
+if($cloudia) {
+    echo " - Creating buckets to backup contents /buckets/backups\n";
+    if (!is_dir("./buckets")) mkdir('buckets');
+    if (!is_dir("./buckets/backups")) mkdir('buckets/backups');
+    echo " - Rewriting composer.json\n";
+    copy("vendor/cloudframework-io/backend-core-php8/install/composer-cloudia-dist.json", "./composer.json");
+
+    if (!is_file('./config.json')) {
+        echo " - Copying config.json\n";
+        copy("vendor/cloudframework-io/backend-core-php8/install/config-cloudia-dist.json", "./config.json");
+    } else echo " - Already exist config.json\n";
+
+    echo " - Execute: composer credentials\n";
+    echo "   It will authenticate your GCP user and it will store your credentials in local_data/application_default_credentials.json\n\n";
+    echo " - Execute: composer script _cloudia/auth\n";
+    echo "   It will require an [Integration Key] you have to receive from your platform admin or go to https://{your-platform}.cloudframework.app/app.html#__cfo/CloudFrameWorkAPIKeys\n\n";
+
+    echo " - Execute: composer script _cloudia/processes/backup-from-remote\n";
+    echo "   It will download your knowledge database\n\n";
 }
 
 if($replit || $appengine) {
@@ -46,7 +70,7 @@ if($replit || $appengine) {
     shell_exec("cp -Ra vendor/cloudframework-io/backend-core-php8/install/scripts-dist/* scripts");
 
     if (!is_file('./config.json')) {
-        echo " - Copying composer.json\n";
+        echo " - Copying config.json\n";
         copy("vendor/cloudframework-io/backend-core-php8/install/config-dist.json", "./config.json");
     } else echo " - Already exist config.json\n";
 
