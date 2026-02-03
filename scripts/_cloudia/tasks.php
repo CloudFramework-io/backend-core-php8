@@ -17,6 +17,7 @@
  *   _cloudia/tasks/today                              - List tasks for today
  *   _cloudia/tasks/sprint                             - List tasks in current sprint
  *   _cloudia/tasks/project?id=project-keyname         - List tasks for a specific project
+ *   _cloudia/tasks/milestone?id=milestone-keyid       - List tasks for a specific milestone
  *   _cloudia/tasks/person?email=user@example.com      - List tasks for a specific person
  *   _cloudia/tasks/get?id=TASK_KEYID                  - Get task details (includes raw JSON)
  *   _cloudia/tasks/insert?json={...}                  - Create new task from JSON
@@ -95,6 +96,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  /today                         - List tasks active for today");
         $this->sendTerminal("  /sprint                        - List tasks in current sprint");
         $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project");
+        $this->sendTerminal("  /milestone?id=MILESTONE_KEYID  - List tasks for a specific milestone");
         $this->sendTerminal("  /person?email=EMAIL            - List tasks for a specific person");
         $this->sendTerminal("  /get?id=TASK_KEYID             - Get detailed task information");
         $this->sendTerminal("  /insert?json={...}             - Create a new task from JSON");
@@ -110,6 +112,7 @@ class Script extends CoreScripts
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer script -- _cloudia/tasks/list");
         $this->sendTerminal("  composer script -- _cloudia/tasks/today");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/milestone?id=5734953457745920\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/person?email=user@example.com\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/get?id=5734953457745920\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/insert?json={\\\"ProjectId\\\":\\\"my-project\\\",\\\"Title\\\":\\\"New Task\\\"}\"");
@@ -282,6 +285,68 @@ class Script extends CoreScripts
 
         $params = [
             'filter_ProjectId' => $project_id,
+            '_order' => '-Priority,Status,DateDeadLine',
+            'cfo_limit' => 500,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks?_raw&_timezone=UTC",
+            $params,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $tasks = $response['data'] ?? [];
+        $this->displayTaskList($tasks);
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * List tasks for a specific milestone
+     */
+    public function METHOD_milestone(): bool
+    {
+        //region VALIDATE milestone ID
+        $milestone_id = $this->formParams['id'] ?? null;
+        if (!$milestone_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/milestone?id=MILESTONE_KEYID");
+        }
+        //endregion
+
+        //region FETCH milestone info
+        $this->sendTerminal("");
+        $this->sendTerminal("Fetching milestone [{$milestone_id}]...");
+
+        $milestone_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/display/{$milestone_id}?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($milestone_response['data'] ?? null)) {
+            $milestone = $milestone_response['data'];
+            $milestoneTitle = $milestone['Title'] ?? 'Untitled Milestone';
+            $milestoneStatus = $milestone['Status'] ?? '';
+            $milestoneDeadline = $milestone['DateDeadLine'] ?? '';
+            $this->sendTerminal("");
+            $this->sendTerminal("Milestone: {$milestoneTitle}");
+            if ($milestoneStatus) $this->sendTerminal("Status: {$milestoneStatus}");
+            if ($milestoneDeadline) $this->sendTerminal("Deadline: {$milestoneDeadline}");
+        }
+        //endregion
+
+        //region FETCH tasks for the milestone
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $params = [
+            'filter_MilestoneId' => $milestone_id,
             '_order' => '-Priority,Status,DateDeadLine',
             'cfo_limit' => 500,
             '_raw' => 1,
