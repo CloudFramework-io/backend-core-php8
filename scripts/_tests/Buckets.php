@@ -12,11 +12,14 @@
  * - MIME type detection (getMimeTypeFromExtension)
  * - Bucket information (getInfo, getAdminUrl)
  * - File information (getFileInfo)
+ * - KMS encryption (initKMS, getKMSKeyName, encryptLargeFile, decryptLargeFile)
  */
 class Script extends CoreScripts {
 
     /** @var Buckets */
     private $bucket;
+    private $useKMS = false;
+    private $kmsConfig = [];
 
     private $test_base_path = '/test_buckets_script';
     private $test_results = [];
@@ -51,11 +54,64 @@ class Script extends CoreScripts {
             return;
         }
 
+        //region CHECK test with Google KMS
+        if(!isset($this->formParams['kms'])) {
+            $useKMS = $this->prompt->title('¿Test KMS file encryption (https://console.cloud.google.com/security/kms/keyrings)?')
+                ->defaultValue('n')
+                ->cacheVar('mks')
+                ->mandatory(true)
+                ->allowedValues(['y','n'])
+                ->query();
+
+            $this->useKMS = $useKMS==='y';
+        } else $this->useKMS = $this->formParams['kms'] === 'y';
+
+        if($this->useKMS) {
+            $this->kmsConfig['projectId'] = $this->prompt->init()->title(' - GCP Project Id?')
+                ->defaultValue($this->core->gc_project_id??'')
+                ->cacheVar('project_id')
+                ->mandatory(true)
+                ->query();
+
+            $this->kmsConfig['location'] = $this->prompt->init()->title(' - GCP KeyRing Location?')
+                ->defaultValue('global')
+                ->cacheVar('location')
+                ->mandatory(true)
+                ->query();
+
+            $this->kmsConfig['keyRing'] = $this->prompt->init()->title(' - GCP KeyRing Name?')
+                ->cacheVar('keyRing')
+                ->mandatory(true)
+                ->query();
+
+            $this->kmsConfig['keyId'] = $this->prompt->init()->title(' - GCP keyRing Id?')
+                ->cacheVar('keyId')
+                ->mandatory(true)
+                ->query();
+
+        }
+        //endregion
+
+
         // Initialize Buckets class
         $this->bucket = $this->core->loadClass('Buckets', $bucket_name);
         if ($this->bucket->error) {
             $this->sendTerminal('ERROR initializing Buckets: ' . json_encode($this->bucket->errorMsg));
             return;
+        }
+
+        if($this->useKMS) {
+            $this->bucket->initKMS($this->kmsConfig);
+            if ($this->bucket->error) {
+                $this->sendTerminal('ERROR initializing Buckets: ' . json_encode($this->bucket->errorMsg));
+                return;
+            }
+            $KMDName = $this->bucket->getKMSKeyName();
+            if ($this->bucket->error) {
+                $this->sendTerminal('ERROR initializing Buckets: ' . json_encode($this->bucket->errorMsg));
+                return;
+            }
+            $this->sendTerminal("   Using KMS: {$KMDName}");
         }
 
         $this->sendTerminal("=== BUCKETS TEST SCRIPT ===");
@@ -78,6 +134,14 @@ class Script extends CoreScripts {
         $this->testMoveFile();
         $this->testScan();
         $this->testFastScan();
+
+        // KMS tests
+        if ($this->useKMS) {
+            $this->testKMSInit();
+            $this->testKMSKeyName();
+            $this->testKMSEncryptDecrypt();
+        }
+
         $this->testDeleteFile();
         $this->testRmdir();
 
@@ -419,6 +483,134 @@ class Script extends CoreScripts {
 
         $this->sendTerminal("  - Removed directory: {$this->test_base_path}");
         $this->addTestResult('rmdir()', $result === true);
+    }
+
+    /**
+     * Test KMS initKMS() - reinitialize and verify no errors
+     */
+    private function testKMSInit() {
+        $this->sendTerminal("TEST: KMS initKMS()");
+
+        // Reset error state and reinitialize
+        $this->bucket->error = false;
+        $this->bucket->errorMsg = [];
+        $result = $this->bucket->initKMS($this->kmsConfig);
+
+        if ($this->bucket->error) {
+            $this->addTestResult('initKMS()', false, $this->bucket->errorMsg);
+            return;
+        }
+
+        $this->sendTerminal("  - Project: {$this->kmsConfig['projectId']}");
+        $this->sendTerminal("  - Location: {$this->kmsConfig['location']}");
+        $this->sendTerminal("  - KeyRing: {$this->kmsConfig['keyRing']}");
+        $this->sendTerminal("  - KeyId: {$this->kmsConfig['keyId']}");
+
+        $this->addTestResult('initKMS()', $result === true);
+    }
+
+    /**
+     * Test KMS getKMSKeyName() - verify key name format
+     */
+    private function testKMSKeyName() {
+        $this->sendTerminal("TEST: KMS getKMSKeyName()");
+
+        $keyName = $this->bucket->getKMSKeyName();
+        if ($this->bucket->error) {
+            $this->addTestResult('getKMSKeyName()', false, $this->bucket->errorMsg);
+            return;
+        }
+
+        $this->sendTerminal("  - Key name: {$keyName}");
+
+        // Verify format: projects/{project}/locations/{location}/keyRings/{keyRing}/cryptoKeys/{keyId}
+        $expectedPrefix = "projects/{$this->kmsConfig['projectId']}/locations/{$this->kmsConfig['location']}/keyRings/{$this->kmsConfig['keyRing']}/cryptoKeys/{$this->kmsConfig['keyId']}";
+        $passed = ($keyName === $expectedPrefix);
+
+        if (!$passed) {
+            $this->sendTerminal("  - Expected: {$expectedPrefix}");
+        }
+
+        $this->addTestResult('getKMSKeyName()', $passed);
+    }
+
+    /**
+     * Test KMS encryptLargeFile() and decryptLargeFile() round-trip
+     */
+    private function testKMSEncryptDecrypt() {
+        $this->sendTerminal("TEST: KMS encryptLargeFile() + decryptLargeFile()");
+
+        $originalContent = 'KMS encryption test content - ' . date('Y-m-d H:i:s') . ' - ' . bin2hex(random_bytes(16));
+        $sourcePath = $this->test_base_path . '/kms_test_source.txt';
+        $encryptedPath = $this->test_base_path . '/kms_test_encrypted.bin';
+        $decryptedPath = $this->test_base_path . '/kms_test_decrypted.txt';
+
+        // 1. Create source file
+        $this->sendTerminal("  - Creating source file...");
+        $this->bucket->putContents('kms_test_source.txt', $originalContent, $this->test_base_path);
+        if ($this->bucket->error) {
+            $this->addTestResult('KMS encrypt+decrypt', false, $this->bucket->errorMsg);
+            return;
+        }
+
+        $sourceGsPath = $this->bucket->getBucketPath($sourcePath);
+        $encryptedGsPath = $this->bucket->getBucketPath($encryptedPath);
+        $decryptedGsPath = $this->bucket->getBucketPath($decryptedPath);
+
+        // 2. Encrypt
+        $this->sendTerminal("  - Encrypting file...");
+        $encryptResult = $this->bucket->encryptLargeFile($sourceGsPath, $encryptedGsPath);
+        if ($this->bucket->error || !$encryptResult) {
+            $this->addTestResult('KMS encrypt+decrypt', false, $this->bucket->errorMsg ?: ['encryptLargeFile returned false']);
+            return;
+        }
+        $this->sendTerminal("  - Encryption OK");
+
+        // 3. Verify encrypted file exists and differs from original
+        $encryptedContent = $this->bucket->getContents('kms_test_encrypted.bin', $this->test_base_path);
+        if ($this->bucket->error) {
+            $this->addTestResult('KMS encrypt+decrypt', false, ['Could not read encrypted file: ' . json_encode($this->bucket->errorMsg)]);
+            return;
+        }
+        $this->sendTerminal("  - Encrypted file size: " . strlen($encryptedContent) . " bytes (original: " . strlen($originalContent) . " bytes)");
+
+        $isDifferent = ($encryptedContent !== $originalContent);
+        $this->sendTerminal("  - Encrypted content differs from original: " . ($isDifferent ? 'YES' : 'NO'));
+
+        // 4. Decrypt
+        $this->sendTerminal("  - Decrypting file...");
+        $this->bucket->error = false;
+        $this->bucket->errorMsg = [];
+        $decryptResult = $this->bucket->decryptLargeFile($encryptedGsPath, $decryptedGsPath);
+        if ($this->bucket->error || !$decryptResult) {
+            $this->addTestResult('KMS encrypt+decrypt', false, $this->bucket->errorMsg ?: ['decryptLargeFile returned false']);
+            return;
+        }
+        $this->sendTerminal("  - Decryption OK");
+
+        // 5. Verify decrypted content matches original
+        $decryptedContent = $this->bucket->getContents('kms_test_decrypted.txt', $this->test_base_path);
+        if ($this->bucket->error) {
+            $this->addTestResult('KMS encrypt+decrypt', false, ['Could not read decrypted file: ' . json_encode($this->bucket->errorMsg)]);
+            return;
+        }
+
+        $contentMatches = ($decryptedContent === $originalContent);
+        $this->sendTerminal("  - Decrypted content matches original: " . ($contentMatches ? 'YES' : 'NO'));
+
+        if (!$contentMatches) {
+            $this->sendTerminal("  - Original:  " . substr($originalContent, 0, 80));
+            $this->sendTerminal("  - Decrypted: " . substr($decryptedContent, 0, 80));
+        }
+
+        $passed = $isDifferent && $contentMatches;
+        $this->addTestResult('KMS encrypt+decrypt', $passed);
+
+        // 6. Cleanup KMS test files
+        $this->sendTerminal("  - Cleaning up KMS test files...");
+        $this->bucket->deleteFile($sourcePath);
+        $this->bucket->deleteFile($encryptedPath);
+        $this->bucket->deleteFile($decryptedPath);
     }
 
     /**

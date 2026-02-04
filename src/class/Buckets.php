@@ -1,5 +1,8 @@
 <?php
 use Google\Cloud\Storage\StorageObject;
+use Google\Cloud\Kms\V1\Client\KeyManagementServiceClient;
+use Google\Cloud\Kms\V1\EncryptRequest;
+use Google\Cloud\Kms\V1\DecryptRequest;
 
 if (!defined ("_Buckets_CLASS_") ) {
     define ("_Buckets_CLASS_", TRUE);
@@ -30,7 +33,14 @@ if (!defined ("_Buckets_CLASS_") ) {
          * ```
          * @var string $version version of the class
          */
-        var $version = '202405311';
+        var $version = '20260104';
+
+        /** @var array $kmsConfig */
+        private $kmsConfig = [];
+        /** @var KeyManagementServiceClient $kmsClient */
+        private $kmsClient=null;
+        private const string AES_ALGORITHM = 'aes-256-gcm';
+        private const int GCM_TAG_LENGTH = 16;
 
         /** @ignore */
         var $bucket = '';
@@ -78,6 +88,276 @@ if (!defined ("_Buckets_CLASS_") ) {
         var $gs_bucket_url = null;
         /** @ignore */
         var $debug = false;
+
+
+        /**
+         * Object constructor
+         * example:
+         *
+         * ```php
+         * $buckets = $this->core->loadClass('Buckets','gs://{BucketName}');
+         * if($buckets->error) return $buckets->errorMsg
+         * ```
+         * @ignore
+         * @param Core7 $core
+         * @param string $bucket
+         */
+        function __construct (Core7 &$core,$bucket='') {
+
+            //Performance
+            $time = microtime(true);
+            $this->core = $core;
+            $this->core->__p->add('Buckets', $bucket??'', 'note');
+
+            if($this->core->is->development()) $this->debug = true;
+
+            if(strlen($bucket??'')) $this->bucket = $bucket;
+            else $this->bucket = $this->core->config->get('bucketUploadPath');
+            if(!$this->bucket) return($this->addError('Missing bucketUploadPath config var or $bucket in the constructor'));
+
+            if(strpos($this->bucket,'gs://')===0) {
+                // take the bucket name: ex: gs://cloudframework/adnbp/.. -> cloudframework
+                $bucket_root = preg_replace('/\/.*/','',str_replace('gs://','',$this->bucket));
+                try {
+                    $this->gs_bucket = $this->core->gc_datastorage_client->bucket($bucket_root);
+                    if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
+                    $this->gs_bucket_url = 'https://console.cloud.google.com/storage/browser/'.$bucket_root;
+                    $this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
+                } catch (Exception $e) {
+                    $this->addError($e->getMessage(),'bucket-can-not-be-assigned');
+                }
+
+                // Add logs for performance
+                if($this->debug)
+                    $this->core->logs->add("Buckets('{$bucket_root}')". ' [time='.(round(microtime(true)-$time,4)).' secs]','Buckets');
+
+                if($this->error) {
+                    $this->core->__p->add('Buckets', null, 'endnote');
+                    return;
+                }
+            } else {
+                $this->core->__p->add('Bucket', null, 'endnote');
+                return($this->addError('The bucket has to begin with gs:// ['.$this->bucket.']','bucket-wrong-name-format'));
+            }
+
+            $time = microtime(true);
+            $this->vars['upload_max_filesize'] = ini_get('upload_max_filesize');
+            $this->vars['max_file_uploads'] = ini_get('max_file_uploads');
+            $this->vars['file_uploads'] = ini_get('file_uploads');
+            $this->vars['default_bucket'] = $this->bucket;
+            $this->vars['retUploadUrl'] = $this->core->system->url['host_url_uri'];
+
+            if(count($_FILES)) {
+                foreach ($_FILES as $key => $value) {
+                    if(is_array($value['name'])) {
+                        for($j=0,$tr2=count($value['name']);$j<$tr2;$j++) {
+                            foreach ($value as $key2 => $value2) {
+                                $this->uploadedFiles[$key][$j][$key2] = $value[$key2][$j];
+                            }
+                        }
+                    } else {
+                        $this->uploadedFiles[$key][0] = $value;
+                    }
+                    $this->isUploaded = true;
+                }
+
+                if($this->debug)
+                    $this->core->logs->add("__construct('{$bucket_root}') [storing temporally uploaded files:".count($_FILES)."]". ' [time='.(round(microtime(true)-$time,4)).' secs]','Buckets');
+
+            }
+            $this->core->__p->add('Buckets', null, 'endnote');
+        }
+
+        /**
+         * Initializes KMS (Key Management Service) configuration.
+         *
+         * @param array $options Configuration options for KMS. Must include the following keys:
+         *                       - 'projectId': The GCP project ID.
+         *                       - 'location': The location of the KMS.
+         *                       - 'keyRing': The name of the key ring to use.
+         *                       - 'keyId': The identifier of the key.
+         * @return bool Returns true on successful initialization, or adds an error and returns false if required fields are missing.
+         */
+        function initKMS(array $options) {
+
+            //region INIT $this->kmsConfig['projectId']
+            if($options['projectId']??'')
+                $this->kmsConfig = ['projectId' => $options['projectId']];
+            else
+                $this->kmsConfig = ['projectId' => $this->core->gc_project_id];
+            if(!($options['projectId']??''))
+                return($this->addError('Missing projectId in KMS config','params-error'));
+            //endregion
+
+            //region SET location, keyRing, keyId
+            $fields = ['location','keyRing','keyId'];
+            foreach ($fields as $field) {
+                if(!$this->kmsConfig[$field] = ($options[$field]??''))
+                    return($this->addError('Missing ['.$field.'] in KMS config','params-error'));
+            }
+            //endregion
+
+            if(!is_object($this->kmsClient))
+                $this->kmsClient = new KeyManagementServiceClient();
+
+
+            return true;
+        }
+
+        /**
+         * Retrieves the KMS key name based on the provided KMS configuration.
+         * @return string The full KMS key name constructed using the KMS configuration. False if any error
+         */
+        public function getKMSKeyName(): string|bool
+        {
+
+            if(!$this->kmsConfig) return $this->addError('Missing KMS config. Use initKMS','params-error');
+            return KeyManagementServiceClient::cryptoKeyName(
+                $this->kmsConfig['projectId'],
+                $this->kmsConfig['location'],
+                $this->kmsConfig['keyRing'],
+                $this->kmsConfig['keyId']
+            );
+        }
+
+        /**
+         * Encrypts a large file using a Data Encryption Key (DEK) and Google Cloud CMEK.
+         * The encrypted file is saved to the target Google Storage path with the appropriate metadata.
+         *
+         * @param string $sourceGsPath The Google Storage path of the source file to be encrypted.
+         * @param string $targetGsPath The Google Storage path where the encrypted file will be saved.
+         * @return bool Returns true if the file is successfully encrypted and saved, false otherwise.
+         */
+        public function encryptLargeFile(string $sourceGsPath, string $targetGsPath): bool
+        {
+            if(!$this->kmsConfig) return $this->addError('Missing KMS config. Use initKMS','params-error');
+            try {
+                // 1. Generate a local Data Encryption Key (DEK)
+                $dek = random_bytes(32);
+                $iv = random_bytes(openssl_cipher_iv_length(self::AES_ALGORITHM));
+
+                // 2. Wrap (Encrypt) the DEK using Google CMEK
+                $encryptRequest = (new EncryptRequest())
+                    ->setName($this->getKMSKeyName())
+                    ->setPlaintext($dek);
+
+                $kmsResponse = $this->kmsClient->encrypt($encryptRequest);
+                $encryptedDek = $kmsResponse->getCiphertext();
+
+                // 3. Open streams for GCS (Streaming prevents OOM errors in App Engine)
+                $sourceHandle = fopen($sourceGsPath, 'rb');
+                $targetHandle = fopen($targetGsPath, 'wb');
+
+                if (!$sourceHandle || !$targetHandle) {
+                    throw new \Exception("Failed to open GCS streams.");
+                }
+
+                // 4. Metadata Header: [DEK Length (4b)][Encrypted DEK][IV (12b)]
+                fwrite($targetHandle, pack('N', strlen($encryptedDek)));
+                fwrite($targetHandle, $encryptedDek);
+                fwrite($targetHandle, $iv);
+
+                /**
+                 * Note: For very large files in PHP OpenSSL, we read the whole content
+                 * or process it in a way that respects GCM tag generation.
+                 * Using stream_get_contents is safe for memory if the file isn't
+                 * exceeding the instance's available RAM.
+                 */
+                $plaintext = stream_get_contents($sourceHandle);
+
+                $tag = ''; // Reference for GCM Tag
+                $ciphertext = openssl_encrypt(
+                    $plaintext,
+                    self::AES_ALGORITHM,
+                    $dek,
+                    OPENSSL_RAW_DATA,
+                    $iv,
+                    $tag,
+                    '',
+                    self::GCM_TAG_LENGTH
+                );
+
+                // 5. Write Tag and Ciphertext
+                fwrite($targetHandle, $tag);
+                fwrite($targetHandle, $ciphertext);
+
+                fclose($sourceHandle);
+                fclose($targetHandle);
+            } catch (\Exception $e) {
+                return $this->addError($e->getMessage(),$e->getCode());
+            }
+
+            return true;
+        }
+
+        /**
+         * Decrypts a large file sourced from a Google Cloud Storage (GCS) path and writes the decrypted content to another GCS path.
+         *
+         * The method processes the file using Key Management Service (KMS) for unwrapping the Data Encryption Key (DEK)
+         * and then decrypts the ciphertext using AES encryption. It ensures the integrity of the decrypted content
+         * and stores the output in the specified target location.
+         *
+         * @param string $sourceGsPath The source GCS path of the encrypted file to be decrypted.
+         * @param string $targetGsPath The target GCS path where the decrypted file will be stored.
+         * @return bool Returns true if the file decryption is successful; otherwise, false if there are errors.
+         */
+        public function decryptLargeFile(string $sourceGsPath, string $targetGsPath): bool
+        {
+            if(!$this->kmsConfig) return $this->addError('Missing KMS config. Use initKMS','params-error');
+            if(!is_object($this->kmsClient))
+                $this->kmsClient = new KeyManagementServiceClient();
+
+
+            try {
+                $sourceHandle = fopen($sourceGsPath, 'rb');
+                if (!$sourceHandle) throw new \Exception("Cannot open encrypted source.");
+
+                // 1. Read Metadata Header
+                $dekLengthData = fread($sourceHandle, 4);
+                $dekLength = unpack('N', $dekLengthData)[1];
+
+                $encryptedDek = fread($sourceHandle, $dekLength);
+
+                $ivLength = openssl_cipher_iv_length(self::AES_ALGORITHM);
+                $iv = fread($sourceHandle, $ivLength);
+
+                $tag = fread($sourceHandle, self::GCM_TAG_LENGTH);
+
+                // 2. Unwrap (Decrypt) the DEK via KMS
+                $decryptRequest = (new DecryptRequest())
+                    ->setName($this->getKMSKeyName())
+                    ->setCiphertext($encryptedDek);
+
+                $kmsResponse = $this->kmsClient->decrypt($decryptRequest);
+                $dek = $kmsResponse->getPlaintext();
+
+                // 3. Decrypt the Ciphertext
+                $ciphertext = stream_get_contents($sourceHandle);
+
+                $decryptedData = openssl_decrypt(
+                    $ciphertext,
+                    self::AES_ALGORITHM,
+                    $dek,
+                    OPENSSL_RAW_DATA,
+                    $iv,
+                    $tag
+                );
+
+                if ($decryptedData === false) {
+                    throw new \Exception("Decryption failed (Integrity check failed).");
+                }
+
+                // 4. Save decrypted file back to GCS or /tmp
+                file_put_contents($targetGsPath, $decryptedData);
+                fclose($sourceHandle);
+            } catch (\Exception $e) {
+                return $this->addError($e->getMessage(),$e->getCode());
+            }
+
+            return true;
+        }
+
+
 
         /**
          * Move files uploaded in $_FILES to temporal space to Bucket $path taking $options
@@ -456,86 +736,6 @@ if (!defined ("_Buckets_CLASS_") ) {
             //endregion
 
         }
-
-
-            /**
-         * Object constructor
-         * example:
-         *
-         * ```php
-         * $buckets = $this->core->loadClass('Buckets','gs://{BucketName}');
-         * if($buckets->error) return $buckets->errorMsg
-         * ```
-         * @ignore
-         * @param Core7 $core
-         * @param string $bucket
-         */
-        Function __construct (Core7 &$core,$bucket='') {
-
-            //Performance
-            $time = microtime(true);
-            $this->core = $core;
-            $this->core->__p->add('Buckets', $bucket??'', 'note');
-
-            if($this->core->is->development()) $this->debug = true;
-
-            if(strlen($bucket??'')) $this->bucket = $bucket;
-            else $this->bucket = $this->core->config->get('bucketUploadPath');
-            if(!$this->bucket) return($this->addError('Missing bucketUploadPath config var or $bucket in the constructor'));
-
-            if(strpos($this->bucket,'gs://')===0) {
-                // take the bucket name: ex: gs://cloudframework/adnbp/.. -> cloudframework
-                $bucket_root = preg_replace('/\/.*/','',str_replace('gs://','',$this->bucket));
-                try {
-                    $this->gs_bucket = $this->core->gc_datastorage_client->bucket($bucket_root);
-                    if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
-                    $this->gs_bucket_url = 'https://console.cloud.google.com/storage/browser/'.$bucket_root;
-                    $this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
-                } catch (Exception $e) {
-                    $this->addError($e->getMessage(),'bucket-can-not-be-assigned');
-                }
-
-                // Add logs for performance
-                if($this->debug)
-                    $this->core->logs->add("Buckets('{$bucket_root}')". ' [time='.(round(microtime(true)-$time,4)).' secs]','Buckets');
-
-                if($this->error) {
-                    $this->core->__p->add('Buckets', null, 'endnote');
-                    return;
-                }
-            } else {
-                $this->core->__p->add('Bucket', null, 'endnote');
-                return($this->addError('The bucket has to begin with gs:// ['.$this->bucket.']','bucket-wrong-name-format'));
-            }
-
-            $time = microtime(true);
-            $this->vars['upload_max_filesize'] = ini_get('upload_max_filesize');
-            $this->vars['max_file_uploads'] = ini_get('max_file_uploads');
-            $this->vars['file_uploads'] = ini_get('file_uploads');
-            $this->vars['default_bucket'] = $this->bucket;
-            $this->vars['retUploadUrl'] = $this->core->system->url['host_url_uri'];
-
-            if(count($_FILES)) {
-                foreach ($_FILES as $key => $value) {
-                    if(is_array($value['name'])) {
-                        for($j=0,$tr2=count($value['name']);$j<$tr2;$j++) {
-                            foreach ($value as $key2 => $value2) {
-                                $this->uploadedFiles[$key][$j][$key2] = $value[$key2][$j];
-                            }
-                        }
-                    } else {
-                        $this->uploadedFiles[$key][0] = $value;
-                    }
-                    $this->isUploaded = true;
-                }
-
-                if($this->debug)
-                    $this->core->logs->add("__construct('{$bucket_root}') [storing temporally uploaded files:".count($_FILES)."]". ' [time='.(round(microtime(true)-$time,4)).' secs]','Buckets');
-
-            }
-            $this->core->__p->add('Buckets', null, 'endnote');
-        }
-
 
         /**
          * Execute a scandir over the path and evluate if they are files or directories. If the path is incorrect it will return void. If $path is empty it assumes '/'
