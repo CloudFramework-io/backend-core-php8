@@ -176,6 +176,8 @@ if (!defined ("_Buckets_CLASS_") ) {
          *                       - 'location': The location of the KMS.
          *                       - 'keyRing': The name of the key ring to use.
          *                       - 'keyId': The identifier of the key.
+         *                       - 'serviceAccount': (optional) Service account credentials for KMS authentication.
+         *                         Accepts: a file path (string), a JSON string, or a decoded array.
          * @return bool Returns true on successful initialization, or adds an error and returns false if required fields are missing.
          */
         function initKMS(array $options) {
@@ -197,9 +199,28 @@ if (!defined ("_Buckets_CLASS_") ) {
             }
             //endregion
 
-            if(!is_object($this->kmsClient))
-                $this->kmsClient = new KeyManagementServiceClient();
-
+            //region INIT KeyManagementServiceClient with optional serviceAccount (string path, JSON string, or array)
+            if(!is_object($this->kmsClient)) {
+                $clientOptions = [];
+                if ($serviceAccount = ($options['serviceAccount'] ?? '')) {
+                    if (is_array($serviceAccount)) {
+                        // Array with credentials directly
+                        $clientOptions['credentials'] = $serviceAccount;
+                    } elseif (is_string($serviceAccount)) {
+                        // Try JSON string first, then file path
+                        $decoded = json_decode($serviceAccount, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $clientOptions['credentials'] = $decoded;
+                        } elseif (is_file($serviceAccount)) {
+                            $clientOptions['credentials'] = $serviceAccount;
+                        } else {
+                            return($this->addError('serviceAccount is not a valid JSON string nor an existing file path', 'params-error'));
+                        }
+                    }
+                }
+                $this->kmsClient = new KeyManagementServiceClient($clientOptions);
+            }
+            //endregion
 
             return true;
         }
