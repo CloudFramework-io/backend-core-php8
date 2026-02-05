@@ -7014,6 +7014,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
 
+        /**
+         * Retrieve user data based on the given key or return all user data if no key is provided.
+         *
+         * @param string $key The specific key of the user data to retrieve. Defaults to an empty string.
+         * @return mixed The value associated with the specified key, all user data if no key is provided, or null if the key does not exist.
+         */
+        public function getUserData(string $key='')
+        {
+            return $key?($this->data[$key]??null):$this->data;
+        }
 
         /**
          * Add Info to User data and try to store it in cache
