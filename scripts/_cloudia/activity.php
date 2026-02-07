@@ -127,7 +127,7 @@ class Script extends CoreScripts
         $this->sendTerminal("");
         $this->sendTerminal("  Report-input JSON fields:");
         $this->sendTerminal("    Required: Hours, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
-        $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), TimeSpent, Billable, Type, UserEmail (default: current user)");
+        $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), TimeSpent, Billable, Type, UserEmail (default: current user), PlayerId (default: current user)");
         $this->sendTerminal("");
         $this->sendTerminal("  Report-event JSON fields:");
         $this->sendTerminal("    Required: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
@@ -735,7 +735,7 @@ class Script extends CoreScripts
      *
      * Receives input data via 'json' form parameter.
      * Required fields: Hours, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
-     * Optional fields: Description, DateInput (default: now - Hours), TimeSpent, Billable, Type, UserEmail (default: current user)
+     * Optional fields: Description, DateInput (default: now - Hours), TimeSpent, Billable, Type, UserEmail (default: current user), PlayerId (default: current user)
      *
      * Usage:
      *   _cloudia/activity/report-input?json={"Hours":2,"TaskId":"123","Description":"Development work"}
@@ -796,6 +796,11 @@ class Script extends CoreScripts
             $secondsAgo = (int)($hoursAgo * 3600);
             $input_data['DateInput'] = date('Y-m-d H:i:s', time() - $secondsAgo);
         }
+
+        // PlayerId: if not specified, use current user's email
+        if (!isset($input_data['PlayerId'])) {
+            $input_data['PlayerId'] = $this->user_email;
+        }
         //endregion
 
         //region SHOW input data being created
@@ -805,6 +810,7 @@ class Script extends CoreScripts
         $this->sendTerminal(" - Hours: {$input_data['Hours']}");
         $this->sendTerminal(" - DateInput: {$input_data['DateInput']}");
         $this->sendTerminal(" - UserEmail: {$input_data['UserEmail']}");
+        $this->sendTerminal(" - PlayerId: {$input_data['PlayerId']}");
 
         // Show associations (at least one is required)
         if (!empty($input_data['TaskId'])) {
