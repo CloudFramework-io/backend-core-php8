@@ -125,13 +125,13 @@ class Script extends CoreScripts
         $this->sendTerminal("  /report-input?json={...}       - Create a new activity input (time entry)");
         $this->sendTerminal("  /report-event?json={...}       - Create a new event");
         $this->sendTerminal("");
-        $this->sendTerminal("  Report-input JSON fields:");
-        $this->sendTerminal("    Required: Hours, TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
-        $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), Billable, Type, UserEmail (default: current user), PlayerId (default: current user)");
+        $this->sendTerminal("  Report-input JSON fields (CFO: CloudFrameWorkProjectsTasksInputs):");
+        $this->sendTerminal("    Required: TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, IncidenceId)");
+        $this->sendTerminal("    Optional: Description, DateInput (default: now-TimeSpent), PlayerId (default: current user)");
         $this->sendTerminal("");
-        $this->sendTerminal("  Report-event JSON fields:");
-        $this->sendTerminal("    Required: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
-        $this->sendTerminal("    Optional: DateTimeInit (default: now), DateTimeEnd (default: +1h), Type, Location, Description, UserEmail (default: current user)");
+        $this->sendTerminal("  Report-event JSON fields (CFO: CloudFrameWorkCRMEvents):");
+        $this->sendTerminal("    Required: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId, IncidenceId, LeadId, CompanyId)");
+        $this->sendTerminal("    Optional: DateInsertion (default: now), SourcePlayerId (default: current user), Source, TimeSpent, TextContent");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script _cloudia/activity/events");
@@ -733,12 +733,14 @@ class Script extends CoreScripts
     /**
      * Create a new activity input (time entry)
      *
+     * CFO: CloudFrameWorkProjectsTasksInputs
+     *
      * Receives input data via 'json' form parameter.
-     * Required fields: Hours, TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
-     * Optional fields: Description, DateInput (default: now - Hours), Billable, Type, UserEmail (default: current user), PlayerId (default: current user)
+     * Required fields: TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, IncidenceId)
+     * Optional fields: Description, DateInput (default: now - TimeSpent), PlayerId (default: current user)
      *
      * Usage:
-     *   _cloudia/activity/report-input?json={"Hours":2,"TimeSpent":1.5,"Title":"Dev task","TaskId":"123","Description":"Development work"}
+     *   _cloudia/activity/report-input?json={"TimeSpent":1.5,"Title":"Dev task","TaskId":"123","Description":"Development work"}
      */
     public function METHOD_report_input(): bool
     {
@@ -767,11 +769,6 @@ class Script extends CoreScripts
         //endregion
 
         //region VALIDATE required fields
-        // Required: Hours (numeric)
-        if (!isset($input_data['Hours']) || !is_numeric($input_data['Hours'])) {
-            return $this->addError("Missing or invalid required field: Hours (must be a number)");
-        }
-
         // Required: TimeSpent (numeric > 0)
         if (!isset($input_data['TimeSpent']) || !is_numeric($input_data['TimeSpent']) || floatval($input_data['TimeSpent']) <= 0) {
             return $this->addError("Missing or invalid required field: TimeSpent (must be a number greater than 0)");
@@ -782,27 +779,19 @@ class Script extends CoreScripts
             return $this->addError("Missing required field: Title");
         }
 
-        // Required: UserEmail (defaults to current user)
-        if (!isset($input_data['UserEmail'])) {
-            $input_data['UserEmail'] = $this->user_email;
-        }
-        if (empty($input_data['UserEmail'])) {
-            return $this->addError("Missing required field: UserEmail");
-        }
-
-        // Required: At least one association (TaskId, MilestoneId, ProjectId, or ProposalId)
+        // Required: At least one association (TaskId, MilestoneId, ProjectId, or IncidenceId)
         $hasAssociation = !empty($input_data['TaskId'])
             || !empty($input_data['MilestoneId'])
             || !empty($input_data['ProjectId'])
-            || !empty($input_data['ProposalId']);
+            || !empty($input_data['IncidenceId']);
 
         if (!$hasAssociation) {
-            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or ProposalId");
+            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or IncidenceId");
         }
 
-        // DateInput: if not specified, calculate as now() - Hours
+        // DateInput: if not specified, calculate as now() - TimeSpent
         if (!isset($input_data['DateInput'])) {
-            $hoursAgo = floatval($input_data['Hours']);
+            $hoursAgo = floatval($input_data['TimeSpent']);
             $secondsAgo = (int)($hoursAgo * 3600);
             $input_data['DateInput'] = date('Y-m-d H:i:s', time() - $secondsAgo);
         }
@@ -818,10 +807,8 @@ class Script extends CoreScripts
         $this->sendTerminal("Creating new activity input...");
         $this->sendTerminal(str_repeat('-', 100));
         $this->sendTerminal(" - Title: {$input_data['Title']}");
-        $this->sendTerminal(" - Hours: {$input_data['Hours']}");
         $this->sendTerminal(" - TimeSpent: {$input_data['TimeSpent']}");
         $this->sendTerminal(" - DateInput: {$input_data['DateInput']}");
-        $this->sendTerminal(" - UserEmail: {$input_data['UserEmail']}");
         $this->sendTerminal(" - PlayerId: {$input_data['PlayerId']}");
 
         // Show associations (at least one is required)
@@ -834,8 +821,8 @@ class Script extends CoreScripts
         if (!empty($input_data['MilestoneId'])) {
             $this->sendTerminal(" - MilestoneId: {$input_data['MilestoneId']}");
         }
-        if (!empty($input_data['ProposalId'])) {
-            $this->sendTerminal(" - ProposalId: {$input_data['ProposalId']}");
+        if (!empty($input_data['IncidenceId'])) {
+            $this->sendTerminal(" - IncidenceId: {$input_data['IncidenceId']}");
         }
 
         // Show optional fields
@@ -906,9 +893,11 @@ class Script extends CoreScripts
     /**
      * Create a new event
      *
+     * CFO: CloudFrameWorkCRMEvents
+     *
      * Receives event data via 'json' form parameter.
-     * Required fields: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
-     * Optional fields: DateTimeInit (default: now), DateTimeEnd (default: +1h), Type, Location, Description, UserEmail (default: current user)
+     * Required fields: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId, IncidenceId, LeadId, CompanyId)
+     * Optional fields: DateInsertion (default: now), SourcePlayerId (default: current user), Source, TimeSpent, TextContent
      *
      * Usage:
      *   _cloudia/activity/report-event?json={"Title":"Sprint Review","ProjectId":"my-project","MilestoneId":"123456"}
@@ -945,35 +934,28 @@ class Script extends CoreScripts
             return $this->addError("Missing required field: Title");
         }
 
-        // Required: UserEmail (defaults to current user)
-        if (!isset($event_data['UserEmail'])) {
-            $event_data['UserEmail'] = $this->user_email;
-        }
-        if (empty($event_data['UserEmail'])) {
-            return $this->addError("Missing required field: UserEmail");
-        }
-
-        // Required: At least one association (TaskId, MilestoneId, ProjectId, or ProposalId)
+        // Required: At least one association (TaskId, MilestoneId, ProjectId, ProposalId, IncidenceId, LeadId, or CompanyId)
         $hasAssociation = !empty($event_data['TaskId'])
             || !empty($event_data['MilestoneId'])
             || !empty($event_data['ProjectId'])
-            || !empty($event_data['ProposalId']);
+            || !empty($event_data['ProposalId'])
+            || !empty($event_data['IncidenceId'])
+            || !empty($event_data['LeadId'])
+            || !empty($event_data['CompanyId']);
 
         if (!$hasAssociation) {
-            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or ProposalId");
+            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, ProposalId, IncidenceId, LeadId, or CompanyId");
         }
 
         // Set defaults for optional fields
-        if (!isset($event_data['DateTimeInit'])) {
-            $event_data['DateTimeInit'] = date('Y-m-d H:i:s');
+        if (!isset($event_data['DateInsertion'])) {
+            $event_data['DateInsertion'] = date('Y-m-d H:i:s');
         }
-        if (!isset($event_data['DateTimeEnd'])) {
-            // Default to 1 hour after init
-            $initTime = strtotime($event_data['DateTimeInit']);
-            $event_data['DateTimeEnd'] = date('Y-m-d H:i:s', $initTime + 3600);
+        if (!isset($event_data['SourcePlayerId'])) {
+            $event_data['SourcePlayerId'] = $this->user_email;
         }
-        if (!isset($event_data['Type'])) {
-            $event_data['Type'] = 'task';
+        if (!isset($event_data['Source'])) {
+            $event_data['Source'] = 'cloudia-cli';
         }
         //endregion
 
@@ -982,10 +964,9 @@ class Script extends CoreScripts
         $this->sendTerminal("Creating new event...");
         $this->sendTerminal(str_repeat('-', 100));
         $this->sendTerminal(" - Title: {$event_data['Title']}");
-        $this->sendTerminal(" - Type: {$event_data['Type']}");
-        $this->sendTerminal(" - Start: {$event_data['DateTimeInit']}");
-        $this->sendTerminal(" - End: {$event_data['DateTimeEnd']}");
-        $this->sendTerminal(" - User: {$event_data['UserEmail']}");
+        $this->sendTerminal(" - DateInsertion: {$event_data['DateInsertion']}");
+        $this->sendTerminal(" - SourcePlayerId: {$event_data['SourcePlayerId']}");
+        $this->sendTerminal(" - Source: {$event_data['Source']}");
 
         // Show associations
         if (!empty($event_data['TaskId'])) {
@@ -1000,8 +981,14 @@ class Script extends CoreScripts
         if (!empty($event_data['ProposalId'])) {
             $this->sendTerminal(" - ProposalId: {$event_data['ProposalId']}");
         }
-        if (!empty($event_data['Location'])) {
-            $this->sendTerminal(" - Location: {$event_data['Location']}");
+        if (!empty($event_data['IncidenceId'])) {
+            $this->sendTerminal(" - IncidenceId: {$event_data['IncidenceId']}");
+        }
+        if (!empty($event_data['LeadId'])) {
+            $this->sendTerminal(" - LeadId: {$event_data['LeadId']}");
+        }
+        if (!empty($event_data['CompanyId'])) {
+            $this->sendTerminal(" - CompanyId: {$event_data['CompanyId']}");
         }
         //endregion
 
