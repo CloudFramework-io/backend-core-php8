@@ -24,9 +24,11 @@
  *   _cloudia/activity/event?id=EVENT_KEYID           - Get event details
  *   _cloudia/activity/input?id=INPUT_KEYID           - Get input details
  *   _cloudia/activity/summary                        - Activity summary with TimeSpent analysis
+ *   _cloudia/activity/report-input?json={...}        - Create a new activity input
+ *   _cloudia/activity/report-event?json={...}        - Create a new event
  *
  * @author CloudFramework Development Team
- * @version 1.0
+ * @version 1.1
  */
 class Script extends CoreScripts
 {
@@ -119,6 +121,18 @@ class Script extends CoreScripts
         $this->sendTerminal("  /all                           - List all activity (events + inputs) last 30 days");
         $this->sendTerminal("  /all?from=DATE&to=DATE         - List all activity in date range");
         $this->sendTerminal("");
+        $this->sendTerminal("  Report Activity (Create new entries):");
+        $this->sendTerminal("  /report-input?json={...}       - Create a new activity input (time entry)");
+        $this->sendTerminal("  /report-event?json={...}       - Create a new event");
+        $this->sendTerminal("");
+        $this->sendTerminal("  Report-input JSON fields:");
+        $this->sendTerminal("    Required: Hours, Description");
+        $this->sendTerminal("    Optional: ProjectId, TaskId, MilestoneId, ProposalId, DateInput, TimeSpent, Billable, Type");
+        $this->sendTerminal("");
+        $this->sendTerminal("  Report-event JSON fields:");
+        $this->sendTerminal("    Required: Title");
+        $this->sendTerminal("    Optional: ProjectId, TaskId, MilestoneId, ProposalId, DateTimeInit, DateTimeEnd, Type, Location, Description");
+        $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script _cloudia/activity/events");
         $this->sendTerminal("  composer run-script script \"_cloudia/activity/events?from=2025-01-01&to=2025-01-31\"");
@@ -126,6 +140,12 @@ class Script extends CoreScripts
         $this->sendTerminal("  composer run-script script \"_cloudia/activity/inputs?task=5734953457745920\"");
         $this->sendTerminal("  composer run-script script \"_cloudia/activity/event?id=1234567890\"");
         $this->sendTerminal("  composer run-script script _cloudia/activity/summary");
+        $this->sendTerminal("");
+        $this->sendTerminal("  # Report input associated with a task");
+        $this->sendTerminal("  composer run-script script \"_cloudia/activity/report-input?json={\\\"Hours\\\":2,\\\"Description\\\":\\\"Development work\\\",\\\"TaskId\\\":\\\"5734953457745920\\\"}\"");
+        $this->sendTerminal("");
+        $this->sendTerminal("  # Report event associated with a project and milestone");
+        $this->sendTerminal("  composer run-script script \"_cloudia/activity/report-event?json={\\\"Title\\\":\\\"Sprint Review\\\",\\\"ProjectId\\\":\\\"my-project\\\",\\\"MilestoneId\\\":\\\"123456\\\"}\"");
     }
 
     /**
@@ -705,6 +725,285 @@ class Script extends CoreScripts
             $this->sendTerminal(sprintf(" TimeSpent/Hours ratio: %.1f%%", $efficiency));
         }
         $this->sendTerminal(" Period: {$from} to {$to} | User: {$this->user_email}");
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Create a new activity input (time entry)
+     *
+     * Receives input data via 'json' form parameter.
+     * Required fields: Hours, Description
+     * Optional fields: ProjectId, TaskId, MilestoneId, ProposalId, DateInput, TimeSpent, Billable, Type
+     *
+     * Usage:
+     *   _cloudia/activity/report-input?json={"Hours":2,"Description":"Development work","TaskId":"123"}
+     */
+    public function METHOD_report_input(): bool
+    {
+        //region GET JSON data from parameter or stdin
+        $json_string = $this->formParams['json'] ?? null;
+
+        if (!$json_string) {
+            $stdin = file_get_contents('php://stdin');
+            if ($stdin && trim($stdin)) {
+                $json_string = trim($stdin);
+            }
+        }
+
+        if (!$json_string) {
+            return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
+        }
+
+        $input_data = json_decode($json_string, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->addError("Invalid JSON: " . json_last_error_msg());
+        }
+
+        if (!is_array($input_data) || empty($input_data)) {
+            return $this->addError("JSON must be a non-empty object with input fields");
+        }
+        //endregion
+
+        //region VALIDATE required fields and set defaults
+        if (!isset($input_data['Hours']) || !is_numeric($input_data['Hours'])) {
+            return $this->addError("Missing or invalid required field: Hours (must be a number)");
+        }
+
+        if (empty($input_data['Description'])) {
+            return $this->addError("Missing required field: Description");
+        }
+
+        // Set defaults
+        if (!isset($input_data['DateInput'])) {
+            $input_data['DateInput'] = date('Y-m-d');
+        }
+        if (!isset($input_data['UserEmail'])) {
+            $input_data['UserEmail'] = $this->user_email;
+        }
+        //endregion
+
+        //region SHOW input data being created
+        $this->sendTerminal("");
+        $this->sendTerminal("Creating new activity input...");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(" - Hours: {$input_data['Hours']}");
+        $this->sendTerminal(" - Description: {$input_data['Description']}");
+        $this->sendTerminal(" - Date: {$input_data['DateInput']}");
+        $this->sendTerminal(" - User: {$input_data['UserEmail']}");
+
+        // Show associations
+        if (!empty($input_data['TaskId'])) {
+            $this->sendTerminal(" - TaskId: {$input_data['TaskId']}");
+        }
+        if (!empty($input_data['ProjectId'])) {
+            $this->sendTerminal(" - ProjectId: {$input_data['ProjectId']}");
+        }
+        if (!empty($input_data['MilestoneId'])) {
+            $this->sendTerminal(" - MilestoneId: {$input_data['MilestoneId']}");
+        }
+        if (!empty($input_data['ProposalId'])) {
+            $this->sendTerminal(" - ProposalId: {$input_data['ProposalId']}");
+        }
+        if (!empty($input_data['TimeSpent'])) {
+            $this->sendTerminal(" - TimeSpent: {$input_data['TimeSpent']}");
+        }
+        //endregion
+
+        //region INSERT input via API
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Sending to remote platform...");
+
+        $response = $this->core->request->post_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs?_raw&_timezone=UTC",
+            $input_data,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        if (!($response['success'] ?? false)) {
+            $errorMsg = $response['errorMsg'] ?? $response['error'] ?? 'Unknown error';
+            if (is_array($errorMsg)) {
+                $errorMsg = implode(', ', $errorMsg);
+            }
+            return $this->addError("Insert failed: {$errorMsg}");
+        }
+        //endregion
+
+        //region SHOW created input
+        $created_input = $response['data'] ?? null;
+        if ($created_input) {
+            $this->sendTerminal("");
+            $this->sendTerminal("Activity input created successfully!");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(" - KeyId: {$created_input['KeyId']}");
+            $this->sendTerminal(" - Hours: {$created_input['Hours']}");
+            $this->sendTerminal(" - Date: {$created_input['DateInput']}");
+            if (!empty($created_input['TaskId'])) {
+                $this->sendTerminal(" - TaskId: {$created_input['TaskId']}");
+            }
+            if (!empty($created_input['ProjectId'])) {
+                $this->sendTerminal(" - ProjectId: {$created_input['ProjectId']}");
+            }
+            $this->sendTerminal(" - Created: {$created_input['DateInserting']}");
+
+            $this->sendTerminal("");
+            $this->sendTerminal("Created input JSON:");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(json_encode($created_input, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        } else {
+            $this->sendTerminal("");
+            $this->sendTerminal("Activity input created (no data returned)");
+        }
+        $this->sendTerminal(str_repeat('=', 100));
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Create a new event
+     *
+     * Receives event data via 'json' form parameter.
+     * Required fields: Title
+     * Optional fields: ProjectId, TaskId, MilestoneId, ProposalId, DateTimeInit, DateTimeEnd, Type, Location, Description
+     *
+     * Usage:
+     *   _cloudia/activity/report-event?json={"Title":"Sprint Review","ProjectId":"my-project"}
+     */
+    public function METHOD_report_event(): bool
+    {
+        //region GET JSON data from parameter or stdin
+        $json_string = $this->formParams['json'] ?? null;
+
+        if (!$json_string) {
+            $stdin = file_get_contents('php://stdin');
+            if ($stdin && trim($stdin)) {
+                $json_string = trim($stdin);
+            }
+        }
+
+        if (!$json_string) {
+            return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
+        }
+
+        $event_data = json_decode($json_string, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->addError("Invalid JSON: " . json_last_error_msg());
+        }
+
+        if (!is_array($event_data) || empty($event_data)) {
+            return $this->addError("JSON must be a non-empty object with event fields");
+        }
+        //endregion
+
+        //region VALIDATE required fields and set defaults
+        if (empty($event_data['Title'])) {
+            return $this->addError("Missing required field: Title");
+        }
+
+        // Set defaults
+        if (!isset($event_data['DateTimeInit'])) {
+            $event_data['DateTimeInit'] = date('Y-m-d H:i:s');
+        }
+        if (!isset($event_data['DateTimeEnd'])) {
+            // Default to 1 hour after init
+            $initTime = strtotime($event_data['DateTimeInit']);
+            $event_data['DateTimeEnd'] = date('Y-m-d H:i:s', $initTime + 3600);
+        }
+        if (!isset($event_data['UserEmail'])) {
+            $event_data['UserEmail'] = $this->user_email;
+        }
+        if (!isset($event_data['Type'])) {
+            $event_data['Type'] = 'task';
+        }
+        //endregion
+
+        //region SHOW event data being created
+        $this->sendTerminal("");
+        $this->sendTerminal("Creating new event...");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(" - Title: {$event_data['Title']}");
+        $this->sendTerminal(" - Type: {$event_data['Type']}");
+        $this->sendTerminal(" - Start: {$event_data['DateTimeInit']}");
+        $this->sendTerminal(" - End: {$event_data['DateTimeEnd']}");
+        $this->sendTerminal(" - User: {$event_data['UserEmail']}");
+
+        // Show associations
+        if (!empty($event_data['TaskId'])) {
+            $this->sendTerminal(" - TaskId: {$event_data['TaskId']}");
+        }
+        if (!empty($event_data['ProjectId'])) {
+            $this->sendTerminal(" - ProjectId: {$event_data['ProjectId']}");
+        }
+        if (!empty($event_data['MilestoneId'])) {
+            $this->sendTerminal(" - MilestoneId: {$event_data['MilestoneId']}");
+        }
+        if (!empty($event_data['ProposalId'])) {
+            $this->sendTerminal(" - ProposalId: {$event_data['ProposalId']}");
+        }
+        if (!empty($event_data['Location'])) {
+            $this->sendTerminal(" - Location: {$event_data['Location']}");
+        }
+        //endregion
+
+        //region INSERT event via API
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Sending to remote platform...");
+
+        $response = $this->core->request->post_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents?_raw&_timezone=UTC",
+            $event_data,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        if (!($response['success'] ?? false)) {
+            $errorMsg = $response['errorMsg'] ?? $response['error'] ?? 'Unknown error';
+            if (is_array($errorMsg)) {
+                $errorMsg = implode(', ', $errorMsg);
+            }
+            return $this->addError("Insert failed: {$errorMsg}");
+        }
+        //endregion
+
+        //region SHOW created event
+        $created_event = $response['data'] ?? null;
+        if ($created_event) {
+            $this->sendTerminal("");
+            $this->sendTerminal("Event created successfully!");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(" - KeyId: {$created_event['KeyId']}");
+            $this->sendTerminal(" - Title: {$created_event['Title']}");
+            $this->sendTerminal(" - Type: {$created_event['Type']}");
+            $this->sendTerminal(" - Start: {$created_event['DateTimeInit']}");
+            if (!empty($created_event['TaskId'])) {
+                $this->sendTerminal(" - TaskId: {$created_event['TaskId']}");
+            }
+            if (!empty($created_event['ProjectId'])) {
+                $this->sendTerminal(" - ProjectId: {$created_event['ProjectId']}");
+            }
+            if (!empty($created_event['MilestoneId'])) {
+                $this->sendTerminal(" - MilestoneId: {$created_event['MilestoneId']}");
+            }
+            $this->sendTerminal(" - Created: {$created_event['DateInserting']}");
+
+            $this->sendTerminal("");
+            $this->sendTerminal("Created event JSON:");
+            $this->sendTerminal(str_repeat('-', 100));
+            $this->sendTerminal(json_encode($created_event, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+        } else {
+            $this->sendTerminal("");
+            $this->sendTerminal("Event created (no data returned)");
+        }
+        $this->sendTerminal(str_repeat('=', 100));
         //endregion
 
         return true;
