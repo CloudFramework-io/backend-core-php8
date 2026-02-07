@@ -29,6 +29,7 @@
  *   _cloudia/devgroups/update-from-backup?id=/cf/products/my-product   - Update existing Development Group in remote
  *   _cloudia/devgroups/list-remote                                     - List all Development Groups in remote
  *   _cloudia/devgroups/list-local                                      - List all Development Groups in local backup
+ *   _cloudia/devgroups/dev-units?id=/cf/products/my-product            - List WebApps (dev units) for a Development Group
  *
  * @author CloudFramework Development Team
  * @version 1.0
@@ -98,10 +99,12 @@ class Script extends CoreScripts
         $this->sendTerminal("  /update-from-backup?id=KEY     - Update existing Development Group in remote platform from local backup");
         $this->sendTerminal("  /list-remote                   - List all Development Groups in remote platform");
         $this->sendTerminal("  /list-local                    - List all Development Groups in local backup");
+        $this->sendTerminal("  /dev-units?id=KEY              - List WebApps (dev units) associated with a Development Group");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script \"_cloudia/devgroups/backup-from-remote?id=/cf/products/cloud-documentum\"");
         $this->sendTerminal("  composer run-script script _cloudia/devgroups/list-remote");
+        $this->sendTerminal("  composer run-script script \"_cloudia/devgroups/dev-units?id=/cf/products/cloud-documentum\"");
         $this->sendTerminal("");
         $this->sendTerminal("Note: The ?id= parameter is the Development Group KeyName (e.g., /cf/products/cloud-documentum)");
     }
@@ -234,6 +237,77 @@ class Script extends CoreScripts
         }
         $this->sendTerminal(str_repeat('-', 80));
         $this->sendTerminal("Total: " . count($files) . " Development Groups");
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * List WebApps (dev units) associated with a Development Group
+     *
+     * CFO: CloudFrameWorkDevDocumentationForWebApps
+     * Filter by: DocumentationId = Development Group KeyName
+     *
+     * Usage:
+     *   _cloudia/devgroups/dev-units?id=/cf/products/cloud-documentum
+     */
+    public function METHOD_dev_units()
+    {
+        //region VALIDATE $devgroup_id (required parameter)
+        $devgroup_id = $this->formParams['id'] ?? null;
+        if (!$devgroup_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/devgroups/dev-units?id=/cf/products/my-product");
+        }
+        //endregion
+
+        //region FETCH WebApps from remote platform filtering by DocumentationId
+        $this->sendTerminal("Listing WebApps (dev units) for Development Group [{$devgroup_id}]:");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $params = [
+            '_fields' => 'KeyName,Title,Type,Status,Cat,Folder,TeamOwner',
+            '_order' => 'KeyName',
+            '_limit' => 500,
+            'filter_DocumentationId' => $devgroup_id
+        ];
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebApps?_raw=1&_timezone=UTC",
+            $params,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $webapps = $response['data'] ?? [];
+        if (!$webapps) {
+            $this->sendTerminal("No WebApps found for Development Group [{$devgroup_id}]");
+            return true;
+        }
+        //endregion
+
+        //region DISPLAY WebApps
+        foreach ($webapps as $webapp) {
+            $keyName = $webapp['KeyName'] ?? 'N/A';
+            $title = $webapp['Title'] ?? 'N/A';
+            $type = $webapp['Type'] ?? '';
+            $status = $webapp['Status'] ?? '';
+            $cat = $webapp['Cat'] ?? '';
+            $folder = $webapp['Folder'] ?? '';
+            $owner = $webapp['TeamOwner'] ?? '';
+
+            $typeInfo = $type ? "[{$type}]" : "";
+            $statusInfo = $status ? " ({$status})" : "";
+            $catInfo = $cat ? " Cat:{$cat}" : "";
+            $folderInfo = $folder ? " Folder:{$folder}" : "";
+            $ownerInfo = $owner ? " Owner:{$owner}" : "";
+
+            $this->sendTerminal(" {$keyName} {$typeInfo} - {$title}{$statusInfo}{$catInfo}{$folderInfo}{$ownerInfo}");
+        }
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal("Total: " . count($webapps) . " WebApps for [{$devgroup_id}]");
         //endregion
 
         return true;
