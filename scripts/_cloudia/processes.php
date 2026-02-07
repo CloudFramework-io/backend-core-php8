@@ -427,6 +427,7 @@ class Script extends CoreScripts
 
         //region FETCH remote Process and COMPARE with local backup
         $this->sendTerminal(" - Fetching remote Process for comparison...");
+        $process_unchanged = false;
         $remote_response = $this->core->request->get_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcesses/display/" . urlencode($process_id) . '?_raw&_timezone=UTC',
             ['_raw' => 1, '_timezone' => 'UTC'],
@@ -441,60 +442,111 @@ class Script extends CoreScripts
 
             if ($this->core->jsonEncode($local_process) === $this->core->jsonEncode($remote_process)) {
                 $this->sendTerminal(" = [CloudFrameWorkDevDocumentationForProcesses] is unchanged (local backup equals remote)");
-                return true;
+                $process_unchanged = true;
             }
         }
         //endregion
 
-        //region UPDATE Process in remote platform via API
-        $this->sendTerminal(" - Updating Process in remote platform...");
-        $response = $this->core->request->put_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcesses/" . urlencode($process_id) . "?_raw&_timezone=UTC",
-            $process,
-            $this->headers,
-            true
-        );
+        //region UPDATE Process in remote platform via API (only if changed)
+        if (!$process_unchanged) {
+            $this->sendTerminal(" - Updating Process in remote platform...");
+            $response = $this->core->request->put_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcesses/" . urlencode($process_id) . "?_raw&_timezone=UTC",
+                $process,
+                $this->headers,
+                true
+            );
 
-        if ($this->core->request->error) {
-            return $this->addError("API request failed: " . $this->core->request->errorMsg);
-        }
+            if ($this->core->request->error) {
+                return $this->addError("API request failed: " . $this->core->request->errorMsg);
+            }
 
-        if (!($response['success'] ?? false)) {
-            $error_msg = $response['errorMsg'] ?? 'Unknown error';
-            if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
-            return $this->addError("API returned error: {$error_msg}");
+            if (!($response['success'] ?? false)) {
+                $error_msg = $response['errorMsg'] ?? 'Unknown error';
+                if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
+                return $this->addError("API returned error: {$error_msg}");
+            }
+            $this->sendTerminal(" + Process record updated");
         }
-        $this->sendTerminal(" + Process record updated");
         //endregion
 
-        //region UPDATE subprocesses in remote platform
+        //region FETCH remote subprocesses for comparison
+        $this->sendTerminal(" - Fetching remote SubProcesses for comparison...");
+        $remote_subprocesses_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
+            ['filter_Process' => $process_id, 'cfo_limit' => 2000, '_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+        $remote_subprocesses = [];
+        if (!$this->core->request->error && ($remote_subprocesses_response['data'] ?? null)) {
+            // Index remote subprocesses by KeyId for easy comparison
+            foreach ($remote_subprocesses_response['data'] as $remote_sub) {
+                if ($key = ($remote_sub['KeyId'] ?? null)) {
+                    ksort($remote_sub);
+                    $remote_subprocesses[$key] = $remote_sub;
+                }
+            }
+        }
+        //endregion
+
+        //region UPDATE/INSERT subprocesses in remote platform
         $subprocesses = $process_data['CloudFrameWorkDevDocumentationForSubProcesses'] ?? [];
+        $subprocess_updated = 0;
+        $subprocess_inserted = 0;
+        $subprocess_unchanged = 0;
+
         if ($subprocesses) {
-            $this->sendTerminal(" - Updating {" . count($subprocesses) . "} subprocesses...");
+            $this->sendTerminal(" - Processing {" . count($subprocesses) . "} subprocesses...");
             foreach ($subprocesses as $subprocess) {
-                $subprocess_key = $subprocess['KeyId'] ?? $subprocess['KeyName'] ?? null;
-                if (!$subprocess_key)  {
+                $subprocess_key = $subprocess['KeyId'] ?? null;
+                $subprocess_title = $subprocess['Title'] ?? $subprocess_key ?? 'unknown';
+
+                if (!$subprocess_key) {
+                    // INSERT new subprocess (no KeyId)
                     $response = $this->core->request->post_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses?_raw&_timezone=UTC",
                         $subprocess,
                         $this->headers
                     );
+
+                    if ($this->core->request->error || !($response['success'] ?? false)) {
+                        $this->sendTerminal("   # Warning: Failed to insert subprocess [{$subprocess_title}]");
+                        $this->sendTerminal("     " . ($this->core->request->errorMsg ?: json_encode($response['errorMsg'] ?? 'Unknown error')));
+                        return false;
+                    }
+                    $subprocess_inserted++;
+                    $this->sendTerminal("   + Inserted: {$subprocess_title}");
                 } else {
+                    // Check if subprocess exists and compare
+                    $local_sub = $subprocess;
+                    ksort($local_sub);
+
+                    if (isset($remote_subprocesses[$subprocess_key])) {
+                        // Compare with remote
+                        if ($this->core->jsonEncode($local_sub) === $this->core->jsonEncode($remote_subprocesses[$subprocess_key])) {
+                            $subprocess_unchanged++;
+                            continue; // Skip unchanged subprocess
+                        }
+                    }
+
+                    // UPDATE subprocess
                     $response = $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForSubProcesses/{$subprocess_key}?_raw&_timezone=UTC",
                         $subprocess,
                         $this->headers,
                         true
                     );
-                }
 
-                if ($this->core->request->error || !($response['success'] ?? false)) {
-                    $this->sendTerminal("   # Warning: Failed to update subprocess [{$subprocess_key}]");
-                    $this->sendTerminal($this->core->request->errorMsg);
-                    return false;
+                    if ($this->core->request->error || !($response['success'] ?? false)) {
+                        $this->sendTerminal("   # Warning: Failed to update subprocess [{$subprocess_title}]");
+                        $this->sendTerminal("     " . ($this->core->request->errorMsg ?: json_encode($response['errorMsg'] ?? 'Unknown error')));
+                        return false;
+                    }
+                    $subprocess_updated++;
+                    $this->sendTerminal("   + Updated: {$subprocess_title}");
                 }
             }
-            $this->sendTerminal(" + Subprocesses updated");
+            $this->sendTerminal(" - SubProcesses: {$subprocess_updated} updated, {$subprocess_inserted} inserted, {$subprocess_unchanged} unchanged");
         }
         //endregion
 
