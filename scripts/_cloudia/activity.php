@@ -126,8 +126,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  /report-event?json={...}       - Create a new event");
         $this->sendTerminal("");
         $this->sendTerminal("  Report-input JSON fields:");
-        $this->sendTerminal("    Required: Hours, Description");
-        $this->sendTerminal("    Optional: ProjectId, TaskId, MilestoneId, ProposalId, DateInput, TimeSpent, Billable, Type");
+        $this->sendTerminal("    Required: Hours, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
+        $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), TimeSpent, Billable, Type, UserEmail (default: current user)");
         $this->sendTerminal("");
         $this->sendTerminal("  Report-event JSON fields:");
         $this->sendTerminal("    Required: Title");
@@ -734,11 +734,11 @@ class Script extends CoreScripts
      * Create a new activity input (time entry)
      *
      * Receives input data via 'json' form parameter.
-     * Required fields: Hours, Description
-     * Optional fields: ProjectId, TaskId, MilestoneId, ProposalId, DateInput, TimeSpent, Billable, Type
+     * Required fields: Hours, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
+     * Optional fields: Description, DateInput (default: now - Hours), TimeSpent, Billable, Type, UserEmail (default: current user)
      *
      * Usage:
-     *   _cloudia/activity/report-input?json={"Hours":2,"Description":"Development work","TaskId":"123"}
+     *   _cloudia/activity/report-input?json={"Hours":2,"TaskId":"123","Description":"Development work"}
      */
     public function METHOD_report_input(): bool
     {
@@ -766,21 +766,35 @@ class Script extends CoreScripts
         }
         //endregion
 
-        //region VALIDATE required fields and set defaults
+        //region VALIDATE required fields
+        // Required: Hours (numeric)
         if (!isset($input_data['Hours']) || !is_numeric($input_data['Hours'])) {
             return $this->addError("Missing or invalid required field: Hours (must be a number)");
         }
 
-        if (empty($input_data['Description'])) {
-            return $this->addError("Missing required field: Description");
-        }
-
-        // Set defaults
-        if (!isset($input_data['DateInput'])) {
-            $input_data['DateInput'] = date('Y-m-d');
-        }
+        // Required: UserEmail (defaults to current user)
         if (!isset($input_data['UserEmail'])) {
             $input_data['UserEmail'] = $this->user_email;
+        }
+        if (empty($input_data['UserEmail'])) {
+            return $this->addError("Missing required field: UserEmail");
+        }
+
+        // Required: At least one association (TaskId, MilestoneId, ProjectId, or ProposalId)
+        $hasAssociation = !empty($input_data['TaskId'])
+            || !empty($input_data['MilestoneId'])
+            || !empty($input_data['ProjectId'])
+            || !empty($input_data['ProposalId']);
+
+        if (!$hasAssociation) {
+            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or ProposalId");
+        }
+
+        // DateInput: if not specified, calculate as now() - Hours
+        if (!isset($input_data['DateInput'])) {
+            $hoursAgo = floatval($input_data['Hours']);
+            $secondsAgo = (int)($hoursAgo * 3600);
+            $input_data['DateInput'] = date('Y-m-d H:i:s', time() - $secondsAgo);
         }
         //endregion
 
@@ -789,11 +803,10 @@ class Script extends CoreScripts
         $this->sendTerminal("Creating new activity input...");
         $this->sendTerminal(str_repeat('-', 100));
         $this->sendTerminal(" - Hours: {$input_data['Hours']}");
-        $this->sendTerminal(" - Description: {$input_data['Description']}");
-        $this->sendTerminal(" - Date: {$input_data['DateInput']}");
-        $this->sendTerminal(" - User: {$input_data['UserEmail']}");
+        $this->sendTerminal(" - DateInput: {$input_data['DateInput']}");
+        $this->sendTerminal(" - UserEmail: {$input_data['UserEmail']}");
 
-        // Show associations
+        // Show associations (at least one is required)
         if (!empty($input_data['TaskId'])) {
             $this->sendTerminal(" - TaskId: {$input_data['TaskId']}");
         }
@@ -805,6 +818,11 @@ class Script extends CoreScripts
         }
         if (!empty($input_data['ProposalId'])) {
             $this->sendTerminal(" - ProposalId: {$input_data['ProposalId']}");
+        }
+
+        // Show optional fields
+        if (!empty($input_data['Description'])) {
+            $this->sendTerminal(" - Description: {$input_data['Description']}");
         }
         if (!empty($input_data['TimeSpent'])) {
             $this->sendTerminal(" - TimeSpent: {$input_data['TimeSpent']}");
