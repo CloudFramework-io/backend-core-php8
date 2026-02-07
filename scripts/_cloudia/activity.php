@@ -126,8 +126,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  /report-event?json={...}       - Create a new event");
         $this->sendTerminal("");
         $this->sendTerminal("  Report-input JSON fields:");
-        $this->sendTerminal("    Required: Hours, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
-        $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), TimeSpent, Billable, Type, UserEmail (default: current user), PlayerId (default: current user)");
+        $this->sendTerminal("    Required: Hours, TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
+        $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), Billable, Type, UserEmail (default: current user), PlayerId (default: current user)");
         $this->sendTerminal("");
         $this->sendTerminal("  Report-event JSON fields:");
         $this->sendTerminal("    Required: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
@@ -734,11 +734,11 @@ class Script extends CoreScripts
      * Create a new activity input (time entry)
      *
      * Receives input data via 'json' form parameter.
-     * Required fields: Hours, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
-     * Optional fields: Description, DateInput (default: now - Hours), TimeSpent, Billable, Type, UserEmail (default: current user), PlayerId (default: current user)
+     * Required fields: Hours, TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
+     * Optional fields: Description, DateInput (default: now - Hours), Billable, Type, UserEmail (default: current user), PlayerId (default: current user)
      *
      * Usage:
-     *   _cloudia/activity/report-input?json={"Hours":2,"TaskId":"123","Description":"Development work"}
+     *   _cloudia/activity/report-input?json={"Hours":2,"TimeSpent":1.5,"Title":"Dev task","TaskId":"123","Description":"Development work"}
      */
     public function METHOD_report_input(): bool
     {
@@ -770,6 +770,16 @@ class Script extends CoreScripts
         // Required: Hours (numeric)
         if (!isset($input_data['Hours']) || !is_numeric($input_data['Hours'])) {
             return $this->addError("Missing or invalid required field: Hours (must be a number)");
+        }
+
+        // Required: TimeSpent (numeric > 0)
+        if (!isset($input_data['TimeSpent']) || !is_numeric($input_data['TimeSpent']) || floatval($input_data['TimeSpent']) <= 0) {
+            return $this->addError("Missing or invalid required field: TimeSpent (must be a number greater than 0)");
+        }
+
+        // Required: Title
+        if (empty($input_data['Title'])) {
+            return $this->addError("Missing required field: Title");
         }
 
         // Required: UserEmail (defaults to current user)
@@ -807,7 +817,9 @@ class Script extends CoreScripts
         $this->sendTerminal("");
         $this->sendTerminal("Creating new activity input...");
         $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(" - Title: {$input_data['Title']}");
         $this->sendTerminal(" - Hours: {$input_data['Hours']}");
+        $this->sendTerminal(" - TimeSpent: {$input_data['TimeSpent']}");
         $this->sendTerminal(" - DateInput: {$input_data['DateInput']}");
         $this->sendTerminal(" - UserEmail: {$input_data['UserEmail']}");
         $this->sendTerminal(" - PlayerId: {$input_data['PlayerId']}");
@@ -864,16 +876,18 @@ class Script extends CoreScripts
             $this->sendTerminal("");
             $this->sendTerminal("Activity input created successfully!");
             $this->sendTerminal(str_repeat('-', 100));
-            $this->sendTerminal(" - KeyId: {$created_input['KeyId']}");
-            $this->sendTerminal(" - Hours: {$created_input['Hours']}");
-            $this->sendTerminal(" - Date: {$created_input['DateInput']}");
+            $this->sendTerminal(" - KeyId: " . ($created_input['KeyId'] ?? 'N/A'));
+            $this->sendTerminal(" - Title: " . ($created_input['Title'] ?? 'N/A'));
+            $this->sendTerminal(" - Hours: " . ($created_input['Hours'] ?? 'N/A'));
+            $this->sendTerminal(" - TimeSpent: " . ($created_input['TimeSpent'] ?? 'N/A'));
+            $this->sendTerminal(" - Date: " . ($created_input['DateInput'] ?? 'N/A'));
             if (!empty($created_input['TaskId'])) {
                 $this->sendTerminal(" - TaskId: {$created_input['TaskId']}");
             }
             if (!empty($created_input['ProjectId'])) {
                 $this->sendTerminal(" - ProjectId: {$created_input['ProjectId']}");
             }
-            $this->sendTerminal(" - Created: {$created_input['DateInserting']}");
+            $this->sendTerminal(" - Created: " . ($created_input['DateInserting'] ?? 'N/A'));
 
             $this->sendTerminal("");
             $this->sendTerminal("Created input JSON:");
