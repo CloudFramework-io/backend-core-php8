@@ -130,8 +130,8 @@ class Script extends CoreScripts
         $this->sendTerminal("    Optional: Description, DateInput (default: now-Hours), TimeSpent, Billable, Type, UserEmail (default: current user)");
         $this->sendTerminal("");
         $this->sendTerminal("  Report-event JSON fields:");
-        $this->sendTerminal("    Required: Title");
-        $this->sendTerminal("    Optional: ProjectId, TaskId, MilestoneId, ProposalId, DateTimeInit, DateTimeEnd, Type, Location, Description");
+        $this->sendTerminal("    Required: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)");
+        $this->sendTerminal("    Optional: DateTimeInit (default: now), DateTimeEnd (default: +1h), Type, Location, Description, UserEmail (default: current user)");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer run-script script _cloudia/activity/events");
@@ -887,11 +887,11 @@ class Script extends CoreScripts
      * Create a new event
      *
      * Receives event data via 'json' form parameter.
-     * Required fields: Title
-     * Optional fields: ProjectId, TaskId, MilestoneId, ProposalId, DateTimeInit, DateTimeEnd, Type, Location, Description
+     * Required fields: Title, at least one of (TaskId, MilestoneId, ProjectId, ProposalId)
+     * Optional fields: DateTimeInit (default: now), DateTimeEnd (default: +1h), Type, Location, Description, UserEmail (default: current user)
      *
      * Usage:
-     *   _cloudia/activity/report-event?json={"Title":"Sprint Review","ProjectId":"my-project"}
+     *   _cloudia/activity/report-event?json={"Title":"Sprint Review","ProjectId":"my-project","MilestoneId":"123456"}
      */
     public function METHOD_report_event(): bool
     {
@@ -920,11 +920,30 @@ class Script extends CoreScripts
         //endregion
 
         //region VALIDATE required fields and set defaults
+        // Required: Title
         if (empty($event_data['Title'])) {
             return $this->addError("Missing required field: Title");
         }
 
-        // Set defaults
+        // Required: UserEmail (defaults to current user)
+        if (!isset($event_data['UserEmail'])) {
+            $event_data['UserEmail'] = $this->user_email;
+        }
+        if (empty($event_data['UserEmail'])) {
+            return $this->addError("Missing required field: UserEmail");
+        }
+
+        // Required: At least one association (TaskId, MilestoneId, ProjectId, or ProposalId)
+        $hasAssociation = !empty($event_data['TaskId'])
+            || !empty($event_data['MilestoneId'])
+            || !empty($event_data['ProjectId'])
+            || !empty($event_data['ProposalId']);
+
+        if (!$hasAssociation) {
+            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or ProposalId");
+        }
+
+        // Set defaults for optional fields
         if (!isset($event_data['DateTimeInit'])) {
             $event_data['DateTimeInit'] = date('Y-m-d H:i:s');
         }
@@ -932,9 +951,6 @@ class Script extends CoreScripts
             // Default to 1 hour after init
             $initTime = strtotime($event_data['DateTimeInit']);
             $event_data['DateTimeEnd'] = date('Y-m-d H:i:s', $initTime + 3600);
-        }
-        if (!isset($event_data['UserEmail'])) {
-            $event_data['UserEmail'] = $this->user_email;
         }
         if (!isset($event_data['Type'])) {
             $event_data['Type'] = 'task';
