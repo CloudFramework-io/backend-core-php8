@@ -289,6 +289,11 @@ composer script -- "_cloudia/activity/inputs?project=PROJECT_KEY"       # Inputs
 composer script -- "_cloudia/activity/input?id=INPUT_KEYID"             # Get input details
 composer script -- "_cloudia/activity/summary"                          # Activity summary (current week)
 composer script -- "_cloudia/activity/all"                              # Combined events + inputs
+
+# Activity Reporting (Create time entries and events) - USE STDIN FOR JSON
+# Required: TimeSpent, Title, and at least one of TaskId/ProjectId/MilestoneId/IncidenceId
+echo '{"TimeSpent":2,"Title":"Dev work","TaskId":"123","ProjectId":"proj"}' | php vendor/.../runscript.php "_cloudia/activity/report-input"
+echo '{"Title":"Meeting","ProjectId":"proj"}' | php vendor/.../runscript.php "_cloudia/activity/report-event"
 ```
 
 ## Development Groups (Organizational Backbone)
@@ -813,6 +818,43 @@ Checks can be associated at **two levels** for WebApps, and **you MUST use the c
 
 Projects, Milestones, and Tasks form a complete **project management module** within CLOUD Documentum. They allow organizations to manage development projects, track deliverables, and assign work items.
 
+### 🔴 MANDATORY: Task Operations - Use _cloudia/tasks
+
+**For ALL individual task operations, use `_cloudia/tasks`**. This is the primary script for:
+
+| Operation | Command |
+|-----------|---------|
+| **Read a task by KeyId** | `composer script -- "_cloudia/tasks/get?id=TASK_KEYID"` |
+| **Read tasks for a project** | `composer script -- "_cloudia/tasks/project?id=PROJECT_KEYNAME"` |
+| **Read tasks for a milestone** | `composer script -- "_cloudia/tasks/milestone?id=MILESTONE_KEYID"` |
+| **Create a new task** | `composer script -- "_cloudia/tasks/insert?json={...}"` |
+| **Update an existing task** | `composer script -- "_cloudia/tasks/update?id=KEYID&json={...}"` |
+| **List my open tasks** | `composer script -- "_cloudia/tasks/list"` |
+| **Search tasks** | `composer script -- "_cloudia/tasks/search?status=pending&project=..."` |
+
+**Examples:**
+
+```bash
+# Read a specific task (returns full task data including raw JSON)
+composer script -- "_cloudia/tasks/get?id=4910294454763520"
+
+# List all tasks for project "cloud-development"
+composer script -- "_cloudia/tasks/project?id=cloud-development"
+
+# List all tasks for milestone 5734953457745920
+composer script -- "_cloudia/tasks/milestone?id=5734953457745920"
+
+# Create a new task
+composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"cloud-development\",\"Title\":\"New task\",\"Status\":\"pending\"}"
+
+# Update task status and solution
+composer script -- "_cloudia/tasks/update?id=4910294454763520&json={\"Status\":\"closed\",\"Open\":false,\"Solution\":\"<p>Implementation complete</p>\"}"
+```
+
+> **Note**: Use `_cloudia/projects` for **bulk operations** (backup entire project with all milestones and tasks). Use `_cloudia/tasks` for **individual task operations** (faster, no file manipulation needed).
+
+See the [Tasks CRUD Script](#tasks-crud-script) section below for complete documentation.
+
 ### ⚠️ CRITICAL: Project Operations - Use _cloudia/projects ONLY
 
 **DO NOT use external MCP tools for project/task operations.** Always use the `_cloudia/projects` scripts for:
@@ -1069,6 +1111,7 @@ The `_cloudia/tasks.php` script provides **full CRUD functionality** for tasks: 
 | `/today` | List tasks active for today (DateInit <= today) |
 | `/sprint` | List tasks in the current active sprint |
 | `/project?id=KEY` | List all tasks for a specific project |
+| `/milestone?id=KEYID` | List all tasks for a specific milestone |
 | `/person?email=EMAIL` | List tasks for a specific person |
 | `/get?id=TASK_KEYID` | Get detailed information about a specific task (includes raw JSON) |
 | `/insert?json={...}` | **CREATE** a new task from JSON |
@@ -1109,16 +1152,38 @@ Updates an existing task by KeyId.
 - `id` parameter - Task KeyId
 - `json` parameter - Fields to update (only include fields that should change)
 
+#### Simple Updates (inline JSON)
+
+For simple updates without HTML content:
+
 ```bash
 # Update task status
 composer script -- "_cloudia/tasks/update?id=5734953457745920&json={\"Status\":\"closed\",\"Open\":false}"
 
 # Update task title and priority
 composer script -- "_cloudia/tasks/update?id=5734953457745920&json={\"Title\":\"Updated Title\",\"Priority\":\"high\"}"
-
-# Update from stdin (useful for complex updates)
-echo '{"Status":"in-qa","Solution":"<p>Implementation complete</p>"}' | composer script -- "_cloudia/tasks/update?id=5734953457745920"
 ```
+
+#### ⚠️ Complex Updates with HTML (RECOMMENDED METHOD)
+
+**When updating fields with HTML content (Solution, Description), use stdin with the PHP script directly.** The `composer script` approach with inline JSON fails due to shell escaping issues.
+
+```bash
+# Write JSON to temp file and pipe via stdin
+echo '{"Status":"closed","Open":false,"Solution":"<p><strong>Solution:</strong></p><ul><li>Change 1</li><li>Change 2</li></ul>"}' > /tmp/task_update.json && php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/tasks/update?id=5734953457745920" < /tmp/task_update.json
+```
+
+**Complete example - closing a task with solution:**
+
+```bash
+echo '{"Status":"closed","Open":false,"Solution":"<p><strong>Solución implementada:</strong></p><h4>Cambios realizados:</h4><ul><li>Añadido método searchInDevGroups()</li><li>Integrado en searchInDev()</li></ul><h4>Archivos modificados:</h4><ul><li>class/CloudPlatform.php</li></ul><h4>Commit:</h4><p>47dd5311b</p>"}' > /tmp/task_update.json && php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/tasks/update?id=6365996002050048" < /tmp/task_update.json
+```
+
+**Why this method works:**
+1. JSON with HTML contains quotes, `<`, `>` that break shell parsing
+2. Writing to a file preserves the exact JSON structure
+3. Piping via stdin to the PHP script directly bypasses composer's argument handling
+4. The script reads stdin when no `json` parameter is provided
 
 ### Query Commands
 
@@ -1146,6 +1211,9 @@ composer script -- "_cloudia/tasks/sprint"
 
 # List tasks for a specific project
 composer script -- "_cloudia/tasks/project?id=cloud-development"
+
+# List tasks for a specific milestone
+composer script -- "_cloudia/tasks/milestone?id=5734953457745920"
 
 # List tasks for a specific person
 composer script -- "_cloudia/tasks/person?email=user@example.com"
@@ -1213,6 +1281,8 @@ The `_cloudia/activity.php` script tracks and displays user activity including *
 | `/summary?from=DATE&to=DATE` | Show activity summary for date range |
 | `/all` | List all activity (events + inputs) combined by date |
 | `/all?from=DATE&to=DATE` | Combined activity in date range |
+| `/report-input` | **Create** a new activity input (time tracking) |
+| `/report-event` | **Create** a new event (calendar/CRM) |
 
 ### Time Bounds
 
@@ -1247,6 +1317,91 @@ composer script -- "_cloudia/activity/summary"
 # Show combined events and inputs
 composer script -- "_cloudia/activity/all"
 composer script -- "_cloudia/activity/all?from=2025-01-01&to=2025-01-31"
+```
+
+### 🔴 MANDATORY: Reporting Activity (Time Tracking)
+
+To report hours worked on a task, milestone, project, or incidence, use `_cloudia/activity/report-input`. This is the **ONLY** way to log time entries programmatically.
+
+**Required Fields:**
+- `TimeSpent` (number > 0) - Hours worked (**NOT "Hours"**)
+- `Title` (string) - Short title for the activity entry
+- At least ONE association: `TaskId`, `MilestoneId`, `ProjectId`, or `IncidenceId`
+
+**Optional Fields:**
+- `PlayerId` - User email (defaults to current authenticated user)
+- `DateInput` - Date/time of the work (defaults to now - TimeSpent hours)
+- `Description` - Detailed description of work performed
+
+**Usage via stdin (recommended for complex JSON):**
+```bash
+# Report 2 hours on a task
+echo '{"TimeSpent":2,"Title":"Development work","TaskId":"123456","ProjectId":"my-project"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-input"
+
+# Report with specific date/time and description
+echo '{
+  "TimeSpent": 4,
+  "Title": "Sprint planning meeting",
+  "TaskId": "123456",
+  "ProjectId": "my-project",
+  "DateInput": "2026-02-05 09:00:00",
+  "Description": "Planning session with the team for Q1 deliverables"
+}' | php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-input"
+
+# Report on a milestone (without specific task)
+echo '{"TimeSpent":0.5,"Title":"Milestone review","MilestoneId":"9876543","ProjectId":"my-project"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-input"
+```
+
+**Complete Example - Report 4h meeting on Thursday at 13:30:**
+```bash
+echo '{
+  "TimeSpent": 4,
+  "Title": "Reunión estrategia comercial 2026",
+  "TaskId": "6519032725897216",
+  "ProjectId": "cfw-sales-and-marketing",
+  "PlayerId": "am@cloudframework.io",
+  "DateInput": "2026-02-05 13:30:00",
+  "Description": "Reunión con John Lorenzo y Alaska Capel para planificar la estrategia comercial"
+}' | php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-input"
+```
+
+**Response on success:**
+```
+Activity input created successfully!
+----------------------------------------------------------------------------------------------------
+ - KeyId: 6116810092445696
+ - Title: Reunión estrategia comercial 2026
+ - TimeSpent: 4
+ - Date: 2026-02-05 13:30:00
+ - TaskId: 6519032725897216
+ - ProjectId: cfw-sales-and-marketing
+```
+
+**⚠️ Common Mistakes:**
+- Using `Hours` instead of `TimeSpent` → Field is ignored, TimeSpent=0
+- Missing `Title` → Error: "Missing required field: Title"
+- TimeSpent <= 0 → Error: "TimeSpent must be a number greater than 0"
+
+### Reporting Events (Calendar/CRM)
+
+To create calendar events or CRM activities, use `_cloudia/activity/report-event`.
+
+**Required Fields:**
+- `Title` (string) - Event title
+
+**Optional Fields:**
+- `ProjectId`, `TaskId`, `MilestoneId`, `ProposalId` - Associations
+- `DateTimeInit`, `DateTimeEnd` - Event start/end times
+- `Type` - Event type (meeting, call, email, etc.)
+- `Location` - Event location
+- `Description` - Event description
+
+**Usage:**
+```bash
+echo '{"Title":"Sprint Review Meeting","ProjectId":"my-project","Type":"meeting","DateTimeInit":"2026-02-07 10:00:00","DateTimeEnd":"2026-02-07 11:00:00"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-event"
 ```
 
 ### Output Format
