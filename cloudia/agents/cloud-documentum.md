@@ -63,12 +63,28 @@ CLOUD Documentum is the documentation management system for:
 - **Libraries** (classes, functions, modules)
 - **Processes** and SubProcesses
 - **Checks** (tests, objectives, specifications)
-- **WebApps** and their Modules
+- **WebApps** (also called **"Unidades de Desarrollo"** in the UI) and their Modules
 - **Resources** (infrastructure resources)
 - **WebPages** (ECM content pages)
 - **Courses** (CLOUD Academy)
 - **Menu Modules** (navigation configuration)
 - **Projects** and Tasks
+
+### Terminology Note: WebApp = Unidad de Desarrollo
+
+In CLOUD Documentum, the terms **"WebApp"** and **"Unidad de Desarrollo"** (Development Unit) are **synonyms**:
+
+| Context | Term Used |
+|---------|-----------|
+| Technical/API/CFO | `WebApp`, `CloudFrameWorkDevDocumentationForWebApps` |
+| User Interface (UI) | "Unidad de Desarrollo", "Unidades de Desarrollo" |
+| Documentation | Both terms interchangeably |
+
+**CFO Mapping:**
+- **Unidad de Desarrollo** (singular) → `CloudFrameWorkDevDocumentationForWebApps` (WebApp record)
+- **Módulo de Unidad** → `CloudFrameWorkDevDocumentationForWebAppsModules` (WebApp Module record)
+
+When users refer to "unidades de desarrollo", they mean WebApps. When creating or querying documentation, use the technical CFO names.
 
 ## Critical Rules
 
@@ -499,7 +515,46 @@ composer script -- "_cloudia/devgroups/update-from-backup?id=/cf/products/cloud-
 | `SourceCode` | string | Git URL |
 | `CFOs` | list | Related CFOs |
 | `Libraries` | list | Used libraries |
+| `Tags` | list | **MANDATORY** - Route-based tags for searchability |
 | `JSONDATA` | json | Config (testurl, headers, params) |
+
+### 🔴 MANDATORY: Tags Generation for APIs
+
+**When documenting APIs, the `Tags` field MUST contain route-based tags following this pattern:**
+
+For an API with route `/cloud-solutions/agents/cloudia`, generate tags by progressively removing leading segments:
+
+| Tag | Description |
+|-----|-------------|
+| `/cloud-solutions/agents/cloudia` | Full route |
+| `/agents/cloudia` | Without first segment |
+| `/cloudia` | Only last segment |
+
+**Algorithm:**
+```
+route = "/cloud-solutions/agents/cloudia"
+segments = route.split("/").filter(Boolean)  // ["cloud-solutions", "agents", "cloudia"]
+tags = []
+for i = 0 to segments.length-1:
+    tags.push("/" + segments.slice(i).join("/"))
+// Result: ["/cloud-solutions/agents/cloudia", "/agents/cloudia", "/cloudia"]
+```
+
+**Example Tags array:**
+```json
+{
+    "Tags": [
+        "/cloud-solutions/agents/cloudia",
+        "/agents/cloudia",
+        "/cloudia"
+    ]
+}
+```
+
+**Why this matters:**
+- Enables search by any segment of the route
+- Users can find APIs using partial paths
+- Consistent discoverability across all APIs
 
 ### CloudFrameWorkDevDocumentationForAPIEndPoints Structure
 
