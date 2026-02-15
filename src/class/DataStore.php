@@ -211,6 +211,32 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
 
         /**
+         * Updates an existing entity in the datastore with the provided data.
+         *
+         * @param array $data The data to update the entity with, where each key corresponds to a field name.
+         * @param string $key The unique identifier of the entity to be updated.
+         * @return bool Returns false if an error occurs or if the entity is not found, otherwise returns true.
+         */
+        function update(array $data,string $key)
+        {
+            $entity = $this->fetchOneByKey($key);
+            if($this->error) return false;
+            if(!$entity) return $this->addError("Entity [{$key}] not found");
+
+            if($data_key = ($data['KeyName']??($data['KeyId']??null))) {
+                if($data_key!= $key) return $this->addError("The key [{$data_key}] does not match with the entity key [{$key}]");
+            }
+            if(($data['KeyName']??null) && ($data['KeyId']??null)) {
+               return $this->addError("data conflict. It has KeyName and KeyId. Only one is allowed");
+            }
+
+            foreach ($data as $keyField=>$keyValue) {
+                $entity[$keyField] = $keyValue;
+            }
+            $this->createEntities($entity);
+        }
+
+        /**
          * Creates one or multiple entities in the datastore using the provided data.
          *
          * @param array $data The data to create entities, must be an array or multidimensional array containing the entity data.
