@@ -522,6 +522,7 @@ class WorkFlows
                 //endregion
 
                 //region IF $result['success'] CREATE CloudFrameWorkEmails with each $result['result']
+                $dsEmail = null;
                 if($result && ($result['success']??null) && is_array($result['result']??null)) {
                     foreach ($result['result'] as $i => $item) {
                         $item = (array)$item;
