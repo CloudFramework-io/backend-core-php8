@@ -1231,6 +1231,27 @@ class Script extends CoreScripts
         if (!$remote_task) {
             return $this->addError("Task [{$task_id}] not found in remote platform");
         }
+
+        // Check if remote task is more recent than local task
+        $local_date_updating = $local_task['DateUpdating'] ?? null;
+        $remote_date_updating = $remote_task['DateUpdating'] ?? null;
+
+        if ($local_date_updating && $remote_date_updating) {
+            $local_timestamp = strtotime($local_date_updating);
+            $remote_timestamp = strtotime($remote_date_updating);
+
+            if ($remote_timestamp > $local_timestamp) {
+                $this->sendTerminal("");
+                $this->sendTerminal(" !! ERROR: Remote task is more recent than local file");
+                $this->sendTerminal("");
+                $this->sendTerminal("    Local DateUpdating:  {$local_date_updating}");
+                $this->sendTerminal("    Remote DateUpdating: {$remote_date_updating}");
+                $this->sendTerminal("");
+                $this->sendTerminal(" → Run 'composer script -- \"_cloudia/tasks/get?id={$task_id}\"' to refresh local data");
+                $this->sendTerminal("");
+                return $this->addError("Remote task has been updated after your local copy. Please refresh local data first with: _cloudia/tasks/get?id={$task_id}");
+            }
+        }
         //endregion
 
         //region FETCH remote checks and ANALYZE differences
