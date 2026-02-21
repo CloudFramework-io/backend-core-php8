@@ -901,6 +901,45 @@ class Script extends CoreScripts
         $this->sendTerminal(" - Checks in file: " . count($local_checks));
         //endregion
 
+        //region VALIDATE JSON routes vs CHECK routes
+        $json_field = $local_task['JSON'] ?? [];
+        if (!empty($json_field) || !empty($local_checks)) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" - Validating JSON routes with CHECK routes...");
+
+            $validation = $this->validateJSONRoutesWithChecks($json_field, $local_checks, $task_id);
+
+            // Show warnings (JSON routes without matching checks)
+            foreach ($validation['warnings'] as $warning) {
+                $this->sendTerminal("   ! WARNING: {$warning}");
+            }
+
+            // Show errors (CHECK routes without matching JSON routes)
+            foreach ($validation['errors'] as $error) {
+                $this->sendTerminal("   # ERROR: {$error}");
+            }
+
+            if (!$validation['valid']) {
+                $this->sendTerminal("");
+                $this->sendTerminal(" !! VALIDATION FAILED: Each CHECK's Route must have a corresponding entry in the JSON field.");
+                $this->sendTerminal("    The JSON field should have leaf nodes with 'route' attributes matching CHECK Routes.");
+                $this->sendTerminal("");
+                $this->sendTerminal(" Expected JSON structure:");
+                $this->sendTerminal('    {');
+                $this->sendTerminal('        "Category Name": {');
+                $this->sendTerminal('            "Check Title": {"route": "/check-route-value"}');
+                $this->sendTerminal('        }');
+                $this->sendTerminal('    }');
+                $this->sendTerminal("");
+                return $this->addError("JSON/CHECK route validation failed. Fix the JSON field to include routes for all CHECKs.");
+            }
+
+            if (empty($validation['warnings']) && empty($validation['errors'])) {
+                $this->sendTerminal("   + Routes validated successfully");
+            }
+        }
+        //endregion
+
         //region FETCH remote task for comparison
         $this->sendTerminal("");
         $this->sendTerminal(" - Fetching remote data for comparison...");
@@ -1857,6 +1896,104 @@ class Script extends CoreScripts
         // User info
         $display_email = $person_email ?? $this->user_email;
         $this->sendTerminal("User: {$display_email}");
+    }
+
+    /**
+     * Extract all route values from a JSON structure
+     *
+     * Recursively traverses the JSON structure and extracts the "route" values
+     * from leaf nodes. A leaf node is an object that contains a "route" key.
+     *
+     * Expected structure:
+     * {
+     *     "Category": {
+     *         "Check Title": {"route": "/check-route"}
+     *     }
+     * }
+     *
+     * @param mixed $json The JSON data (array or object)
+     * @param array &$routes Array to collect found routes
+     * @return array Array of route strings found
+     */
+    private function extractRoutesFromJSON($json, array &$routes = []): array
+    {
+        if (!is_array($json)) {
+            return $routes;
+        }
+
+        // Check if this node has a "route" key (leaf node)
+        if (isset($json['route']) && is_string($json['route'])) {
+            $routes[] = $json['route'];
+            return $routes;
+        }
+
+        // Recursively process child nodes
+        foreach ($json as $key => $value) {
+            if (is_array($value)) {
+                $this->extractRoutesFromJSON($value, $routes);
+            }
+        }
+
+        return $routes;
+    }
+
+    /**
+     * Validate that JSON routes match CHECK routes
+     *
+     * Verifies that:
+     * 1. All routes in JSON field exist in the checks (warning if not)
+     * 2. All routes in checks exist in JSON field (warning if not)
+     *
+     * @param array $jsonField The JSON field from the task
+     * @param array $checks The checks array
+     * @param string $taskId The task KeyId for logging
+     * @return array ['valid' => bool, 'errors' => array, 'warnings' => array]
+     */
+    private function validateJSONRoutesWithChecks(array $jsonField, array $checks, string $taskId): array
+    {
+        $result = [
+            'valid' => true,
+            'errors' => [],
+            'warnings' => []
+        ];
+
+        // Extract routes from JSON
+        $jsonRoutes = [];
+        $this->extractRoutesFromJSON($jsonField, $jsonRoutes);
+        $jsonRoutes = array_unique($jsonRoutes);
+
+        // Extract routes from checks
+        $checkRoutes = [];
+        foreach ($checks as $check) {
+            if (isset($check['Route']) && is_string($check['Route'])) {
+                $checkRoutes[] = $check['Route'];
+            }
+        }
+        $checkRoutes = array_unique($checkRoutes);
+
+        // If no JSON routes and no checks, that's valid
+        if (empty($jsonRoutes) && empty($checkRoutes)) {
+            return $result;
+        }
+
+        // Find routes in JSON but not in checks
+        $jsonOnlyRoutes = array_diff($jsonRoutes, $checkRoutes);
+        if (!empty($jsonOnlyRoutes)) {
+            foreach ($jsonOnlyRoutes as $route) {
+                $result['warnings'][] = "Route '{$route}' in JSON but no CHECK with this Route";
+            }
+        }
+
+        // Find routes in checks but not in JSON
+        $checkOnlyRoutes = array_diff($checkRoutes, $jsonRoutes);
+        if (!empty($checkOnlyRoutes)) {
+            foreach ($checkOnlyRoutes as $route) {
+                $result['errors'][] = "CHECK with Route '{$route}' has no matching route in JSON field";
+            }
+            $result['valid'] = false;
+        }
+
+        return $result;
     }
 
     /**

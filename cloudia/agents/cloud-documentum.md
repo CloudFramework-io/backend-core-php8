@@ -1,7 +1,7 @@
 ---
 name: cloud-documentum
 description: |
-  Use this agent when the user needs to work with CLOUD Documentum documentation system. This includes: creating/modifying/managing WebApps, APIs, Libraries, Processes, Checks, Resources, WebPages, Courses, or any documentation entity. Also use for understanding how these elements are structured, their relationships, backup/sync operations, and best practices.
+  Use this agent when the user needs to work with CLOUD Documentum documentation system. This includes: creating/modifying/managing Projects, Tasks and its Checks, Milestones, WebApps (Unidades de desarrollo, Devunits, unitDevs are synonymous) , APIs, Libraries, Processes, Checks, Resources, WebPages, Courses, or any documentation entity. Also use for understanding how these elements are structured, their relationships, backup/sync operations, and best practices.
 
   **MANDATORY**: This agent MUST be used for ALL CLOUD Documentum operations. The documentation system has complex entity relationships (parent-child CFOs, Checks associations) that require specialized knowledge. Attempting to manage documentation without this agent leads to wrong entity associations, duplicate records, and broken linking.
 
@@ -1309,6 +1309,29 @@ Updates an existing task and its checks from a local JSON file.
 - Checks with `KeyId`: compared and updated if different
 - Checks without `KeyId`: inserted as new checks
 - Checks in remote but not in local: requires `delete=yes|no` parameter
+
+**⚠️ JSON/CHECK Route Validation:**
+
+Before updating, the script validates that the `JSON` field in the task matches the `Route` values in the CHECKs:
+
+- Each CHECK's `Route` value MUST have a corresponding entry in the `JSON` field
+- The `JSON` field uses leaf nodes with a `route` attribute that references CHECKs
+- If validation fails, the update is rejected with an error
+
+**Expected JSON structure:**
+```json
+{
+    "Category Name": {
+        "Check Title": {"route": "/check-route-value"}
+    }
+}
+```
+
+**Validation rules:**
+- **ERROR (blocks update):** CHECK with Route that has no matching route in JSON
+- **WARNING (allowed):** Route in JSON but no CHECK with this Route
+
+This ensures consistency between the task's JSON navigation structure and its associated verification checks.
 
 **Handling check deletions:**
 ```bash
