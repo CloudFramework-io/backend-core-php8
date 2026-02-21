@@ -800,18 +800,13 @@ When creating Checks, these fields are **mandatory**:
 
 ### Valid CHECK Status Values
 
-| Status | Value | Phase |
-|--------|-------|-------|
-| `backlog` | Backlog | Planning |
-| `recurrent` | Recurrent | Planning |
-| `new` | New Task | Planning |
-| `pending` | Pending | Planning |
-| `in-progress` | In Progress | Execution |
-| `in-qa` | In QA | Execution |
-| `closing` | Closing Required | Execution |
-| `closed` | Closed | Execution |
-| `canceled` | Canceled | Execution |
-| `blocked` | Blocked | Execution |
+| Status | Value | Resultado Required |
+|--------|-------|-------------------|
+| `pending` | Pendiente de definir | No |
+| `in-progress` | En curso | No |
+| `blocked` | Bloqueado | **Yes** |
+| `in-qa` | En QA | **Yes** |
+| `ok` | Finalizado (OK) | **Yes** |
 
 ### Objetivo vs Resultado: Planning and Execution Phases
 
@@ -820,23 +815,25 @@ CHECKs have two key fields that reflect the **planning** and **execution** phase
 | Field | Phase | Statuses | Requirement |
 |-------|-------|----------|-------------|
 | `Objetivo` | **Planning** | All statuses | Recommended (WARNING if empty) |
-| `Resultado` | **Execution** | `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked` | **REQUIRED** (ERROR if empty) |
+| `Resultado` | **Execution** | `blocked`, `in-qa`, `ok` | **REQUIRED** (ERROR if empty) |
 
-**Planning Statuses** (Resultado optional): `backlog`, `recurrent`, `new`, `pending`
+**Planning/Progress Statuses** (Resultado optional): `pending`, `in-progress`
 
-**Execution Statuses** (Resultado REQUIRED): `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked`
+**Completion Statuses** (Resultado REQUIRED): `blocked`, `in-qa`, `ok`
 
 **Workflow:**
 
-1. **Planning Phase** (Status: `backlog`, `recurrent`, `new`, `pending`):
+1. **Planning Phase** (Status: `pending`):
    - Define `Objetivo`: Clear description of what must be accomplished
    - `Resultado` can be empty or contain initial notes
    - Define estimated `DateDueDate`
 
-2. **Execution Phase** (Status: `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked`):
+2. **Progress Phase** (Status: `in-progress`):
+   - Work is ongoing, `Resultado` is optional but can document partial progress
+
+3. **Completion Phase** (Status: `blocked`, `in-qa`, `ok`):
    - **`Resultado` is REQUIRED** - document what was implemented and the outcome
-   - Update `Status` to reflect current progress
-   - Set `DateDueDate` to today when completing (`closed`)
+   - Set `DateDueDate` to today when completing (`ok`)
 
 **Example:**
 ```json
@@ -1455,13 +1452,17 @@ Each CHECK in the `CloudFrameWorkDevDocumentationForProcessTests` array must hav
 - If `CFOField` is provided, it must be `JSON`
 - These fields will be set automatically during insertion if not provided
 
-****Resultado is REQUIRED when status is an execution status.
+****Resultado is REQUIRED when status is `blocked`, `in-qa`, or `ok`.
 
 **Valid CHECK Status values:**
 
-| Planning (Resultado optional) | Execution (Resultado REQUIRED) |
-|------------------------------|-------------------------------|
-| `backlog`, `recurrent`, `new`, `pending` | `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked` |
+| Status | Value | Resultado Required |
+|--------|-------|-------------------|
+| `pending` | Pendiente de definir | No |
+| `in-progress` | En curso | No |
+| `blocked` | Bloqueado | **Yes** |
+| `in-qa` | En QA | **Yes** |
+| `ok` | Finalizado (OK) | **Yes** |
 
 **Handling check deletions:**
 ```bash

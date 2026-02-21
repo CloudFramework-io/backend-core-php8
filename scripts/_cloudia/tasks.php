@@ -2357,8 +2357,13 @@ class Script extends CoreScripts
             }
         }
 
-        // Valid Status values for checks (complete list)
-        $validStatuses = ['backlog', 'recurrent', 'new', 'pending', 'in-progress', 'in-qa', 'closing', 'closed', 'canceled', 'blocked'];
+        // Valid Status values for checks
+        // pending = Pendiente de definir
+        // in-progress = En curso
+        // blocked = Bloqueado
+        // in-qa = En QA
+        // ok = Finalizado (OK)
+        $validStatuses = ['pending', 'in-progress', 'blocked', 'in-qa', 'ok'];
         if (isset($check['Status']) && !in_array($check['Status'], $validStatuses)) {
             $result['errors'][] = "{$checkLabel}: Status '{$check['Status']}' is not valid. Allowed: " . implode(', ', $validStatuses);
             $result['valid'] = false;
@@ -2369,14 +2374,14 @@ class Script extends CoreScripts
             $result['warnings'][] = "{$checkLabel}: 'Objetivo' field is empty - should define what needs to be achieved (planning phase)";
         }
 
-        // Resultado field validation (EXECUTION phase)
-        // Planning statuses: backlog, recurrent, new, pending - Resultado is optional
-        // Execution statuses: in-progress, in-qa, closing, closed, canceled, blocked - Resultado is REQUIRED
-        $planningStatuses = ['backlog', 'recurrent', 'new', 'pending'];
-        if (isset($check['Status']) && !in_array($check['Status'], $planningStatuses)) {
-            // Status is NOT a planning status, so Resultado is REQUIRED
+        // Resultado field validation
+        // Resultado is REQUIRED when status is: blocked, in-qa, ok
+        // Resultado is optional when status is: pending, in-progress
+        $resultadoRequiredStatuses = ['blocked', 'in-qa', 'ok'];
+        if (isset($check['Status']) && in_array($check['Status'], $resultadoRequiredStatuses)) {
+            // Status requires Resultado
             if (!isset($check['Resultado']) || (is_string($check['Resultado']) && trim(strip_tags($check['Resultado'])) === '')) {
-                $result['errors'][] = "{$checkLabel}: 'Resultado' field is REQUIRED when status is '{$check['Status']}' (execution phase)";
+                $result['errors'][] = "{$checkLabel}: 'Resultado' field is REQUIRED when status is '{$check['Status']}'";
                 $result['valid'] = false;
             }
         }
