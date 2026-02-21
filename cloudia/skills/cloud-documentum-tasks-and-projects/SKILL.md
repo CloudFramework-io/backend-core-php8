@@ -338,7 +338,7 @@ echo '{"TimeSpent":2,"Title":"Development work","TaskId":"TASK_ID"}' | \
 | List my tasks | `composer script -- "_cloudia/tasks/list"` |
 | View project tasks | `composer script -- "_cloudia/tasks/project?id=PROJECT"` |
 | Create task | `composer script -- "_cloudia/tasks/insert?title=X&project=X&milestone=X"` |
-| Show task details | `composer script -- "_cloudia/tasks/show?id=TASK_ID"` |
+| Show task details (with inputs, events, TimeSpent) | `composer script -- "_cloudia/tasks/show?id=TASK_ID"` |
 | Export task for editing | `composer script -- "_cloudia/tasks/get?id=TASK_ID"` |
 | Update task | `composer script -- "_cloudia/tasks/update?id=TASK_ID"` |
 | View activity | `composer script -- "_cloudia/activity/summary"` |

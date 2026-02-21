@@ -1305,7 +1305,7 @@ The `_cloudia/tasks.php` script provides **full CRUD functionality** for tasks: 
 | `/project?id=KEY` | List all tasks for a specific project (with hours report) |
 | `/milestone?id=KEYID` | List all tasks for a specific milestone |
 | `/person?email=EMAIL` | List tasks for a specific person |
-| `/show?id=TASK_KEYID` | Show detailed task info with checks and relations |
+| `/show?id=TASK_KEYID` | Show detailed task info with checks, activity inputs, events, and TimeSpent summary |
 | `/get?id=TASK_KEYID` | Export task + checks JSON to local file for editing |
 | `/insert?title=X&project=X&milestone=X` | **CREATE** a new task |
 | `/update?id=TASK_KEYID` | **UPDATE** task + checks from local file |

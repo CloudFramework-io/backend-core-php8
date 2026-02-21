@@ -817,8 +817,158 @@ class Script extends CoreScripts
                 }
             }
         }
-        $this->sendTerminal(str_repeat('=', 100));
         //endregion
+
+        //region FETCH and DISPLAY activity inputs (time entries)
+        $this->sendTerminal("");
+        $this->sendTerminal(" Activity Inputs (Time Entries):");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $inputs_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs?_raw&_timezone=UTC",
+            [
+                'filter_TaskId' => $task_id,
+                '_order' => '-DateInput',
+                'cfo_limit' => 50,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            $this->sendTerminal(" # Error fetching inputs: " . json_encode($this->core->request->errorMsg));
+        } else {
+            $inputs = $inputs_response['data'] ?? [];
+            $totalInputsHours = 0;
+
+            if (!$inputs) {
+                $this->sendTerminal(" No activity inputs found for this task");
+            } else {
+                $this->sendTerminal(" Found " . count($inputs) . " input(s):");
+                $this->sendTerminal("");
+
+                foreach ($inputs as $index => $input) {
+                    $inputKeyId = $input['KeyId'] ?? 'N/A';
+                    $inputTitle = $input['Title'] ?? 'Untitled';
+                    $inputTimeSpent = floatval($input['TimeSpent'] ?? 0);
+                    $inputDate = $input['DateInput'] ?? 'N/A';
+                    $inputPlayer = $input['PlayerId'] ?? $input['UserEmail'] ?? 'N/A';
+
+                    $totalInputsHours += $inputTimeSpent;
+
+                    $this->sendTerminal(sprintf(" [%d] %s", $index + 1, $inputTitle));
+                    $this->sendTerminal(sprintf("     KeyId: %s | TimeSpent: %.2fh | Date: %s | User: %s",
+                        $inputKeyId, $inputTimeSpent, $inputDate, $inputPlayer));
+
+                    // Show description if available
+                    if ($inputDescription = $input['Description'] ?? null) {
+                        $cleanDesc = strip_tags($inputDescription);
+                        $cleanDesc = html_entity_decode($cleanDesc);
+                        $cleanDesc = preg_replace('/\s+/', ' ', trim($cleanDesc));
+                        if (strlen($cleanDesc) > 150) {
+                            $cleanDesc = substr($cleanDesc, 0, 147) . '...';
+                        }
+                        $this->sendTerminal("     Description: " . $cleanDesc);
+                    }
+
+                    $this->sendTerminal("");
+                }
+
+                $this->sendTerminal(sprintf(" TOTAL from Inputs: %.2f hours", $totalInputsHours));
+            }
+        }
+        //endregion
+
+        //region FETCH and DISPLAY events
+        $this->sendTerminal("");
+        $this->sendTerminal(" Events:");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $events_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents?_raw&_timezone=UTC",
+            [
+                'filter_TaskId' => $task_id,
+                '_order' => '-DateInserting',
+                'cfo_limit' => 50,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            $this->sendTerminal(" # Error fetching events: " . json_encode($this->core->request->errorMsg));
+        } else {
+            $events = $events_response['data'] ?? [];
+            $totalEventsHours = 0;
+
+            if (!$events) {
+                $this->sendTerminal(" No events found for this task");
+            } else {
+                $this->sendTerminal(" Found " . count($events) . " event(s):");
+                $this->sendTerminal("");
+
+                foreach ($events as $index => $event) {
+                    $eventKeyId = $event['KeyId'] ?? 'N/A';
+                    $eventTitle = $event['Title'] ?? 'Untitled';
+                    $eventTimeSpent = floatval($event['TimeSpent'] ?? 0);
+                    $eventDate = $event['DateInserting'] ?? $event['DateTimeInit'] ?? 'N/A';
+                    $eventType = $event['Type'] ?? 'N/A';
+                    $eventSource = $event['Source'] ?? '';
+                    $eventPlayer = $event['SourcePlayerId'] ?? $event['UserEmail'] ?? 'N/A';
+
+                    $totalEventsHours += $eventTimeSpent;
+
+                    $this->sendTerminal(sprintf(" [%d] %s", $index + 1, $eventTitle));
+                    $this->sendTerminal(sprintf("     KeyId: %s | TimeSpent: %.2fh | Date: %s | Type: %s",
+                        $eventKeyId, $eventTimeSpent, $eventDate, $eventType));
+                    $this->sendTerminal(sprintf("     User: %s%s",
+                        $eventPlayer, $eventSource ? " | Source: {$eventSource}" : ""));
+
+                    // Show text content if available
+                    if ($eventContent = $event['TextContent'] ?? null) {
+                        $cleanContent = strip_tags($eventContent);
+                        $cleanContent = html_entity_decode($cleanContent);
+                        $cleanContent = preg_replace('/\s+/', ' ', trim($cleanContent));
+                        if (strlen($cleanContent) > 150) {
+                            $cleanContent = substr($cleanContent, 0, 147) . '...';
+                        }
+                        $this->sendTerminal("     Content: " . $cleanContent);
+                    }
+
+                    $this->sendTerminal("");
+                }
+
+                $this->sendTerminal(sprintf(" TOTAL from Events: %.2f hours", $totalEventsHours));
+            }
+        }
+        //endregion
+
+        //region DISPLAY TimeSpent summary
+        $totalTimeSpent = ($totalInputsHours ?? 0) + ($totalEventsHours ?? 0);
+        $taskTimeSpent = floatval($task['TimeSpent'] ?? 0);
+        $taskTimeEstimated = floatval($task['TimeEstimated'] ?? 0);
+
+        $this->sendTerminal("");
+        $this->sendTerminal(" TimeSpent Summary:");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(sprintf(" Inputs:    %.2f hours", $totalInputsHours ?? 0));
+        $this->sendTerminal(sprintf(" Events:    %.2f hours", $totalEventsHours ?? 0));
+        $this->sendTerminal(sprintf(" CALCULATED: %.2f hours (Inputs + Events)", $totalTimeSpent));
+        $this->sendTerminal(sprintf(" STORED:     %.2f hours (Task.TimeSpent field)", $taskTimeSpent));
+        if ($taskTimeEstimated > 0) {
+            $percentUsed = ($totalTimeSpent / $taskTimeEstimated) * 100;
+            $this->sendTerminal(sprintf(" ESTIMATED:  %.2f hours (%.1f%% used)", $taskTimeEstimated, $percentUsed));
+        }
+        if (abs($totalTimeSpent - $taskTimeSpent) > 0.01) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" ! NOTE: Calculated TimeSpent differs from stored value.");
+            $this->sendTerminal("   Run '_cloudia/tasks/update?id={$task_id}' to recalculate and sync.");
+        }
+        //endregion
+
+        $this->sendTerminal(str_repeat('=', 100));
 
         return true;
     }
