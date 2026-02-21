@@ -1542,6 +1542,9 @@ class Script extends CoreScripts
                     });
                 }
 
+                // Remove TimeSpent from refreshed task (it's a calculated field)
+                unset($refreshed_task['TimeSpent']);
+
                 // Build and save refreshed data
                 $refreshed_data = [
                     'CloudFrameWorkProjectsTasks' => $refreshed_task,
@@ -1713,6 +1716,9 @@ class Script extends CoreScripts
         //region SAVE task to local file
         $this->sendTerminal("");
         $this->sendTerminal(" - Saving to local file...");
+
+        // Remove TimeSpent from exported JSON (it's a calculated field)
+        unset($created_task['TimeSpent']);
 
         // Sort task keys
         ksort($created_task);
