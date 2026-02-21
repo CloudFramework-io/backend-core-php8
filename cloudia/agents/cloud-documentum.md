@@ -791,33 +791,52 @@ When creating Checks, these fields are **mandatory**:
 | `Title` | string | Yes | Check title |
 | `Description` | html | No | Detailed description |
 | `Objetivo` | html | **Yes** | **PLANNING**: What needs to be achieved (objective/acceptance criteria) |
-| `Resultado` | html | **Yes*** | **EXECUTION**: What was done and the outcome |
-| `Status` | enum | Yes | Check status (pending, in-progress, blocked, in-qa, ok) |
+| `Resultado` | html | **Yes*** | **EXECUTION**: What was done and the outcome (REQUIRED for execution statuses) |
+| `Status` | enum | Yes | Check status (see valid values below) |
 | `Owner` | string | Yes | Owner email |
 | `AssignedTo` | list | No | Assigned users |
 | `DateDueDate` | date | **Yes*** | Due date (see rule below) |
 | `JSON` | json | No | Test definitions |
 
+### Valid CHECK Status Values
+
+| Status | Value | Phase |
+|--------|-------|-------|
+| `backlog` | Backlog | Planning |
+| `recurrent` | Recurrent | Planning |
+| `new` | New Task | Planning |
+| `pending` | Pending | Planning |
+| `in-progress` | In Progress | Execution |
+| `in-qa` | In QA | Execution |
+| `closing` | Closing Required | Execution |
+| `closed` | Closed | Execution |
+| `canceled` | Canceled | Execution |
+| `blocked` | Blocked | Execution |
+
 ### Objetivo vs Resultado: Planning and Execution Phases
 
 CHECKs have two key fields that reflect the **planning** and **execution** phases:
 
-| Field | Phase | When to Fill | Content |
-|-------|-------|--------------|---------|
-| `Objetivo` | **Planning** | When creating the CHECK (status: `pending`) | What needs to be achieved, acceptance criteria, expected outcome |
-| `Resultado` | **Execution** | When working on the CHECK (status: `in-progress`, `in-qa`, `ok`) | What was actually done, implementation details, actual results |
+| Field | Phase | Statuses | Requirement |
+|-------|-------|----------|-------------|
+| `Objetivo` | **Planning** | All statuses | Recommended (WARNING if empty) |
+| `Resultado` | **Execution** | `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked` | **REQUIRED** (ERROR if empty) |
+
+**Planning Statuses** (Resultado optional): `backlog`, `recurrent`, `new`, `pending`
+
+**Execution Statuses** (Resultado REQUIRED): `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked`
 
 **Workflow:**
 
-1. **Planning Phase** (Status: `pending`):
+1. **Planning Phase** (Status: `backlog`, `recurrent`, `new`, `pending`):
    - Define `Objetivo`: Clear description of what must be accomplished
    - `Resultado` can be empty or contain initial notes
    - Define estimated `DateDueDate`
 
-2. **Execution Phase** (Status changes to `in-progress`, `in-qa`, or `ok`):
-   - Fill `Resultado` with what was implemented and the outcome
+2. **Execution Phase** (Status: `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked`):
+   - **`Resultado` is REQUIRED** - document what was implemented and the outcome
    - Update `Status` to reflect current progress
-   - Set `DateDueDate` to today when completing (`ok`)
+   - Set `DateDueDate` to today when completing (`closed`)
 
 **Example:**
 ```json
@@ -1390,20 +1409,26 @@ Each CHECK in the `CloudFrameWorkDevDocumentationForProcessTests` array must hav
 | Field | Required | Description |
 |-------|----------|-------------|
 | `Title` | **Yes** | Non-empty check title |
-| `Status` | **Yes** | Check status |
+| `Status` | **Yes** | Valid check status (see below) |
 | `Route` | **Yes** | Route matching JSON field |
 | `CFOEntity` | **Yes*** | Must be `CloudFrameWorkProjectsTasks` (ALWAYS this value) |
 | `CFOId` | **Yes*** | Must match task KeyId |
 | `CFOField` | **Yes*** | Must be `JSON` (ALWAYS this value) |
 | `Objetivo` | Recommended | **PLANNING**: What needs to be achieved (WARNING if empty) |
-| `Resultado` | Recommended** | **EXECUTION**: What was done and outcome (WARNING if empty when status is `in-progress`, `in-qa`, or `ok`) |
+| `Resultado` | **Required**** | **EXECUTION**: What was done and outcome (ERROR if empty for execution statuses) |
 
 *Required for existing checks (those with KeyId). For new checks (without KeyId):
 - If `CFOEntity` is provided, it must be `CloudFrameWorkProjectsTasks`
 - If `CFOField` is provided, it must be `JSON`
 - These fields will be set automatically during insertion if not provided
 
-**Valid CHECK Status values:** `pending`, `in-progress`, `ok`, `blocked`, `failed`
+****Resultado is REQUIRED when status is an execution status.
+
+**Valid CHECK Status values:**
+
+| Planning (Resultado optional) | Execution (Resultado REQUIRED) |
+|------------------------------|-------------------------------|
+| `backlog`, `recurrent`, `new`, `pending` | `in-progress`, `in-qa`, `closing`, `closed`, `canceled`, `blocked` |
 
 **Handling check deletions:**
 ```bash
