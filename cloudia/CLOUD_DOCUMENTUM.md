@@ -197,7 +197,7 @@ This separation ensures:
 | **APIs** | REST API documentation with endpoints |
 | **Libraries** | Code libraries and function documentation |
 | **Courses** | CLOUD Academy learning content |
-| **Activity** | Time tracking and event logging |
+| **Activity** | Time tracking and event logging (TimeSpent on tasks is calculated from activity) |
 
 ---
 
@@ -226,7 +226,7 @@ composer script -- "_cloudia/{module}/{action}?{params}"
 |--------|---------|
 | `_cloudia/projects` | Projects and milestones |
 | `_cloudia/tasks` | Task CRUD with checks |
-| `_cloudia/activity` | Time tracking and events |
+| `_cloudia/activity` | Time tracking and events (TimeSpent is calculated from Inputs + Events) |
 
 ---
 

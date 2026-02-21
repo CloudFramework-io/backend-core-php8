@@ -1402,6 +1402,29 @@ Before updating, the script validates that all required task fields are present:
 
 **Valid Priority values:** `very_high`, `high`, `medium`, `low`, `very_low`
 
+**🚫 TimeSpent is a CALCULATED Field:**
+
+The `TimeSpent` field in tasks is **automatically calculated** and MUST NOT be included in the JSON file:
+
+| Rule | Description |
+|------|-------------|
+| **Never in JSON** | TimeSpent is excluded from exported JSON files |
+| **ERROR if present** | If TimeSpent is found in local JSON during update, an ERROR is returned |
+| **Calculated from activity** | TimeSpent = sum of `TimeSpent` from Inputs + Events linked to the task |
+| **Auto-updated** | When updating a task, TimeSpent is calculated and sent to API automatically |
+
+**How TimeSpent is calculated:**
+```
+TimeSpent = CloudFrameWorkProjectsTasksInputs.TimeSpent (filter_TaskId)
+          + CloudFrameWorkCRMEvents.TimeSpent (filter_TaskId)
+```
+
+**To report time on a task, use `_cloudia/activity/report-input`:**
+```bash
+echo '{"TimeSpent":2,"Title":"Development work","TaskId":"123456"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-input"
+```
+
 **⚠️ CHECK Field Validation:**
 
 Each CHECK in the `CloudFrameWorkDevDocumentationForProcessTests` array must have:

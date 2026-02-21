@@ -299,6 +299,36 @@ composer script -- "_cloudia/tasks/delete?id=6789012345678901&delete_checks=yes&
 
 ---
 
+## Important Rules
+
+### TimeSpent is a CALCULATED Field
+
+**🚫 NEVER include `TimeSpent` in task JSON files.**
+
+The `TimeSpent` field is **automatically calculated** from activity inputs and events:
+
+| Rule | Description |
+|------|-------------|
+| **Excluded from export** | `_cloudia/tasks/get` removes TimeSpent from the JSON file |
+| **ERROR if present** | `_cloudia/tasks/update` returns ERROR if TimeSpent is in the JSON |
+| **Auto-calculated** | TimeSpent = sum of hours from Inputs + Events linked to the task |
+
+**Calculation:**
+```
+TimeSpent = CloudFrameWorkProjectsTasksInputs.TimeSpent (filter_TaskId)
+          + CloudFrameWorkCRMEvents.TimeSpent (filter_TaskId)
+```
+
+**To report time on a task, use Workflow 3: Report Hours on a Task (above)**
+
+Or directly:
+```bash
+echo '{"TimeSpent":2,"Title":"Development work","TaskId":"TASK_ID"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-input"
+```
+
+---
+
 ## Quick Reference
 
 ### Most Common Commands
