@@ -789,9 +789,8 @@ When creating Checks, these fields are **mandatory**:
 | `CFOId` | string | **Yes** | Parent record KeyName or KeyId |
 | `Route` | string | **Yes** | Reference path for JSON linking |
 | `Title` | string | Yes | Check title |
-| `Description` | html | No | Detailed description |
-| `Objetivo` | html | **Yes** | **PLANNING**: What needs to be achieved (objective/acceptance criteria) |
-| `Resultado` | html | **Yes*** | **EXECUTION**: What was done and the outcome (REQUIRED for execution statuses) |
+| `Description` | html | **Yes** | **PLANNING**: What needs to be achieved (objective/acceptance criteria) |
+| `Results` | html | **Yes*** | **EXECUTION**: What was done and the outcome (REQUIRED when status is `blocked`, `in-qa`, `ok`) |
 | `Status` | enum | Yes | Check status (see valid values below) |
 | `Owner` | string | Yes | Owner email |
 | `AssignedTo` | list | No | Assigned users |
@@ -800,47 +799,47 @@ When creating Checks, these fields are **mandatory**:
 
 ### Valid CHECK Status Values
 
-| Status | Value | Resultado Required |
-|--------|-------|-------------------|
+| Status | Value | Results Required |
+|--------|-------|-----------------|
 | `pending` | Pendiente de definir | No |
 | `in-progress` | En curso | No |
 | `blocked` | Bloqueado | **Yes** |
 | `in-qa` | En QA | **Yes** |
 | `ok` | Finalizado (OK) | **Yes** |
 
-### Objetivo vs Resultado: Planning and Execution Phases
+### Description vs Results: Planning and Execution Phases
 
 CHECKs have two key fields that reflect the **planning** and **execution** phases:
 
 | Field | Phase | Statuses | Requirement |
 |-------|-------|----------|-------------|
-| `Objetivo` | **Planning** | All statuses | Recommended (WARNING if empty) |
-| `Resultado` | **Execution** | `blocked`, `in-qa`, `ok` | **REQUIRED** (ERROR if empty) |
+| `Description` | **Planning** | All statuses | Recommended (WARNING if empty) |
+| `Results` | **Execution** | `blocked`, `in-qa`, `ok` | **REQUIRED** (ERROR if empty) |
 
-**Planning/Progress Statuses** (Resultado optional): `pending`, `in-progress`
+**Planning/Progress Statuses** (Results optional): `pending`, `in-progress`
 
-**Completion Statuses** (Resultado REQUIRED): `blocked`, `in-qa`, `ok`
+**Completion Statuses** (Results REQUIRED): `blocked`, `in-qa`, `ok`
 
 **Workflow:**
 
 1. **Planning Phase** (Status: `pending`):
-   - Define `Objetivo`: Clear description of what must be accomplished
-   - `Resultado` can be empty or contain initial notes
+   - Define `Description`: Clear description of what must be accomplished
+   - `Results` can be empty or contain initial notes
    - Define estimated `DateDueDate`
 
 2. **Progress Phase** (Status: `in-progress`):
-   - Work is ongoing, `Resultado` is optional but can document partial progress
+   - Work is ongoing, `Results` is optional but can document partial progress
 
 3. **Completion Phase** (Status: `blocked`, `in-qa`, `ok`):
-   - **`Resultado` is REQUIRED** - document what was implemented and the outcome
+   - **`Results` is REQUIRED** - document what was implemented and the outcome
    - Set `DateDueDate` to today when completing (`ok`)
 
 **Example:**
 ```json
 {
     "Title": "Implement user authentication",
-    "Objetivo": "<p>Create OAuth2 login with Google and GitHub providers. Users should be able to login/logout seamlessly.</p>",
-    "Resultado": "<p>Implemented OAuth2 flow using passport.js. Added Google and GitHub strategies. Session management with Redis.</p>",
+    "Description": "<p>Create OAuth2 login with Google and GitHub providers. Users should be able to login/logout seamlessly.</p>",
+    "Results": "<p>Implemented OAuth2 flow using passport.js. Added Google and GitHub strategies. Session management with Redis.</p>",
     "Status": "ok"
 }
 ```
@@ -1444,20 +1443,20 @@ Each CHECK in the `CloudFrameWorkDevDocumentationForProcessTests` array must hav
 | `CFOEntity` | **Yes*** | Must be `CloudFrameWorkProjectsTasks` (ALWAYS this value) |
 | `CFOId` | **Yes*** | Must match task KeyId |
 | `CFOField` | **Yes*** | Must be `JSON` (ALWAYS this value) |
-| `Objetivo` | Recommended | **PLANNING**: What needs to be achieved (WARNING if empty) |
-| `Resultado` | **Required**** | **EXECUTION**: What was done and outcome (ERROR if empty for execution statuses) |
+| `Description` | Recommended | **PLANNING**: What needs to be achieved (WARNING if empty) |
+| `Results` | **Required**** | **EXECUTION**: What was done and outcome (ERROR if empty for completion statuses) |
 
 *Required for existing checks (those with KeyId). For new checks (without KeyId):
 - If `CFOEntity` is provided, it must be `CloudFrameWorkProjectsTasks`
 - If `CFOField` is provided, it must be `JSON`
 - These fields will be set automatically during insertion if not provided
 
-****Resultado is REQUIRED when status is `blocked`, `in-qa`, or `ok`.
+****Results is REQUIRED when status is `blocked`, `in-qa`, or `ok`.
 
 **Valid CHECK Status values:**
 
-| Status | Value | Resultado Required |
-|--------|-------|-------------------|
+| Status | Value | Results Required |
+|--------|-------|-----------------|
 | `pending` | Pendiente de definir | No |
 | `in-progress` | En curso | No |
 | `blocked` | Bloqueado | **Yes** |

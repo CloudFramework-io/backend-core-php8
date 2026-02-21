@@ -150,8 +150,12 @@ Every CHECK has two fundamental fields that support the **planning** and **execu
 
 | Field | Phase | Purpose |
 |-------|-------|---------|
-| **Objetivo** | Planning | Defines WHAT needs to be achieved - acceptance criteria, expected outcome |
-| **Resultado** | Execution | Documents WHAT was done - implementation details, actual results |
+| **Description** | Planning | Defines WHAT needs to be achieved - acceptance criteria, expected outcome |
+| **Results** | Execution | Documents WHAT was done - implementation details, actual results |
+
+**Valid CHECK Status values:** `pending`, `in-progress`, `blocked`, `in-qa`, `ok`
+
+**Results is REQUIRED** when status is: `blocked`, `in-qa`, `ok`
 
 **Workflow:**
 
@@ -159,28 +163,28 @@ Every CHECK has two fundamental fields that support the **planning** and **execu
 ┌─────────────────────────────────────────────────────────────────┐
 │  PLANNING PHASE (Status: pending)                               │
 │  ─────────────────────────────────────────────────────────────  │
-│  • Define Objetivo: What must be accomplished                   │
+│  • Define Description: What must be accomplished                │
 │  • Set DateDueDate: Estimated completion date                   │
-│  • Resultado: Empty or initial notes                            │
+│  • Results: Empty or initial notes                              │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│  EXECUTION PHASE (Status: in-progress → in-qa → ok)            │
+│  EXECUTION PHASE (Status: in-progress → blocked/in-qa → ok)    │
 │  ─────────────────────────────────────────────────────────────  │
-│  • Fill Resultado: What was implemented and the outcome         │
+│  • Fill Results: What was implemented and the outcome           │
 │  • Update Status: Reflect current progress                      │
 │  • DateDueDate: Set to today when completing (ok)               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 **Example:**
-- **Objetivo**: "Create OAuth2 login with Google and GitHub. Users should login/logout seamlessly."
-- **Resultado**: "Implemented OAuth2 using passport.js. Added Google/GitHub strategies. Session with Redis."
+- **Description**: "Create OAuth2 login with Google and GitHub. Users should login/logout seamlessly."
+- **Results**: "Implemented OAuth2 using passport.js. Added Google/GitHub strategies. Session with Redis."
 
 This separation ensures:
-1. **Clear requirements** during planning (Objetivo)
-2. **Documented outcomes** during execution (Resultado)
+1. **Clear requirements** during planning (Description)
+2. **Documented outcomes** during execution (Results)
 3. **Traceability** between what was planned and what was delivered
 
 ---
