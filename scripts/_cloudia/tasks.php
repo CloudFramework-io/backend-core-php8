@@ -1233,19 +1233,19 @@ class Script extends CoreScripts
         }
 
         // Check if remote task is more recent than local task
-        $local_date_updating = $local_task['DateUpdating'] ?? null;
-        $remote_date_updating = $remote_task['DateUpdating'] ?? null;
+        $local_date_updated = $local_task['DateUpdated'] ?? null;
+        $remote_date_updated = $remote_task['DateUpdated'] ?? null;
 
-        if ($local_date_updating && $remote_date_updating) {
-            $local_timestamp = strtotime($local_date_updating);
-            $remote_timestamp = strtotime($remote_date_updating);
+        if ($local_date_updated && $remote_date_updated) {
+            $local_timestamp = strtotime($local_date_updated);
+            $remote_timestamp = strtotime($remote_date_updated);
 
             if ($remote_timestamp > $local_timestamp) {
                 $this->sendTerminal("");
                 $this->sendTerminal(" !! ERROR: Remote task is more recent than local file");
                 $this->sendTerminal("");
-                $this->sendTerminal("    Local DateUpdating:  {$local_date_updating}");
-                $this->sendTerminal("    Remote DateUpdating: {$remote_date_updating}");
+                $this->sendTerminal("    Local DateUpdated:  {$local_date_updated}");
+                $this->sendTerminal("    Remote DateUpdated: {$remote_date_updated}");
                 $this->sendTerminal("");
                 $this->sendTerminal(" → Run 'composer script -- \"_cloudia/tasks/get?id={$task_id}\"' to refresh local data");
                 $this->sendTerminal("");
@@ -1516,8 +1516,8 @@ class Script extends CoreScripts
             $this->sendTerminal(" - Milestone: {$milestone}");
         }
         $this->sendTerminal(" - Status: {$updated_task['Status']}");
-        if ($task_updated && isset($updated_task['DateUpdating'])) {
-            $this->sendTerminal(" - Updated: {$updated_task['DateUpdating']}");
+        if ($task_updated && isset($updated_task['DateUpdated'])) {
+            $this->sendTerminal(" - Updated: {$updated_task['DateUpdated']}");
         }
         //endregion
 
@@ -2678,7 +2678,7 @@ class Script extends CoreScripts
             'SprintIds' => 'Sprint IDs',
             'Tags' => 'Tags',
             'DateInserting' => 'Created',
-            'DateUpdating' => 'Updated'
+            'DateUpdated' => 'Updated'
         ];
 
         foreach ($fields as $key => $label) {
