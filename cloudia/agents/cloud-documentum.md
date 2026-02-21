@@ -1333,6 +1333,43 @@ Before updating, the script validates that the `JSON` field in the task matches 
 
 This ensures consistency between the task's JSON navigation structure and its associated verification checks.
 
+**⚠️ Task Field Validation:**
+
+Before updating, the script validates that all required task fields are present:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `KeyId` | **Yes** | Must match the `id` parameter |
+| `Title` | **Yes** | Non-empty task title |
+| `ProjectId` | **Yes** | Non-empty project reference |
+| `Status` | **Yes** | Valid status value |
+| `MilestoneId` | Recommended | Links task to milestone |
+| `PlayerId` | Recommended | Assigns task to user(s) |
+
+**Valid Status values:** `pending`, `in-progress`, `in-qa`, `closed`, `blocked`, `canceled`, `on-hold`
+
+**Valid Priority values:** `very_high`, `high`, `medium`, `low`, `very_low`
+
+**⚠️ CHECK Field Validation:**
+
+Each CHECK in the `CloudFrameWorkDevDocumentationForProcessTests` array must have:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `Title` | **Yes** | Non-empty check title |
+| `Status` | **Yes** | Check status |
+| `Route` | **Yes** | Route matching JSON field |
+| `CFOEntity` | **Yes*** | Must be `CloudFrameWorkProjectsTasks` (ALWAYS this value) |
+| `CFOId` | **Yes*** | Must match task KeyId |
+| `CFOField` | **Yes*** | Must be `JSON` (ALWAYS this value) |
+
+*Required for existing checks (those with KeyId). For new checks (without KeyId):
+- If `CFOEntity` is provided, it must be `CloudFrameWorkProjectsTasks`
+- If `CFOField` is provided, it must be `JSON`
+- These fields will be set automatically during insertion if not provided
+
+**Valid CHECK Status values:** `pending`, `in-progress`, `ok`, `blocked`, `failed`
+
 **Handling check deletions:**
 ```bash
 # Delete remote checks not in local file:

@@ -901,6 +901,67 @@ class Script extends CoreScripts
         $this->sendTerminal(" - Checks in file: " . count($local_checks));
         //endregion
 
+        //region VALIDATE task required fields
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Validating task required fields...");
+
+        $taskValidation = $this->validateTaskFields($local_task, $task_id);
+
+        // Show task warnings
+        foreach ($taskValidation['warnings'] as $warning) {
+            $this->sendTerminal("   ! WARNING: {$warning}");
+        }
+
+        // Show task errors
+        foreach ($taskValidation['errors'] as $error) {
+            $this->sendTerminal("   # ERROR: {$error}");
+        }
+
+        if (!$taskValidation['valid']) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" !! TASK VALIDATION FAILED");
+            $this->sendTerminal("    Required task fields: KeyId, Title, ProjectId, Status");
+            $this->sendTerminal("");
+            return $this->addError("Task field validation failed. Ensure all required fields are present.");
+        }
+
+        if (empty($taskValidation['warnings']) && empty($taskValidation['errors'])) {
+            $this->sendTerminal("   + Task fields validated successfully");
+        }
+        //endregion
+
+        //region VALIDATE check required fields
+        if (!empty($local_checks)) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" - Validating check required fields...");
+
+            $checksValidation = $this->validateAllChecks($local_checks, $task_id);
+
+            // Show check warnings
+            foreach ($checksValidation['warnings'] as $warning) {
+                $this->sendTerminal("   ! WARNING: {$warning}");
+            }
+
+            // Show check errors
+            foreach ($checksValidation['errors'] as $error) {
+                $this->sendTerminal("   # ERROR: {$error}");
+            }
+
+            if (!$checksValidation['valid']) {
+                $this->sendTerminal("");
+                $this->sendTerminal(" !! CHECK VALIDATION FAILED");
+                $this->sendTerminal("    Required check fields: Title, Status, Route");
+                $this->sendTerminal("    For existing checks (with KeyId): CFOEntity=CloudFrameWorkProjectsTasks, CFOId=TaskKeyId");
+                $this->sendTerminal("");
+                return $this->addError("Check field validation failed. Ensure all required fields are present.");
+            }
+
+            if (empty($checksValidation['warnings']) && empty($checksValidation['errors'])) {
+                $this->sendTerminal("   + Check fields validated successfully");
+            }
+        }
+        //endregion
+
         //region VALIDATE JSON routes vs CHECK routes
         $json_field = $local_task['JSON'] ?? [];
         if (!empty($json_field) || !empty($local_checks)) {
@@ -1896,6 +1957,191 @@ class Script extends CoreScripts
         // User info
         $display_email = $person_email ?? $this->user_email;
         $this->sendTerminal("User: {$display_email}");
+    }
+
+    /**
+     * Validate task required fields
+     *
+     * Ensures all mandatory fields are present and correctly defined.
+     *
+     * Required fields:
+     * - KeyId: Must be present and match expected value
+     * - Title: Non-empty string
+     * - ProjectId: Non-empty string
+     * - Status: Non-empty string
+     *
+     * Recommended fields (warnings if missing):
+     * - MilestoneId: Should be present for proper organization
+     * - PlayerId: Should be assigned
+     *
+     * @param array $task The task data
+     * @param string $expectedKeyId The expected KeyId value
+     * @return array ['valid' => bool, 'errors' => array, 'warnings' => array]
+     */
+    private function validateTaskFields(array $task, string $expectedKeyId): array
+    {
+        $result = [
+            'valid' => true,
+            'errors' => [],
+            'warnings' => []
+        ];
+
+        // Required fields
+        $requiredFields = [
+            'KeyId' => 'Task KeyId',
+            'Title' => 'Task Title',
+            'ProjectId' => 'Project ID',
+            'Status' => 'Task Status'
+        ];
+
+        foreach ($requiredFields as $field => $label) {
+            if (!isset($task[$field]) || (is_string($task[$field]) && trim($task[$field]) === '')) {
+                $result['errors'][] = "Missing required field: {$label} ({$field})";
+                $result['valid'] = false;
+            }
+        }
+
+        // Validate KeyId matches expected value
+        if (isset($task['KeyId']) && $task['KeyId'] !== $expectedKeyId) {
+            $result['errors'][] = "KeyId mismatch: task has '{$task['KeyId']}' but expected '{$expectedKeyId}'";
+            $result['valid'] = false;
+        }
+
+        // Valid Status values
+        $validStatuses = ['pending', 'in-progress', 'in-qa', 'closed', 'blocked', 'canceled', 'on-hold'];
+        if (isset($task['Status']) && !in_array($task['Status'], $validStatuses)) {
+            $result['warnings'][] = "Status '{$task['Status']}' is not a standard value. Valid: " . implode(', ', $validStatuses);
+        }
+
+        // Valid Priority values
+        $validPriorities = ['very_high', 'high', 'medium', 'low', 'very_low'];
+        if (isset($task['Priority']) && !in_array($task['Priority'], $validPriorities)) {
+            $result['warnings'][] = "Priority '{$task['Priority']}' is not a standard value. Valid: " . implode(', ', $validPriorities);
+        }
+
+        // Recommended fields (warnings only)
+        if (!isset($task['MilestoneId']) || trim($task['MilestoneId']) === '') {
+            $result['warnings'][] = "MilestoneId is empty - task should be linked to a milestone";
+        }
+
+        if (!isset($task['PlayerId']) || (is_array($task['PlayerId']) && empty($task['PlayerId'])) || (is_string($task['PlayerId']) && trim($task['PlayerId']) === '')) {
+            $result['warnings'][] = "PlayerId is empty - task should be assigned to someone";
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validate check required fields
+     *
+     * Ensures all mandatory fields are present and correctly defined for a check.
+     *
+     * Required fields:
+     * - CFOEntity: Must be 'CloudFrameWorkProjectsTasks'
+     * - CFOId: Must match the task KeyId
+     * - Route: Non-empty string
+     * - Title: Non-empty string
+     * - Status: Non-empty string
+     *
+     * Recommended fields:
+     * - CFOField: Should be 'JSON' for proper linking
+     *
+     * @param array $check The check data
+     * @param string $taskKeyId The parent task KeyId
+     * @param int $index The check index in the array (for error messages)
+     * @return array ['valid' => bool, 'errors' => array, 'warnings' => array]
+     */
+    private function validateCheckFields(array $check, string $taskKeyId, int $index): array
+    {
+        $result = [
+            'valid' => true,
+            'errors' => [],
+            'warnings' => []
+        ];
+
+        $checkLabel = "Check #" . ($index + 1) . (isset($check['Title']) ? " ({$check['Title']})" : "");
+
+        // Required fields
+        $requiredFields = [
+            'Title' => 'Check Title',
+            'Status' => 'Check Status',
+            'Route' => 'Check Route'
+        ];
+
+        foreach ($requiredFields as $field => $label) {
+            if (!isset($check[$field]) || (is_string($check[$field]) && trim($check[$field]) === '')) {
+                $result['errors'][] = "{$checkLabel}: Missing required field '{$field}'";
+                $result['valid'] = false;
+            }
+        }
+
+        // CFOEntity validation - ALWAYS required for task checks
+        if (isset($check['KeyId'])) {
+            // Existing check - must have correct CFOEntity
+            if (!isset($check['CFOEntity']) || $check['CFOEntity'] !== 'CloudFrameWorkProjectsTasks') {
+                $result['errors'][] = "{$checkLabel}: CFOEntity must be 'CloudFrameWorkProjectsTasks', found: '" . ($check['CFOEntity'] ?? 'missing') . "'";
+                $result['valid'] = false;
+            }
+
+            // CFOId must match task KeyId
+            if (!isset($check['CFOId']) || $check['CFOId'] !== $taskKeyId) {
+                $result['errors'][] = "{$checkLabel}: CFOId must be '{$taskKeyId}', found: '" . ($check['CFOId'] ?? 'missing') . "'";
+                $result['valid'] = false;
+            }
+
+            // CFOField MUST be 'JSON' for task checks
+            if (!isset($check['CFOField']) || $check['CFOField'] !== 'JSON') {
+                $result['errors'][] = "{$checkLabel}: CFOField must be 'JSON', found: '" . ($check['CFOField'] ?? 'missing') . "'";
+                $result['valid'] = false;
+            }
+        } else {
+            // New check (no KeyId) - validate CFOEntity and CFOField if present
+            if (isset($check['CFOEntity']) && $check['CFOEntity'] !== 'CloudFrameWorkProjectsTasks') {
+                $result['errors'][] = "{$checkLabel}: CFOEntity must be 'CloudFrameWorkProjectsTasks', found: '{$check['CFOEntity']}'";
+                $result['valid'] = false;
+            }
+            if (isset($check['CFOField']) && $check['CFOField'] !== 'JSON') {
+                $result['errors'][] = "{$checkLabel}: CFOField must be 'JSON', found: '{$check['CFOField']}'";
+                $result['valid'] = false;
+            }
+        }
+
+        // Valid Status values for checks
+        $validStatuses = ['pending', 'in-progress', 'ok', 'blocked', 'failed'];
+        if (isset($check['Status']) && !in_array($check['Status'], $validStatuses)) {
+            $result['warnings'][] = "{$checkLabel}: Status '{$check['Status']}' is not standard. Valid: " . implode(', ', $validStatuses);
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validate all checks in an array
+     *
+     * @param array $checks Array of check records
+     * @param string $taskKeyId The parent task KeyId
+     * @return array ['valid' => bool, 'errors' => array, 'warnings' => array]
+     */
+    private function validateAllChecks(array $checks, string $taskKeyId): array
+    {
+        $result = [
+            'valid' => true,
+            'errors' => [],
+            'warnings' => []
+        ];
+
+        foreach ($checks as $index => $check) {
+            $checkValidation = $this->validateCheckFields($check, $taskKeyId, $index);
+
+            $result['errors'] = array_merge($result['errors'], $checkValidation['errors']);
+            $result['warnings'] = array_merge($result['warnings'], $checkValidation['warnings']);
+
+            if (!$checkValidation['valid']) {
+                $result['valid'] = false;
+            }
+        }
+
+        return $result;
     }
 
     /**
