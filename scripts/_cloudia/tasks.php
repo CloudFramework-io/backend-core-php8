@@ -556,6 +556,10 @@ class Script extends CoreScripts
         //endregion
 
         //region BUILD data structure and WRITE to file
+        // Remove TimeSpent from exported JSON (it's a calculated field from activity inputs/events)
+        // TimeSpent must be managed via _cloudia/activity script, not directly in task JSON
+        unset($task['TimeSpent']);
+
         // Sort task keys
         ksort($task);
 
@@ -901,6 +905,23 @@ class Script extends CoreScripts
         $this->sendTerminal(" - Checks in file: " . count($local_checks));
         //endregion
 
+        //region VALIDATE TimeSpent is NOT in local file (it's a calculated field)
+        if (array_key_exists('TimeSpent', $local_task)) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" !! ERROR: TimeSpent field found in local JSON file");
+            $this->sendTerminal("");
+            $this->sendTerminal("    TimeSpent is a CALCULATED field that cannot be set manually.");
+            $this->sendTerminal("    It is automatically calculated from activity inputs and events.");
+            $this->sendTerminal("");
+            $this->sendTerminal("    To report time spent on this task, use:");
+            $this->sendTerminal("      composer script -- \"_cloudia/activity/report-input?json={\\\"TimeSpent\\\":{$local_task['TimeSpent']},\\\"Title\\\":\\\"Description\\\",\\\"TaskId\\\":\\\"{$task_id}\\\"}\"");
+            $this->sendTerminal("");
+            $this->sendTerminal("    Remove the 'TimeSpent' field from the JSON file and try again.");
+            $this->sendTerminal("");
+            return $this->addError("TimeSpent field must not be in the JSON file. Use _cloudia/activity/report-input to report time.");
+        }
+        //endregion
+
         //region VALIDATE task required fields
         $this->sendTerminal("");
         $this->sendTerminal(" - Validating task required fields...");
@@ -1103,20 +1124,59 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region CALCULATE TimeSpent from activity inputs and events
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Calculating TimeSpent from activity inputs and events...");
+
+        $timeSpentResult = $this->calculateTimeSpentForTask($task_id);
+
+        if (!$timeSpentResult['success']) {
+            $this->sendTerminal("   ! WARNING: Could not calculate TimeSpent: {$timeSpentResult['error']}");
+            $this->sendTerminal("   ! TimeSpent will not be updated");
+            $calculatedTimeSpent = null;
+        } else {
+            $calculatedTimeSpent = $timeSpentResult['timeSpent'];
+            $this->sendTerminal("   + Inputs: {$timeSpentResult['inputsCount']} records, {$timeSpentResult['inputsHours']} hours");
+            $this->sendTerminal("   + Events: {$timeSpentResult['eventsCount']} records, {$timeSpentResult['eventsHours']} hours");
+            $this->sendTerminal("   + Total TimeSpent: {$calculatedTimeSpent} hours");
+        }
+        //endregion
+
         //region COMPARE and UPDATE task if different
+        // Remove TimeSpent from remote for comparison (since local doesn't have it)
+        $remote_task_for_compare = $remote_task;
+        unset($remote_task_for_compare['TimeSpent']);
+
         // Sort both arrays by key for proper comparison
         ksort($local_task);
-        ksort($remote_task);
+        ksort($remote_task_for_compare);
 
         $task_updated = false;
         $updated_task = $remote_task; // Default to remote if no update needed
 
-        if (json_encode($local_task) !== json_encode($remote_task)) {
-            $this->sendTerminal(" - Changes detected in task, updating...");
+        // Check if task fields changed (excluding TimeSpent) or if TimeSpent needs update
+        $fieldsChanged = json_encode($local_task) !== json_encode($remote_task_for_compare);
+        $timeSpentChanged = $calculatedTimeSpent !== null &&
+                            floatval($remote_task['TimeSpent'] ?? 0) !== $calculatedTimeSpent;
+
+        if ($fieldsChanged || $timeSpentChanged) {
+            if ($fieldsChanged) {
+                $this->sendTerminal(" - Changes detected in task fields, updating...");
+            }
+            if ($timeSpentChanged) {
+                $oldTimeSpent = floatval($remote_task['TimeSpent'] ?? 0);
+                $this->sendTerminal(" - TimeSpent changed: {$oldTimeSpent} -> {$calculatedTimeSpent}");
+            }
+
+            // Build update data: local_task + calculated TimeSpent
+            $update_data = $local_task;
+            if ($calculatedTimeSpent !== null) {
+                $update_data['TimeSpent'] = $calculatedTimeSpent;
+            }
 
             $response = $this->core->request->put_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_id}?_raw&_timezone=UTC",
-                $local_task,
+                $update_data,
                 $this->headers,
                 true
             );
@@ -1133,7 +1193,7 @@ class Script extends CoreScripts
                 return $this->addError("Task update failed: {$errorMsg}");
             }
 
-            $updated_task = $response['data'] ?? $local_task;
+            $updated_task = $response['data'] ?? $update_data;
             $task_updated = true;
             $this->sendTerminal(" + Task updated successfully");
         } else {
@@ -2256,6 +2316,94 @@ class Script extends CoreScripts
             }
             $result['valid'] = false;
         }
+
+        return $result;
+    }
+
+    /**
+     * Calculate TimeSpent for a task from activity inputs and events
+     *
+     * TimeSpent is a calculated field that aggregates time from:
+     * - CloudFrameWorkProjectsTasksInputs (activity inputs/time entries)
+     * - CloudFrameWorkCRMEvents (events with TimeSpent)
+     *
+     * @param string $taskId The task KeyId
+     * @return array ['success' => bool, 'timeSpent' => float, 'inputsCount' => int, 'eventsCount' => int, 'error' => string|null]
+     */
+    private function calculateTimeSpentForTask(string $taskId): array
+    {
+        $result = [
+            'success' => true,
+            'timeSpent' => 0.0,
+            'inputsCount' => 0,
+            'eventsCount' => 0,
+            'inputsHours' => 0.0,
+            'eventsHours' => 0.0,
+            'error' => null
+        ];
+
+        //region FETCH activity inputs for the task (CloudFrameWorkProjectsTasksInputs)
+        $inputParams = [
+            'filter_TaskId' => $taskId,
+            'cfo_limit' => 1000,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $inputsResponse = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs",
+            $inputParams,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            $result['success'] = false;
+            $result['error'] = "Error fetching activity inputs: " . json_encode($this->core->request->errorMsg);
+            return $result;
+        }
+
+        $inputs = $inputsResponse['data'] ?? [];
+        $result['inputsCount'] = count($inputs);
+
+        // Sum TimeSpent from inputs
+        foreach ($inputs as $input) {
+            $timeSpent = floatval($input['TimeSpent'] ?? 0);
+            $result['inputsHours'] += $timeSpent;
+        }
+        //endregion
+
+        //region FETCH events for the task (CloudFrameWorkCRMEvents)
+        $eventParams = [
+            'filter_TaskId' => $taskId,
+            'cfo_limit' => 1000,
+            '_raw' => 1,
+            '_timezone' => 'UTC'
+        ];
+
+        $eventsResponse = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents",
+            $eventParams,
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            $result['success'] = false;
+            $result['error'] = "Error fetching events: " . json_encode($this->core->request->errorMsg);
+            return $result;
+        }
+
+        $events = $eventsResponse['data'] ?? [];
+        $result['eventsCount'] = count($events);
+
+        // Sum TimeSpent from events
+        foreach ($events as $event) {
+            $timeSpent = floatval($event['TimeSpent'] ?? 0);
+            $result['eventsHours'] += $timeSpent;
+        }
+        //endregion
+
+        // Total TimeSpent
+        $result['timeSpent'] = $result['inputsHours'] + $result['eventsHours'];
 
         return $result;
     }
