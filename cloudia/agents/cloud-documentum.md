@@ -70,6 +70,134 @@ CLOUD Documentum is the documentation management system for:
 - **Menu Modules** (navigation configuration)
 - **Projects** and Tasks
 
+---
+
+## Methodology: Business Knowledge First
+
+When developing products or technological solutions, CLOUD Documentum enforces a methodology where **business knowledge comes before technical implementation**. This is the **foundational philosophy** that must guide all documentation work.
+
+### The Development Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         1. BUSINESS KNOWLEDGE                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  PROCESS: "Email Sending Product"                                    │    │
+│  │  - Strategic and commercial objectives                               │    │
+│  │  - What we want to achieve (NOT how to implement it)                │    │
+│  │                                                                      │    │
+│  │  SUBPROCESSES (Features - Functional Definition):                    │    │
+│  │  ├── Template Management (what the user can do)                     │    │
+│  │  ├── Contact Lists (functional capabilities)                         │    │
+│  │  ├── Campaign Scheduling (business rules)                           │    │
+│  │  └── Analytics Dashboard (what information is shown)                │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      2. DEVELOPMENT GROUP                                    │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  Groups all related information under one organizational unit:       │    │
+│  │  - Processes (business knowledge)                                    │    │
+│  │  - WebApps (technical implementation)                                │    │
+│  │  - Projects (execution tracking)                                     │    │
+│  │  - APIs, Libraries, Courses...                                       │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                 3. WEBAPPS (Unidades de Desarrollo)                          │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  Technical definition of each feature/functionality:                 │    │
+│  │                                                                      │    │
+│  │  WebApp: "/email-product/template-editor"                           │    │
+│  │  └── Module: "/drag-drop-builder" → Checks (acceptance criteria)    │    │
+│  │  └── Module: "/html-editor" → Checks                                │    │
+│  │                                                                      │    │
+│  │  WebApp: "/email-product/campaign-manager"                          │    │
+│  │  └── Module: "/scheduler" → Checks                                  │    │
+│  │  └── Module: "/recipient-selector" → Checks                         │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    4. PROJECT WITH MILESTONES                                │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  Project linked to Development Group                                 │    │
+│  │  Milestones matching WebApp categories:                              │    │
+│  │                                                                      │    │
+│  │  Milestone: "Template Editor"                                        │    │
+│  │  Milestone: "Campaign Manager"                                       │    │
+│  │  Milestone: "Analytics"                                              │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                      │
+                                      ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           5. TASKS                                           │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │  Tasks execute the functional definitions:                           │    │
+│  │                                                                      │    │
+│  │  Task: "Implement drag-drop builder"                                 │    │
+│  │  ├── Project: email-product-2026                                    │    │
+│  │  ├── Milestone: Template Editor                                      │    │
+│  │  ├── Related WebApp Module: /drag-drop-builder                      │    │
+│  │  └── Checks: Implementation verification points                      │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Key Distinction: Process vs WebApp
+
+| Aspect | Process/SubProcess | WebApp/Module |
+|--------|-------------------|---------------|
+| **Purpose** | Business knowledge | Technical implementation |
+| **Audience** | Customers + Developers | Developers |
+| **Content** | Functional definition | Technical specification |
+| **Focus** | WHAT the product does | HOW it's implemented |
+| **Example** | "User can schedule campaigns" | "Scheduler API integration" |
+
+### What an AI Must Understand
+
+When working with CLOUD Documentum to develop a product or solution, an AI must:
+
+1. **Identify or create the Process and SubProcesses**
+   - Define the business objectives (strategic/commercial)
+   - Document features from a FUNCTIONAL perspective, not technical
+   - This serves both customers (understanding) and developers (requirements)
+
+2. **Create or identify the Development Group**
+   - The organizational umbrella for all related documentation
+   - Links processes, WebApps, projects, and other elements
+
+3. **Create WebApps (Unidades de Desarrollo) categorized by feature area**
+   - Technical definition of each functionality
+   - Must fulfill the requirements defined in Processes/SubProcesses
+   - Include Modules with their acceptance Checks
+
+4. **Create a Project linked to the Development Group**
+   - Milestones should match WebApp categories
+   - This enables organized task execution
+
+5. **Document WebApps at functional level**
+   - Define Modules with their Checks
+   - Checks become the acceptance criteria for tasks
+
+6. **Create Tasks for execution**
+   - Each task linked to Project, Milestone, and related WebApp/Module
+   - Tasks execute the functional definitions
+
+### Related Skills
+
+For detailed workflow guidance on implementing this methodology:
+- **Skill:** `cloudia/skills/cloud-documentum-processes-unitdevs-projects/SKILL.md` - Complete workflow for creating documentation structure
+- **Skill:** `cloudia/skills/cloud-documentum-tasks-and-projects/SKILL.md` - Task execution and time tracking
+
+---
+
 ### Terminology Note: WebApp = Unidad de Desarrollo
 
 In CLOUD Documentum, the terms **"WebApp"** and **"Unidad de Desarrollo"** (Development Unit) are **synonyms**:
@@ -179,7 +307,8 @@ Each `route` value matches a Check's `Route` field for bidirectional linking.
 | **Resources** | `CloudFrameWorkInfrastructureResources` | `CloudFrameWorkInfrastructureResourcesAccesses` | `ResourceId` → KeyId |
 | **Modules** | `CloudFrameWorkModules` | - | Menu configuration |
 | **WebPages** | `CloudFrameWorkECMPages` | - | ECM content |
-| **Projects** | `CloudFrameWorkProjectsEntries` | `CloudFrameWorkProjectsMilestones`, `CloudFrameWorkProjectsTasks` | Project relationships |
+| **Projects** | `CloudFrameWorkProjectsEntries` | `CloudFrameWorkProjectsMilestones` | `ProjectId` → KeyName |
+| **Tasks** | `CloudFrameWorkProjectsTasks` | `CloudFrameWorkDevDocumentationForProcessTests` (Checks) | Managed via `_cloudia/tasks` |
 
 ### Lifecycle States
 
@@ -218,7 +347,7 @@ Each `route` value matches a Check's `Route` field for bidirectional linking.
 | Courses | `buckets/backups/Courses/{platform}/` | `{course-keyid}.json` |
 | Menus | `buckets/backups/Menus/{platform}/` | `{module-keyname}.json` |
 | Projects | `buckets/backups/Projects/{platform}/` | `{project-keyname}.json` |
-| ProjectsTasks | `buckets/backups/ProjectsTasks/{platform}/` | `{project-id}.json` |
+| Tasks | `./local_data/_cloudia/tasks/` | `{task-keyid}.json` (via `_cloudia/tasks/get`) |
 | CFOs | `buckets/backups/CFOs/{platform}/` | `{cfo-keyname}.json` |
 
 ## Script Commands
@@ -240,8 +369,8 @@ All scripts are located in `vendor/cloudframework-io/backend-core-php8/scripts/_
 | `cfos.php` | CFO (CloudFramework Object) definitions |
 | `resources.php` | Infrastructure resources and accesses |
 | `menu.php` | Menu modules configuration |
-| `projects.php` | Projects with Milestones and Tasks |
-| `tasks.php` | Task queries (list, search, get details) |
+| `projects.php` | Projects with Milestones (NOT tasks) |
+| `tasks.php` | Task CRUD with checks (create, show, get, update, delete) |
 | `activity.php` | Activity tracking (Events and Inputs) |
 | `auth.php` | Authentication utilities and token management |
 
@@ -267,8 +396,8 @@ composer script -- "_cloudia/{type}/{action}?{params}"
 | `cfos` | `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=CFOKeyName` |
 | `resources` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=resource-key` |
 | `menu` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=MODULE-KEY` |
-| `projects` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup`, `my_tasks` | `id=project-keyname` |
-| `tasks` | `list`, `today`, `sprint`, `project`, `person`, `get`, `insert`, `update`, `search` | `id`, `email`, `json`, `status`, `priority`, `project`, `assigned` |
+| `projects` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup`, `my_tasks` | `id=project-keyname` (milestones only, NOT tasks) |
+| `tasks` | `list`, `today`, `sprint`, `project`, `milestone`, `person`, `show`, `get`, `insert`, `update`, `delete`, `search` | `id`, `title`, `project`, `milestone`, `email`, `status`, `priority`, `confirm`, `delete_checks`, `delete` |
 | `activity` | `events`, `event`, `inputs`, `input`, `summary`, `all` | `from`, `to`, `id`, `task`, `project` |
 | `auth` | `info`, `x-ds-token`, `access-token` | `_reset` (form param to reset token) |
 
@@ -873,24 +1002,42 @@ Checks can be associated at **two levels** for WebApps, and **you MUST use the c
 
 Projects, Milestones, and Tasks form a complete **project management module** within CLOUD Documentum. They allow organizations to manage development projects, track deliverables, and assign work items.
 
-### 🔴 MANDATORY: Task Operations - Use _cloudia/tasks
+### 📚 Skill Reference: cloud-documentum-tasks-and-projects
 
-**For ALL individual task operations, use `_cloudia/tasks`**. This is the primary script for:
+For complete documentation on managing projects, tasks, milestones, and activity tracking, refer to the skill file:
+
+**Location:** `cloudia/skills/cloud-documentum-tasks-and-projects/SKILL.md`
+
+This skill covers:
+- Project and milestone management (`_cloudia/projects`)
+- Task CRUD operations with checks (`_cloudia/tasks`)
+- Activity and time tracking (`_cloudia/activity`)
+
+### 🔴 MANDATORY: Task Operations - Use ONLY _cloudia/tasks
+
+**Tasks are managed EXCLUSIVELY via `_cloudia/tasks`.** The `_cloudia/projects` script does NOT manage tasks - it only handles projects and milestones.
+
+**For ALL task operations, use `_cloudia/tasks`**:
 
 | Operation | Command |
 |-----------|---------|
-| **Read a task by KeyId** | `composer script -- "_cloudia/tasks/get?id=TASK_KEYID"` |
-| **Read tasks for a project** | `composer script -- "_cloudia/tasks/project?id=PROJECT_KEYNAME"` |
-| **Read tasks for a milestone** | `composer script -- "_cloudia/tasks/milestone?id=MILESTONE_KEYID"` |
-| **Create a new task** | `composer script -- "_cloudia/tasks/insert?json={...}"` |
-| **Update an existing task** | `composer script -- "_cloudia/tasks/update?id=KEYID&json={...}"` |
+| **Show task details** | `composer script -- "_cloudia/tasks/show?id=TASK_KEYID"` |
+| **Export task to local file** | `composer script -- "_cloudia/tasks/get?id=TASK_KEYID"` |
+| **List tasks for a project** | `composer script -- "_cloudia/tasks/project?id=PROJECT_KEYNAME"` |
+| **List tasks for a milestone** | `composer script -- "_cloudia/tasks/milestone?id=MILESTONE_KEYID"` |
+| **Create a new task** | `composer script -- "_cloudia/tasks/insert?title=X&project=X&milestone=X"` |
+| **Update task from local file** | `composer script -- "_cloudia/tasks/update?id=TASK_KEYID"` |
+| **Delete a task** | `composer script -- "_cloudia/tasks/delete?id=TASK_KEYID"` |
 | **List my open tasks** | `composer script -- "_cloudia/tasks/list"` |
 | **Search tasks** | `composer script -- "_cloudia/tasks/search?status=pending&project=..."` |
 
 **Examples:**
 
 ```bash
-# Read a specific task (returns full task data including raw JSON)
+# Show task details with checks and relations
+composer script -- "_cloudia/tasks/show?id=4910294454763520"
+
+# Export task + checks to local file for editing
 composer script -- "_cloudia/tasks/get?id=4910294454763520"
 
 # List all tasks for project "cloud-development"
@@ -899,29 +1046,28 @@ composer script -- "_cloudia/tasks/project?id=cloud-development"
 # List all tasks for milestone 5734953457745920
 composer script -- "_cloudia/tasks/milestone?id=5734953457745920"
 
-# Create a new task
-composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"cloud-development\",\"Title\":\"New task\",\"Status\":\"pending\"}"
+# Create a new task (minimal)
+composer script -- "_cloudia/tasks/insert?title=New task&project=cloud-development&milestone=5734953457745920"
 
-# Update task status and solution
-composer script -- "_cloudia/tasks/update?id=4910294454763520&json={\"Status\":\"closed\",\"Open\":false,\"Solution\":\"<p>Implementation complete</p>\"}"
+# Update task from local file (after editing ./local_data/_cloudia/tasks/{id}.json)
+composer script -- "_cloudia/tasks/update?id=4910294454763520"
+
+# Delete a task (requires confirmation)
+composer script -- "_cloudia/tasks/delete?id=4910294454763520&confirm=yes"
 ```
 
-> **Note**: Use `_cloudia/projects` for **bulk operations** (backup entire project with all milestones and tasks). Use `_cloudia/tasks` for **individual task operations** (faster, no file manipulation needed).
+> **⚠️ IMPORTANT**: The `_cloudia/projects` script does NOT manage tasks. Use `_cloudia/tasks` for ALL task operations.
 
-See the [Tasks CRUD Script](#tasks-crud-script) section below for complete documentation.
+See the [Tasks CRUD Script](#tasks-crud-script) section below for complete documentation, or refer to the skill file at `cloudia/skills/cloud-documentum-tasks-and-projects/SKILL.md`.
 
-### ⚠️ CRITICAL: Project Operations - Use _cloudia/projects ONLY
+### Project Operations - Use _cloudia/projects
 
-**DO NOT use external MCP tools for project/task operations.** Always use the `_cloudia/projects` scripts for:
-- Backing up projects
-- Reading task information
-- Updating tasks (status, solution, description, etc.)
-- Creating new tasks
+**Use `_cloudia/projects` for project and milestone operations only.** Tasks are managed via `_cloudia/tasks`.
 
 #### Backup Project (read latest data)
 
 ```bash
-# Backup a specific project (includes milestones and tasks)
+# Backup a specific project (includes milestones only, NOT tasks)
 composer script -- "_cloudia/projects/backup-from-remote?id=project-keyname"
 
 # Example
@@ -930,45 +1076,10 @@ composer script -- "_cloudia/projects/backup-from-remote?id=cloud-platform-docum
 
 **Output location:** `buckets/backups/Projects/{platform}/{project_sanitized_name}.json`
 
-The backup file contains the complete project structure:
+The backup file contains:
 - `CloudFrameWorkProjectsEntries`: Project data
 - `CloudFrameWorkProjectsMilestones`: All milestones
-- `CloudFrameWorkProjectsTasks`: All tasks
-
-#### Update Task Workflow (MANDATORY)
-
-**When you need to update a task (status, solution, description, etc.), ALWAYS follow this workflow:**
-
-1. **Backup from remote** (get latest version):
-   ```bash
-   composer script -- "_cloudia/projects/backup-from-remote?id=project-keyname"
-   ```
-
-2. **Modify the local JSON file**:
-   - Open `buckets/backups/Projects/{platform}/{project_sanitized_name}.json`
-   - Find the task by its `KeyId` in the `CloudFrameWorkProjectsTasks` array
-   - Update the desired fields (Status, Solution, Description, etc.)
-   - Save the file
-
-3. **Sync to remote**:
-   ```bash
-   composer script -- "_cloudia/projects/update-from-backup?id=project-keyname"
-   ```
-
-**Example - Update task status to 'ready for qa':**
-```bash
-# Step 1: Backup
-composer script -- "_cloudia/projects/backup-from-remote?id=cloud-platform-documentum"
-
-# Step 2: Edit buckets/backups/Projects/cloudframework/cloud-platform-documentum.json
-# Find task by KeyId and change "Status": "in-progress" to "Status": "in-qa"
-
-# Step 3: Sync
-composer script -- "_cloudia/projects/update-from-backup?id=cloud-platform-documentum"
-```
-
-**Reading project data after backup:**
-Once backed up, you can read the local JSON file to access all project information including specific tasks by their KeyId.
+- `CloudFrameWorkProjectsTasks`: **Reference text** pointing to `_cloudia/tasks` commands (NOT actual tasks)
 
 ### CFO Structure and Relationships
 
@@ -985,7 +1096,7 @@ Once backed up, you can read the local JSON file to access all project informati
 
 ### Backup File Structure
 
-Projects are stored as single JSON files containing the project, its milestones, and tasks:
+Projects are stored as single JSON files containing the project and its milestones (tasks are managed separately):
 
 ```json
 {
@@ -1006,44 +1117,31 @@ Projects are stored as single JSON files containing the project, its milestones,
             "DateEnd": "2025-03-31"
         }
     ],
-    "CloudFrameWorkProjectsTasks": [
-        {
-            "KeyId": "6845064568856031",
-            "ProjectId": "cloud-platform-2025",
-            "MilestoneId": "5734953457745920",
-            "Title": "Implement feature X",
-            "Status": "pending",
-            "PlayerId": "dev@example.com"
-        }
-    ]
+    "CloudFrameWorkProjectsTasks": "Use _cloudia/tasks/project?id=cloud-platform-2025 to list the tasks associated, _cloudia/tasks/milestone?id=milestone-id to list tasks for a milestone, _cloudia/tasks/show?id=XXXXX to show a task with its CHECKs and relations, _cloudia/tasks/get?id=XXXXX to download a task for editing with _cloudia/tasks/update?id=XXXXX. Insert new tasks with _cloudia/tasks/insert?title=xxx&project=xxx&milestone=xxx"
 }
 ```
 
-**Backup Locations:**
+**Backup Location:**
 - Projects: `buckets/backups/Projects/{platform}/{project-keyname}.json`
-- Tasks (alternative): `buckets/backups/ProjectsTasks/{platform}/{project-id}.json`
+
+**Task Files (managed via `_cloudia/tasks`):**
+- Task exports: `./local_data/_cloudia/tasks/{task-keyid}.json`
 
 ### Management Scripts
 
-There are **two scripts** for managing Projects, Milestones, and Tasks:
+There are **three scripts** for managing Projects, Milestones, Tasks, and Activity:
 
-#### 1. Bulk Backup Script (`backup_platforms_projects.php`)
+| Script | Purpose |
+|--------|---------|
+| `_cloudia/projects` | Projects and milestones ONLY (NOT tasks) |
+| `_cloudia/tasks` | Task CRUD with checks (create, show, get, update, delete) |
+| `_cloudia/activity` | Time tracking and events |
 
-**Location**: `buckets/scripts/backup_platforms_projects.php`
-
-Backs up ALL projects, milestones, and tasks from ALL platforms in a single operation.
-
-```bash
-composer run-script script backup_platforms_projects
-```
-
-**Output**: Creates/updates files in `buckets/backups/Projects/{platform}/`
-
-#### 2. REST API Script (`_cloudia/projects.php`)
+#### Projects Script (`_cloudia/projects.php`)
 
 **Location**: `vendor/cloudframework-io/backend-core-php8/scripts/_cloudia/projects.php`
 
-REST API-based operations via `https://api.cloudframework.io`. Uses HTTP requests with `X-DS-TOKEN` authentication.
+REST API-based operations for projects and milestones. **Does NOT manage tasks.**
 
 ```bash
 # List projects in local backups
@@ -1052,55 +1150,40 @@ composer script -- "_cloudia/projects/list-local"
 # List projects in remote
 composer script -- "_cloudia/projects/list-remote"
 
-# Backup single project (includes milestones and tasks)
+# Backup single project (includes milestones only, NOT tasks)
 composer script -- "_cloudia/projects/backup-from-remote?id=project-keyname"
 
 # Backup ALL projects
 composer script -- "_cloudia/projects/backup-from-remote"
 
-# Insert new project (creates project, milestones, and tasks)
+# Insert new project (creates project and milestones only)
 composer script -- "_cloudia/projects/insert-from-backup?id=project-keyname"
 
-# Update existing project (syncs all: delete orphans, update existing, insert new)
+# Update existing project (syncs milestones: delete orphans, update existing, insert new)
 composer script -- "_cloudia/projects/update-from-backup?id=project-keyname"
 
-# List my open tasks (current user's tasks across all projects)
+# List my open tasks (quick view - uses _cloudia/tasks internally)
 composer script -- "_cloudia/projects/my_tasks"
 ```
 
 #### My Tasks Query
 
-The `_cloudia/projects/my_tasks` command lists all **open tasks assigned to the current user** across all projects. This is the recommended way to quickly check your pending work.
+The `_cloudia/projects/my_tasks` command lists all **open tasks assigned to the current user** across all projects.
 
 ```bash
 composer script -- "_cloudia/projects/my_tasks"
 ```
 
-**Output includes:**
-- Priority indicator (`!!!` very_high, `!!` high, `!` medium, `.` low)
-- Task KeyId and status
-- Task title
-- Project, Milestone, Deadline, DueDate
-- Time tracking (spent/estimated hours)
-- Summary by status at the end
+> **Note**: For detailed task operations (show, get, update, delete), use `_cloudia/tasks` instead.
 
 #### Project Reports
 
-Both `backup-from-remote` and `update-from-backup` commands display detailed reports for each project processed:
-
-**Milestones Report:**
+The `backup-from-remote` command displays a **Milestones Report**:
 - Separated into **OPEN** and **CLOSED** groups
 - Shows: Title, Status, Deadline, Assignee (PlayerId)
 - Item is CLOSED if: Status is `closed`/`canceled` OR `Open` field is `false`
 
-**Tasks Report:**
-- Separated into **OPEN** and **CLOSED** groups
-- Shows: Title, Status, Deadline, Assignee, Hours (Spent/Estimated)
-- Includes subtotals of hours for open and closed tasks
-- Includes **Summary by Assignee** table with:
-  - Tasks count (Open/Closed) per person
-  - Hours (Open/Closed) per person
-  - Total row
+For task reports, use `composer script -- "_cloudia/tasks/project?id=PROJECT_KEYNAME"`.
 
 ### Task States and Priorities
 
@@ -1156,7 +1239,9 @@ Additional project-related CFOs:
 
 ## Tasks CRUD Script
 
-The `_cloudia/tasks.php` script provides **full CRUD functionality** for tasks: querying, creating, and updating tasks directly without needing to manipulate backup files.
+The `_cloudia/tasks.php` script provides **full CRUD functionality** for tasks: querying, creating, updating, and deleting tasks. Tasks can have associated checks (`CloudFrameWorkDevDocumentationForProcessTests`).
+
+**📚 Full documentation:** See `cloudia/skills/cloud-documentum-tasks-and-projects/SKILL.md`
 
 ### Available Commands
 
@@ -1165,80 +1250,89 @@ The `_cloudia/tasks.php` script provides **full CRUD functionality** for tasks: 
 | `/list` | List all open tasks assigned to the current user |
 | `/today` | List tasks active for today (DateInit <= today) |
 | `/sprint` | List tasks in the current active sprint |
-| `/project?id=KEY` | List all tasks for a specific project |
+| `/project?id=KEY` | List all tasks for a specific project (with hours report) |
 | `/milestone?id=KEYID` | List all tasks for a specific milestone |
 | `/person?email=EMAIL` | List tasks for a specific person |
-| `/get?id=TASK_KEYID` | Get detailed information about a specific task (includes raw JSON) |
-| `/insert?json={...}` | **CREATE** a new task from JSON |
-| `/update?id=KEYID&json={...}` | **UPDATE** an existing task from JSON |
+| `/show?id=TASK_KEYID` | Show detailed task info with checks and relations |
+| `/get?id=TASK_KEYID` | Export task + checks JSON to local file for editing |
+| `/insert?title=X&project=X&milestone=X` | **CREATE** a new task |
+| `/update?id=TASK_KEYID` | **UPDATE** task + checks from local file |
+| `/delete?id=TASK_KEYID` | **DELETE** a task (requires confirmation) |
 | `/search?params` | Search tasks with filters |
 
 ### Create Task (`/insert`)
 
 Creates a new task directly in the remote platform.
 
-**Required fields:**
-- `ProjectId` - Project KeyName
-- `Title` - Task title
+**Required parameters:**
+- `title` - Task title
+- `project` - Project KeyName (must exist)
+- `milestone` - Milestone KeyId (must exist)
 
-**Default values (if not provided):**
+**Default values (set automatically):**
 - `Status`: `pending`
 - `Priority`: `medium`
 - `Open`: `true`
+- `PlayerId`: Current user email (assigned to)
+- `PlayerIdSource`: Current user email (created by)
+- `DateInitTask`: Today's date
 
 **⚠️ KeyId is auto-generated** - Never include KeyId when creating tasks.
 
 ```bash
 # Create a simple task
-composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"cloud-development\",\"Title\":\"New Task\"}"
-
-# Create task with more fields
-composer script -- "_cloudia/tasks/insert?json={\"ProjectId\":\"cloud-development\",\"Title\":\"Implement feature\",\"Status\":\"in-progress\",\"Priority\":\"high\",\"PlayerId\":[\"dev@example.com\"],\"MilestoneId\":\"5734953457745920\"}"
-
-# Create task from stdin (useful for complex JSON)
-echo '{"ProjectId":"cloud-development","Title":"Complex Task","Description":"<p>Detailed description</p>"}' | composer script -- "_cloudia/tasks/insert"
+composer script -- "_cloudia/tasks/insert?title=New Task&project=cloud-development&milestone=5734953457745920"
 ```
+
+**Output:** Creates the task in remote and saves a local file at `./local_data/_cloudia/tasks/{TASK_ID}.json`
 
 ### Update Task (`/update`)
 
-Updates an existing task by KeyId.
+Updates an existing task and its checks from a local JSON file.
 
-**Required:**
-- `id` parameter - Task KeyId
-- `json` parameter - Fields to update (only include fields that should change)
+**Workflow:**
 
-#### Simple Updates (inline JSON)
+1. **Export task to local file:**
+   ```bash
+   composer script -- "_cloudia/tasks/get?id=5734953457745920"
+   ```
 
-For simple updates without HTML content:
+2. **Edit the local JSON file** at `./local_data/_cloudia/tasks/{TASK_ID}.json`
 
+3. **Update from local file:**
+   ```bash
+   composer script -- "_cloudia/tasks/update?id=5734953457745920"
+   ```
+
+**Behavior:**
+- Task data is compared with remote and updated only if different
+- Checks with `KeyId`: compared and updated if different
+- Checks without `KeyId`: inserted as new checks
+- Checks in remote but not in local: requires `delete=yes|no` parameter
+
+**Handling check deletions:**
 ```bash
-# Update task status
-composer script -- "_cloudia/tasks/update?id=5734953457745920&json={\"Status\":\"closed\",\"Open\":false}"
+# Delete remote checks not in local file:
+composer script -- "_cloudia/tasks/update?id=5734953457745920&delete=yes"
 
-# Update task title and priority
-composer script -- "_cloudia/tasks/update?id=5734953457745920&json={\"Title\":\"Updated Title\",\"Priority\":\"high\"}"
+# Skip deletion, only update/insert:
+composer script -- "_cloudia/tasks/update?id=5734953457745920&delete=no"
 ```
 
-#### ⚠️ Complex Updates with HTML (RECOMMENDED METHOD)
+### Delete Task (`/delete`)
 
-**When updating fields with HTML content (Solution, Description), use stdin with the PHP script directly.** The `composer script` approach with inline JSON fails due to shell escaping issues.
-
-```bash
-# Write JSON to temp file and pipe via stdin
-echo '{"Status":"closed","Open":false,"Solution":"<p><strong>Solution:</strong></p><ul><li>Change 1</li><li>Change 2</li></ul>"}' > /tmp/task_update.json && php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/tasks/update?id=5734953457745920" < /tmp/task_update.json
-```
-
-**Complete example - closing a task with solution:**
+Deletes a task and optionally its associated checks.
 
 ```bash
-echo '{"Status":"closed","Open":false,"Solution":"<p><strong>Solución implementada:</strong></p><h4>Cambios realizados:</h4><ul><li>Añadido método searchInDevGroups()</li><li>Integrado en searchInDev()</li></ul><h4>Archivos modificados:</h4><ul><li>class/CloudPlatform.php</li></ul><h4>Commit:</h4><p>47dd5311b</p>"}' > /tmp/task_update.json && php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/tasks/update?id=6365996002050048" < /tmp/task_update.json
-```
+# Step 1: View task info and warning
+composer script -- "_cloudia/tasks/delete?id=5734953457745920"
 
-**Why this method works:**
-1. JSON with HTML contains quotes, `<`, `>` that break shell parsing
-2. Writing to a file preserves the exact JSON structure
-3. Piping via stdin to the PHP script directly bypasses composer's argument handling
-4. The script reads stdin when no `json` parameter is provided
+# Step 2a: If task has NO checks, confirm:
+composer script -- "_cloudia/tasks/delete?id=5734953457745920&confirm=yes"
+
+# Step 2b: If task HAS checks, confirm both:
+composer script -- "_cloudia/tasks/delete?id=5734953457745920&delete_checks=yes&confirm=yes"
+```
 
 ### Query Commands
 
@@ -1273,7 +1367,10 @@ composer script -- "_cloudia/tasks/milestone?id=5734953457745920"
 # List tasks for a specific person
 composer script -- "_cloudia/tasks/person?email=user@example.com"
 
-# Get details of a specific task (includes raw JSON output)
+# Show task details with checks and relations
+composer script -- "_cloudia/tasks/show?id=6705991164362752"
+
+# Export task + checks to local file for editing
 composer script -- "_cloudia/tasks/get?id=6705991164362752"
 
 # Search tasks by status
@@ -1297,17 +1394,17 @@ At the end of each report, it shows:
 - Breakdown by status
 - User email used for filtering
 
-### When to Use `/insert` and `/update` vs Project Backup
+### Task vs Project Scripts
 
-| Operation | Use `_cloudia/tasks/` | Use `_cloudia/projects/` |
-|-----------|----------------------|--------------------------|
-| Create single task | ✅ `/insert` (faster) | ❌ |
-| Update single task | ✅ `/update` (faster) | When updating multiple tasks |
-| Bulk task operations | ❌ | ✅ `update-from-backup` |
-| Create task + checks | ❌ | ✅ (backup includes CHECKs) |
-| Sync all project data | ❌ | ✅ `backup-from-remote` |
+| Operation | Script |
+|-----------|--------|
+| Create/update/delete tasks | `_cloudia/tasks` **ONLY** |
+| Tasks with checks | `_cloudia/tasks` (get/update includes checks) |
+| Create/update projects | `_cloudia/projects` |
+| Create/update milestones | `_cloudia/projects` |
+| Report hours | `_cloudia/activity` |
 
-**Recommendation:** Use `_cloudia/tasks/insert` and `_cloudia/tasks/update` for **single task operations** as they are faster and don't require file manipulation. Use project backup/sync for bulk operations or when tasks have associated CHECKs.
+**⚠️ IMPORTANT:** The `_cloudia/projects` script does NOT manage tasks. Use `_cloudia/tasks` for ALL task operations.
 
 ## Activity Script
 

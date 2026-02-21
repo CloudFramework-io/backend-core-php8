@@ -6,8 +6,10 @@
  * - List my open tasks
  * - List tasks for today
  * - List tasks in the current sprint
+ * - List tasks for a specific project (with detailed report)
  * - List tasks for a specific person
- * - Get detailed information about a specific task
+ * - Show detailed task information with associated checks
+ * - Export task JSON to local file
  * - Create a new task from JSON input
  * - Update a task from JSON input
  * - Filter tasks by project, status, or priority
@@ -16,16 +18,17 @@
  *   _cloudia/tasks/list                               - List my open tasks
  *   _cloudia/tasks/today                              - List tasks for today
  *   _cloudia/tasks/sprint                             - List tasks in current sprint
- *   _cloudia/tasks/project?id=project-keyname         - List tasks for a specific project
+ *   _cloudia/tasks/project?id=project-keyname         - List tasks for a project (detailed report)
  *   _cloudia/tasks/milestone?id=milestone-keyid       - List tasks for a specific milestone
  *   _cloudia/tasks/person?email=user@example.com      - List tasks for a specific person
- *   _cloudia/tasks/get?id=TASK_KEYID                  - Get task details (includes raw JSON)
+ *   _cloudia/tasks/show?id=TASK_KEYID                 - Show task details with checks
+ *   _cloudia/tasks/get?id=TASK_KEYID                  - Export task JSON to ./local_data/_cloudia/tasks/
  *   _cloudia/tasks/insert?json={...}                  - Create new task from JSON
- *   _cloudia/tasks/update?id=TASK_KEYID&json={...}       - Update task from JSON
+ *   _cloudia/tasks/update?id=TASK_KEYID&json={...}    - Update task from JSON
  *   _cloudia/tasks/search?status=in-progress          - Search tasks by filters
  *
  * @author CloudFramework Development Team
- * @version 1.2
+ * @version 1.3
  */
 class Script extends CoreScripts
 {
@@ -95,12 +98,16 @@ class Script extends CoreScripts
         $this->sendTerminal("  /list                          - List my open tasks");
         $this->sendTerminal("  /today                         - List tasks active for today");
         $this->sendTerminal("  /sprint                        - List tasks in current sprint");
-        $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project");
+        $this->sendTerminal("  /project?id=KEY                - List tasks for a specific project (detailed report)");
         $this->sendTerminal("  /milestone?id=MILESTONE_KEYID  - List tasks for a specific milestone");
         $this->sendTerminal("  /person?email=EMAIL            - List tasks for a specific person");
-        $this->sendTerminal("  /get?id=TASK_KEYID             - Get detailed task information");
-        $this->sendTerminal("  /insert?json={...}             - Create a new task from JSON");
-        $this->sendTerminal("  /put?id=TASK_KEYID&json={...}  - Update a task from JSON");
+        $this->sendTerminal("  /show?id=TASK_KEYID            - Show detailed task info with checks");
+        $this->sendTerminal("  /get?id=TASK_KEYID             - Export task + checks JSON to local file");
+        $this->sendTerminal("  /update?id=TASK_KEYID          - Update task + checks from local file");
+        $this->sendTerminal("  /update?id=TASK_KEYID&delete=yes|no - Confirm or skip deletion of remote checks");
+        $this->sendTerminal("  /insert?title=TITLE&project=ID&milestone=ID - Create a new task");
+        $this->sendTerminal("  /delete?id=TASK_KEYID          - Delete a task (requires confirm=yes)");
+        $this->sendTerminal("  /delete?...&delete_checks=yes  - Confirm deletion of associated checks");
         $this->sendTerminal("  /search?status=STATE           - Search tasks by filters");
         $this->sendTerminal("");
         $this->sendTerminal("Filter parameters for /search:");
@@ -112,12 +119,22 @@ class Script extends CoreScripts
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer script -- _cloudia/tasks/list");
         $this->sendTerminal("  composer script -- _cloudia/tasks/today");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/project?id=cloud-platform\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/milestone?id=5734953457745920\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/person?email=user@example.com\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/show?id=5734953457745920\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/get?id=5734953457745920\"");
-        $this->sendTerminal("  composer script -- \"_cloudia/tasks/insert?json={\\\"ProjectId\\\":\\\"my-project\\\",\\\"Title\\\":\\\"New Task\\\"}\"");
-        $this->sendTerminal("  composer script -- \"_cloudia/tasks/update?id=5734953457745920&json={\\\"Status\\\":\\\"closed\\\"}\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/update?id=5734953457745920\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/insert?title=New Task&project=my-project&milestone=123456\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/delete?id=5734953457745920\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/delete?id=5734953457745920&confirm=yes\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/tasks/delete?id=5734953457745920&delete_checks=yes&confirm=yes\"");
         $this->sendTerminal("  composer script -- \"_cloudia/tasks/search?status=in-progress&priority=high\"");
+        $this->sendTerminal("");
+        $this->sendTerminal("Workflow: get -> edit file -> update");
+        $this->sendTerminal("  1. Export task: composer script -- \"_cloudia/tasks/get?id=TASK_ID\"");
+        $this->sendTerminal("  2. Edit file:   ./local_data/_cloudia/tasks/TASK_ID.json");
+        $this->sendTerminal("  3. Update:      composer script -- \"_cloudia/tasks/update?id=TASK_ID\"");
     }
 
     /**
@@ -267,7 +284,10 @@ class Script extends CoreScripts
     }
 
     /**
-     * List tasks for a specific project
+     * List tasks for a specific project with detailed report
+     *
+     * Shows tasks separated by OPEN/CLOSED status with hours summary
+     * and breakdown by assignee.
      */
     public function METHOD_project(): bool
     {
@@ -278,10 +298,32 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region FETCH project info
+        $this->sendTerminal("");
+        $this->sendTerminal("Fetching project [{$project_id}]...");
+
+        $project_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsEntries/display/" . urlencode($project_id) . "?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if (!$this->core->request->error && ($project_response['data'] ?? null)) {
+            $project = $project_response['data'];
+            $projectTitle = $project['Title'] ?? 'Untitled Project';
+            $projectStatus = $project['Status'] ?? '';
+            $projectType = $project['Type'] ?? '';
+            $projectOpen = ($project['Open'] ?? false) ? 'Open' : 'Closed';
+            $this->sendTerminal("");
+            $this->sendTerminal("Project: {$projectTitle}");
+            if ($projectType) $this->sendTerminal("Type: {$projectType}");
+            if ($projectStatus) $this->sendTerminal("Status: {$projectStatus} ({$projectOpen})");
+        }
+        //endregion
+
         //region FETCH tasks for the project
         $this->sendTerminal("");
-        $this->sendTerminal("Tasks for project [{$project_id}]:");
-        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal("Fetching tasks for project [{$project_id}]...");
 
         $params = [
             'filter_ProjectId' => $project_id,
@@ -302,7 +344,11 @@ class Script extends CoreScripts
         }
 
         $tasks = $response['data'] ?? [];
-        $this->displayTaskList($tasks);
+        $this->sendTerminal(" - Found " . count($tasks) . " tasks");
+        //endregion
+
+        //region DISPLAY tasks report
+        $this->displayTasksReport($tasks, $project_id);
         //endregion
 
         return true;
@@ -430,7 +476,12 @@ class Script extends CoreScripts
     }
 
     /**
-     * Get detailed task information
+     * Export task and checks JSON to local file
+     *
+     * Saves the task data and associated checks to ./local_data/_cloudia/tasks/{task_id}.json
+     * Structure:
+     *   - CloudFrameWorkProjectsTasks: task data
+     *   - CloudFrameWorkDevDocumentationForProcessTests: associated checks
      */
     public function METHOD_get()
     {
@@ -438,6 +489,112 @@ class Script extends CoreScripts
         $task_id = $this->formParams['id'] ?? null;
         if (!$task_id) {
             return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/get?id=TASK_KEYID");
+        }
+        //endregion
+
+        //region FETCH task details using display endpoint
+        $this->sendTerminal("");
+        $this->sendTerminal("Fetching task [{$task_id}]...");
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/display/{$task_id}?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $task = $response['data'] ?? null;
+        if (!$task) {
+            return $this->addError("Task [{$task_id}] not found");
+        }
+        $this->sendTerminal(" - Task found: {$task['Title']}");
+        //endregion
+
+        //region FETCH associated checks
+        $this->sendTerminal(" - Fetching associated checks...");
+
+        $checks_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => 'CloudFrameWorkProjectsTasks',
+                'filter_CFOId' => $task_id,
+                '_order' => 'Route',
+                'cfo_limit' => 200,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        $checks = [];
+        if (!$this->core->request->error && ($checks_response['data'] ?? null)) {
+            $checks = $checks_response['data'];
+            // Sort checks by KeyId
+            foreach ($checks as &$check) {
+                ksort($check);
+            }
+            usort($checks, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+        }
+        $this->sendTerminal(" - Checks found: " . count($checks));
+        //endregion
+
+        //region CREATE output directory if not exists
+        $output_dir = $this->core->system->root_path . '/local_data/_cloudia/tasks';
+
+        // Create directories recursively if they don't exist
+        if (!is_dir($output_dir)) {
+            if (!mkdir($output_dir, 0755, true)) {
+                return $this->addError("Failed to create directory: {$output_dir}");
+            }
+            $this->sendTerminal(" - Created directory: ./local_data/_cloudia/tasks");
+        }
+        //endregion
+
+        //region BUILD data structure and WRITE to file
+        // Sort task keys
+        ksort($task);
+
+        $data = [
+            'CloudFrameWorkProjectsTasks' => $task,
+            'CloudFrameWorkDevDocumentationForProcessTests' => $checks
+        ];
+
+        $filepath = "{$output_dir}/{$task_id}.json";
+        $json_content = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if (file_put_contents($filepath, $json_content) === false) {
+            return $this->addError("Failed to write file: {$filepath}");
+        }
+
+        $this->sendTerminal(" + Saved: ./local_data/_cloudia/tasks/{$task_id}.json");
+        $this->sendTerminal("");
+        $this->sendTerminal("Task: {$task['Title']}");
+        $this->sendTerminal("Project: {$task['ProjectId']}");
+        $milestone = $task['MilestoneId'] ?? null;
+        if ($milestone) {
+            $this->sendTerminal("Milestone: {$milestone}");
+        }
+        $this->sendTerminal("Status: {$task['Status']}");
+        $this->sendTerminal("Checks: " . count($checks));
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Show detailed task information including associated checks
+     */
+    public function METHOD_show()
+    {
+        //region VALIDATE task ID
+        $task_id = $this->formParams['id'] ?? null;
+        if (!$task_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/show?id=TASK_KEYID");
         }
         //endregion
 
@@ -462,12 +619,200 @@ class Script extends CoreScripts
         }
 
         $this->displayTaskDetail($task);
+        //endregion
 
-        //region SHOW raw JSON
+        //region FETCH and DISPLAY project info (if linked)
+        $project_id = $task['ProjectId'] ?? null;
+        if ($project_id) {
+            $project_response = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsEntries/display/" . urlencode($project_id) . "?_raw&_timezone=UTC",
+                ['_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+
+            if (!$this->core->request->error && ($project_response['data'] ?? null)) {
+                $project = $project_response['data'];
+                $this->sendTerminal("");
+                $this->sendTerminal(" Project Info:");
+                $this->sendTerminal(str_repeat('-', 100));
+                $this->sendTerminal(" Title: {$project['Title']}");
+                if ($projectType = $project['Type'] ?? null) {
+                    $this->sendTerminal(" Type: {$projectType}");
+                }
+                if ($projectStatus = $project['Status'] ?? null) {
+                    $projectOpen = ($project['Open'] ?? false) ? 'Open' : 'Closed';
+                    $this->sendTerminal(" Status: {$projectStatus} ({$projectOpen})");
+                }
+                if ($projectDescription = $project['Description'] ?? null) {
+                    $cleanDesc = strip_tags($projectDescription);
+                    $cleanDesc = html_entity_decode($cleanDesc);
+                    $cleanDesc = preg_replace('/\s+/', ' ', trim($cleanDesc));
+                    if (strlen($cleanDesc) > 300) {
+                        $cleanDesc = substr($cleanDesc, 0, 297) . '...';
+                    }
+                    $this->sendTerminal(" Description: " . $cleanDesc);
+                }
+            }
+        }
+        //endregion
+
+        //region FETCH and DISPLAY milestone info (if linked)
+        $milestone_id = $task['MilestoneId'] ?? null;
+        if ($milestone_id) {
+            $milestone_response = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/display/{$milestone_id}?_raw&_timezone=UTC",
+                ['_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+
+            if (!$this->core->request->error && ($milestone_response['data'] ?? null)) {
+                $milestone = $milestone_response['data'];
+                $this->sendTerminal("");
+                $this->sendTerminal(" Milestone Info:");
+                $this->sendTerminal(str_repeat('-', 100));
+                $this->sendTerminal(" Title: {$milestone['Title']}");
+                if ($milestoneStatus = $milestone['Status'] ?? null) {
+                    $this->sendTerminal(" Status: {$milestoneStatus}");
+                }
+                if ($milestoneDeadline = $milestone['DateDeadLine'] ?? null) {
+                    $this->sendTerminal(" Deadline: {$milestoneDeadline}");
+                }
+                if ($milestoneDescription = $milestone['Description'] ?? null) {
+                    $cleanDesc = strip_tags($milestoneDescription);
+                    $cleanDesc = html_entity_decode($cleanDesc);
+                    $cleanDesc = preg_replace('/\s+/', ' ', trim($cleanDesc));
+                    if (strlen($cleanDesc) > 300) {
+                        $cleanDesc = substr($cleanDesc, 0, 297) . '...';
+                    }
+                    $this->sendTerminal(" Description: " . $cleanDesc);
+                }
+            }
+        }
+        //endregion
+
+        //region FETCH and DISPLAY WebApps info (if linked)
+        $webapps = $task['WebApps'] ?? [];
+        if (!is_array($webapps)) {
+            $webapps = $webapps ? [$webapps] : [];
+        }
+
+        if (!empty($webapps)) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" WebApps Info (" . count($webapps) . "):");
+            $this->sendTerminal(str_repeat('-', 100));
+
+            foreach ($webapps as $webapp_id) {
+                if (!$webapp_id) continue;
+
+                $webapp_response = $this->core->request->get_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebApps/display/" . urlencode($webapp_id) . "?_raw&_timezone=UTC",
+                    ['_raw' => 1, '_timezone' => 'UTC'],
+                    $this->headers
+                );
+
+                if (!$this->core->request->error && ($webapp_response['data'] ?? null)) {
+                    $webapp = $webapp_response['data'];
+                    $this->sendTerminal(" [{$webapp_id}]");
+                    $this->sendTerminal("   Title: {$webapp['Title']}");
+                    if ($webappStatus = $webapp['Status'] ?? null) {
+                        $this->sendTerminal("   Status: {$webappStatus}");
+                    }
+                    if ($webappType = $webapp['Type'] ?? null) {
+                        $this->sendTerminal("   Type: {$webappType}");
+                    }
+                    if ($webappDescription = $webapp['Description'] ?? null) {
+                        $cleanDesc = strip_tags($webappDescription);
+                        $cleanDesc = html_entity_decode($cleanDesc);
+                        $cleanDesc = preg_replace('/\s+/', ' ', trim($cleanDesc));
+                        if (strlen($cleanDesc) > 300) {
+                            $cleanDesc = substr($cleanDesc, 0, 297) . '...';
+                        }
+                        $this->sendTerminal("   Description: " . $cleanDesc);
+                    }
+                    $this->sendTerminal("");
+                } else {
+                    $this->sendTerminal(" [{$webapp_id}] - Not found or error fetching");
+                    $this->sendTerminal("");
+                }
+            }
+        }
+        //endregion
+
+        //region FETCH and DISPLAY associated checks
         $this->sendTerminal("");
-        $this->sendTerminal("Raw JSON:");
+        $this->sendTerminal(" Checks:");
         $this->sendTerminal(str_repeat('-', 100));
-        $this->sendTerminal(json_encode($task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        $checks_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => 'CloudFrameWorkProjectsTasks',
+                'filter_CFOId' => $task_id,
+                '_order' => 'Route',
+                'cfo_limit' => 100,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            $this->sendTerminal(" # Error fetching checks: " . json_encode($this->core->request->errorMsg));
+        } else {
+            $checks = $checks_response['data'] ?? [];
+            if (!$checks) {
+                $this->sendTerminal(" No checks found for this task");
+            } else {
+                $this->sendTerminal(" Found " . count($checks) . " check(s):");
+                $this->sendTerminal("");
+
+                foreach ($checks as $index => $check) {
+                    $checkKeyId = $check['KeyId'] ?? 'N/A';
+                    $checkRoute = $check['Route'] ?? '';
+                    $checkTitle = $check['Title'] ?? 'Untitled';
+                    $checkStatus = $check['Status'] ?? 'N/A';
+                    $checkDescription = $check['Description'] ?? '';
+
+                    $this->sendTerminal(sprintf(" [%d] %s", $index + 1, $checkTitle));
+                    $this->sendTerminal(sprintf("     KeyId: %s | Route: %s | Status: %s", $checkKeyId, $checkRoute, $checkStatus));
+
+                    // Show check description if available
+                    if ($checkDescription) {
+                        // Clean and format description
+                        $cleanDesc = strip_tags($checkDescription);
+                        $cleanDesc = html_entity_decode($cleanDesc);
+                        $cleanDesc = preg_replace('/\s+/', ' ', trim($cleanDesc));
+                        if (strlen($cleanDesc) > 200) {
+                            $cleanDesc = substr($cleanDesc, 0, 197) . '...';
+                        }
+                        $this->sendTerminal("     Description: " . $cleanDesc);
+                    }
+
+                    // Show additional check fields if present
+                    if ($checkExpected = $check['Expected'] ?? null) {
+                        $cleanExpected = strip_tags($checkExpected);
+                        $cleanExpected = html_entity_decode($cleanExpected);
+                        $cleanExpected = preg_replace('/\s+/', ' ', trim($cleanExpected));
+                        if (strlen($cleanExpected) > 200) {
+                            $cleanExpected = substr($cleanExpected, 0, 197) . '...';
+                        }
+                        $this->sendTerminal("     Expected: " . $cleanExpected);
+                    }
+
+                    if ($checkSteps = $check['Steps'] ?? null) {
+                        $cleanSteps = strip_tags($checkSteps);
+                        $cleanSteps = html_entity_decode($cleanSteps);
+                        $cleanSteps = preg_replace('/\s+/', ' ', trim($cleanSteps));
+                        if (strlen($cleanSteps) > 200) {
+                            $cleanSteps = substr($cleanSteps, 0, 197) . '...';
+                        }
+                        $this->sendTerminal("     Steps: " . $cleanSteps);
+                    }
+
+                    $this->sendTerminal("");
+                }
+            }
+        }
         $this->sendTerminal(str_repeat('=', 100));
         //endregion
 
@@ -475,233 +820,501 @@ class Script extends CoreScripts
     }
 
     /**
-     * Update a task from JSON input
+     * Update a task and checks from local JSON file
      *
-     * Receives task data via:
-     * - Form parameter 'json' containing the JSON string
-     * - Or reads from stdin if 'json' param not provided
+     * Reads the task data from ./local_data/_cloudia/tasks/{task_id}.json
+     * and updates both the task and associated checks in the remote platform.
+     *
+     * Validates:
+     * - KeyId in file matches the id parameter
+     * - Compares with remote to avoid unnecessary updates
+     *
+     * Check handling:
+     * - Checks with KeyId that exist in remote: compared and updated if different
+     * - Checks without KeyId: inserted as new checks
+     * - Checks in remote but not in local: requires delete=yes|no parameter
+     *   - If delete=yes: deletes remote checks not present in local
+     *   - If delete=no: skips deletion, only updates/inserts
+     *   - If not specified: shows warning and requires re-run with parameter
+     *
+     * Auto-refresh:
+     * - After any changes (task/checks updated/inserted/deleted), automatically
+     *   refreshes the local file with the latest data from remote
+     * - This ensures new checks get their assigned KeyIds in the local file
      *
      * Required: 'id' parameter with the task KeyId
+     * Optional: 'delete' parameter (yes|no) for remote check deletion
      *
      * Usage:
-     *   _cloudia/tasks/update?id=TASK_KEYID&json={"Status":"in-progress","Title":"Updated"}
-     *   echo '{"Status":"closed"}' | composer script -- "_cloudia/tasks/update?id=TASK_KEYID"
+     *   _cloudia/tasks/update?id=TASK_KEYID
+     *   _cloudia/tasks/update?id=TASK_KEYID&delete=yes
+     *   _cloudia/tasks/update?id=TASK_KEYID&delete=no
      */
     public function METHOD_update(): bool
     {
         //region VALIDATE task ID
         $task_id = $this->formParams['id'] ?? null;
         if (!$task_id) {
-            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/update?id=TASK_KEYID&json={...}");
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/update?id=TASK_KEYID");
         }
         //endregion
 
-        //region GET JSON data from parameter or stdin
-        $json_string = $this->formParams['json'] ?? null;
+        //region READ JSON file from local_data
+        $filepath = $this->core->system->root_path . "/local_data/_cloudia/tasks/{$task_id}.json";
 
-        if (!$json_string) {
-            // Try to read from stdin
-            $stdin = file_get_contents('php://stdin');
-
-            if ($stdin && trim($stdin)) {
-                $json_string = trim($stdin);
-            }
-        }
-
-
-        if (!$json_string) {
-            return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
-        }
-
-        $task_data = json_decode($json_string, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->addError("Invalid JSON: " . json_last_error_msg());
-        }
-
-        if (!is_array($task_data) || empty($task_data)) {
-            return $this->addError("JSON must be a non-empty object with fields to update");
-        }
-        //endregion
-
-        //region FETCH current task to verify it exists
         $this->sendTerminal("");
-        $this->sendTerminal("Updating task [{$task_id}]...");
+        $this->sendTerminal("Updating task [{$task_id}] from local file...");
         $this->sendTerminal(str_repeat('-', 100));
 
-        $response = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/display/{$task_id}",
+        if (!is_file($filepath)) {
+            return $this->addError("Local file not found: ./local_data/_cloudia/tasks/{$task_id}.json. Use 'get' command first to export the task.");
+        }
+
+        $json_content = file_get_contents($filepath);
+        if ($json_content === false) {
+            return $this->addError("Failed to read file: {$filepath}");
+        }
+
+        $data = json_decode($json_content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return $this->addError("Invalid JSON in file: " . json_last_error_msg());
+        }
+
+        $local_task = $data['CloudFrameWorkProjectsTasks'] ?? null;
+        $local_checks = $data['CloudFrameWorkDevDocumentationForProcessTests'] ?? [];
+
+        if (!$local_task) {
+            return $this->addError("Invalid file structure: missing 'CloudFrameWorkProjectsTasks' node");
+        }
+
+        // Validate KeyId matches
+        $file_key_id = $local_task['KeyId'] ?? null;
+        if (!$file_key_id) {
+            return $this->addError("Invalid task data: missing 'KeyId' in CloudFrameWorkProjectsTasks");
+        }
+        if ($file_key_id !== $task_id) {
+            return $this->addError("KeyId mismatch: file contains KeyId '{$file_key_id}' but parameter id is '{$task_id}'");
+        }
+
+        $this->sendTerminal(" - File loaded: ./local_data/_cloudia/tasks/{$task_id}.json");
+        $this->sendTerminal(" - Task: {$local_task['Title']}");
+        $this->sendTerminal(" - Checks in file: " . count($local_checks));
+        //endregion
+
+        //region FETCH remote task for comparison
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Fetching remote data for comparison...");
+
+        $remote_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/display/{$task_id}?_raw&_timezone=UTC",
             ['_raw' => 1, '_timezone' => 'UTC'],
             $this->headers
         );
 
         if ($this->core->request->error) {
-            return $this->addError($this->core->request->errorMsg);
+            return $this->addError("API Error fetching remote task: " . json_encode($this->core->request->errorMsg));
         }
 
-        $current_task = $response['data'] ?? null;
-        if (!$current_task) {
-            return $this->addError("Task [{$task_id}] not found");
-        }
-
-        $this->sendTerminal(" - Current task: {$current_task['Title']}");
-        $this->sendTerminal(" - Status: {$current_task['Status']} | Open: " . ($current_task['Open'] ? 'Yes' : 'No'));
-        //endregion
-
-        //region SHOW fields being updated
-        $this->sendTerminal("");
-        $this->sendTerminal(" - Fields to update:");
-        foreach ($task_data as $field => $value) {
-            $displayValue = is_array($value) ? json_encode($value) : (string)$value;
-            if (strlen($displayValue) > 80) {
-                $displayValue = substr($displayValue, 0, 77) . '...';
-            }
-            $this->sendTerminal("   * {$field}: {$displayValue}");
+        $remote_task = $remote_response['data'] ?? null;
+        if (!$remote_task) {
+            return $this->addError("Task [{$task_id}] not found in remote platform");
         }
         //endregion
 
-        //region UPDATE task via API
-        $this->sendTerminal("");
-        $this->sendTerminal(" - Sending update to remote platform...");
-
-        $response = $this->core->request->put_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_id}?_raw&_timezone=UTC",
-            $task_data,
-            $this->headers,
-            true // JSON body flag
+        //region FETCH remote checks and ANALYZE differences
+        $checks_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => 'CloudFrameWorkProjectsTasks',
+                'filter_CFOId' => $task_id,
+                'cfo_limit' => 200,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
         );
 
-        if ($this->core->request->error) {
-            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        $remote_checks = $checks_response['data'] ?? [];
+        $this->sendTerminal(" - Remote checks: " . count($remote_checks));
+
+        // Index remote checks by KeyId
+        $remote_indexed = [];
+        foreach ($remote_checks as $check) {
+            $remote_indexed[$check['KeyId']] = $check;
         }
 
-        if (!($response['success'] ?? false)) {
-            $errorMsg = $response['errorMsg'] ?? $response['error'] ?? 'Unknown error';
-            if (is_array($errorMsg)) {
-                $errorMsg = implode(', ', $errorMsg);
+        // Index local checks by KeyId (only those that have KeyId)
+        $local_indexed = [];
+        $local_new_checks = []; // Checks without KeyId (to be inserted)
+        foreach ($local_checks as $check) {
+            if ($keyId = $check['KeyId'] ?? null) {
+                $local_indexed[$keyId] = $check;
+            } else {
+                $local_new_checks[] = $check;
             }
-            return $this->addError("Update failed: {$errorMsg}");
+        }
+
+        // Identify checks to delete (exist in remote but not in local)
+        $checks_to_delete = [];
+        foreach ($remote_indexed as $keyId => $remote_check) {
+            if (!isset($local_indexed[$keyId])) {
+                $checks_to_delete[$keyId] = $remote_check;
+            }
         }
         //endregion
 
-        //region SHOW updated task
-        $updated_task = $response['data'] ?? null;
-        if ($updated_task) {
-            $this->sendTerminal("");
-            $this->sendTerminal("Task updated successfully!");
-            $this->sendTerminal(str_repeat('-', 100));
-            $this->sendTerminal(" - Title: {$updated_task['Title']}");
-            $this->sendTerminal(" - Status: {$updated_task['Status']}");
-            $this->sendTerminal(" - Open: " . (($updated_task['Open'] ?? false) ? 'Yes' : 'No'));
-            $this->sendTerminal(" - Updated: {$updated_task['DateUpdating']}");
+        //region CHECK if delete confirmation is needed
+        if (!empty($checks_to_delete)) {
+            $delete_param = $this->formParams['delete'] ?? null;
 
-            $this->sendTerminal("");
-            $this->sendTerminal("Updated JSON:");
-            $this->sendTerminal(str_repeat('-', 100));
-            $this->sendTerminal(json_encode($updated_task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+            if ($delete_param === null) {
+                // Show checks that will be deleted and require confirmation
+                $this->sendTerminal("");
+                $this->sendTerminal(" !! WARNING: The following checks exist in REMOTE but NOT in LOCAL:");
+                $this->sendTerminal(str_repeat('-', 100));
+                foreach ($checks_to_delete as $keyId => $check) {
+                    $this->sendTerminal("    - [{$keyId}] {$check['Title']}");
+                }
+                $this->sendTerminal(str_repeat('-', 100));
+                $this->sendTerminal("");
+                $this->sendTerminal(" These checks will be DELETED from remote if you proceed.");
+                $this->sendTerminal(" To confirm deletion, re-run the command with: delete=yes");
+                $this->sendTerminal(" To skip deletion (only update/insert), re-run with: delete=no");
+                $this->sendTerminal("");
+                $this->sendTerminal(" Example:");
+                $this->sendTerminal("   composer script -- \"_cloudia/tasks/update?id={$task_id}&delete=yes\"");
+                $this->sendTerminal("   composer script -- \"_cloudia/tasks/update?id={$task_id}&delete=no\"");
+                $this->sendTerminal("");
+                return $this->addError("Delete confirmation required. Use delete=yes or delete=no parameter.");
+            }
+
+            $allow_delete = ($delete_param === 'yes');
+            if (!$allow_delete && $delete_param !== 'no') {
+                return $this->addError("Invalid delete parameter value. Use delete=yes or delete=no");
+            }
+
+            if ($allow_delete) {
+                $this->sendTerminal(" - Delete parameter: yes (will delete " . count($checks_to_delete) . " remote checks)");
+            } else {
+                $this->sendTerminal(" - Delete parameter: no (skipping deletion of " . count($checks_to_delete) . " remote checks)");
+            }
         } else {
-            $this->sendTerminal("");
-            $this->sendTerminal("Task updated (no data returned)");
+            $allow_delete = false; // No checks to delete
         }
-        $this->sendTerminal(str_repeat('=', 100));
         //endregion
+
+        //region COMPARE and UPDATE task if different
+        // Sort both arrays by key for proper comparison
+        ksort($local_task);
+        ksort($remote_task);
+
+        $task_updated = false;
+        $updated_task = $remote_task; // Default to remote if no update needed
+
+        if (json_encode($local_task) !== json_encode($remote_task)) {
+            $this->sendTerminal(" - Changes detected in task, updating...");
+
+            $response = $this->core->request->put_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_id}?_raw&_timezone=UTC",
+                $local_task,
+                $this->headers,
+                true
+            );
+
+            if ($this->core->request->error) {
+                return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+            }
+
+            if (!($response['success'] ?? false)) {
+                $errorMsg = $response['errorMsg'] ?? $response['error'] ?? 'Unknown error';
+                if (is_array($errorMsg)) {
+                    $errorMsg = implode(', ', $errorMsg);
+                }
+                return $this->addError("Task update failed: {$errorMsg}");
+            }
+
+            $updated_task = $response['data'] ?? $local_task;
+            $task_updated = true;
+            $this->sendTerminal(" + Task updated successfully");
+        } else {
+            $this->sendTerminal(" - No changes in task, skipping update");
+        }
+        //endregion
+
+        //region SYNC checks with remote platform
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Syncing checks...");
+
+        $checks_updated = 0;
+        $checks_inserted = 0;
+        $checks_deleted = 0;
+        $checks_unchanged = 0;
+        $checks_skipped = 0;
+
+        // Process remote checks: update, delete, or skip
+        foreach ($remote_indexed as $keyId => $remote_check) {
+            if (!isset($local_indexed[$keyId])) {
+                // Remote check not in local - delete or skip based on parameter
+                if ($allow_delete) {
+                    $this->sendTerminal("   - Deleting check: {$remote_check['Title']}");
+                    $this->core->request->delete(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw",
+                        $this->headers
+                    );
+                    $checks_deleted++;
+                } else {
+                    $checks_skipped++;
+                }
+            } else {
+                // Check exists in both - compare and update if different
+                $local_check_sorted = $local_indexed[$keyId];
+                $remote_check_sorted = $remote_check;
+                ksort($local_check_sorted);
+                ksort($remote_check_sorted);
+
+                if (json_encode($local_check_sorted) !== json_encode($remote_check_sorted)) {
+                    $this->sendTerminal("   - Updating check: {$local_indexed[$keyId]['Title']}");
+                    $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw&_timezone=UTC",
+                        $local_indexed[$keyId],
+                        $this->headers,
+                        true
+                    );
+                    $checks_updated++;
+                } else {
+                    $checks_unchanged++;
+                }
+                unset($local_indexed[$keyId]);
+            }
+        }
+
+        // Insert checks that have KeyId but don't exist in remote
+        foreach ($local_indexed as $keyId => $local_check) {
+            $this->sendTerminal("   - Inserting check: {$local_check['Title']}");
+            unset($local_check['KeyId']); // Remove KeyId for insert
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                $local_check,
+                $this->headers
+            );
+            $checks_inserted++;
+        }
+
+        // Insert new checks (those without KeyId)
+        foreach ($local_new_checks as $local_check) {
+            $this->sendTerminal("   - Inserting new check: {$local_check['Title']}");
+            // Ensure CFOEntity and CFOId are set for new checks
+            $local_check['CFOEntity'] = 'CloudFrameWorkProjectsTasks';
+            $local_check['CFOId'] = $task_id;
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                $local_check,
+                $this->headers
+            );
+            $checks_inserted++;
+        }
+
+        // Build summary message
+        $summary_parts = [];
+        if ($checks_updated > 0) $summary_parts[] = "{$checks_updated} updated";
+        if ($checks_inserted > 0) $summary_parts[] = "{$checks_inserted} inserted";
+        if ($checks_deleted > 0) $summary_parts[] = "{$checks_deleted} deleted";
+        if ($checks_unchanged > 0) $summary_parts[] = "{$checks_unchanged} unchanged";
+        if ($checks_skipped > 0) $summary_parts[] = "{$checks_skipped} skipped (not deleted)";
+
+        $this->sendTerminal(" + Checks: " . implode(', ', $summary_parts));
+        //endregion
+
+        //region SHOW summary
+        $this->sendTerminal("");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $has_changes = $task_updated || $checks_updated > 0 || $checks_inserted > 0 || $checks_deleted > 0;
+
+        if ($has_changes) {
+            $this->sendTerminal("Update completed!");
+        } else {
+            $this->sendTerminal("No changes detected - nothing to update");
+        }
+
+        $this->sendTerminal(" - Title: {$updated_task['Title']}");
+        $this->sendTerminal(" - Project: {$updated_task['ProjectId']}");
+        $milestone = $updated_task['MilestoneId'] ?? null;
+        if ($milestone) {
+            $this->sendTerminal(" - Milestone: {$milestone}");
+        }
+        $this->sendTerminal(" - Status: {$updated_task['Status']}");
+        if ($task_updated) {
+            $this->sendTerminal(" - Updated: {$updated_task['DateUpdating']}");
+        }
+        //endregion
+
+        //region REFRESH local file if changes were made
+        if ($has_changes) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" - Refreshing local file with remote data...");
+
+            // Fetch updated task from remote
+            $refresh_task_response = $this->core->request->get_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/display/{$task_id}?_raw&_timezone=UTC",
+                ['_raw' => 1, '_timezone' => 'UTC'],
+                $this->headers
+            );
+
+            if (!$this->core->request->error && ($refresh_task_response['data'] ?? null)) {
+                $refreshed_task = $refresh_task_response['data'];
+                ksort($refreshed_task);
+
+                // Fetch updated checks from remote
+                $refresh_checks_response = $this->core->request->get_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                    [
+                        'filter_CFOEntity' => 'CloudFrameWorkProjectsTasks',
+                        'filter_CFOId' => $task_id,
+                        '_order' => 'Route',
+                        'cfo_limit' => 200,
+                        '_raw' => 1,
+                        '_timezone' => 'UTC'
+                    ],
+                    $this->headers
+                );
+
+                $refreshed_checks = [];
+                if (!$this->core->request->error && ($refresh_checks_response['data'] ?? null)) {
+                    $refreshed_checks = $refresh_checks_response['data'];
+                    // Sort checks by KeyId
+                    foreach ($refreshed_checks as &$check) {
+                        ksort($check);
+                    }
+                    usort($refreshed_checks, function ($a, $b) {
+                        return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+                    });
+                }
+
+                // Build and save refreshed data
+                $refreshed_data = [
+                    'CloudFrameWorkProjectsTasks' => $refreshed_task,
+                    'CloudFrameWorkDevDocumentationForProcessTests' => $refreshed_checks
+                ];
+
+                $json_content = json_encode($refreshed_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                if (file_put_contents($filepath, $json_content) !== false) {
+                    $this->sendTerminal(" + Local file updated: ./local_data/_cloudia/tasks/{$task_id}.json");
+                } else {
+                    $this->sendTerminal(" # Warning: Failed to update local file");
+                }
+            } else {
+                $this->sendTerminal(" # Warning: Failed to refresh data from remote");
+            }
+        }
+        //endregion
+
+        $this->sendTerminal(str_repeat('=', 100));
 
         return true;
     }
 
     /**
-     * Create a new task from JSON input
+     * Create a new task with basic parameters
      *
-     * Receives task data via:
-     * - Form parameter 'json' containing the JSON string
-     * - Or reads from stdin if 'json' param not provided
+     * Creates a new task with the specified title, project, and milestone.
+     * Validates that both project and milestone exist in the remote platform.
+     * After successful creation, generates a local JSON file that can be edited
+     * and updated using the 'update' command.
      *
-     * Required fields: ProjectId, Title
-     * KeyId must NOT be included (will be auto-generated)
+     * Required: 'title', 'project', and 'milestone' parameters
+     *
+     * Default values:
+     * - Status: pending
+     * - Priority: medium
+     * - Open: true
      *
      * Usage:
-     *   _cloudia/tasks/insert?json={"ProjectId":"my-project","Title":"New Task","Status":"pending"}
-     *   echo '{"ProjectId":"my-project","Title":"New Task"}' | composer script -- "_cloudia/tasks/insert"
+     *   _cloudia/tasks/insert?title=My Task&project=my-project&milestone=MILESTONE_KEYID
      */
     public function METHOD_insert(): bool
     {
-        //region GET JSON data from parameter or stdin
-        $json_string = $this->formParams['json'] ?? null;
+        //region VALIDATE required parameters
+        $title = $this->formParams['title'] ?? null;
+        $project = $this->formParams['project'] ?? null;
+        $milestone = $this->formParams['milestone'] ?? null;
 
-        if (!$json_string) {
-            // Try to read from stdin
-            $stdin = file_get_contents('php://stdin');
-            if ($stdin && trim($stdin)) {
-                $json_string = trim($stdin);
-            }
+        if (!$title) {
+            return $this->addError("Missing required parameter: title. Usage: _cloudia/tasks/insert?title=TITLE&project=PROJECT_ID&milestone=MILESTONE_ID");
         }
 
-        if (!$json_string) {
-            return $this->addError("Missing JSON data. Provide via 'json' parameter or stdin");
+        if (!$project) {
+            return $this->addError("Missing required parameter: project. Usage: _cloudia/tasks/insert?title=TITLE&project=PROJECT_ID&milestone=MILESTONE_ID");
         }
 
-        $task_data = json_decode($json_string, true);
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            return $this->addError("Invalid JSON: " . json_last_error_msg());
-        }
-
-        if (!is_array($task_data) || empty($task_data)) {
-            return $this->addError("JSON must be a non-empty object with task fields");
+        if (!$milestone) {
+            return $this->addError("Missing required parameter: milestone. Usage: _cloudia/tasks/insert?title=TITLE&project=PROJECT_ID&milestone=MILESTONE_ID");
         }
         //endregion
 
-        //region VALIDATE required fields and remove KeyId if present
-        if (isset($task_data['KeyId'])) {
-            $this->sendTerminal("");
-            $this->sendTerminal("Warning: KeyId will be ignored (auto-generated on insert)");
-            unset($task_data['KeyId']);
+        //region VERIFY project exists
+        $this->sendTerminal("");
+        $this->sendTerminal("Validating parameters...");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(" - Checking project [{$project}]...");
+
+        $project_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsEntries/display/" . urlencode($project) . "?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error || !($project_response['data'] ?? null)) {
+            return $this->addError("Project [{$project}] not found in remote platform");
         }
 
-        if (empty($task_data['ProjectId'])) {
-            return $this->addError("Missing required field: ProjectId");
+        $project_data = $project_response['data'];
+        $this->sendTerminal("   + Found: {$project_data['Title']}");
+        //endregion
+
+        //region VERIFY milestone exists
+        $this->sendTerminal(" - Checking milestone [{$milestone}]...");
+
+        $milestone_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsMilestones/display/{$milestone}?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error || !($milestone_response['data'] ?? null)) {
+            return $this->addError("Milestone [{$milestone}] not found in remote platform");
         }
 
-        if (empty($task_data['Title'])) {
-            return $this->addError("Missing required field: Title");
-        }
+        $milestone_data = $milestone_response['data'];
+        $this->sendTerminal("   + Found: {$milestone_data['Title']}");
+        //endregion
 
-        // Set defaults if not provided
-        if (!isset($task_data['Status'])) {
-            $task_data['Status'] = 'pending';
-        }
-        if (!isset($task_data['Priority'])) {
-            $task_data['Priority'] = 'medium';
-        }
-        if (!isset($task_data['Open'])) {
-            $task_data['Open'] = true;
-        }
+        //region BUILD task data with defaults
+        $task_data = [
+            'Title' => $title,
+            'ProjectId' => $project,
+            'MilestoneId' => $milestone,
+            'Status' => 'pending',
+            'Priority' => 'medium',
+            'Open' => true,
+            'PlayerId' => $this->user_email,
+            'PlayerIdSource' => $this->user_email,
+            'DateInitTask' => date('Y-m-d')
+        ];
         //endregion
 
         //region SHOW task data being created
         $this->sendTerminal("");
         $this->sendTerminal("Creating new task...");
         $this->sendTerminal(str_repeat('-', 100));
-        $this->sendTerminal(" - Project: {$task_data['ProjectId']}");
         $this->sendTerminal(" - Title: {$task_data['Title']}");
+        $this->sendTerminal(" - Project: {$project_data['Title']} ({$project})");
+        $this->sendTerminal(" - Milestone: {$milestone_data['Title']} ({$milestone})");
         $this->sendTerminal(" - Status: {$task_data['Status']}");
         $this->sendTerminal(" - Priority: {$task_data['Priority']}");
-
-        if (!empty($task_data['MilestoneId'])) {
-            $this->sendTerminal(" - Milestone: {$task_data['MilestoneId']}");
-        }
-        if (!empty($task_data['PlayerId'])) {
-            $assigned = is_array($task_data['PlayerId']) ? implode(', ', $task_data['PlayerId']) : $task_data['PlayerId'];
-            $this->sendTerminal(" - Assigned: {$assigned}");
-        }
-
-        $this->sendTerminal("");
-        $this->sendTerminal(" - All fields:");
-        foreach ($task_data as $field => $value) {
-            $displayValue = is_array($value) ? json_encode($value) : (string)$value;
-            if (strlen($displayValue) > 80) {
-                $displayValue = substr($displayValue, 0, 77) . '...';
-            }
-            $this->sendTerminal("   * {$field}: {$displayValue}");
-        }
+        $this->sendTerminal(" - Assigned: {$task_data['PlayerId']}");
+        $this->sendTerminal(" - Source: {$task_data['PlayerIdSource']}");
+        $this->sendTerminal(" - Init Date: {$task_data['DateInitTask']}");
         //endregion
 
         //region INSERT task via API
@@ -725,28 +1338,237 @@ class Script extends CoreScripts
             }
             return $this->addError("Insert failed: {$errorMsg}");
         }
+
+        $created_task = $response['data'] ?? null;
+        if (!$created_task || !($created_task['KeyId'] ?? null)) {
+            return $this->addError("Task created but no KeyId returned");
+        }
+
+        $task_id = $created_task['KeyId'];
+        $this->sendTerminal(" + Task created with KeyId: {$task_id}");
         //endregion
 
-        //region SHOW created task
-        $created_task = $response['data'] ?? null;
-        if ($created_task) {
-            $this->sendTerminal("");
-            $this->sendTerminal("Task created successfully!");
-            $this->sendTerminal(str_repeat('-', 100));
-            $this->sendTerminal(" - KeyId: {$created_task['KeyId']}");
-            $this->sendTerminal(" - Title: {$created_task['Title']}");
-            $this->sendTerminal(" - Project: {$created_task['ProjectId']}");
-            $this->sendTerminal(" - Status: {$created_task['Status']}");
-            $this->sendTerminal(" - Created: {$created_task['DateInserting']}");
+        //region CREATE output directory if not exists
+        $output_dir = $this->core->system->root_path . '/local_data/_cloudia/tasks';
 
-            $this->sendTerminal("");
-            $this->sendTerminal("Created task JSON:");
-            $this->sendTerminal(str_repeat('-', 100));
-            $this->sendTerminal(json_encode($created_task, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        } else {
-            $this->sendTerminal("");
-            $this->sendTerminal("Task created (no data returned)");
+        if (!is_dir($output_dir)) {
+            if (!mkdir($output_dir, 0755, true)) {
+                return $this->addError("Failed to create directory: {$output_dir}");
+            }
+            $this->sendTerminal(" - Created directory: ./local_data/_cloudia/tasks");
         }
+        //endregion
+
+        //region SAVE task to local file
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Saving to local file...");
+
+        // Sort task keys
+        ksort($created_task);
+
+        $data = [
+            'CloudFrameWorkProjectsTasks' => $created_task,
+            'CloudFrameWorkDevDocumentationForProcessTests' => []
+        ];
+
+        $filepath = "{$output_dir}/{$task_id}.json";
+        $json_content = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        if (file_put_contents($filepath, $json_content) === false) {
+            return $this->addError("Failed to write file: {$filepath}");
+        }
+
+        $this->sendTerminal(" + Saved: ./local_data/_cloudia/tasks/{$task_id}.json");
+        //endregion
+
+        //region SHOW summary
+        $this->sendTerminal("");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal("Task created successfully!");
+        $this->sendTerminal(" - KeyId: {$created_task['KeyId']}");
+        $this->sendTerminal(" - Title: {$created_task['Title']}");
+        $this->sendTerminal(" - Project: {$created_task['ProjectId']}");
+        if ($milestone) {
+            $this->sendTerminal(" - Milestone: {$milestone}");
+        }
+        $this->sendTerminal(" - Status: {$created_task['Status']}");
+        $this->sendTerminal(" - Created: {$created_task['DateInserting']}");
+        $this->sendTerminal("");
+        $this->sendTerminal("Next steps:");
+        $this->sendTerminal("  1. Edit the file: ./local_data/_cloudia/tasks/{$task_id}.json");
+        $this->sendTerminal("  2. Update task:   composer script -- \"_cloudia/tasks/update?id={$task_id}\"");
+        $this->sendTerminal(str_repeat('=', 100));
+        //endregion
+
+        return true;
+    }
+
+    /**
+     * Delete a task from the remote platform
+     *
+     * Deletes the task and optionally removes the local JSON file if it exists.
+     * Requires confirmation via the 'confirm' parameter.
+     *
+     * Required: 'id' parameter with the task KeyId
+     * Required: 'confirm=yes' to confirm deletion
+     *
+     * Usage:
+     *   _cloudia/tasks/delete?id=TASK_KEYID              - Shows task info and requires confirmation
+     *   _cloudia/tasks/delete?id=TASK_KEYID&confirm=yes  - Deletes the task
+     */
+    public function METHOD_delete(): bool
+    {
+        //region VALIDATE task ID
+        $task_id = $this->formParams['id'] ?? null;
+        if (!$task_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/tasks/delete?id=TASK_KEYID");
+        }
+        //endregion
+
+        //region FETCH task details to confirm it exists
+        $this->sendTerminal("");
+        $this->sendTerminal("Fetching task [{$task_id}]...");
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/display/{$task_id}?_raw&_timezone=UTC",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        $task = $response['data'] ?? null;
+        if (!$task) {
+            return $this->addError("Task [{$task_id}] not found in remote platform");
+        }
+        //endregion
+
+        //region FETCH associated checks count
+        $checks_response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => 'CloudFrameWorkProjectsTasks',
+                'filter_CFOId' => $task_id,
+                'cfo_limit' => 200,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        $checks = $checks_response['data'] ?? [];
+        $checks_count = count($checks);
+        //endregion
+
+        //region SHOW task info
+        $this->sendTerminal("");
+        $this->sendTerminal("Task to delete:");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal(" - KeyId: {$task['KeyId']}");
+        $this->sendTerminal(" - Title: {$task['Title']}");
+        $this->sendTerminal(" - Project: {$task['ProjectId']}");
+        if ($milestone = $task['MilestoneId'] ?? null) {
+            $this->sendTerminal(" - Milestone: {$milestone}");
+        }
+        $this->sendTerminal(" - Status: {$task['Status']}");
+        $this->sendTerminal(" - Checks: {$checks_count}");
+        $this->sendTerminal(str_repeat('-', 100));
+        //endregion
+
+        //region CHECK delete_checks parameter if task has checks
+        if ($checks_count > 0) {
+            $delete_checks = $this->formParams['delete_checks'] ?? null;
+
+            if ($delete_checks !== 'yes') {
+                $this->sendTerminal("");
+                $this->sendTerminal(" !! WARNING: This task has {$checks_count} associated check(s) that will also be deleted.");
+                $this->sendTerminal("");
+                $this->sendTerminal(" To confirm deletion of checks, re-run the command with: delete_checks=yes");
+                $this->sendTerminal("");
+                $this->sendTerminal(" Example:");
+                $this->sendTerminal("   composer script -- \"_cloudia/tasks/delete?id={$task_id}&delete_checks=yes&confirm=yes\"");
+                $this->sendTerminal("");
+                return $this->addError("Delete checks confirmation required. Use delete_checks=yes parameter.");
+            }
+        }
+        //endregion
+
+        //region CHECK confirmation parameter
+        $confirm = $this->formParams['confirm'] ?? null;
+
+        if ($confirm !== 'yes') {
+            $this->sendTerminal("");
+            $this->sendTerminal(" !! WARNING: This action will permanently delete the task" . ($checks_count > 0 ? " and {$checks_count} associated check(s)" : "") . ".");
+            $this->sendTerminal("");
+            $this->sendTerminal(" To confirm deletion, re-run the command with: confirm=yes");
+            $this->sendTerminal("");
+            $this->sendTerminal(" Example:");
+            if ($checks_count > 0) {
+                $this->sendTerminal("   composer script -- \"_cloudia/tasks/delete?id={$task_id}&delete_checks=yes&confirm=yes\"");
+            } else {
+                $this->sendTerminal("   composer script -- \"_cloudia/tasks/delete?id={$task_id}&confirm=yes\"");
+            }
+            $this->sendTerminal("");
+            return $this->addError("Delete confirmation required. Use confirm=yes parameter.");
+        }
+        //endregion
+
+        //region DELETE associated checks first
+        if ($checks_count > 0) {
+            $this->sendTerminal("");
+            $this->sendTerminal("Deleting {$checks_count} associated checks...");
+
+            foreach ($checks as $check) {
+                $check_id = $check['KeyId'] ?? null;
+                if ($check_id) {
+                    $this->sendTerminal(" - Deleting check: {$check['Title']}");
+                    $this->core->request->delete(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$check_id}?_raw",
+                        $this->headers
+                    );
+                }
+            }
+            $this->sendTerminal(" + {$checks_count} checks deleted");
+        }
+        //endregion
+
+        //region DELETE task from remote
+        $this->sendTerminal("");
+        $this->sendTerminal("Deleting task...");
+
+        $this->core->request->delete(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasks/{$task_id}?_raw",
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error deleting task: " . json_encode($this->core->request->errorMsg));
+        }
+
+        $this->sendTerminal(" + Task deleted from remote platform");
+        //endregion
+
+        //region DELETE local file if exists
+        $filepath = $this->core->system->root_path . "/local_data/_cloudia/tasks/{$task_id}.json";
+
+        if (is_file($filepath)) {
+            if (unlink($filepath)) {
+                $this->sendTerminal(" + Local file deleted: ./local_data/_cloudia/tasks/{$task_id}.json");
+            } else {
+                $this->sendTerminal(" # Warning: Failed to delete local file");
+            }
+        }
+        //endregion
+
+        //region SHOW summary
+        $this->sendTerminal("");
+        $this->sendTerminal(str_repeat('-', 100));
+        $this->sendTerminal("Task deleted successfully!");
+        $this->sendTerminal(" - KeyId: {$task_id}");
+        $this->sendTerminal(" - Title: {$task['Title']}");
+        $this->sendTerminal(" - Checks deleted: {$checks_count}");
         $this->sendTerminal(str_repeat('=', 100));
         //endregion
 
@@ -811,6 +1633,143 @@ class Script extends CoreScripts
         //endregion
 
         return true;
+    }
+
+    /**
+     * Display tasks report separated by open/closed status with hours summary
+     *
+     * Shows a detailed report including:
+     * - Tasks separated by OPEN/CLOSED status
+     * - Hours spent vs estimated per task
+     * - Subtotals by section
+     * - Summary by assignee (PlayerId)
+     *
+     * @param array $tasks Array of task data
+     * @param string|null $project_id Optional project ID for context
+     */
+    private function displayTasksReport(array $tasks, ?string $project_id = null): void
+    {
+        if (!$tasks) {
+            $this->sendTerminal("");
+            $this->sendTerminal("   No tasks found" . ($project_id ? " for project [{$project_id}]" : ""));
+            $this->sendTerminal("");
+            return;
+        }
+
+        // Build report items with open/closed classification
+        $report_open = [];
+        $report_closed = [];
+
+        // Totals for hours (open vs closed)
+        $total_spent_open = 0;
+        $total_estimated_open = 0;
+        $total_spent_closed = 0;
+        $total_estimated_closed = 0;
+
+        // Stats by PlayerId
+        $stats_by_player = [];
+
+        foreach ($tasks as $t) {
+            // Handle PlayerId as array or string
+            $players = $t['PlayerId'] ?? [];
+            $player = is_array($players) ? implode(',', $players) : $players;
+            $player = $player ?: '-';
+
+            // Get hours values
+            $time_spent = floatval($t['TimeSpent'] ?? 0);
+            $time_estimated = floatval($t['TimeEstimated'] ?? 0);
+
+            $item = [
+                'id' => $t['KeyId'] ?? 'N/A',
+                'title' => $t['Title'] ?? 'Untitled',
+                'player' => $player,
+                'status' => $t['Status'] ?? '-',
+                'deadline' => $t['DateDeadLine'] ?? '-',
+                'hours' => sprintf("%.1f/%.1f", $time_spent, $time_estimated),
+            ];
+
+            // Determine if closed
+            $status = $t['Status'] ?? '';
+            $open = $t['Open'] ?? true;
+            $is_closed = in_array($status, ['closed', 'canceled']) || $open === false;
+
+            // Initialize player stats if not exists
+            if (!isset($stats_by_player[$player])) {
+                $stats_by_player[$player] = [
+                    'tasks_open' => 0,
+                    'tasks_closed' => 0,
+                    'spent_open' => 0,
+                    'estimated_open' => 0,
+                    'spent_closed' => 0,
+                    'estimated_closed' => 0
+                ];
+            }
+
+            if ($is_closed) {
+                $report_closed[] = $item;
+                $total_spent_closed += $time_spent;
+                $total_estimated_closed += $time_estimated;
+                $stats_by_player[$player]['tasks_closed']++;
+                $stats_by_player[$player]['spent_closed'] += $time_spent;
+                $stats_by_player[$player]['estimated_closed'] += $time_estimated;
+            } else {
+                $report_open[] = $item;
+                $total_spent_open += $time_spent;
+                $total_estimated_open += $time_estimated;
+                $stats_by_player[$player]['tasks_open']++;
+                $stats_by_player[$player]['spent_open'] += $time_spent;
+                $stats_by_player[$player]['estimated_open'] += $time_estimated;
+            }
+        }
+
+        // Display OPEN tasks
+        $this->sendTerminal("");
+        $this->sendTerminal("   Tasks OPEN (" . count($report_open) . "):");
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        $this->sendTerminal(sprintf("   %-12s %-25s %-22s %-12s %-12s %-10s", "KeyId", "Title", "Assignee", "Status", "Deadline", "Hours"));
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        foreach ($report_open as $t) {
+            $title_display = strlen($t['title']) > 22 ? substr($t['title'], 0, 19) . '...' : $t['title'];
+            $player_display = strlen($t['player']) > 19 ? substr($t['player'], 0, 16) . '...' : $t['player'];
+            $deadline_display = $t['deadline'] !== '-' ? substr($t['deadline'], 0, 10) : '-';
+            $this->sendTerminal(sprintf("   %-12s %-25s %-22s %-12s %-12s %-10s", $t['id'], $title_display, $player_display, $t['status'], $deadline_display, $t['hours']));
+        }
+        $this->sendTerminal(sprintf("   %90s %-10s", "Subtotal:", sprintf("%.1f/%.1f", $total_spent_open, $total_estimated_open)));
+
+        // Display CLOSED tasks
+        $this->sendTerminal("");
+        $this->sendTerminal("   Tasks CLOSED (" . count($report_closed) . "):");
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        foreach ($report_closed as $t) {
+            $title_display = strlen($t['title']) > 22 ? substr($t['title'], 0, 19) . '...' : $t['title'];
+            $player_display = strlen($t['player']) > 19 ? substr($t['player'], 0, 16) . '...' : $t['player'];
+            $deadline_display = $t['deadline'] !== '-' ? substr($t['deadline'], 0, 10) : '-';
+            $this->sendTerminal(sprintf("   %-12s %-25s %-22s %-12s %-12s %-10s", $t['id'], $title_display, $player_display, $t['status'], $deadline_display, $t['hours']));
+        }
+        $this->sendTerminal(sprintf("   %90s %-10s", "Subtotal:", sprintf("%.1f/%.1f", $total_spent_closed, $total_estimated_closed)));
+
+        // Display totals
+        $total_spent = $total_spent_open + $total_spent_closed;
+        $total_estimated = $total_estimated_open + $total_estimated_closed;
+        $this->sendTerminal("   " . str_repeat('-', 130));
+        $this->sendTerminal(sprintf("   %90s %-10s", "TOTAL Hours (Spent/Estimated):", sprintf("%.1f/%.1f", $total_spent, $total_estimated)));
+
+        // Display summary by PlayerId
+        $this->sendTerminal("");
+        $this->sendTerminal("   Summary by Assignee:");
+        $this->sendTerminal("   " . str_repeat('-', 100));
+        $this->sendTerminal(sprintf("   %-30s %12s %12s %15s %15s", "Assignee", "Tasks Open", "Tasks Closed", "Hours Open", "Hours Closed"));
+        $this->sendTerminal("   " . str_repeat('-', 100));
+        ksort($stats_by_player);
+        foreach ($stats_by_player as $player_id => $stats) {
+            $player_display = strlen($player_id) > 27 ? substr($player_id, 0, 24) . '...' : $player_id;
+            $hours_open = sprintf("%.1f/%.1f", $stats['spent_open'], $stats['estimated_open']);
+            $hours_closed = sprintf("%.1f/%.1f", $stats['spent_closed'], $stats['estimated_closed']);
+            $this->sendTerminal(sprintf("   %-30s %12d %12d %15s %15s", $player_display, $stats['tasks_open'], $stats['tasks_closed'], $hours_open, $hours_closed));
+        }
+        $this->sendTerminal("   " . str_repeat('-', 100));
+        $this->sendTerminal(sprintf("   %-30s %12d %12d %15s %15s", "TOTAL", count($report_open), count($report_closed), sprintf("%.1f/%.1f", $total_spent_open, $total_estimated_open), sprintf("%.1f/%.1f", $total_spent_closed, $total_estimated_closed)));
+        $this->sendTerminal("");
     }
 
     /**
