@@ -2112,6 +2112,19 @@ class Script extends CoreScripts
             $result['warnings'][] = "{$checkLabel}: Status '{$check['Status']}' is not standard. Valid: " . implode(', ', $validStatuses);
         }
 
+        // Objetivo field validation (PLANNING phase - should be present for all checks)
+        if (!isset($check['Objetivo']) || (is_string($check['Objetivo']) && trim(strip_tags($check['Objetivo'])) === '')) {
+            $result['warnings'][] = "{$checkLabel}: 'Objetivo' field is empty - should define what needs to be achieved (planning phase)";
+        }
+
+        // Resultado field validation (EXECUTION phase - should be present when status is in-progress, in-qa, or ok)
+        $executionStatuses = ['in-progress', 'in-qa', 'ok'];
+        if (isset($check['Status']) && in_array($check['Status'], $executionStatuses)) {
+            if (!isset($check['Resultado']) || (is_string($check['Resultado']) && trim(strip_tags($check['Resultado'])) === '')) {
+                $result['warnings'][] = "{$checkLabel}: 'Resultado' field is empty - should document what was done (execution phase, status: {$check['Status']})";
+            }
+        }
+
         return $result;
     }
 

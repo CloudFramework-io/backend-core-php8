@@ -144,6 +144,45 @@ When working with CLOUD Documentum to develop a product or solution, an AI must:
 | **Milestone** | Delivery phase matching feature categories |
 | **Task** | Executable work item with verification |
 
+### CHECKs: Planning and Execution Phases
+
+Every CHECK has two fundamental fields that support the **planning** and **execution** workflow:
+
+| Field | Phase | Purpose |
+|-------|-------|---------|
+| **Objetivo** | Planning | Defines WHAT needs to be achieved - acceptance criteria, expected outcome |
+| **Resultado** | Execution | Documents WHAT was done - implementation details, actual results |
+
+**Workflow:**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  PLANNING PHASE (Status: pending)                               │
+│  ─────────────────────────────────────────────────────────────  │
+│  • Define Objetivo: What must be accomplished                   │
+│  • Set DateDueDate: Estimated completion date                   │
+│  • Resultado: Empty or initial notes                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  EXECUTION PHASE (Status: in-progress → in-qa → ok)            │
+│  ─────────────────────────────────────────────────────────────  │
+│  • Fill Resultado: What was implemented and the outcome         │
+│  • Update Status: Reflect current progress                      │
+│  • DateDueDate: Set to today when completing (ok)               │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Example:**
+- **Objetivo**: "Create OAuth2 login with Google and GitHub. Users should login/logout seamlessly."
+- **Resultado**: "Implemented OAuth2 using passport.js. Added Google/GitHub strategies. Session with Redis."
+
+This separation ensures:
+1. **Clear requirements** during planning (Objetivo)
+2. **Documented outcomes** during execution (Resultado)
+3. **Traceability** between what was planned and what was delivered
+
 ---
 
 ## Module Overview

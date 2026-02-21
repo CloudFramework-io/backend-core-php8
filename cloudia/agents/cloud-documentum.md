@@ -790,11 +790,44 @@ When creating Checks, these fields are **mandatory**:
 | `Route` | string | **Yes** | Reference path for JSON linking |
 | `Title` | string | Yes | Check title |
 | `Description` | html | No | Detailed description |
+| `Objetivo` | html | **Yes** | **PLANNING**: What needs to be achieved (objective/acceptance criteria) |
+| `Resultado` | html | **Yes*** | **EXECUTION**: What was done and the outcome |
 | `Status` | enum | Yes | Check status (pending, in-progress, blocked, in-qa, ok) |
 | `Owner` | string | Yes | Owner email |
 | `AssignedTo` | list | No | Assigned users |
 | `DateDueDate` | date | **Yes*** | Due date (see rule below) |
 | `JSON` | json | No | Test definitions |
+
+### Objetivo vs Resultado: Planning and Execution Phases
+
+CHECKs have two key fields that reflect the **planning** and **execution** phases:
+
+| Field | Phase | When to Fill | Content |
+|-------|-------|--------------|---------|
+| `Objetivo` | **Planning** | When creating the CHECK (status: `pending`) | What needs to be achieved, acceptance criteria, expected outcome |
+| `Resultado` | **Execution** | When working on the CHECK (status: `in-progress`, `in-qa`, `ok`) | What was actually done, implementation details, actual results |
+
+**Workflow:**
+
+1. **Planning Phase** (Status: `pending`):
+   - Define `Objetivo`: Clear description of what must be accomplished
+   - `Resultado` can be empty or contain initial notes
+   - Define estimated `DateDueDate`
+
+2. **Execution Phase** (Status changes to `in-progress`, `in-qa`, or `ok`):
+   - Fill `Resultado` with what was implemented and the outcome
+   - Update `Status` to reflect current progress
+   - Set `DateDueDate` to today when completing (`ok`)
+
+**Example:**
+```json
+{
+    "Title": "Implement user authentication",
+    "Objetivo": "<p>Create OAuth2 login with Google and GitHub providers. Users should be able to login/logout seamlessly.</p>",
+    "Resultado": "<p>Implemented OAuth2 flow using passport.js. Added Google and GitHub strategies. Session management with Redis.</p>",
+    "Status": "ok"
+}
+```
 
 > **⚠️ DateDueDate Rule**: When creating new CHECKs or updating status to `ok` (completed), **ALWAYS set `DateDueDate`** if it's empty:
 > - For **new CHECKs**: Set to the estimated completion date
@@ -1362,6 +1395,8 @@ Each CHECK in the `CloudFrameWorkDevDocumentationForProcessTests` array must hav
 | `CFOEntity` | **Yes*** | Must be `CloudFrameWorkProjectsTasks` (ALWAYS this value) |
 | `CFOId` | **Yes*** | Must match task KeyId |
 | `CFOField` | **Yes*** | Must be `JSON` (ALWAYS this value) |
+| `Objetivo` | Recommended | **PLANNING**: What needs to be achieved (WARNING if empty) |
+| `Resultado` | Recommended** | **EXECUTION**: What was done and outcome (WARNING if empty when status is `in-progress`, `in-qa`, or `ok`) |
 
 *Required for existing checks (those with KeyId). For new checks (without KeyId):
 - If `CFOEntity` is provided, it must be `CloudFrameWorkProjectsTasks`
