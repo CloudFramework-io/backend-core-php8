@@ -1495,7 +1495,7 @@ class Script extends CoreScripts
             $this->sendTerminal(" - Milestone: {$milestone}");
         }
         $this->sendTerminal(" - Status: {$updated_task['Status']}");
-        if ($task_updated) {
+        if ($task_updated && isset($updated_task['DateUpdating'])) {
             $this->sendTerminal(" - Updated: {$updated_task['DateUpdating']}");
         }
         //endregion
