@@ -1,0 +1,412 @@
+{
+  "Active": true,
+  "CloudFrameworkUser": "fran@cloudframework.io",
+  "Connections": "",
+  "DateUpdating": "2025-11-03 12:29:43",
+  "Description": "<p>Este <strong>CFO</strong> está orientado a la gestión de tags basados organizados por:<br></p><ul><li>KeyName que permitirá nombra al tag de diccionario directamente. Debería ser el valor en minúsculas de &lt;App&gt;;&lt;<br></li><li>App que permite la organización de tags agrupados por aplicación</li><li>Cat que permite la organización por categorías dentro de una aplicación</li></ul><p>Los índices que este CFO necesitará son:</p><pre><span style=\"color:#cf8e6d\">indexes</span>:<br><br>  - <span style=\"color:#cf8e6d\">kind</span>: CloudFrameWorkLocalizations<br><span style=\"color:#cf8e6d\">properties</span>:<br>      - <span style=\"color:#cf8e6d\">name</span>: App<br>      - <span style=\"color:#cf8e6d\">name</span>: Cat<br><br>  - <span style=\"color:#cf8e6d\">kind</span>: CloudFrameWorkLocalizations<br><span style=\"color:#cf8e6d\">properties</span>:<br>      - <span style=\"color:#cf8e6d\">name</span>: App<br>      - <span style=\"color:#cf8e6d\">name</span>: _search<br><br>  - <span style=\"color:#cf8e6d\">kind</span>: CloudFrameWorkLocalizations<br><span style=\"color:#cf8e6d\">properties</span>:<br>      - <span style=\"color:#cf8e6d\">name</span>: Cat<br>      - <span style=\"color:#cf8e6d\">name</span>: _search<br><br>  - <span style=\"color:#cf8e6d\">kind</span>: CloudFrameWorkLocalizations<br><span style=\"color:#cf8e6d\">properties</span>:<br>      - <span style=\"color:#cf8e6d\">name</span>: App<br>      - <span style=\"color:#cf8e6d\">name</span>: Cat<br>      - <span style=\"color:#cf8e6d\">name</span>: _search<br>​​<br><br></pre><p>Copiar este contenido en un fichero index.yaml y ejecutar el comendo</p><pre>​​gcloud datastore indexes create indexes/index.yaml --project={project-name}<br></pre>",
+  "GroupName": "DEVELOPMENT",
+  "KeyName": "CloudFrameWorkLocalizations",
+  "Owner": "",
+  "Tags": "",
+  "Title": "",
+  "_search": [
+    "CLOUDFRAMEWORKLOCALIZATIONS",
+    "DEVELOPMENT"
+  ],
+  "entity": "CloudFrameWorkLocalizations",
+  "environment": "",
+  "events": {
+    "hooks": {
+      "on.insert": [
+        {
+          "code": "refresh_cache",
+          "name": "Refresh Cache for this Localization",
+          "method": "GET",
+          "url": "https://api.cloudframework.io/erp/localizations/{{Platform:namespace}}/{{User:KeyName}}/reset-cache/{{App}};{{Cat}}"
+        },
+        {
+          "code": "firestore_generate_dictionary",
+          "name": "Generate completly dictionery into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.io/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/generate/{{App}};{{Cat}}?_appengine_service=api7"
+        },
+        {
+          "code": "firestore_generate_dictionary",
+          "name": "Generate completly dictionery into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.dev/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/generate/{{App}};{{Cat}}?_appengine_service=api8-dev"
+        }
+      ],
+      "on.update": [
+        {
+          "code": "refresh_cache",
+          "name": "Refresh Cache for this Localization",
+          "method": "GET",
+          "url": "https://api.cloudframework.io/queue/erp/localizations/{{Platform:namespace}}/{{User:KeyName}}/reset-cache/{{App}};{{Cat}}?_appengine_service=api7&env=prod"
+        },
+        {
+          "code": "firestore_regenerate_dictionary_prod",
+          "name": "Regenerate app dictionary into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.io/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/regenerate/{{App}};{{Cat}}?_appengine_service=api7&env=prod"
+        },
+        {
+          "code": "firestore_regenerate_dictionary_dev",
+          "name": "Regenerate app dictionary into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.dev/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/regenerate/{{App}};{{Cat}}?_appengine_service=api8-dev"
+        }
+      ],
+      "on.update_queue": [
+        {
+          "code": "refresh_cache",
+          "name": "Refresh Cache for this Localization",
+          "method": "GET",
+          "url": "https://api.cloudframework.io/erp/localizations/{{Platform:namespace}}/{{User:KeyName}}/reset-cache/{{App}};{{Cat}}"
+        },
+        {
+          "code": "firestore_regenerate_dictionary_prod",
+          "name": "Regenerate app dictionary into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.io/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/regenerate/{{App}};{{Cat}}?_appengine_service=api7&env=prod"
+        },
+        {
+          "code": "firestore_regenerate_dictionary_dev",
+          "name": "Regenerate app dictionary into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.dev/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/regenerate/{{App}};{{Cat}}?_appengine_service=api8-dev"
+        }
+      ],
+      "on.update.bak": [
+        {
+          "code": "refresh_cache",
+          "name": "Refresh Cache for this Localization",
+          "method": "GET",
+          "url": "https://api.cloudframework.io/erp/localizations/{{Platform:namespace}}/{{User:KeyName}}/reset-cache/{{App}};{{Cat}}"
+        },
+        {
+          "code": "firestore_regenerate_dictionary",
+          "name": "Regenerate completly dictionery into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.io/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/regenerate/{{App}};{{Cat}}"
+        },
+        {
+          "code": "firestore_regenerate_dictionary_dev",
+          "name": "Regenerate completly dictionery into Firestore for app;cat selected",
+          "method": "POST",
+          "url": "https://api.cloudframework.dev/queue/erp/l10n/{{Platform:namespace}}/{{User:KeyName}}/hooks/regenerate/{{App}};{{Cat}}"
+        }
+      ]
+    },
+    "hooks_backups": {
+      "on.insert": {
+        "code": "refresh_cache",
+        "name": "Refresh Cache for this Localization",
+        "method": "GET",
+        "url": "https://api.cloudframework.io/erp/localizations/{{Platform:namespace}}/{{User:KeyName}}/reset-cache/{{App}};{{Cat}}"
+      },
+      "on.update": {
+        "code": "refresh_cache",
+        "name": "Refresh Cache for this Localization",
+        "method": "GET",
+        "url": "https://api.cloudframework.io/erp/localizations/{{Platform:namespace}}/{{User:KeyName}}/reset-cache/{{App}};{{Cat}}"
+      }
+    },
+    "workflows": null
+  },
+  "extends": "",
+  "hasExternalWorkflows": false,
+  "interface": {
+    "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;name}",
+    "plural": "{$namespace:cloudframework,cloud-development;localizations;cfos;plural}",
+    "secret": "cfo-secrets.service-account",
+    "ico": "language",
+    "ecm": "/cfos/CloudFrameWorkLocalizations",
+    "filters": [
+      {
+        "field": "App",
+        "type": "select",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkLocalizations",
+        "fields": "App",
+        "linked_field": "App",
+        "allow_empty": true,
+        "empty_value": "{$namespace:cloudframework,cloud-development;localizations;cfos;select-type-App}",
+        "defaultvalue": null
+      },
+      {
+        "field": "Cat",
+        "type": "autocomplete",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkLocalizations",
+        "fields": "Cat",
+        "linked_field": "Cat",
+        "allow_empty": true,
+        "empty_value": "{$namespace:cloudframework,cloud-development;localizations;cfos;select-a-category}",
+        "defaultvalue": null
+      },
+      {
+        "field": "_search",
+        "type": "text",
+        "unique": true,
+        "placeholder": "{$namespace:cloudframework,cloud-development;localizations;cfos;filter-_search-placeholder}"
+      }
+    ],
+    "buttons": [
+      {
+        "title": "{$namespace:cloudframework,cloud-development;localizations;cfos;button-new-entry}",
+        "type": "api-insert",
+        "api": "/cfi/CloudFrameWorkLocalizations"
+      }
+    ],
+    "views": {
+      "default": {
+        "name": "General View",
+        "all_fields": true,
+        "_server_order": "DateInsertion ASC",
+        "server_limit": 500,
+        "fields": {
+          "App": {
+            "order": "asc",
+            "field": "App"
+          },
+          "Cat": {
+            "field": "Cat"
+          },
+          "Code": {
+            "update_cfo": true,
+            "field": "Code",
+            "id_field": "KeyName"
+          },
+          "Translations": {
+            "field": "Translations"
+          },
+          "Default": {
+            "field": "Default"
+          },
+          "DateUpdated": {
+            "field": "DateUpdated"
+          }
+        }
+      }
+    },
+    "insert_fields": {
+      "KeyName": {
+        "field": "KeyName",
+        "order": "desc"
+      },
+      "Lang": {
+        "field": "Lang"
+      },
+      "Translations": {
+        "field": "Translations",
+        "allow_empty": true
+      },
+      "App": {
+        "field": "App"
+      },
+      "Cat": {
+        "field": "Cat"
+      },
+      "Code": {
+        "field": "Code"
+      },
+      "Default": {
+        "field": "Default",
+        "new_row": true
+      },
+      "JSON": {
+        "field": "JSON",
+        "new_row": true,
+        "allow_empty": true
+      }
+    },
+    "copy_fields": {
+      "KeyName": {
+        "field": "KeyName",
+        "order": "desc"
+      },
+      "Lang": {
+        "field": "Lang"
+      },
+      "Translations": {
+        "field": "Translations",
+        "allow_empty": true
+      },
+      "App": {
+        "field": "App"
+      },
+      "Cat": {
+        "field": "Cat"
+      },
+      "Code": {
+        "field": "Code"
+      },
+      "Default": {
+        "field": "Default",
+        "new_row": true
+      },
+      "JSON": {
+        "field": "JSON",
+        "new_row": true,
+        "allow_empty": true
+      }
+    },
+    "update_fields": {
+      "KeyName": {
+        "field": "KeyName",
+        "order": "desc"
+      },
+      "Lang": {
+        "field": "Lang"
+      },
+      "Translations": {
+        "field": "Translations"
+      },
+      "App": {
+        "field": "App"
+      },
+      "Cat": {
+        "field": "Cat"
+      },
+      "Code": {
+        "field": "Code"
+      },
+      "Default": {
+        "field": "Default",
+        "new_row": true
+      },
+      "JSON": {
+        "field": "JSON",
+        "new_row": true,
+        "allow_empty": true
+      },
+      "_search": {
+        "field": "_search",
+        "disabled": true,
+        "cols": 3
+      },
+      "DateUpdated": {
+        "field": "DateUpdated",
+        "disabled": true
+      }
+    },
+    "display_fields": null,
+    "delete_fields": {
+      "KeyName": {
+        "field": "KeyName",
+        "order": "desc"
+      }
+    }
+  },
+  "lowCode": [],
+  "model": {
+    "model": {
+      "KeyName": [
+        "keyname",
+        "index|minlength:4|description:Id manual. It has to be unique"
+      ],
+      "App": [
+        "string",
+        "index|minlength:2|description:App group of the tags"
+      ],
+      "Cat": [
+        "string",
+        "index|minlength:2|description:Cat group under App"
+      ],
+      "Code": [
+        "string",
+        "index|minlength:2|description:Code to identify the tag/tags"
+      ],
+      "Lang": [
+        "string",
+        "index|allownull|values:es,en|description:Default lang"
+      ],
+      "Default": [
+        "string",
+        "index|allownull|minlength:1|description:Default text to be shown"
+      ],
+      "Translations": [
+        "list",
+        "index|allonull|description: list of languages loaded. Example: [es,en]"
+      ],
+      "JSON": [
+        "json",
+        "allownull|description:JSON structure where you can place subtags o directly translations. The structure can be directly the translations  ({\"es\":\"Spanis\",\"en\":\"English\"}) or it can contains subtags ({\"subtag1\":{\"es\":\"Es un subtag\",\"en\":\"It is a subtag\"}})"
+      ],
+      "DateUpdated": [
+        "datetime",
+        "index|forcevalue:now|description:when the CFO was updated"
+      ],
+      "_search": [
+        "list",
+        "index|allownull|description:campo interno para búsquedas"
+      ]
+    },
+    "dependencies": []
+  },
+  "securityAndFields": {
+    "security": {
+      "user_spacenames": null,
+      "user_organizations": null,
+      "cfo_locked": true,
+      "user_privileges": [
+        "directory-admin",
+        "localization-admin"
+      ]
+    },
+    "fields": {
+      "KeyName": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-KeyName}"
+      },
+      "App": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-App}",
+        "type": "autoselect"
+      },
+      "Cat": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-Cat}",
+        "type": "autoselect"
+      },
+      "Code": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-Code}",
+        "type": "autoselect"
+      },
+      "Lang": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-Lang}"
+      },
+      "Default": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-Default}",
+        "allow_empty": true
+      },
+      "JSON": {
+        "name": "Multi language",
+        "type": "json",
+        "defaultvalue": "{\"es\":\"XXX\",\"en\":\"YYY\"}"
+      },
+      "Translations": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-Translations}",
+        "type": "checkbox",
+        "values": [
+          {
+            "id": "es",
+            "value": "Spanish"
+          },
+          {
+            "id": "en",
+            "value": "English"
+          },
+          {
+            "id": "fr",
+            "value": "French"
+          }
+        ]
+      },
+      "_search": {
+        "name": "{$namespace:cloudframework,cloud-development;localizations;cfos;field-_search}",
+        "search_fields": "KeyName,App,Cat,Code,Default"
+      }
+    }
+  },
+  "status": "",
+  "type": "ds"
+}
