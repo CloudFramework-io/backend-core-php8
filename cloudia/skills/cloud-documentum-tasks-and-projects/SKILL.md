@@ -311,13 +311,19 @@ The `TimeSpent` field is **automatically calculated** from activity inputs and e
 |------|-------------|
 | **Excluded from export** | `_cloudia/tasks/get` removes TimeSpent from the JSON file |
 | **ERROR if present** | `_cloudia/tasks/update` returns ERROR if TimeSpent is in the JSON |
-| **Auto-calculated** | TimeSpent = sum of hours from Inputs + Events linked to the task |
+| **Auto-calculated** | TimeSpent = sum of hours from Inputs + Events (with user multiplication) |
 
 **Calculation:**
 ```
-TimeSpent = CloudFrameWorkProjectsTasksInputs.TimeSpent (filter_TaskId)
-          + CloudFrameWorkCRMEvents.TimeSpent (filter_TaskId)
+TimeSpent = Σ(Inputs.TimeSpent) + Σ(Events.TimeSpent × userCount)
+
+where userCount = count of distinct users from (SourcePlayerId + PlayersLinked)
 ```
+
+**Event User Calculation:**
+- Events with multiple participants multiply TimeSpent by user count
+- `SourcePlayerId` + `PlayersLinked` are counted as distinct users
+- Example: Event with 2h and 3 users = 6h total contribution
 
 **To report time on a task, use Workflow 3: Report Hours on a Task (above)**
 

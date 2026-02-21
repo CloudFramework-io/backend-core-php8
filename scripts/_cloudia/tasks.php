@@ -829,12 +829,21 @@ class Script extends CoreScripts
             [
                 'filter_TaskId' => $task_id,
                 '_order' => '-DateInput',
-                'cfo_limit' => 50,
+                'cfo_limit' => 200,
                 '_raw' => 1,
                 '_timezone' => 'UTC'
             ],
             $this->headers
         );
+
+        //delete inputs with 0h and check TaskId match with $task_id
+        if($inputs_response['data']??null) foreach ($inputs_response['data'] as $i=>$item) {
+            if($item['TaskId']!=$task_id) {
+                $this->sendTerminal(" # Error fetching input [{$item['KeyId']}] with TaskId != [{$task_id}]:");
+                exit;
+            }
+            if(($item['TimeSpent']??0) <=0) unset($inputs_response['data'][$i]);
+        }
 
         if ($this->core->request->error) {
             $this->sendTerminal(" # Error fetching inputs: " . json_encode($this->core->request->errorMsg));
@@ -886,16 +895,24 @@ class Script extends CoreScripts
         $this->sendTerminal(str_repeat('-', 100));
 
         $events_response = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents",
             [
                 'filter_TaskId' => $task_id,
                 '_order' => '-DateInserting',
-                'cfo_limit' => 50,
+                'cfo_limit' => 200,
                 '_raw' => 1,
                 '_timezone' => 'UTC'
             ],
             $this->headers
         );
+        //delete inputs with 0h and check TaskId match with $task_id
+        if($events_response['data']??null) foreach ($events_response['data'] as $i=>$item) {
+            if($item['TaskId']!=$task_id) {
+                $this->sendTerminal(" # Error Event input [{$item['KeyId']}] with TaskId != [{$task_id}]:");
+                exit;
+            }
+            if(($item['TimeSpent']??0) <=0) unset($events_response['data'][$i]);
+        }
 
         if ($this->core->request->error) {
             $this->sendTerminal(" # Error fetching events: " . json_encode($this->core->request->errorMsg));
@@ -916,15 +933,39 @@ class Script extends CoreScripts
                     $eventDate = $event['DateInserting'] ?? $event['DateTimeInit'] ?? 'N/A';
                     $eventType = $event['Type'] ?? 'N/A';
                     $eventSource = $event['Source'] ?? '';
-                    $eventPlayer = $event['SourcePlayerId'] ?? $event['UserEmail'] ?? 'N/A';
 
-                    $totalEventsHours += $eventTimeSpent;
+                    // Calculate distinct users: SourcePlayerId + PlayersLinked
+                    $users = [];
+                    $sourcePlayer = $event['SourcePlayerId'] ?? $event['UserEmail'] ?? null;
+                    if ($sourcePlayer) {
+                        $users[] = $sourcePlayer;
+                    }
+                    $playersLinked = $event['PlayersLinked'] ?? [];
+                    if (is_string($playersLinked)) {
+                        $playersLinked = array_filter(array_map('trim', explode(',', $playersLinked)));
+                    }
+                    if (is_array($playersLinked)) {
+                        foreach ($playersLinked as $linkedPlayer) {
+                            if ($linkedPlayer && !in_array($linkedPlayer, $users)) {
+                                $users[] = $linkedPlayer;
+                            }
+                        }
+                    }
+                    $userCount = max(1, count($users));
+                    $eventTotalHours = $eventTimeSpent * $userCount;
+
+                    $totalEventsHours += $eventTotalHours;
 
                     $this->sendTerminal(sprintf(" [%d] %s", $index + 1, $eventTitle));
-                    $this->sendTerminal(sprintf("     KeyId: %s | TimeSpent: %.2fh | Date: %s | Type: %s",
-                        $eventKeyId, $eventTimeSpent, $eventDate, $eventType));
-                    $this->sendTerminal(sprintf("     User: %s%s",
-                        $eventPlayer, $eventSource ? " | Source: {$eventSource}" : ""));
+                    if ($userCount > 1) {
+                        $this->sendTerminal(sprintf("     KeyId: %s | TimeSpent: %.2fh x %d users = %.2fh | Date: %s | Type: %s",
+                            $eventKeyId, $eventTimeSpent, $userCount, $eventTotalHours, $eventDate, $eventType));
+                    } else {
+                        $this->sendTerminal(sprintf("     KeyId: %s | TimeSpent: %.2fh | Date: %s | Type: %s",
+                            $eventKeyId, $eventTimeSpent, $eventDate, $eventType));
+                    }
+                    $this->sendTerminal(sprintf("     Users: %s%s",
+                        implode(', ', $users), $eventSource ? " | Source: {$eventSource}" : ""));
 
                     // Show text content if available
                     if ($eventContent = $event['TextContent'] ?? null) {
@@ -2545,10 +2586,33 @@ class Script extends CoreScripts
         $events = $eventsResponse['data'] ?? [];
         $result['eventsCount'] = count($events);
 
-        // Sum TimeSpent from events
+        // Sum TimeSpent from events (multiplied by number of distinct users)
+        // Each event's TimeSpent is multiplied by the count of distinct users
+        // (SourcePlayerId + PlayersLinked), since each participant logs their time
         foreach ($events as $event) {
             $timeSpent = floatval($event['TimeSpent'] ?? 0);
-            $result['eventsHours'] += $timeSpent;
+
+            // Calculate distinct users: SourcePlayerId + PlayersLinked
+            $users = [];
+            $sourcePlayer = $event['SourcePlayerId'] ?? $event['UserEmail'] ?? null;
+            if ($sourcePlayer) {
+                $users[] = $sourcePlayer;
+            }
+            $playersLinked = $event['PlayersLinked'] ?? [];
+            if (is_string($playersLinked)) {
+                $playersLinked = array_filter(array_map('trim', explode(',', $playersLinked)));
+            }
+            if (is_array($playersLinked)) {
+                foreach ($playersLinked as $linkedPlayer) {
+                    if ($linkedPlayer && !in_array($linkedPlayer, $users)) {
+                        $users[] = $linkedPlayer;
+                    }
+                }
+            }
+            $userCount = max(1, count($users));
+
+            // Multiply TimeSpent by number of users
+            $result['eventsHours'] += $timeSpent * $userCount;
         }
         //endregion
 
