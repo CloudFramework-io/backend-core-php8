@@ -142,7 +142,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  composer run-script script _cloudia/activity/summary");
         $this->sendTerminal("");
         $this->sendTerminal("  # Report input associated with a task");
-        $this->sendTerminal("  composer run-script script \"_cloudia/activity/report-input?json={\\\"Hours\\\":2,\\\"Description\\\":\\\"Development work\\\",\\\"TaskId\\\":\\\"5734953457745920\\\"}\"");
+        $this->sendTerminal("  composer run-script script \"_cloudia/activity/report-input?json={\\\"TimeSpent\\\":2,\\\"Title\\\":\\\"Development work\\\",\\\"TaskId\\\":\\\"5734953457745920\\\"}\"");
         $this->sendTerminal("");
         $this->sendTerminal("  # Report event associated with a project and milestone");
         $this->sendTerminal("  composer run-script script \"_cloudia/activity/report-event?json={\\\"Title\\\":\\\"Sprint Review\\\",\\\"ProjectId\\\":\\\"my-project\\\",\\\"MilestoneId\\\":\\\"123456\\\"}\"");
@@ -280,7 +280,7 @@ class Script extends CoreScripts
         $this->sendTerminal(str_repeat('-', 100));
 
         $params = [
-            'filter__search' => $this->user_email,
+            'filter_PlayerId' => $this->user_email,
             'filter_DateInput' =>$from.'/'.($to??''),
             'cfo_limit' => 1000,
             '_raw' => 1,
@@ -386,8 +386,8 @@ class Script extends CoreScripts
 
         //region FETCH events count (filtered by DateInserting)
         $eventParams = [
-            'filter_UserEmail' => $this->user_email,
-            'filter_DateInserting' => ['>=', $from],
+            'filter__search' => strtoupper($this->user_email),
+            'filter_DateInserting' => "{$from}/".($to??''),
             'cfo_limit' => 500,
             '_raw' => 1,
             '_timezone' => 'UTC'
@@ -417,8 +417,8 @@ class Script extends CoreScripts
 
         //region FETCH inputs and calculate hours (filtered by DateInput)
         $inputParams = [
-            'filter_UserEmail' => $this->user_email,
-            'filter_DateInput' => ['>=', $from],
+            'filter_PlayerId' => $this->user_email,
+            'filter_DateInput' => "{$from}/".($to??''),
             'cfo_limit' => 500,
             '_raw' => 1,
             '_timezone' => 'UTC'
@@ -445,41 +445,32 @@ class Script extends CoreScripts
         $inputs = array_values($inputs);
         //endregion
 
-        //region CALCULATE statistics including TimeSpent
-        $totalHours = 0;
+        //region CALCULATE statistics (TimeSpent only - Hours field does not exist in CFO)
         $totalTimeSpent = 0;
-        $hoursByProject = [];
         $timeSpentByProject = [];
-        $hoursByTask = [];
         $timeSpentByTask = [];
-        $hoursByDay = [];
         $timeSpentByDay = [];
 
         foreach ($inputs as $input) {
-            $hours = floatval($input['Hours'] ?? 0);
             $timeSpent = floatval($input['TimeSpent'] ?? 0);
-            $totalHours += $hours;
             $totalTimeSpent += $timeSpent;
 
             $project = $input['ProjectId'] ?? 'Unknown';
-            $hoursByProject[$project] = ($hoursByProject[$project] ?? 0) + $hours;
             $timeSpentByProject[$project] = ($timeSpentByProject[$project] ?? 0) + $timeSpent;
 
             $task = $input['TaskId'] ?? 'Unknown';
-            $hoursByTask[$task] = ($hoursByTask[$task] ?? 0) + $hours;
             $timeSpentByTask[$task] = ($timeSpentByTask[$task] ?? 0) + $timeSpent;
 
             $day = substr($input['DateInput'] ?? '', 0, 10);
             if ($day) {
-                $hoursByDay[$day] = ($hoursByDay[$day] ?? 0) + $hours;
                 $timeSpentByDay[$day] = ($timeSpentByDay[$day] ?? 0) + $timeSpent;
             }
         }
 
-        // Sort by hours descending
-        arsort($hoursByProject);
-        arsort($hoursByTask);
-        ksort($hoursByDay);
+        // Sort by TimeSpent descending
+        arsort($timeSpentByProject);
+        arsort($timeSpentByTask);
+        ksort($timeSpentByDay);
         //endregion
 
         //region DISPLAY summary
@@ -491,49 +482,38 @@ class Script extends CoreScripts
         $this->sendTerminal("");
         $this->sendTerminal(" Time Tracking (by DateInput):");
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(sprintf("   Total Hours logged: %.2f hours", $totalHours));
         $this->sendTerminal(sprintf("   Total TimeSpent: %.2f hours", $totalTimeSpent));
-        if ($totalTimeSpent > 0 && $totalHours > 0) {
-            $efficiency = ($totalTimeSpent / $totalHours) * 100;
-            $this->sendTerminal(sprintf("   TimeSpent/Hours ratio: %.1f%%", $efficiency));
-        }
         $this->sendTerminal(sprintf("   Number of entries: %d", count($inputs)));
 
-        if ($hoursByDay) {
+        if ($timeSpentByDay) {
             $this->sendTerminal("");
-            $this->sendTerminal(" Hours / TimeSpent by Day:");
+            $this->sendTerminal(" TimeSpent by Day:");
             $this->sendTerminal(str_repeat('-', 50));
-            foreach ($hoursByDay as $day => $hours) {
+            foreach ($timeSpentByDay as $day => $timeSpent) {
                 $dayName = date('l', strtotime($day));
-                $dayTimeSpent = $timeSpentByDay[$day] ?? 0;
-                $timeSpentInfo = $dayTimeSpent > 0 ? sprintf(" | TimeSpent: %.2fh", $dayTimeSpent) : "";
-                $this->sendTerminal(sprintf("   %s (%s): %.2fh%s", $day, $dayName, $hours, $timeSpentInfo));
+                $this->sendTerminal(sprintf("   %s (%s): %.2fh", $day, $dayName, $timeSpent));
             }
         }
 
-        if ($hoursByProject) {
+        if ($timeSpentByProject) {
             $this->sendTerminal("");
-            $this->sendTerminal(" Hours / TimeSpent by Project (top 10):");
+            $this->sendTerminal(" TimeSpent by Project (top 10):");
             $this->sendTerminal(str_repeat('-', 50));
             $count = 0;
-            foreach ($hoursByProject as $project => $hours) {
+            foreach ($timeSpentByProject as $project => $timeSpent) {
                 if (++$count > 10) break;
-                $projectTimeSpent = $timeSpentByProject[$project] ?? 0;
-                $timeSpentInfo = $projectTimeSpent > 0 ? sprintf(" | TimeSpent: %.2fh", $projectTimeSpent) : "";
-                $this->sendTerminal(sprintf("   %-25s: %.2fh%s", $this->truncate($project, 25), $hours, $timeSpentInfo));
+                $this->sendTerminal(sprintf("   %-25s: %.2fh", $this->truncate($project, 25), $timeSpent));
             }
         }
 
-        if ($hoursByTask && count($hoursByTask) <= 20) {
+        if ($timeSpentByTask && count($timeSpentByTask) <= 20) {
             $this->sendTerminal("");
-            $this->sendTerminal(" Hours / TimeSpent by Task (top 10):");
+            $this->sendTerminal(" TimeSpent by Task (top 10):");
             $this->sendTerminal(str_repeat('-', 50));
             $count = 0;
-            foreach ($hoursByTask as $task => $hours) {
+            foreach ($timeSpentByTask as $task => $timeSpent) {
                 if (++$count > 10) break;
-                $taskTimeSpent = $timeSpentByTask[$task] ?? 0;
-                $timeSpentInfo = $taskTimeSpent > 0 ? sprintf(" | TimeSpent: %.2fh", $taskTimeSpent) : "";
-                $this->sendTerminal(sprintf("   %-25s: %.2fh%s", $this->truncate($task, 25), $hours, $timeSpentInfo));
+                $this->sendTerminal(sprintf("   %-25s: %.2fh", $this->truncate($task, 25), $timeSpent));
             }
         }
 
@@ -571,7 +551,7 @@ class Script extends CoreScripts
 
         //region FETCH events (filtered by DateInserting)
         $eventParams = [
-            'filter_UserEmail' => $this->user_email,
+            'filter__search' => strtoupper($this->user_email),
             'filter_DateInserting' => $from.'/'.($to??''),
             '_order' => '-DateInserting',
             'cfo_limit' => 500,
@@ -602,7 +582,7 @@ class Script extends CoreScripts
 
         //region FETCH inputs (filtered by DateInput)
         $inputParams = [
-            'filter_UserEmail' => $this->user_email,
+            'filter_PlayerId' => $this->user_email,
             'filter_DateInput' => $from.'/'.($to??''),
             '_order' => '-DateInput',
             'cfo_limit' => 500,
@@ -633,7 +613,6 @@ class Script extends CoreScripts
 
         //region COMBINE and GROUP by date
         $byDate = [];
-        $totalHours = 0;
         $totalTimeSpent = 0;
 
         // Add events to byDate
@@ -648,7 +627,6 @@ class Script extends CoreScripts
             $date = substr($input['DateInput'] ?? '', 0, 10);
             if (!$date) continue;
             $byDate[$date]['inputs'][] = $input;
-            $totalHours += floatval($input['Hours'] ?? 0);
             $totalTimeSpent += floatval($input['TimeSpent'] ?? 0);
         }
 
@@ -662,13 +640,11 @@ class Script extends CoreScripts
             $dayEvents = $dayData['events'] ?? [];
             $dayInputs = $dayData['inputs'] ?? [];
 
-            $dayTotalHours = array_sum(array_map(fn($i) => floatval($i['Hours'] ?? 0), $dayInputs));
             $dayTotalTimeSpent = array_sum(array_map(fn($i) => floatval($i['TimeSpent'] ?? 0), $dayInputs));
 
             $this->sendTerminal("");
-            $hoursInfo = $dayTotalHours > 0 ? sprintf(" | Hours: %.1fh", $dayTotalHours) : "";
             $timeSpentInfo = $dayTotalTimeSpent > 0 ? sprintf(" | TimeSpent: %.1fh", $dayTotalTimeSpent) : "";
-            $this->sendTerminal(" {$date} ({$dayName}) - Events: " . count($dayEvents) . " | Inputs: " . count($dayInputs) . $hoursInfo . $timeSpentInfo);
+            $this->sendTerminal(" {$date} ({$dayName}) - Events: " . count($dayEvents) . " | Inputs: " . count($dayInputs) . $timeSpentInfo);
             $this->sendTerminal(" " . str_repeat('-', 115));
 
             // Display events for this day
@@ -698,7 +674,6 @@ class Script extends CoreScripts
             // Display inputs for this day
             if ($dayInputs) {
                 foreach ($dayInputs as $input) {
-                    $hours = floatval($input['Hours'] ?? 0);
                     $timeSpent = floatval($input['TimeSpent'] ?? 0);
                     $project = $input['ProjectId'] ?? '';
                     $description = $input['Description'] ?? '';
@@ -706,10 +681,9 @@ class Script extends CoreScripts
                     $description = strlen($description) > 40 ? substr($description, 0, 37) . '...' : $description;
                     $project = strlen($project) > 25 ? substr($project, 0, 22) . '...' : $project;
 
-                    $hoursStr = sprintf("%.1fh", $hours);
-                    $timeSpentStr = $timeSpent > 0 ? sprintf(" (spent: %.1fh)", $timeSpent) : "";
+                    $timeSpentStr = sprintf("%.1fh", $timeSpent);
 
-                    $this->sendTerminal(sprintf("   [INP] [%s%s] %-40s | %s", $hoursStr, $timeSpentStr, $description ?: '(no description)', $project));
+                    $this->sendTerminal(sprintf("   [INP] [%s] %-40s | %s", $timeSpentStr, $description ?: '(no description)', $project));
                 }
             }
         }
@@ -718,12 +692,8 @@ class Script extends CoreScripts
         //region DISPLAY summary
         $this->sendTerminal("");
         $this->sendTerminal(str_repeat('=', 120));
-        $this->sendTerminal(sprintf(" TOTAL: %d events | %d inputs | Hours: %.1f | TimeSpent: %.1f",
-            count($events), count($inputs), $totalHours, $totalTimeSpent));
-        if ($totalTimeSpent > 0 && $totalHours > 0) {
-            $efficiency = ($totalTimeSpent / $totalHours) * 100;
-            $this->sendTerminal(sprintf(" TimeSpent/Hours ratio: %.1f%%", $efficiency));
-        }
+        $this->sendTerminal(sprintf(" TOTAL: %d events | %d inputs | TimeSpent: %.1fh",
+            count($events), count($inputs), $totalTimeSpent));
         $this->sendTerminal(" Period: {$from} to {$to} | User: {$this->user_email}");
         //endregion
 
@@ -865,7 +835,6 @@ class Script extends CoreScripts
             $this->sendTerminal(str_repeat('-', 100));
             $this->sendTerminal(" - KeyId: " . ($created_input['KeyId'] ?? 'N/A'));
             $this->sendTerminal(" - Title: " . ($created_input['Title'] ?? 'N/A'));
-            $this->sendTerminal(" - Hours: " . ($created_input['Hours'] ?? 'N/A'));
             $this->sendTerminal(" - TimeSpent: " . ($created_input['TimeSpent'] ?? 'N/A'));
             $this->sendTerminal(" - Date: " . ($created_input['DateInput'] ?? 'N/A'));
             if (!empty($created_input['TaskId'])) {
@@ -1190,16 +1159,14 @@ class Script extends CoreScripts
         if (!$inputs) {
             $this->sendTerminal("No activity inputs found");
             $this->sendTerminal(str_repeat('-', 100));
-            $this->sendTerminal("Total: 0 inputs | Hours: 0.00 | TimeSpent: 0.00");
+            $this->sendTerminal("Total: 0 inputs | TimeSpent: 0.00h");
             return;
         }
 
-        // Calculate totals including TimeSpent
-        $totalHours = 0;
+        // Calculate totals (TimeSpent only - Hours field does not exist in CFO)
         $totalTimeSpent = 0;
         $byDate = [];
         foreach ($inputs as $input) {
-            $totalHours += floatval($input['Hours'] ?? 0);
             $totalTimeSpent += floatval($input['TimeSpent'] ?? 0);
             $date = substr($input['DateInput'] ?? '', 0, 10);
             $byDate[$date][] = $input;
@@ -1211,17 +1178,13 @@ class Script extends CoreScripts
         // Display inputs grouped by date
         foreach ($byDate as $date => $dateInputs) {
             $dayName = date('l', strtotime($date));
-            $dayTotalHours = array_sum(array_map(fn($i) => floatval($i['Hours'] ?? 0), $dateInputs));
             $dayTotalTimeSpent = array_sum(array_map(fn($i) => floatval($i['TimeSpent'] ?? 0), $dateInputs));
 
             $this->sendTerminal("");
-            $timeSpentInfo = $dayTotalTimeSpent > 0 ? " | TimeSpent: {$dayTotalTimeSpent}h" : "";
-            $this->sendTerminal(" {$date} ({$dayName}) - Hours: {$dayTotalHours}h{$timeSpentInfo}");
+            $this->sendTerminal(" {$date} ({$dayName}) - TimeSpent: {$dayTotalTimeSpent}h");
             $this->sendTerminal(" " . str_repeat('-', 50));
 
             foreach ($dateInputs as $input) {
-                $keyId = $input['KeyId'] ?? 'N/A';
-                $hours = floatval($input['Hours'] ?? 0);
                 $timeSpent = floatval($input['TimeSpent'] ?? 0);
                 $project = $input['ProjectId'] ?? '';
                 $task = $input['TaskId'] ?? '';
@@ -1233,31 +1196,25 @@ class Script extends CoreScripts
                     $description = substr($description, 0, $maxDescLen - 3) . '...';
                 }
 
-                // Format hours with TimeSpent if present
-                $hoursStr = sprintf("%.2fh", $hours);
-                $timeSpentStr = $timeSpent > 0 ? sprintf(" (spent: %.2fh)", $timeSpent) : "";
+                // Format TimeSpent
+                $timeSpentStr = sprintf("%.2fh", $timeSpent);
 
-                $this->sendTerminal(sprintf("   [%s%s] %s | Project: %s", $hoursStr, $timeSpentStr, $description ?: '(no description)', $this->truncate($project, 20)));
+                $this->sendTerminal(sprintf("   [%s] %s | Project: %s", $timeSpentStr, $description ?: '(no description)', $this->truncate($project, 20)));
                 if ($task) {
                     $this->sendTerminal("            Task: {$task}");
                 }
             }
         }
 
-        // Summary with TimeSpent analysis
+        // Summary
         $this->sendTerminal("");
         $this->sendTerminal(str_repeat('-', 100));
-        $this->sendTerminal(sprintf("Total: %d inputs | Hours: %.2f | TimeSpent: %.2f", count($inputs), $totalHours, $totalTimeSpent));
-        if ($totalTimeSpent > 0 && $totalHours > 0) {
-            $efficiency = ($totalTimeSpent / $totalHours) * 100;
-            $this->sendTerminal(sprintf("TimeSpent/Hours ratio: %.1f%%", $efficiency));
-        }
+        $this->sendTerminal(sprintf("Total: %d inputs | TimeSpent: %.2fh", count($inputs), $totalTimeSpent));
         $this->sendTerminal("User: {$this->user_email}");
     }
 
     /**
      * Display detailed input information
-     * Includes TimeSpent analysis
      *
      * @param array $input Input record
      */
@@ -1266,7 +1223,6 @@ class Script extends CoreScripts
         $fields = [
             'KeyId' => 'ID',
             'DateInput' => 'Date',
-            'Hours' => 'Hours',
             'TimeSpent' => 'TimeSpent',
             'ProjectId' => 'Project',
             'TaskId' => 'Task',
@@ -1284,7 +1240,7 @@ class Script extends CoreScripts
                     $value = $value ? 'Yes' : 'No';
                 } elseif (is_array($value)) {
                     $value = implode(', ', $value);
-                } elseif ($key === 'Hours' || $key === 'TimeSpent') {
+                } elseif ($key === 'TimeSpent') {
                     $value = sprintf("%.2f", $value);
                 }
                 $this->sendTerminal(sprintf(" %-18s: %s", $label, $value));
