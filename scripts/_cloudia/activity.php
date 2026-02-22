@@ -446,21 +446,28 @@ class Script extends CoreScripts
         //endregion
 
         //region CALCULATE statistics (TimeSpent only - Hours field does not exist in CFO)
-        // Calculate TimeSpent from events
         $eventsTimeSpent = 0;
-        foreach ($events as $event) {
-            $eventsTimeSpent += floatval($event['TimeSpent'] ?? 0);
-        }
-
-        // Calculate TimeSpent from inputs
-        $totalTimeSpent = 0;
+        $inputsTimeSpent = 0;
         $timeSpentByProject = [];
         $timeSpentByTask = [];
         $timeSpentByDay = [];
 
+        // Calculate TimeSpent from events (add to daily totals)
+        foreach ($events as $event) {
+            $timeSpent = floatval($event['TimeSpent'] ?? 0);
+            $eventsTimeSpent += $timeSpent;
+
+            // Add to daily total using DateTimeInit or DateInserting
+            $day = substr($event['DateTimeInit'] ?? $event['DateInserting'] ?? '', 0, 10);
+            if ($day && $timeSpent > 0) {
+                $timeSpentByDay[$day] = ($timeSpentByDay[$day] ?? 0) + $timeSpent;
+            }
+        }
+
+        // Calculate TimeSpent from inputs
         foreach ($inputs as $input) {
             $timeSpent = floatval($input['TimeSpent'] ?? 0);
-            $totalTimeSpent += $timeSpent;
+            $inputsTimeSpent += $timeSpent;
 
             $project = $input['ProjectId'] ?? 'Unknown';
             $timeSpentByProject[$project] = ($timeSpentByProject[$project] ?? 0) + $timeSpent;
@@ -474,6 +481,9 @@ class Script extends CoreScripts
             }
         }
 
+        // Total TimeSpent = events + inputs
+        $totalTimeSpent = $eventsTimeSpent + $inputsTimeSpent;
+
         // Sort by TimeSpent descending
         arsort($timeSpentByProject);
         arsort($timeSpentByTask);
@@ -482,20 +492,15 @@ class Script extends CoreScripts
 
         //region DISPLAY summary
         $this->sendTerminal("");
-        $this->sendTerminal(" Events (by DateInserting):");
+        $this->sendTerminal(" Summary:");
         $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(sprintf("   Total events: %d", count($events)));
-        $this->sendTerminal(sprintf("   Total TimeSpent in events: %.2f hours", $eventsTimeSpent));
-
-        $this->sendTerminal("");
-        $this->sendTerminal(" Time Tracking (by DateInput):");
-        $this->sendTerminal(str_repeat('-', 50));
-        $this->sendTerminal(sprintf("   Total TimeSpent: %.2f hours", $totalTimeSpent));
-        $this->sendTerminal(sprintf("   Number of entries: %d", count($inputs)));
+        $this->sendTerminal(sprintf("   Events: %d (TimeSpent: %.2fh)", count($events), $eventsTimeSpent));
+        $this->sendTerminal(sprintf("   Inputs: %d (TimeSpent: %.2fh)", count($inputs), $inputsTimeSpent));
+        $this->sendTerminal(sprintf("   TOTAL TimeSpent: %.2f hours", $totalTimeSpent));
 
         if ($timeSpentByDay) {
             $this->sendTerminal("");
-            $this->sendTerminal(" TimeSpent by Day:");
+            $this->sendTerminal(" TimeSpent by Day (events + inputs):");
             $this->sendTerminal(str_repeat('-', 50));
             foreach ($timeSpentByDay as $day => $timeSpent) {
                 $dayName = date('l', strtotime($day));
