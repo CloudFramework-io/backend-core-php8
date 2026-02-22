@@ -1730,6 +1730,8 @@ The `_cloudia/activity.php` script tracks and displays user activity including *
 | `/all?from=DATE&to=DATE` | Combined activity in date range |
 | `/report-input` | **Create** a new activity input (time tracking) |
 | `/report-event` | **Create** a new event (calendar/CRM) |
+| `/delete-input?id=INPUT_KEYID` | **Delete** an activity input |
+| `/delete-event?id=EVENT_KEYID` | **Delete** an event |
 
 ### Time Bounds
 
@@ -1839,7 +1841,8 @@ To create calendar events or CRM activities, use `_cloudia/activity/report-event
 - `Title` (string) - Event title
 
 **Optional Fields:**
-- `ProjectId`, `TaskId`, `MilestoneId`, `ProposalId` - Associations
+- `ProjectId`, `TaskId`, `MilestoneId`, `ProposalId`, `LeadId`, `IncidenceId`, `CompanyId` - Associations
+- `TimeSpent` (number) - Hours spent on this event
 - `DateTimeInit`, `DateTimeEnd` - Event start/end times
 - `Type` - Event type (meeting, call, email, etc.)
 - `Location` - Event location
@@ -1847,9 +1850,32 @@ To create calendar events or CRM activities, use `_cloudia/activity/report-event
 
 **Usage:**
 ```bash
+# Create event linked to a project
 echo '{"Title":"Sprint Review Meeting","ProjectId":"my-project","Type":"meeting","DateTimeInit":"2026-02-07 10:00:00","DateTimeEnd":"2026-02-07 11:00:00"}' | \
   php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-event"
+
+# Create event linked to a Lead (sales activity)
+echo '{"Title":"Discovery call with potential client","LeadId":"5734953457745920","TimeSpent":1,"Type":"call"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-event"
+
+# Create event linked to a Proposal
+echo '{"Title":"Proposal presentation","ProposalId":"6116810092445696","TimeSpent":2,"Type":"meeting"}' | \
+  php vendor/cloudframework-io/backend-core-php8/runscript.php "_cloudia/activity/report-event"
 ```
+
+### Deleting Activity
+
+To delete an activity input or event, use the delete commands:
+
+```bash
+# Delete an activity input
+composer script -- "_cloudia/activity/delete-input?id=6116810092445696"
+
+# Delete an event
+composer script -- "_cloudia/activity/delete-event?id=5734953457745920"
+```
+
+**⚠️ Warning:** Deletion is permanent and cannot be undone.
 
 ### Output Format
 
@@ -1864,8 +1890,13 @@ echo '{"Title":"Sprint Review Meeting","ProjectId":"my-project","Type":"meeting"
 - Description/notes
 
 **Summary** shows:
-- Activity breakdown by day
-- Total hours spent
+- **Events** (by DateInsertion): List with total TimeSpent
+- **Inputs** (by DateInput): List with total TimeSpent
+- **TimeSpent by Day**: Daily breakdown combining events + inputs (with TOTAL)
+- **TimeSpent by Project**: Per-project breakdown (with TOTAL)
+- **TimeSpent by Task**: Per-task breakdown (with TOTAL)
+- **TimeSpent by Proposal**: Time spent on sales proposals (with TOTAL)
+- **TimeSpent by Lead**: Time spent on sales leads (with TOTAL)
 - Period and user information
 
 **All (combined)** shows:
