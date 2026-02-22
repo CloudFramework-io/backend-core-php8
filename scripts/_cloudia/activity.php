@@ -450,16 +450,18 @@ class Script extends CoreScripts
         $inputsTimeSpent = 0;
         $timeSpentByProject = [];
         $timeSpentByTask = [];
+        $timeSpentByProposal = [];
+        $timeSpentByLead = [];
         $timeSpentByDay = [];
 
-        // Calculate TimeSpent from events (add to daily, project and task totals)
+        // Calculate TimeSpent from events (add to daily, project, task, proposal and lead totals)
         foreach ($events as $event) {
             $timeSpent = floatval($event['TimeSpent'] ?? 0);
             $eventsTimeSpent += $timeSpent;
 
             if ($timeSpent > 0) {
-                // Add to daily total using DateTimeInit or DateInserting
-                $day = substr($event['DateTimeInit'] ?? $event['DateInserting'] ?? '', 0, 10);
+                // Add to daily total using DateTimeInit or DateInsertion
+                $day = substr($event['DateTimeInit'] ?? $event['DateInsertion'] ?? '', 0, 10);
                 if ($day) {
                     $timeSpentByDay[$day] = ($timeSpentByDay[$day] ?? 0) + $timeSpent;
                 }
@@ -474,6 +476,18 @@ class Script extends CoreScripts
                 $task = $event['TaskId'] ?? null;
                 if ($task) {
                     $timeSpentByTask[$task] = ($timeSpentByTask[$task] ?? 0) + $timeSpent;
+                }
+
+                // Add to proposal total
+                $proposal = $event['ProposalId'] ?? null;
+                if ($proposal) {
+                    $timeSpentByProposal[$proposal] = ($timeSpentByProposal[$proposal] ?? 0) + $timeSpent;
+                }
+
+                // Add to lead total
+                $lead = $event['LeadId'] ?? null;
+                if ($lead) {
+                    $timeSpentByLead[$lead] = ($timeSpentByLead[$lead] ?? 0) + $timeSpent;
                 }
             }
         }
@@ -493,6 +507,17 @@ class Script extends CoreScripts
                 $timeSpentByTask[$task] = ($timeSpentByTask[$task] ?? 0) + $timeSpent;
             }
 
+            // Inputs may also have ProposalId and LeadId
+            $proposal = $input['ProposalId'] ?? null;
+            if ($proposal) {
+                $timeSpentByProposal[$proposal] = ($timeSpentByProposal[$proposal] ?? 0) + $timeSpent;
+            }
+
+            $lead = $input['LeadId'] ?? null;
+            if ($lead) {
+                $timeSpentByLead[$lead] = ($timeSpentByLead[$lead] ?? 0) + $timeSpent;
+            }
+
             $day = substr($input['DateInput'] ?? '', 0, 10);
             if ($day) {
                 $timeSpentByDay[$day] = ($timeSpentByDay[$day] ?? 0) + $timeSpent;
@@ -505,6 +530,8 @@ class Script extends CoreScripts
         // Sort by TimeSpent descending
         arsort($timeSpentByProject);
         arsort($timeSpentByTask);
+        arsort($timeSpentByProposal);
+        arsort($timeSpentByLead);
         ksort($timeSpentByDay);
         //endregion
 
@@ -554,6 +581,32 @@ class Script extends CoreScripts
             }
             $this->sendTerminal(str_repeat('-', 50));
             $this->sendTerminal(sprintf("   %-30s: %.2fh", "TOTAL", $taskTotal));
+        }
+
+        if ($timeSpentByProposal) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" TimeSpent by Proposal (events + inputs):");
+            $this->sendTerminal(str_repeat('-', 50));
+            $proposalTotal = 0;
+            foreach ($timeSpentByProposal as $proposal => $timeSpent) {
+                $this->sendTerminal(sprintf("   %-30s: %.2fh", $this->truncate($proposal, 30), $timeSpent));
+                $proposalTotal += $timeSpent;
+            }
+            $this->sendTerminal(str_repeat('-', 50));
+            $this->sendTerminal(sprintf("   %-30s: %.2fh", "TOTAL", $proposalTotal));
+        }
+
+        if ($timeSpentByLead) {
+            $this->sendTerminal("");
+            $this->sendTerminal(" TimeSpent by Lead (events + inputs):");
+            $this->sendTerminal(str_repeat('-', 50));
+            $leadTotal = 0;
+            foreach ($timeSpentByLead as $lead => $timeSpent) {
+                $this->sendTerminal(sprintf("   %-30s: %.2fh", $this->truncate($lead, 30), $timeSpent));
+                $leadTotal += $timeSpent;
+            }
+            $this->sendTerminal(str_repeat('-', 50));
+            $this->sendTerminal(sprintf("   %-30s: %.2fh", "TOTAL", $leadTotal));
         }
 
         $this->sendTerminal(str_repeat('=', 100));
