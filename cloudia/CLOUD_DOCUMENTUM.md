@@ -202,6 +202,7 @@ This separation ensures:
 | **Libraries** | Code libraries and function documentation |
 | **Courses** | CLOUD Academy learning content |
 | **Activity** | Time tracking and event logging (TimeSpent on tasks is calculated from activity) |
+| **Localizations** | Multi-language dictionary tags for i18n support |
 
 ---
 
@@ -223,6 +224,7 @@ composer script -- "_cloudia/{module}/{action}?{params}"
 | `_cloudia/checks` | Checks/tests management |
 | `_cloudia/apis` | API documentation |
 | `_cloudia/libraries` | Library documentation |
+| `_cloudia/localize` | Localization dictionaries (i18n tags) |
 
 ### Execution Scripts
 

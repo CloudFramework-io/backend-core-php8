@@ -66,6 +66,7 @@ CLOUD Documentum is the documentation management system for:
 - **WebApps** (also called **"Unidades de Desarrollo"** in the UI) and their Modules
 - **Resources** (infrastructure resources)
 - **WebPages** (ECM content pages)
+- **Localizations** (i18n dictionary tags organized by App/Cat/Code)
 - **Courses** (CLOUD Academy)
 - **Menu Modules** (navigation configuration)
 - **Projects** and Tasks
@@ -344,6 +345,7 @@ Each `route` value matches a Check's `Route` field for bidirectional linking.
 | Checks | `buckets/backups/Checks/{platform}/` | `{CFOEntity}__{CFOId}.json` |
 | Resources | `buckets/backups/Resources/{platform}/` | `_all_resources.json` |
 | WebPages | `buckets/backups/WebPages/{platform}/` | `_page_route.json` |
+| Localizations | `buckets/backups/Localize/{platform}/` | `{app}__{cat}__{code}.json` |
 | Courses | `buckets/backups/Courses/{platform}/` | `{course-keyid}.json` |
 | Menus | `buckets/backups/Menus/{platform}/` | `{module-keyname}.json` |
 | Projects | `buckets/backups/Projects/{platform}/` | `{project-keyname}.json` |
@@ -369,6 +371,7 @@ All scripts are located in `vendor/cloudframework-io/backend-core-php8/scripts/_
 | `cfos.php` | CFO (CloudFramework Object) definitions |
 | `resources.php` | Infrastructure resources and accesses |
 | `menu.php` | Menu modules configuration |
+| `localize.php` | Localization dictionaries (i18n tags by App/Cat/Code) |
 | `projects.php` | Projects with Milestones (NOT tasks) |
 | `tasks.php` | Task CRUD with checks (create, show, get, update, delete) |
 | `activity.php` | Activity tracking (Events and Inputs) |
@@ -396,6 +399,7 @@ composer script -- "_cloudia/{type}/{action}?{params}"
 | `cfos` | `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=CFOKeyName` |
 | `resources` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=resource-key` |
 | `menu` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=MODULE-KEY` |
+| `localize` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup` | `id=app;cat;code`, `app=APP`, `cat=CAT` |
 | `projects` | `list-remote`, `list-local`, `backup-from-remote`, `insert-from-backup`, `update-from-backup`, `my_tasks` | `id=project-keyname` (milestones only, NOT tasks) |
 | `tasks` | `list`, `today`, `sprint`, `project`, `milestone`, `person`, `show`, `get`, `insert`, `update`, `delete`, `search` | `id`, `title`, `project`, `milestone`, `email`, `status`, `priority`, `confirm`, `delete_checks`, `delete` |
 | `activity` | `events`, `event`, `inputs`, `input`, `summary`, `all` | `from`, `to`, `id`, `task`, `project` |
@@ -418,6 +422,16 @@ composer script -- "_cloudia/projects/update-from-backup?id=project-keyname"
 composer script -- "_cloudia/cfos/backup-from-remote?id=CFO_KeyName"
 composer script -- "_cloudia/cfos/insert-from-backup?id=CFO_KeyName"
 composer script -- "_cloudia/cfos/update-from-backup?id=CFO_KeyName"
+
+# Localizations (i18n dictionary tags)
+composer script -- "_cloudia/localize/list-remote"                          # List all localizations
+composer script -- "_cloudia/localize/list-remote?app=cloudframework"       # Filter by app
+composer script -- "_cloudia/localize/list-remote?app=cloudframework&cat=common"  # Filter by app and cat
+composer script -- "_cloudia/localize/list-local"                            # List local backup files
+composer script -- "_cloudia/localize/backup-from-remote?app=cloudframework"  # Backup all for an app
+composer script -- "_cloudia/localize/backup-from-remote?id=app;cat;code"    # Backup specific by KeyName
+composer script -- "_cloudia/localize/insert-from-backup?id=app;cat;code"    # Insert from backup
+composer script -- "_cloudia/localize/update-from-backup?id=app;cat;code"    # Update from backup
 
 # Auth
 composer script -- "_cloudia/auth/info"           # Show authenticated user email
@@ -1045,6 +1059,112 @@ Checks can be associated at **two levels** for WebApps, and **you MUST use the c
 | `Status` | enum | Page status |
 | `PublicMeta` | json | SEO metadata |
 | `DocumentationId` | string | Development group |
+
+## Localizations (i18n Dictionary Tags)
+
+Localizations manage multi-language dictionary tags for internationalization (i18n) support. Tags are organized by **App** (application grouping), **Cat** (category within an app), and **Code** (specific tag identifier).
+
+### CloudFrameWorkLocalizations Structure
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `KeyName` | keyname | Unique identifier: `app;cat;code` (semicolon-separated) |
+| `App` | string | Application grouping (e.g., `cloudframework`, `cloud-hrms`) |
+| `Cat` | string | Category within the app (e.g., `common`, `errors`, `buttons`) |
+| `Code` | string | Tag identifier (e.g., `save`, `cancel`, `error-not-found`) |
+| `Lang` | string | Default language code (`es`, `en`) |
+| `Default` | string | Default text value |
+| `Translations` | list | List of available translations (`["es", "en", "fr"]`) |
+| `JSON` | json | Multi-language translations or subtags |
+| `DateUpdated` | datetime | Last update timestamp |
+
+### JSON Structure for Translations
+
+The `JSON` field can contain direct translations or subtags:
+
+**Direct translations:**
+```json
+{
+    "es": "Guardar",
+    "en": "Save",
+    "fr": "Sauvegarder"
+}
+```
+
+**Subtags structure:**
+```json
+{
+    "button-save": {
+        "es": "Guardar",
+        "en": "Save"
+    },
+    "button-cancel": {
+        "es": "Cancelar",
+        "en": "Cancel"
+    }
+}
+```
+
+### Backup File Structure
+
+Localizations are stored as individual JSON files:
+
+**Filename format:** `{app}__{cat}__{code}.json` (semicolons replaced with double underscores)
+
+**Example:** `cloudframework;common;save` → `cloudframework__common__save.json`
+
+```json
+{
+    "KeyName": "cloudframework;common;save",
+    "App": "cloudframework",
+    "Cat": "common",
+    "Code": "save",
+    "Lang": "en",
+    "Default": "Save",
+    "Translations": ["es", "en", "fr"],
+    "JSON": {
+        "es": "Guardar",
+        "en": "Save",
+        "fr": "Sauvegarder"
+    }
+}
+```
+
+**Backup Location:** `buckets/backups/Localize/{platform}/{app}__{cat}__{code}.json`
+
+### Script Commands
+
+```bash
+# List all localizations
+composer script -- "_cloudia/localize/list-remote"
+
+# List localizations filtered by app
+composer script -- "_cloudia/localize/list-remote?app=cloudframework"
+
+# List localizations filtered by app and category
+composer script -- "_cloudia/localize/list-remote?app=cloudframework&cat=common"
+
+# List local backup files
+composer script -- "_cloudia/localize/list-local"
+
+# Backup all localizations for an app
+composer script -- "_cloudia/localize/backup-from-remote?app=cloudframework"
+
+# Backup specific localization by KeyName
+composer script -- "_cloudia/localize/backup-from-remote?id=cloudframework;common;save"
+
+# Insert new localization from backup file
+composer script -- "_cloudia/localize/insert-from-backup?id=cloudframework;common;save"
+
+# Update existing localization from backup file
+composer script -- "_cloudia/localize/update-from-backup?id=cloudframework;common;save"
+```
+
+### Localization Hooks
+
+When localizations are inserted or updated, the CFO triggers hooks to:
+1. **Refresh cache** for the affected app/category
+2. **Generate/regenerate Firestore dictionary** for real-time access
 
 ## Projects, Milestones and Tasks
 
