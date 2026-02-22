@@ -452,15 +452,29 @@ class Script extends CoreScripts
         $timeSpentByTask = [];
         $timeSpentByDay = [];
 
-        // Calculate TimeSpent from events (add to daily totals)
+        // Calculate TimeSpent from events (add to daily, project and task totals)
         foreach ($events as $event) {
             $timeSpent = floatval($event['TimeSpent'] ?? 0);
             $eventsTimeSpent += $timeSpent;
 
-            // Add to daily total using DateTimeInit or DateInserting
-            $day = substr($event['DateTimeInit'] ?? $event['DateInserting'] ?? '', 0, 10);
-            if ($day && $timeSpent > 0) {
-                $timeSpentByDay[$day] = ($timeSpentByDay[$day] ?? 0) + $timeSpent;
+            if ($timeSpent > 0) {
+                // Add to daily total using DateTimeInit or DateInserting
+                $day = substr($event['DateTimeInit'] ?? $event['DateInserting'] ?? '', 0, 10);
+                if ($day) {
+                    $timeSpentByDay[$day] = ($timeSpentByDay[$day] ?? 0) + $timeSpent;
+                }
+
+                // Add to project total
+                $project = $event['ProjectId'] ?? null;
+                if ($project) {
+                    $timeSpentByProject[$project] = ($timeSpentByProject[$project] ?? 0) + $timeSpent;
+                }
+
+                // Add to task total
+                $task = $event['TaskId'] ?? null;
+                if ($task) {
+                    $timeSpentByTask[$task] = ($timeSpentByTask[$task] ?? 0) + $timeSpent;
+                }
             }
         }
 
@@ -469,11 +483,15 @@ class Script extends CoreScripts
             $timeSpent = floatval($input['TimeSpent'] ?? 0);
             $inputsTimeSpent += $timeSpent;
 
-            $project = $input['ProjectId'] ?? 'Unknown';
-            $timeSpentByProject[$project] = ($timeSpentByProject[$project] ?? 0) + $timeSpent;
+            $project = $input['ProjectId'] ?? null;
+            if ($project) {
+                $timeSpentByProject[$project] = ($timeSpentByProject[$project] ?? 0) + $timeSpent;
+            }
 
-            $task = $input['TaskId'] ?? 'Unknown';
-            $timeSpentByTask[$task] = ($timeSpentByTask[$task] ?? 0) + $timeSpent;
+            $task = $input['TaskId'] ?? null;
+            if ($task) {
+                $timeSpentByTask[$task] = ($timeSpentByTask[$task] ?? 0) + $timeSpent;
+            }
 
             $day = substr($input['DateInput'] ?? '', 0, 10);
             if ($day) {
@@ -510,24 +528,28 @@ class Script extends CoreScripts
 
         if ($timeSpentByProject) {
             $this->sendTerminal("");
-            $this->sendTerminal(" TimeSpent by Project (top 10):");
+            $this->sendTerminal(" TimeSpent by Project (events + inputs):");
             $this->sendTerminal(str_repeat('-', 50));
-            $count = 0;
+            $projectTotal = 0;
             foreach ($timeSpentByProject as $project => $timeSpent) {
-                if (++$count > 10) break;
-                $this->sendTerminal(sprintf("   %-25s: %.2fh", $this->truncate($project, 25), $timeSpent));
+                $this->sendTerminal(sprintf("   %-30s: %.2fh", $this->truncate($project, 30), $timeSpent));
+                $projectTotal += $timeSpent;
             }
+            $this->sendTerminal(str_repeat('-', 50));
+            $this->sendTerminal(sprintf("   %-30s: %.2fh", "TOTAL", $projectTotal));
         }
 
-        if ($timeSpentByTask && count($timeSpentByTask) <= 20) {
+        if ($timeSpentByTask) {
             $this->sendTerminal("");
-            $this->sendTerminal(" TimeSpent by Task (top 10):");
+            $this->sendTerminal(" TimeSpent by Task (events + inputs):");
             $this->sendTerminal(str_repeat('-', 50));
-            $count = 0;
+            $taskTotal = 0;
             foreach ($timeSpentByTask as $task => $timeSpent) {
-                if (++$count > 10) break;
-                $this->sendTerminal(sprintf("   %-25s: %.2fh", $this->truncate($task, 25), $timeSpent));
+                $this->sendTerminal(sprintf("   %-30s: %.2fh", $this->truncate($task, 30), $timeSpent));
+                $taskTotal += $timeSpent;
             }
+            $this->sendTerminal(str_repeat('-', 50));
+            $this->sendTerminal(sprintf("   %-30s: %.2fh", "TOTAL", $taskTotal));
         }
 
         $this->sendTerminal(str_repeat('=', 100));
