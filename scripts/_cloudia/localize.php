@@ -170,9 +170,9 @@ class Script extends CoreScripts
         $this->sendTerminal(str_repeat('-', 100));
 
         $params = [
-            '_fields' => 'KeyName,App,Cat,Code,Lang,Default,Translations',
+            '_fields' => 'App,Cat,Code,Lang,Default,Translations',
             '_order' => 'App,Cat,Code',
-            '_limit' => 1000
+            '_limit' => 2000
         ];
 
         // Filter by App if provided
@@ -456,6 +456,29 @@ class Script extends CoreScripts
 
         if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
             $remote_localization = $remote_response['data'];
+
+            //region CHECK if remote is more recent than local
+            $local_date_updated = $localization['DateUpdated'] ?? null;
+            $remote_date_updated = $remote_localization['DateUpdated'] ?? null;
+
+            if ($local_date_updated && $remote_date_updated) {
+                $local_timestamp = strtotime($local_date_updated);
+                $remote_timestamp = strtotime($remote_date_updated);
+
+                if ($remote_timestamp > $local_timestamp) {
+                    $this->sendTerminal("");
+                    $this->sendTerminal(" !! ERROR: Remote Localization is more recent than local file");
+                    $this->sendTerminal("    - Local DateUpdated:  {$local_date_updated}");
+                    $this->sendTerminal("    - Remote DateUpdated: {$remote_date_updated}");
+                    $this->sendTerminal("");
+                    $this->sendTerminal(" >> Please run backup-from-remote first to get the latest version:");
+                    $this->sendTerminal("    composer script -- \"_cloudia/localize/backup-from-remote?id={$localization_id}\"");
+                    $this->sendTerminal("");
+                    return $this->addError("Remote Localization is more recent than local file. Run backup-from-remote first.");
+                }
+            }
+            //endregion
+
             ksort($remote_localization);
             ksort($localization);
 
@@ -473,7 +496,7 @@ class Script extends CoreScripts
         //region UPDATE Localization in remote platform via API
         $this->sendTerminal(" - Updating Localization in remote platform...");
         $response = $this->core->request->put_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkLocalizations/" . urlencode($localization_id) . "?_raw&_timezone=UTC",
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkLocalizations/" . urlencode($localization_id),
             $localization,
             $this->headers,
             true
