@@ -520,10 +520,14 @@ class Script extends CoreScripts
             $this->sendTerminal("");
             $this->sendTerminal(" TimeSpent by Day (events + inputs):");
             $this->sendTerminal(str_repeat('-', 50));
+            $dayTotal = 0;
             foreach ($timeSpentByDay as $day => $timeSpent) {
                 $dayName = date('l', strtotime($day));
                 $this->sendTerminal(sprintf("   %s (%s): %.2fh", $day, $dayName, $timeSpent));
+                $dayTotal += $timeSpent;
             }
+            $this->sendTerminal(str_repeat('-', 50));
+            $this->sendTerminal(sprintf("   %-30s: %.2fh", "TOTAL", $dayTotal));
         }
 
         if ($timeSpentByProject) {
