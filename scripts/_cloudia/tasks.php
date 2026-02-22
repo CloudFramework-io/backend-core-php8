@@ -2286,9 +2286,20 @@ class Script extends CoreScripts
         }
 
         // Valid Status values
-        $validStatuses = ['pending', 'in-progress', 'in-qa', 'closed', 'blocked', 'canceled', 'on-hold'];
+        $validStatuses = ['pending', 'in-progress', 'in-qa', 'closing-required', 'closed', 'blocked', 'canceled', 'on-hold'];
         if (isset($task['Status']) && !in_array($task['Status'], $validStatuses)) {
             $result['warnings'][] = "Status '{$task['Status']}' is not a standard value. Valid: " . implode(', ', $validStatuses);
+        }
+
+        // Solution field validation
+        // Solution is REQUIRED when status is: in-progress, in-qa, closing-required, closed, canceled
+        // Solution should summarize the implementation progress and ideally include CloudIA prompts used
+        $solutionRequiredStatuses = ['in-progress', 'in-qa', 'closing-required', 'closed', 'canceled'];
+        if (isset($task['Status']) && in_array($task['Status'], $solutionRequiredStatuses)) {
+            if (!isset($task['Solution']) || (is_string($task['Solution']) && trim(strip_tags($task['Solution'])) === '')) {
+                $result['errors'][] = "'Solution' field is REQUIRED when status is '{$task['Status']}'. It should summarize the implementation/progress and ideally include CloudIA prompts used.";
+                $result['valid'] = false;
+            }
         }
 
         // Valid Priority values

@@ -1511,12 +1511,34 @@ Before updating, the script validates that all required task fields are present:
 | `Title` | **Yes** | Non-empty task title |
 | `ProjectId` | **Yes** | Non-empty project reference |
 | `Status` | **Yes** | Valid status value |
+| `Solution` | **Required*** | Implementation summary (required for active/completed statuses) |
 | `MilestoneId` | Recommended | Links task to milestone |
 | `PlayerId` | Recommended | Assigns task to user(s) |
 
-**Valid Status values:** `pending`, `in-progress`, `in-qa`, `closed`, `blocked`, `canceled`, `on-hold`
+**Valid Status values:** `pending`, `in-progress`, `in-qa`, `closing-required`, `closed`, `blocked`, `canceled`, `on-hold`
 
 **Valid Priority values:** `very_high`, `high`, `medium`, `low`, `very_low`
+
+***Solution Field Requirements:**
+
+The `Solution` field is **REQUIRED** when task status is: `in-progress`, `in-qa`, `closing-required`, `closed`, `canceled`
+
+| Status | Solution Required | Purpose |
+|--------|------------------|---------|
+| `pending` | No | Task not started yet |
+| `blocked` | No | Task blocked, awaiting resolution |
+| `on-hold` | No | Task paused |
+| `in-progress` | **Yes** | Document progress and work done |
+| `in-qa` | **Yes** | Document implementation for QA review |
+| `closing-required` | **Yes** | Document implementation awaiting closure |
+| `closed` | **Yes** | Final implementation summary |
+| `canceled` | **Yes** | Reason for cancellation |
+
+**Solution content should include:**
+- Summary of implementation or progress made
+- Key decisions and approaches taken
+- Ideally, CloudIA prompts used during development
+- Links to relevant commits or PRs
 
 **🚫 TimeSpent is a CALCULATED Field:**
 

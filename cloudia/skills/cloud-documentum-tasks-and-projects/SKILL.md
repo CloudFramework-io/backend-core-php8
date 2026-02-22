@@ -352,8 +352,28 @@ echo '{"TimeSpent":2,"Title":"Development work","TaskId":"TASK_ID"}' | \
 ### Task Lifecycle
 
 ```
-pending → in-progress → in-qa → closed
-                    ↘ blocked ↗
+pending → in-progress → in-qa → closing-required → closed
+                    ↘ blocked ↗        ↘ canceled
+```
+
+### Solution Field Requirement
+
+The `Solution` field is **REQUIRED** when task status is: `in-progress`, `in-qa`, `closing-required`, `closed`, `canceled`
+
+**Solution content should include:**
+- Summary of implementation or progress made
+- Key decisions and approaches taken
+- CloudIA prompts used during development
+- Links to relevant commits or PRs
+
+**Example:**
+```json
+{
+    "CloudFrameWorkProjectsTasks": {
+        "Status": "in-progress",
+        "Solution": "<p>Implemented OAuth2 authentication.</p><p><strong>CloudIA prompts used:</strong></p><ul><li>\"Create OAuth2 login flow with Google\"</li><li>\"Add session management with Redis\"</li></ul>"
+    }
+}
 ```
 
 ### Check Lifecycle
