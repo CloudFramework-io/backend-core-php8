@@ -10,7 +10,7 @@
  * - Analyze time spent (TimeSpent) on activities
  *
  * All listings are always bounded by a time range:
- * - Events: DateInserting (creation date) with default 30-day window
+ * - Events: DateInsertion (creation date) with default 30-day window
  * - Inputs: DateInput with default 30-day window
  *
  * Usage:
@@ -96,11 +96,11 @@ class Script extends CoreScripts
         $this->sendTerminal("Available commands:");
         $this->sendTerminal("");
         $this->sendTerminal("  NOTE: All listings are bounded by a time range (default: last 30 days)");
-        $this->sendTerminal("        - Events filter by DateInserting (creation date)");
+        $this->sendTerminal("        - Events filter by DateInsertion (creation date)");
         $this->sendTerminal("        - Inputs filter by DateInput (activity date)");
         $this->sendTerminal("");
         $this->sendTerminal("  Events (CloudFrameWorkCRMEvents):");
-        $this->sendTerminal("  /events                        - List my events (last 30 days by DateInserting)");
+        $this->sendTerminal("  /events                        - List my events (last 30 days by DateInsertion)");
         $this->sendTerminal("  /events?from=YYYY-MM-DD        - List events created from a date");
         $this->sendTerminal("  /events?from=DATE&to=DATE      - List events in date range");
         $this->sendTerminal("  /event?id=EVENT_KEYID          - Get detailed event information");
@@ -150,7 +150,7 @@ class Script extends CoreScripts
 
     /**
      * List events for the authenticated user
-     * Always bounded by DateInserting (creation date) with default 30-day window
+     * Always bounded by DateInsertion (creation date) with default 30-day window
      */
     public function METHOD_events(): bool
     {
@@ -168,16 +168,16 @@ class Script extends CoreScripts
         }
         //endregion
 
-        //region FETCH events filtered by DateInserting
+        //region FETCH events filtered by DateInsertion
         $this->sendTerminal("");
-        $this->sendTerminal("My events [{$this->user_email} - max 1000 records] (DateInserting: {$from} to {$to}):");
+        $this->sendTerminal("My events [{$this->user_email} - max 1000 records] (DateInsertion: {$from} to {$to}):");
         $this->sendTerminal(str_repeat('-', 100));
 
         $params = [
             'filter__search' => $this->user_email,
-            'filter_DateInserting' =>$from.'/'.($to??''),
+            'filter_DateInsertion' =>$from.'/'.($to??''),
 
-            '_order' => '-DateInserting',
+            '_order' => '-DateInsertion',
             'cfo_limit' => 1000,
             '_raw' => 1,
             '_timezone' => 'UTC'
@@ -195,10 +195,10 @@ class Script extends CoreScripts
 
         $events = $response['data'] ?? [];
 
-        // Filter by 'to' date in PHP (DateInserting upper bound)
+        // Filter by 'to' date in PHP (DateInsertion upper bound)
         $toTimestamp = strtotime($to . ' 23:59:59');
         $events = array_filter($events, function($event) use ($toTimestamp) {
-            $insertDate = $event['DateInserting'] ?? '';
+            $insertDate = $event['DateInsertion'] ?? '';
             if (!$insertDate) return true;
             return strtotime($insertDate) <= $toTimestamp;
         });
@@ -384,10 +384,10 @@ class Script extends CoreScripts
         $this->sendTerminal("Period: {$from} to {$to} (DateInput)");
         $this->sendTerminal(str_repeat('=', 100));
 
-        //region FETCH events count (filtered by DateInserting)
+        //region FETCH events count (filtered by DateInsertion)
         $eventParams = [
             'filter__search' => strtoupper($this->user_email),
-            'filter_DateInserting' => "{$from}/".($to??''),
+            'filter_DateInsertion' => "{$from}/".($to??''),
             'cfo_limit' => 500,
             '_raw' => 1,
             '_timezone' => 'UTC'
@@ -408,7 +408,7 @@ class Script extends CoreScripts
         // Filter by 'to' date (DateInserting upper bound)
         $toTimestamp = strtotime($to . ' 23:59:59');
         $events = array_filter($events, function($event) use ($toTimestamp) {
-            $insertDate = $event['DateInserting'] ?? '';
+            $insertDate = $event['DateInsertion'] ?? '';
             if (!$insertDate) return true;
             return strtotime($insertDate) <= $toTimestamp;
         });
@@ -446,6 +446,13 @@ class Script extends CoreScripts
         //endregion
 
         //region CALCULATE statistics (TimeSpent only - Hours field does not exist in CFO)
+        // Calculate TimeSpent from events
+        $eventsTimeSpent = 0;
+        foreach ($events as $event) {
+            $eventsTimeSpent += floatval($event['TimeSpent'] ?? 0);
+        }
+
+        // Calculate TimeSpent from inputs
         $totalTimeSpent = 0;
         $timeSpentByProject = [];
         $timeSpentByTask = [];
@@ -478,6 +485,7 @@ class Script extends CoreScripts
         $this->sendTerminal(" Events (by DateInserting):");
         $this->sendTerminal(str_repeat('-', 50));
         $this->sendTerminal(sprintf("   Total events: %d", count($events)));
+        $this->sendTerminal(sprintf("   Total TimeSpent in events: %.2f hours", $eventsTimeSpent));
 
         $this->sendTerminal("");
         $this->sendTerminal(" Time Tracking (by DateInput):");
@@ -525,7 +533,7 @@ class Script extends CoreScripts
 
     /**
      * List all activity (events + inputs) combined and ordered by date
-     * Events filtered by DateInserting, Inputs filtered by DateInput
+     * Events filtered by DateInsertion, Inputs filtered by DateInput
      */
     public function METHOD_all(): bool
     {
@@ -549,11 +557,11 @@ class Script extends CoreScripts
         $this->sendTerminal("Period: {$from} to {$to}");
         $this->sendTerminal(str_repeat('=', 120));
 
-        //region FETCH events (filtered by DateInserting)
+        //region FETCH events (filtered by DateInsertion)
         $eventParams = [
             'filter__search' => strtoupper($this->user_email),
-            'filter_DateInserting' => $from.'/'.($to??''),
-            '_order' => '-DateInserting',
+            'filter_DateInsertion' => $from.'/'.($to??''),
+            '_order' => 'DateInsertion',
             'cfo_limit' => 500,
             '_raw' => 1,
             '_timezone' => 'UTC'
@@ -571,9 +579,9 @@ class Script extends CoreScripts
 
         $events = $eventsResponse['data'] ?? [];
 
-        // Filter by 'to' date (DateInserting upper bound)
+        // Filter by 'to' date (DateInsertion upper bound)
         $events = array_filter($events, function($event) use ($toTimestamp) {
-            $insertDate = $event['DateInserting'] ?? '';
+            $insertDate = $event['DateInsertion'] ?? '';
             if (!$insertDate) return true;
             return strtotime($insertDate) <= $toTimestamp;
         });
@@ -617,7 +625,7 @@ class Script extends CoreScripts
 
         // Add events to byDate
         foreach ($events as $event) {
-            $date = substr($event['DateTimeInit'] ?? $event['DateInserting'] ?? '', 0, 10);
+            $date = substr($event['DateTimeInit'] ?? $event['DateInsertion'] ?? '', 0, 10);
             if (!$date) continue;
             $byDate[$date]['events'][] = $event;
         }
@@ -843,7 +851,7 @@ class Script extends CoreScripts
             if (!empty($created_input['ProjectId'])) {
                 $this->sendTerminal(" - ProjectId: {$created_input['ProjectId']}");
             }
-            $this->sendTerminal(" - Created: " . ($created_input['DateInserting'] ?? 'N/A'));
+            $this->sendTerminal(" - Created: " . ($created_input['DateInsertion'] ?? 'N/A'));
 
             $this->sendTerminal("");
             $this->sendTerminal("Created input JSON:");
@@ -1003,7 +1011,7 @@ class Script extends CoreScripts
             if (!empty($created_event['MilestoneId'])) {
                 $this->sendTerminal(" - MilestoneId: {$created_event['MilestoneId']}");
             }
-            $this->sendTerminal(" - Created: {$created_event['DateInserting']}");
+            $this->sendTerminal(" - Created: {$created_event['DateInsertion']}");
 
             $this->sendTerminal("");
             $this->sendTerminal("Created event JSON:");
@@ -1107,7 +1115,7 @@ class Script extends CoreScripts
             'Participants' => 'Participants',
             'ProjectId' => 'Project',
             'TaskId' => 'Task',
-            'DateInserting' => 'Created',
+            'DateInsertion' => 'Created',
             'DateUpdating' => 'Updated'
         ];
 
@@ -1226,10 +1234,10 @@ class Script extends CoreScripts
             'TimeSpent' => 'TimeSpent',
             'ProjectId' => 'Project',
             'TaskId' => 'Task',
-            'UserEmail' => 'User',
+            'PlayerId' => 'User',
             'Type' => 'Type',
             'Billable' => 'Billable',
-            'DateInserting' => 'Created',
+            'DateInsertion' => 'Created',
             'DateUpdating' => 'Updated'
         ];
 
