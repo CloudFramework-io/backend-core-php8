@@ -46,6 +46,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         var $project_id = '';
         var $namespace = 'default';
         var $service_account = null;
+        var $secret_id = null;
         var $debug = false;
         var $transformReadedEntities = true; // Transform readed entities
 
@@ -135,6 +136,17 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             return true;
             //endregion
 
+        }
+
+        /**
+         * Sets the secret identifier.
+         *
+         * @param string $secretId The secret ID to be set.
+         * @return void
+         */
+        public function setSecretId(string $secretId)
+        {
+            $this->secret_id = $secretId;
         }
 
         /**
@@ -484,14 +496,15 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         }
 
         /**
-         * Return array with the schema
-         * format:
-         * { "field1":["type"(,"index|..other validations")]
-         * { "field2":["type"(,"index|..other validations")]
+         * Update $this->schema processing the schema definition for the specified entity.
+         * This method validates the schema structure and organizes it into a standardized format.
+         *
+         * @param string $entity The name of the entity for which the schema is being loaded.
+         * @param array|string $schema The schema definition, typically as an array. If not an array, it gets initialized as empty.
+         * @return false|array The processed schema containing 'data', 'props', and other structured information. False ir error
          */
-        private function loadSchema($entity, $schema)
+        private function loadSchema($entity, $schema): false|array
         {
-            $ret = $entity;
             $this->schema['data'] = (is_array($schema)) ? $schema : [];
             $this->schema['props'] = ['__fields' => []];
 
@@ -1709,6 +1722,18 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             $this->errorMsg[] = $value;
             $this->core->errors->add(['DataStore' => $value]);
             return false;
+        }
+
+        /**
+         * Resets the error state and clears error messages.
+         *
+         * @return bool Returns true after successfully resetting the error state.
+         */
+        function resetError(): bool
+        {
+            $this->error = false;
+            $this->errorMsg = [];
+            return true;
         }
     }
 }

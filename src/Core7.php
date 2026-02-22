@@ -3033,7 +3033,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $secrets = $this->core->request->get_json_decode($url,null,$headers);
 
             if($this->core->request->error) {
-                return($this->addError(($secrets['message']??null)?:$this->core->request->errorMsg));
+                $this->addError(($secrets['message']??null)?:$this->core->request->errorMsg);
+                $this->core->request->reset();
+                return false;
             }
 
             $user_secrets['secret-id'] = ($erp_secret_id)?:$user_secrets['id'];
@@ -4198,6 +4200,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->error = true;
             $this->errorMsg[] = $value;
             return false;
+        }
+
+        /**
+         * Resets the error state of the object.
+         * Clears any stored error messages and sets the error flag to false.
+         *
+         * @return bool Returns true after resetting the error state.
+         */
+        function resetError()
+        {
+            $this->error = false;
+            $this->errorMsg = [];
+            return true;
         }
 
         /**

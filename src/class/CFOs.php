@@ -194,24 +194,36 @@ class CFOs {
         //endregion
 
         //region IF (!$service_account && !$this->avoid_secrets) READ $model to verify $model['data']['secret'] exist
+        $service_account_secret_id = null;
         if(!$service_account && !$this->avoid_secrets) {
             $model = ($this->core->model->models['ds:' . $cfoId] ?? null);
+
             if (!$model) {
                 if(!$this->readCFOs($cfoId)) {
                     $this->createFooDatastoreObject($cfoId);
                     $this->dsObjects[$cfoId]->error = true;
                     $this->dsObjects[$cfoId]->errorMsg = $this->errorMsg;
+
                     return false;
                 }
                 $model = ($this->core->model->models['ds:' . $cfoId] ?? null);
             }
             if (($service_account_secret = ($model['data']['secret'] ?? ($model['data']['interface']['secret']??null)))) {
                 if (is_string($service_account_secret)) {
+                    $service_account_secret_id = $service_account_secret;
                     if (!$service_account = $this->getCFOSecret($service_account_secret)) {
-                        $this->core->logs->add("CFO {$cfoId} has a secret and it does not exist in CFOs->secrets[]. Set the secret value or call CFOs->avoidSecrets(true).", 'CFOs_warning');
+                        if($this->error) {
+                            $error_message = json_encode($this->errorMsg);
+                            $this->core->logs->add($error_message, 'CFOs_error');
+                        } else {
+                            $error_message = "The variable {$service_account_secret} does not exist ot it is empty ";
+                            $this->core->logs->add($error_message, 'CFOs_warning');
+                        }
+                        $this->resetError();
                         $this->createFooDatastoreObject($cfoId);
+                        $this->dsObjects[$cfoId]->namespace = $namespace?:$this->namespace;
                         $this->dsObjects[$cfoId]->error = true;
-                        $this->dsObjects[$cfoId]->errorMsg = 'CFO ['.$cfoId.'] hash a secret ['.$service_account_secret.'] and it does not exist in CFOs->secrets. Programmer has to include [CFOs->setSecret(\''.$service_account_secret.'\', array secret] or to include [CFOs->setServiceAccount(array service_account])';
+                        $this->dsObjects[$cfoId]->errorMsg = $error_message;
                         return false;
                     }
                 } else {
@@ -258,6 +270,10 @@ class CFOs {
                 $this->core->logs->add('Error creating Foo datastore Object when error','error_CFOs_dsInit');
             }
             return false;
+        } else {
+            if($service_account_secret_id) {
+                $this->dsObjects[$cfoId]->setSecretId($service_account_secret_id);
+            }
         }
         //endregion
 
@@ -474,7 +490,7 @@ class CFOs {
      * @param string $connection
      * @return array|false
      */
-    public function dbQuery ($q,$params=null,$connection='')
+    public function dbQuery ($q,$params=null,$connection=''): bool|array
     {
         if(!$this->core->model->dbInit($connection))
             return $this->addError('database-error',$this->core->model->errorMsg);
@@ -492,7 +508,7 @@ class CFOs {
      * @param string $connection
      * @return array|false
      */
-    public function bqQuery ($q,$params=null)
+    public function bqQuery ($q,$params=null): bool|array
     {
         //region INIT $this->bqObjects['internal'] IF it does not exist
         if(!isset($this->bqObjects['no-dataset'])) {
@@ -548,7 +564,7 @@ class CFOs {
      * @param string $connection Optional name of the connection. If empty it will be default
      * @return boolean
      */
-    public function setDBCredentials (array $credentials,string $connection='')
+    public function setDBCredentials (array $credentials,string $connection=''): bool
     {
         $this->core->config->set("dbServer",$credentials['dbServer']??null);
         $this->core->config->set("dbUser",$credentials['dbUser']??null);
@@ -580,7 +596,8 @@ class CFOs {
      * @param string $connection Optional connection name to identify the database connection.
      * @return bool Returns true if the database credentials are successfully set; otherwise, returns false on error.
      */
-    public function setDBCredentialsFromPlatformSecret(string $platform_secret_variable,string $platform_id='',$connection='') {
+    public function setDBCredentialsFromPlatformSecret(string $platform_secret_variable,string $platform_id='',$connection=''): bool
+    {
 
         if(!$platform_id) $platform = $this->namespace;
         if(!strpos($platform_secret_variable,'.')) return $this->addError('function-conflict','setDBCredentialsFromPlatformSecret($platform_secret_variable) has received a value with wrong format. Use {secret_id}.{varname}')??false;
@@ -618,14 +635,21 @@ class CFOs {
      */
     public function getPlatformSecret(string $platform_secret_id,$platform_id=''): mixed
     {
+        // return secret if it has been already read
         if(!$platform_id) $platform_id = $this->namespace;
-        if(isset($this->secrets[$platform_secret_id]) && $this->secrets[$platform_secret_id]) return $this->secrets[$platform_secret_id];
+        if($this->secrets[$platform_id][$platform_secret_id]??null) return $this->secrets[$platform_id][$platform_secret_id];
+
+        // read from remote platform and return false if error
         if(!strpos($platform_secret_id,'.')) return $this->addError('function-conflict',"CFOs.readPlatformSecret(\$secret) has a wrong format. Use {secret_id}.{varname}");
         list($secret_id, $var_id ) = explode('.',$platform_secret_id,2);
-        $this->secrets[$platform_secret_id] = $this->core->security->getPlatformSecretVar($var_id,$secret_id,$platform_id);
-        if($this->core->security->error)
-            return($this->addError('platform-secret-error',['CFOs.readPlatformSecret($secret) has produced an error.',$this->core->security->errorMsg]));
-        return $this->secrets[$platform_secret_id]?:[];
+        $this->secrets[$platform_id][$platform_secret_id] = $this->core->security->getPlatformSecretVar($var_id,$secret_id,$platform_id);
+        if($this->core->security->error) {
+            $this->addError('platform-secret-error', ['CFOs.readPlatformSecret($secret) has produced an error.', $this->core->security->errorMsg]);
+            $this->core->security->resetError();
+            return false;
+        }
+
+        return $this->secrets[$platform_id][$platform_secret_id]?:[];
     }
 
     /**
@@ -633,6 +657,7 @@ class CFOs {
      * @ignore
      */
     public function createFooDatastoreObject($object) {
+
         if(!isset($this->dsObjects[$object]) || !is_object($this->dsObjects[$object])) {
             $model = json_decode('{
                                     "KeyName": ["keyname","index|minlength:4"]
@@ -640,6 +665,7 @@ class CFOs {
             $this->dsObjects[$object] = $this->core->loadClass('Datastore',['Foo','default',$model]);
             if ($this->dsObjects[$object]->error) return($this->addError('datastore-error',$this->dsObjects[$object]->errorMsg));
         }
+        $this->dsObjects[$object]->resetError();
     }
 
     /**
@@ -673,9 +699,13 @@ class CFOs {
     }
 
     /**
-     * @param $namespace
+     * Sets the namespace for the current instance and updates related configurations.
+     *
+     * @param mixed $namespace The namespace to be set.
+     * @return void
      */
-    function setNameSpace($namespace) {
+    function setNameSpace($namespace): void
+    {
         $this->namespace = $namespace;
         $this->core->config->set('DataStoreSpaceName',$this->namespace);
         foreach (array_keys($this->dsObjects) as $object) {
@@ -686,14 +716,17 @@ class CFOs {
     /**
      * Set a default project_id overwritting the default project_id
      * @param $project_id
+     * @return void
      */
-    function setProjectId($project_id) {
+    function setProjectId($project_id): void
+    {
         $this->project_id = $project_id;
     }
 
     /**
      * If ($avoid==true and if !$this->service_account) the secrets of Datastore, Bigquery, Database CFOs will be tried to be read. False by default
      * @param bool $avoid
+     * @return void
      */
     function avoidSecrets(bool $avoid) {
         $this->avoid_secrets = $avoid;
@@ -704,15 +737,18 @@ class CFOs {
      * @param bool $use Whether to enable the use of CFO secret (default: true)
      * @return void
      */
-    function useCFOSecret(bool $use=true) {
+    function useCFOSecret(bool $use=true): void
+    {
         $this->avoid_secrets = !$use;
     }
 
     /**
      * Set $this->integrationKey to connect with CFO models
      * @param $key
+     * @return void
      */
-    public function setIntegrationKey (string $key) {
+    public function setIntegrationKey (string $key): void
+    {
         $this->integrationKey = $key;
     }
 
@@ -720,24 +756,30 @@ class CFOs {
      * Set secrets to be used by Datastore, Bigquery, Database
      * @param $key
      * @param array $value
+     * @return void
      */
-    public function setSecret ($key,array $value) {
-        $this->secrets[$key] = $value;
+    public function setSecret ($key,array $value): void
+    {
+        $this->secrets[$this->namespace][$key] = $value;
     }
 
     /**
      * Set a default service account for Datastore and BigQuery Objects. It has to be an array and it will rewrite the secrets includes in the CFOs for ds and bigquery
      * @param array $service_account
+     * @return void
      */
-    function setServiceAccount(array $service_account) {
+    function setServiceAccount(array $service_account): void
+    {
         $this->service_account = $service_account;
     }
 
     /**
      * Set a default DB Connection for CloudSQL. It has to be an array and it will rewrite the secrets included in the CFOs for db
      * @param array $db_connection
+     * @return void
      */
-    function setDBConnection(array $db_connection) {
+    function setDBConnection(array $db_connection): void
+    {
         $this->db_connection = $db_connection;
     }
 
@@ -750,7 +792,8 @@ class CFOs {
      *                    - 'service_account': the email of the service account to impersonate.
      * @return array|bool Returns an array with the generated credentials, or false if an error occurs.
      */
-    public function getImpersonateCredentials(array $data) {
+    public function getImpersonateCredentials(array $data): bool|array
+    {
 
         //region VERIFY $data parameters
         if(( $data['type']??'')!= 'service_account_to_impersonate')
@@ -795,9 +838,9 @@ class CFOs {
      *
      * @param string $txt The text representation of the datastore model, with fields separated by commas and lines separated by newlines.
      * @param string $cfo The entity name to validate against the first line of the text input.
-     * @return array|null Returns a structured array with 'group' and 'model' keys if successful, or null if an error occurs.
+     * @return array|false Returns a structured array with 'group' and 'model' keys if successful, or false if an error occurs.
      */
-    public function transformTXTInDatastoreModel(string $txt, string $cfo)
+    public function transformTXTInDatastoreModel(string $txt, string $cfo): bool|array
     {
         $model_lines = explode("\n", $txt);
         $ds_model = [];
@@ -825,7 +868,7 @@ class CFOs {
                 }
             }
         }
-        if($error) return $this->setError($error);
+        if($error) return $this->addError($error);
         else return ['group'=>$group,'model'=>$ds_model];
     }
 
@@ -833,7 +876,7 @@ class CFOs {
      * Return a structure with bigquery squema based on CF model
      * @return array
      */
-    public function getInterfaceModelFromDatastoreModel($entity,$model,$group,$secret_id='')
+    public function getInterfaceModelFromDatastoreModel($entity,$model,$group,$secret_id=''): array
     {
 
         $fields_definition = [];
@@ -958,17 +1001,6 @@ class CFOs {
     }
 
     /**
-     * Reset error status and clear error details in the class
-     *
-     * @return void No return value as it resets the error state without returning any specific value
-     */
-    function resetError() {
-        $this->error = true;
-        $this->errorCode = null;
-        $this->errorMsg[] = [];
-    }
-
-    /**
      * Add an error in the class
      * @param string $code Code of error
      * @param mixed $value
@@ -984,6 +1016,17 @@ class CFOs {
         return false;
     }
 
+    /**
+     * Reset the error state of the class
+     * @return bool Always returns true after resetting the error state
+     */
+    function resetError() {
+        $this->error = false;
+        $this->errorCode = null;
+        $this->errorMsg = [];
+
+        return true;
+    }
 }
 
 /**
