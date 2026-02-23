@@ -1992,16 +1992,16 @@ The `_cloudia/courses.php` script manages CLOUD Academy Course documentation by 
 | Field | Type | Description |
 |-------|------|-------------|
 | `CourseId` | string | Course KeyId this content belongs to |
+| `ContentTitle` | string | Content title (min 2 characters) |
+| `ContentIntro` | string (html) | Short description/intro of the content |
+| `ContentInformation` | string (html) | Complete HTML content of the chapter |
 | `Position` | integer | Order position within the course |
-| `ContentTitle` | string | Title of the content/chapter |
+| `Active` | boolean | Whether content is active (default: true) |
 
 **Optional Fields:**
 | Field | Type | Description |
 |-------|------|-------------|
-| `ContentDescription` | string | HTML content description |
-| `ContentType` | string | Type of content (video, text, quiz, etc.) |
-| `ContentURL` | string | URL to external content |
-| `Active` | boolean | Whether content is active |
+| `Materials` | json | Materials structure (videos, documents, links) |
 
 ### Questions JSON Structure
 
@@ -2075,7 +2075,9 @@ Each course backup file (`/buckets/backups/Courses/{platform}/{KeyId}.json`) con
       "CourseId": "5077124951572480",
       "Position": 1,
       "ContentTitle": "Chapter 1: Getting Started",
-      "ContentDescription": "<p>Content...</p>",
+      "ContentIntro": "<p>Short intro to the chapter...</p>",
+      "ContentInformation": "<h2>Complete content</h2><p>Full chapter HTML...</p>",
+      "Materials": {},
       "Active": true
     }
   ]
