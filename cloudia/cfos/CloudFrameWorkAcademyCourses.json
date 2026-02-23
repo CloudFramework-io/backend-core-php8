@@ -1,0 +1,782 @@
+{
+  "Active": true,
+  "CloudFrameworkUser": "info@adrianmm.com",
+  "Connections": "",
+  "DateUpdating": "2026-01-10 12:34:14",
+  "Description": "<p>Courses for CLOUD Academy to define an LMS Journey</p>",
+  "GroupName": "CLOUD Academy",
+  "KeyName": "CloudFrameWorkAcademyCourses",
+  "Owner": "info@adrianmm.com",
+  "Tags": [
+    "lms",
+    "academy"
+  ],
+  "Title": "Academy Courses",
+  "_search": [
+    "CLOUDFRAMEWORKACADEMYCOURSES",
+    "CLOUD ACADEMY",
+    "LMS",
+    "ACADEMY"
+  ],
+  "entity": "CloudFrameWorkAcademyCourses",
+  "environment": "",
+  "events": {
+    "hooks": null,
+    "workflows": null
+  },
+  "extends": "",
+  "hasExternalWorkflows": false,
+  "interface": {
+    "ico": "graduation-cap",
+    "name": "Academy Course",
+    "plural": "Academy Courses",
+    "html_info": "<h1>CloudFramework LMS</h1>\nTo find further information please use the following links:\n<li><a href=\"https://www.notion.so/cloudframework/LMS-Learning-Managment-System-150d4367e27141ccb36150810a536936\" target=\"_lms\">https://www.notion.so/cloudframework/LMS-Learning-Managment-System-150d4367e27141ccb36150810a536936</a>",
+    "tabs": {
+      "main": {
+        "title": "Course Info",
+        "ico": "check-square"
+      },
+      "config": {
+        "title": "Configuración",
+        "ico": "cog"
+      },
+      "answers": {
+        "title": "Respuestas",
+        "ico": "users"
+      },
+      "development": {
+        "title": "Development relations"
+      }
+    },
+    "buttons": [
+      {
+        "title": "Insert new Course",
+        "type": "api-insert"
+      }
+    ],
+    "filters": [
+      {
+        "field": "GroupId",
+        "type": "select",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkAcademyGroups",
+        "fields": "GroupName",
+        "linked_field": "KeyId",
+        "allow_empty": true,
+        "empty_value": "Select a Group"
+      }
+    ],
+    "views": {
+      "default": {
+        "name": "General View",
+        "all_fields": true,
+        "server_order": "CourseOrder ASC",
+        "conditional_rows_background_color": {
+          "default": "#c1fdc0",
+          "fields": [
+            {
+              "field": "Active",
+              "condition": "equals",
+              "value": "false",
+              "color": "#CCCCCC"
+            }
+          ]
+        },
+        "mutiselect": {
+          "active": true,
+          "menu": [
+            {
+              "title": "Desactivar curso",
+              "type": "cfo-update-fields",
+              "color": "orange",
+              "ico": "trash-alt",
+              "values": {
+                "Active": false
+              }
+            },
+            {
+              "title": "Reactivar curso",
+              "type": "cfo-update-fields",
+              "color": "#8cfd8c",
+              "ico": "ok",
+              "values": {
+                "Active": true
+              }
+            }
+          ]
+        },
+        "fields": {
+          "CourseOrder": {
+            "field": "CourseOrder"
+          },
+          "CourseLogo": {
+            "field": "CourseLogo"
+          },
+          "CourseTitle": {
+            "field": "CourseTitle",
+            "full_col_width": true,
+            "virtual_elements": {
+              "update": {
+                "type": "update",
+                "id_field": "KeyId",
+                "cfo": "CloudFrameWorkAcademyCourses"
+              },
+              "go-to-curse": {
+                "type": "ico",
+                "ico": "graduation-cap",
+                "href": "#https://core20.web.app/ajax/cfa.html?api=/erp/dev-docs?tag=course:{{KeyId}}",
+                "target": "_blank"
+              },
+              "title": {
+                "type": "value",
+                "value": "{{CourseTitle}}"
+              }
+            }
+          },
+          "CourseTeacher": {
+            "field": "CourseTeacher",
+            "crm-user": true
+          },
+          "UserGroups": {
+            "field": "UserGroups"
+          },
+          "CourseMinPoints": {
+            "field": "CourseMinPoints"
+          },
+          "CourseMaxTries": {
+            "field": "CourseMaxTries"
+          },
+          "CourseMaxTime": {
+            "field": "CourseMaxTime"
+          },
+          "Link": {
+            "field": "Link",
+            "type": "virtual",
+            "link": true,
+            "link_content": "/app.html#https://core20.web.app/ajax/lms.html?id={{KeyName}}",
+            "virtual_values": [
+              "KeyName"
+            ]
+          },
+          "Active": {
+            "field": "Active"
+          },
+          "GroupId": {
+            "order": "asc",
+            "row_group": true,
+            "field": "GroupId",
+            "fields": "*",
+            "display_cfo": true,
+            "cfo": "CloudFrameWorkAcademyGroups"
+          }
+        }
+      }
+    },
+    "insert_fields": {
+      "CourseLogo": {
+        "field": "CourseLogo"
+      },
+      "GroupId": {
+        "field": "GroupId"
+      },
+      "CourseOrder": {
+        "field": "CourseOrder"
+      },
+      "CourseTitle": {
+        "field": "CourseTitle"
+      },
+      "CourseTeacher": {
+        "field": "CourseTeacher"
+      },
+      "CourseDescription": {
+        "field": "CourseDescription"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "CourseMinPoints": {
+        "field": "CourseMinPoints"
+      },
+      "CourseMaxTries": {
+        "field": "CourseMaxTries"
+      },
+      "CourseMaxTime": {
+        "field": "CourseMaxTime"
+      },
+      "Questions": {
+        "field": "Questions"
+      },
+      "UserGroups": {
+        "field": "UserGroups"
+      },
+      "DocumentationId": {
+        "field": "DocumentationId"
+      }
+    },
+    "update_fields": {
+      "KeyId": {
+        "field": "KeyId",
+        "hidden": true
+      },
+      "CourseLogo": {
+        "field": "CourseLogo"
+      },
+      "GroupId": {
+        "field": "GroupId"
+      },
+      "CourseOrder": {
+        "field": "CourseOrder"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "CourseTitle": {
+        "field": "CourseTitle"
+      },
+      "CourseTeacher": {
+        "field": "CourseTeacher"
+      },
+      "CourseDescription": {
+        "field": "CourseDescription"
+      },
+      "CourseMinPoints": {
+        "field": "CourseMinPoints"
+      },
+      "CourseMaxTries": {
+        "field": "CourseMaxTries"
+      },
+      "CourseMaxTime": {
+        "field": "CourseMaxTime"
+      },
+      "Questions": {
+        "field": "Questions"
+      },
+      "CourseContents": {
+        "field": "CourseContents"
+      },
+      "UserGroups": {
+        "field": "UserGroups"
+      },
+      "UsersToApply": {
+        "field": "UsersToApply"
+      },
+      "ExamsAndAccesses": {
+        "field": "ExamsAndAccesses"
+      },
+      "CopyContents": {
+        "field": "CopyContents"
+      },
+      "DocumentationId": {
+        "field": "DocumentationId"
+      }
+    },
+    "copy_fields": {
+      "CourseLogo": {
+        "field": "CourseLogo"
+      },
+      "GroupId": {
+        "field": "GroupId"
+      },
+      "CourseOrder": {
+        "field": "CourseOrder"
+      },
+      "CourseTitle": {
+        "field": "CourseTitle"
+      },
+      "CourseDescription": {
+        "field": "CourseDescription"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "CourseMinPoints": {
+        "field": "CourseMinPoints"
+      },
+      "CourseMaxTries": {
+        "field": "CourseMaxTries"
+      },
+      "CourseMaxTime": {
+        "field": "CourseMaxTime"
+      },
+      "UserGroups": {
+        "field": "UserGroups"
+      },
+      "CourseContents": {
+        "field": "CourseContents",
+        "type": "virtual",
+        "external_info": "datastore",
+        "linked_field": "CourseId",
+        "field_value": "KeyName",
+        "fields": "*",
+        "entity": "CloudFrameWorkLMSContents",
+        "_order": "Position ASC"
+      },
+      "Questions": {
+        "field": "Questions"
+      },
+      "DocumentationId": {
+        "field": "DocumentationId"
+      }
+    },
+    "delete_fields": {
+      "KeyName": {
+        "field": "KeyName"
+      }
+    },
+    "display_fields": []
+  },
+  "lowCode": {
+    "name": "Academy Course",
+    "plural": "Academy Courses",
+    "description": "Academy Courses",
+    "ico": "graduation-cap",
+    "secret": "",
+    "model": {
+      "GroupId": {
+        "name": "Group",
+        "description": "Group",
+        "type": "string",
+        "allow_null": false,
+        "index": true,
+        "minlength": 2,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "select"
+        }
+      },
+      "CourseOrder": {
+        "name": "CourseOrder",
+        "description": "CourseOrder",
+        "type": "integer",
+        "allow_null": false,
+        "index": true,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true
+      },
+      "CourseTitle": {
+        "name": "Course Title",
+        "description": "Course Title",
+        "type": "string",
+        "allow_null": false,
+        "index": true,
+        "minlength": 2,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true
+      },
+      "CourseLogo": {
+        "name": "Course Logo",
+        "description": "Course Logo",
+        "type": "string",
+        "allow_null": true,
+        "index": true,
+        "minlength": 2,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "public_image"
+        }
+      },
+      "CourseTeacher": {
+        "name": "Course Teacher",
+        "description": "Course Teacher",
+        "type": "string",
+        "allow_null": true,
+        "index": true,
+        "minlength": 2,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": false,
+        "interface": {
+          "type": "autocomplete"
+        },
+        "tab": "config"
+      },
+      "CourseDescription": {
+        "name": "Course Description",
+        "description": "Course Description",
+        "type": "string",
+        "allow_null": true,
+        "index": false,
+        "view": false,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "html"
+        }
+      },
+      "CourseMinPoints": {
+        "name": "Min Points to Pass",
+        "description": "Min Points to Pass",
+        "type": "float",
+        "allow_null": true,
+        "index": false,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "tab": "config"
+      },
+      "CourseMaxTries": {
+        "name": "Max Tries",
+        "description": "Max Tries",
+        "type": "float",
+        "allow_null": true,
+        "index": false,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "tab": "config"
+      },
+      "CourseMaxTime": {
+        "name": "Max Time (min)",
+        "description": "Max Time (min)",
+        "type": "integer",
+        "allow_null": true,
+        "index": false,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "tab": "config"
+      },
+      "Questions": {
+        "name": "Course Questions",
+        "description": "Course Questions",
+        "type": "json",
+        "allow_null": true,
+        "index": false,
+        "view": false,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "json"
+        },
+        "tab": "config"
+      },
+      "UserGroups": {
+        "name": "User Groups to give access (empty=all)",
+        "description": "User Groups to give access (empty=all)",
+        "type": "list",
+        "allow_null": true,
+        "index": true,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "checkbox"
+        },
+        "tab": "config"
+      },
+      "DocumentationId": {
+        "name": "Documentation Group",
+        "description": "Grupo de Documentación al que pertence",
+        "type": "string",
+        "allow_null": true,
+        "index": true,
+        "view": false,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "select"
+        },
+        "tab": "development"
+      },
+      "Active": {
+        "name": "Active",
+        "description": "Active",
+        "type": "boolean",
+        "allow_null": false,
+        "index": true,
+        "view": true,
+        "insert": true,
+        "display": false,
+        "update": true,
+        "copy": true,
+        "interface": {
+          "type": "boolean"
+        }
+      }
+    },
+    "dependencies": [],
+    "behaviour": []
+  },
+  "model": {
+    "model": {
+      "GroupId": [
+        "string",
+        "integer|mandatory|index|minlength:2|description:Group"
+      ],
+      "CourseOrder": [
+        "integer",
+        "integer|mandatory|index|description:CourseOrder"
+      ],
+      "CourseTitle": [
+        "string",
+        "integer|mandatory|index|minlength:2|description:Course Title"
+      ],
+      "CourseLogo": [
+        "string",
+        "integer|allowNull|index|minlength:2|description:Course Logo"
+      ],
+      "CourseTeacher": [
+        "string",
+        "integer|allowNull|index|minlength:2|description:Course Teacher"
+      ],
+      "CourseDescription": [
+        "string",
+        "integer|allowNull|description:Course Description"
+      ],
+      "CourseMinPoints": [
+        "float",
+        "float|allowNull|description:Min Points to Pass"
+      ],
+      "CourseMaxTries": [
+        "float",
+        "float|allowNull|description:Max Tries"
+      ],
+      "CourseMaxTime": [
+        "integer",
+        "integer|allowNull|description:Max Time (min)"
+      ],
+      "Questions": [
+        "json",
+        "string|allowNull|description:Course Questions"
+      ],
+      "UserGroups": [
+        "list",
+        "integer|allowNull|index|description:User Groups to give access (empty=all)"
+      ],
+      "DocumentationId": [
+        "string",
+        "integer|allowNull|index|description:Grupo de Documentación al que pertence"
+      ],
+      "Active": [
+        "boolean",
+        "integer|mandatory|index|description:Active"
+      ]
+    },
+    "dependencies": [
+      "CloudFrameWorkAcademyGroups",
+      "CloudFrameWorkAcademyContents",
+      "CloudFrameWorkAcademyAnswers",
+      "CloudFrameWorkGroups",
+      "CloudFrameWorkUsers"
+    ]
+  },
+  "securityAndFields": {
+    "security": {
+      "user_spacenames": null,
+      "user_organizations": null,
+      "cfo_locked": true,
+      "user_privileges": [
+        "directory-admin",
+        "development-admin",
+        "development-user",
+        "ecm-admin",
+        "ecm-user"
+      ]
+    },
+    "fields": {
+      "KeyId": {
+        "name": "CourseId"
+      },
+      "GroupId": {
+        "name": "Group",
+        "type": "select",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkAcademyGroups",
+        "fields": "GroupName",
+        "linked_field": "KeyId",
+        "id_field": "GroupId",
+        "order": "Position ASC",
+        "load_in_memory": true,
+        "data_format": "{{GroupName}}"
+      },
+      "CourseOrder": {
+        "name": "CourseOrder"
+      },
+      "CourseTitle": {
+        "name": "Course Title",
+        "cols": 3
+      },
+      "CourseLogo": {
+        "name": "Course Logo",
+        "allow_empty": true,
+        "type": "public_image",
+        "image": true,
+        "image_height": 40,
+        "bucket": "gs://cloudframework-public/images/{{Platform:namespace}}/academy-group-images"
+      },
+      "CourseTeacher": {
+        "name": "Course Teacher",
+        "type": "autocomplete",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkUsers",
+        "fields": "KeyName,UserName,UserEmail,UserAvatar",
+        "linked_field": "KeyName",
+        "external_where": {
+          "UserActive": true,
+          "UserPrivileges": [
+            "academy-teacher"
+          ]
+        },
+        "allow_empty": true,
+        "input_type": "users",
+        "defaultvalue": "{{User:KeyName}}",
+        "tab": "config"
+      },
+      "CourseDescription": {
+        "name": "Course Description",
+        "type": "html",
+        "defaultvalue": "<h1>Title of the course</h1>\n<p>Welcome to this course about XXXXXX</p>",
+        "allow_empty": true
+      },
+      "CourseMinPoints": {
+        "name": "Min Points to Pass",
+        "allow_empty": true,
+        "tab": "config"
+      },
+      "CourseMaxTries": {
+        "name": "Max Tries",
+        "allow_empty": true,
+        "tab": "config"
+      },
+      "CourseMaxTime": {
+        "name": "Max Time (min)",
+        "allow_empty": true,
+        "tab": "config"
+      },
+      "Questions": {
+        "name": "Course Questions",
+        "type": "json",
+        "tab": "config",
+        "allow_empty": true,
+        "defaultvalue": "{\n    \"Introducción: Qué tienes que tener instalado en tu ordenador\": {\n        \"title\": \"¿Qué tienes que tener instalado en tu ordenador para instalar CloudFramework API Test?\",\n        \"type\": \"checkbox|radio\",\n        \"category\": \"Introducción\",\n        \"points\": 1,\n        \"shuffle\": true,\n        \"answers\": [\n            {\n                \"title\": \"Un servidor de FTP\",\n                \"grade\": 0\n            },\n            {\n                \"title\": \"composer\",\n                \"grade\": 50\n            },\n            {\n                \"title\": \"php versión mínima 7.3\",\n                \"grade\": 50\n            },\n            {\n                \"title\": \"java 11\",\n                \"grade\": 0\n            }\n        ]\n    }\n}"
+      },
+      "Active": {
+        "name": "Active",
+        "type": "boolean",
+        "defaultvalue": true
+      },
+      "CourseContents": {
+        "field": "CourseContents",
+        "name": "Virtual View of Course Contents",
+        "type": "virtual",
+        "external_info": "datastore",
+        "external_order": "Position ASC",
+        "linked_field": "CourseId",
+        "field_value": "KeyId",
+        "fields": "*",
+        "entity": "CloudFrameWorkAcademyContents",
+        "_order": "Position ASC",
+        "summary_line": "[{{Position}}] {{ContentTitle}}",
+        "external_new_entity_url": "/cfi/CloudFrameWorkAcademyContents/insert?filter_CourseId={{KeyId}}"
+      },
+      "UserGroups": {
+        "name": "User Groups to give access (empty=all)",
+        "type": "checkbox",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkGroups",
+        "linked_field": "KeyName",
+        "fields": "Title",
+        "id_field": "UserGroups",
+        "tab": "config",
+        "load_in_memory": true,
+        "data_format": "{{Title}}",
+        "section_class": "col col-12",
+        "allow_empty": true
+      },
+      "UsersToApply": {
+        "field": "UsersToApply",
+        "name": "Users to apply with the Users Groups",
+        "type": "virtual",
+        "external_info": "datastore",
+        "linked_field": "UserGroups",
+        "field_value": "UserGroups",
+        "fields": "KeyName",
+        "entity": "CloudFrameWorkUsers",
+        "_order": "Position ASC",
+        "summary_line": "{{KeyName}}",
+        "tab": "config"
+      },
+      "DocumentationId": {
+        "name": "Documentation Group",
+        "type": "select",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkDevDocumentation",
+        "fields": "KeyName,Title",
+        "linked_field": "KeyName",
+        "nowrap": true,
+        "display_cfo": true,
+        "cfo": "CloudFrameWorkDevDocumentation",
+        "cols": 3,
+        "allow_empty": true,
+        "tab": "development"
+      },
+      "ExamsAndAccesses": {
+        "field": "ExamsAndAccesses",
+        "name": "Users with any answer",
+        "type": "virtual",
+        "external_info": "datastore",
+        "entity": "CloudFrameWorkAcademyAnswers",
+        "fields": "UserId,DateInsertion,DateUpdated,CourseMaxTries,CourseMaxTime,CoursePoints,CourseMinPoints,Points,Tries",
+        "linked_field": "CourseId",
+        "field_value": "KeyId",
+        "_order": "Position ASC",
+        "summary_line": "{{UserId}} tried [{{Tries}}] last updated [{{DateUpdated}}]",
+        "tab": "answers"
+      },
+      "CopyContents": {
+        "name": "Special Feature",
+        "type": "virtual",
+        "tab": "contents",
+        "security": {
+          "user_spacenames": [
+            "cloudframework"
+          ]
+        },
+        "external_apis": [
+          {
+            "title": "Copy Content to Other Platform",
+            "url": "https://api.cloudframework.io/erp/lms/{{Platform:namespace}}/{{User:KeyName}}/cfo/copy-courses/{{KeyName}}"
+          }
+        ]
+      },
+      "_spacename": {
+        "name": "Plataforma",
+        "tab": "config"
+      }
+    },
+    "dependencies": [],
+    "behaviour": []
+  },
+  "status": "IN DEVELOPMENT",
+  "type": "ds"
+}

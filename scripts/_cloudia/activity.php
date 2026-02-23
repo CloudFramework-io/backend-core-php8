@@ -125,6 +125,10 @@ class Script extends CoreScripts
         $this->sendTerminal("  /report-input?json={...}       - Create a new activity input (time entry)");
         $this->sendTerminal("  /report-event?json={...}       - Create a new event");
         $this->sendTerminal("");
+        $this->sendTerminal("  Delete Activity:");
+        $this->sendTerminal("  /delete-input?id=INPUT_KEYID   - Delete an activity input");
+        $this->sendTerminal("  /delete-event?id=EVENT_KEYID   - Delete an event");
+        $this->sendTerminal("");
         $this->sendTerminal("  Report-input JSON fields (CFO: CloudFrameWorkProjectsTasksInputs):");
         $this->sendTerminal("    Required: TimeSpent (>0), Title, at least one of (TaskId, MilestoneId, ProjectId, IncidenceId)");
         $this->sendTerminal("    Optional: Description, DateInput (default: now-TimeSpent), PlayerId (default: current user)");
@@ -842,13 +846,14 @@ class Script extends CoreScripts
         }
 
         // Required: At least one association (TaskId, MilestoneId, ProjectId, or IncidenceId)
+        // Note: ProposalId and LeadId are only valid for events (report-event), not inputs
         $hasAssociation = !empty($input_data['TaskId'])
             || !empty($input_data['MilestoneId'])
             || !empty($input_data['ProjectId'])
             || !empty($input_data['IncidenceId']);
 
         if (!$hasAssociation) {
-            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or IncidenceId");
+            return $this->addError("At least one association is required: TaskId, MilestoneId, ProjectId, or IncidenceId. For Proposals/Leads use report-event instead");
         }
 
         // DateInput: if not specified, calculate as now() - TimeSpent
@@ -1107,6 +1112,158 @@ class Script extends CoreScripts
         }
         $this->sendTerminal(str_repeat('=', 100));
         //endregion
+
+        return true;
+    }
+
+    /**
+     * Delete an activity input by KeyId
+     *
+     * Usage:
+     *   _cloudia/activity/delete-input?id=INPUT_KEYID
+     */
+    public function METHOD_delete_input(): bool
+    {
+        //region VALIDATE input ID
+        $input_id = $this->formParams['id'] ?? null;
+        if (!$input_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/activity/delete-input?id=INPUT_KEYID");
+        }
+        //endregion
+
+        //region FETCH input to verify it exists and show details before deletion
+        $this->sendTerminal("");
+        $this->sendTerminal("Deleting activity input [{$input_id}]...");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs/display/{$input_id}",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $input = $response['data'] ?? null;
+        if (!$input) {
+            return $this->addError("Activity input [{$input_id}] not found");
+        }
+
+        // Show input details before deletion
+        $this->sendTerminal(" Input to delete:");
+        $this->sendTerminal("   - KeyId: {$input['KeyId']}");
+        $this->sendTerminal("   - Title: " . ($input['Title'] ?? 'N/A'));
+        $this->sendTerminal("   - TimeSpent: " . ($input['TimeSpent'] ?? 0) . "h");
+        $this->sendTerminal("   - DateInput: " . ($input['DateInput'] ?? 'N/A'));
+        $this->sendTerminal("   - PlayerId: " . ($input['PlayerId'] ?? 'N/A'));
+        if (!empty($input['TaskId'])) $this->sendTerminal("   - TaskId: {$input['TaskId']}");
+        if (!empty($input['ProjectId'])) $this->sendTerminal("   - ProjectId: {$input['ProjectId']}");
+        //endregion
+
+        //region DELETE input via API
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Sending DELETE request to remote platform...");
+
+        $delete_response = $this->core->request->delete_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkProjectsTasksInputs/{$input_id}?_raw",
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        if (!($delete_response['success'] ?? false)) {
+            $errorMsg = $delete_response['errorMsg'] ?? $delete_response['error'] ?? 'Unknown error';
+            if (is_array($errorMsg)) {
+                $errorMsg = implode(', ', $errorMsg);
+            }
+            return $this->addError("Delete failed: {$errorMsg}");
+        }
+        //endregion
+
+        $this->sendTerminal("");
+        $this->sendTerminal("Activity input [{$input_id}] deleted successfully!");
+        $this->sendTerminal(str_repeat('=', 100));
+
+        return true;
+    }
+
+    /**
+     * Delete an event by KeyId
+     *
+     * Usage:
+     *   _cloudia/activity/delete-event?id=EVENT_KEYID
+     */
+    public function METHOD_delete_event(): bool
+    {
+        //region VALIDATE event ID
+        $event_id = $this->formParams['id'] ?? null;
+        if (!$event_id) {
+            return $this->addError("Missing required parameter: id. Usage: _cloudia/activity/delete-event?id=EVENT_KEYID");
+        }
+        //endregion
+
+        //region FETCH event to verify it exists and show details before deletion
+        $this->sendTerminal("");
+        $this->sendTerminal("Deleting event [{$event_id}]...");
+        $this->sendTerminal(str_repeat('-', 100));
+
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents/display/{$event_id}",
+            ['_raw' => 1, '_timezone' => 'UTC'],
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError($this->core->request->errorMsg);
+        }
+
+        $event = $response['data'] ?? null;
+        if (!$event) {
+            return $this->addError("Event [{$event_id}] not found");
+        }
+
+        // Show event details before deletion
+        $this->sendTerminal(" Event to delete:");
+        $this->sendTerminal("   - KeyId: {$event['KeyId']}");
+        $this->sendTerminal("   - Title: " . ($event['Title'] ?? 'N/A'));
+        $this->sendTerminal("   - Type: " . ($event['Type'] ?? 'N/A'));
+        $this->sendTerminal("   - TimeSpent: " . ($event['TimeSpent'] ?? 0) . "h");
+        $this->sendTerminal("   - DateTimeInit: " . ($event['DateTimeInit'] ?? 'N/A'));
+        if (!empty($event['TaskId'])) $this->sendTerminal("   - TaskId: {$event['TaskId']}");
+        if (!empty($event['ProjectId'])) $this->sendTerminal("   - ProjectId: {$event['ProjectId']}");
+        if (!empty($event['ProposalId'])) $this->sendTerminal("   - ProposalId: {$event['ProposalId']}");
+        if (!empty($event['LeadId'])) $this->sendTerminal("   - LeadId: {$event['LeadId']}");
+        //endregion
+
+        //region DELETE event via API
+        $this->sendTerminal("");
+        $this->sendTerminal(" - Sending DELETE request to remote platform...");
+
+        $delete_response = $this->core->request->delete_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkCRMEvents/{$event_id}?_raw",
+            $this->headers
+        );
+
+        if ($this->core->request->error) {
+            return $this->addError("API Error: " . json_encode($this->core->request->errorMsg));
+        }
+
+        if (!($delete_response['success'] ?? false)) {
+            $errorMsg = $delete_response['errorMsg'] ?? $delete_response['error'] ?? 'Unknown error';
+            if (is_array($errorMsg)) {
+                $errorMsg = implode(', ', $errorMsg);
+            }
+            return $this->addError("Delete failed: {$errorMsg}");
+        }
+        //endregion
+
+        $this->sendTerminal("");
+        $this->sendTerminal("Event [{$event_id}] deleted successfully!");
+        $this->sendTerminal(str_repeat('=', 100));
 
         return true;
     }

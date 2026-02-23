@@ -1,0 +1,397 @@
+{
+  "Active": true,
+  "CloudFrameworkUser": "info@adrianmm.com",
+  "Connections": "",
+  "DateUpdating": "2026-01-12 12:13:07",
+  "Description": "<p>Contents related to an Academy Course</p>",
+  "GroupName": "CLOUD Academy",
+  "KeyName": "CloudFrameWorkAcademyContents",
+  "Owner": "info@adrianmm.com",
+  "Tags": [
+    "lms",
+    "contents",
+    "CloudFrameWorkAcademyContents"
+  ],
+  "Title": "Acamedy contents linked to Academy Courses",
+  "_search": [
+    "CLOUDFRAMEWORKACADEMYCONTENTS",
+    "CLOUD ACADEMY",
+    "LMS",
+    "CONTENTS"
+  ],
+  "entity": "CloudFrameWorkAcademyContents",
+  "environment": "",
+  "events": {
+    "hooks": null,
+    "workflows": null
+  },
+  "extends": "",
+  "hasExternalWorkflows": false,
+  "interface": {
+    "ico": "check-square",
+    "name": "Academy Course Content",
+    "plural": "Academy Courses Contents",
+    "ecm": "/cfos/CloudFrameWorkAcademyContents",
+    "buttons": [
+      {
+        "title": "Insert new Course Content",
+        "type": "api-insert"
+      }
+    ],
+    "views": {
+      "default": {
+        "server_order": "Position ASC",
+        "name": "General View",
+        "all_fields": "1",
+        "fields": {
+          "CourseId": {
+            "field": "CourseId",
+            "update_cfo": "1",
+            "cfo": "CloudFrameWorkAcademyCourses"
+          },
+          "Position": {
+            "field": "Position",
+            "order": "asc"
+          },
+          "ContentTitle": {
+            "field": "ContentTitle",
+            "update_cfo": "1",
+            "id_field": "KeyId"
+          },
+          "Active": {
+            "field": "Active"
+          },
+          "WebCourse": {
+            "field": "WebCourse",
+            "type": "virtual",
+            "name": "Web Course",
+            "link": "1",
+            "link_content": "/app.html#https://core20.web.app/ajax/lms.html?id={{CourseId}}",
+            "virtual_values": [
+              "CourseId"
+            ]
+          }
+        }
+      }
+    },
+    "insert_fields": {
+      "CourseId": {
+        "field": "CourseId"
+      },
+      "ContentTitle": {
+        "field": "ContentTitle"
+      },
+      "Position": {
+        "field": "Position"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "ContentIntro": {
+        "field": "ContentIntro"
+      },
+      "ContentInformation": {
+        "field": "ContentInformation"
+      },
+      "Materials": {
+        "field": "Materials"
+      }
+    },
+    "update_fields": {
+      "KeyId": {
+        "field": "KeyId",
+        "type": "hidden"
+      },
+      "CourseId": {
+        "field": "CourseId"
+      },
+      "Position": {
+        "field": "Position"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "ContentTitle": {
+        "field": "ContentTitle"
+      },
+      "ContentIntro": {
+        "field": "ContentIntro"
+      },
+      "ContentInformation": {
+        "field": "ContentInformation"
+      },
+      "Materials": {
+        "field": "Materials"
+      }
+    },
+    "display_fields": {
+      "CourseId": {
+        "field": "CourseId"
+      },
+      "Position": {
+        "field": "Position"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "ContentTitle": {
+        "field": "ContentTitle"
+      },
+      "ContentIntro": {
+        "field": "ContentIntro"
+      },
+      "ContentInformation": {
+        "field": "ContentInformation"
+      },
+      "Materials": {
+        "field": "Materials"
+      }
+    },
+    "copy_fields": {
+      "CourseId": {
+        "field": "CourseId"
+      },
+      "ContentTitle": {
+        "field": "ContentTitle"
+      },
+      "Position": {
+        "field": "Position"
+      },
+      "Active": {
+        "field": "Active"
+      },
+      "ContentIntro": {
+        "field": "ContentIntro"
+      },
+      "ContentInformation": {
+        "field": "ContentInformation"
+      },
+      "Materials": {
+        "field": "Materials"
+      }
+    },
+    "delete_fields": {
+      "KeyName": {
+        "field": "KeyName"
+      }
+    },
+    "filters": [
+      {
+        "field": "CourseId",
+        "name": "Course",
+        "type": "autocomplete",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkAcademyCourses",
+        "linked_field": "KeyId",
+        "fields": "CourseTitle"
+      }
+    ]
+  },
+  "lowCode": {
+    "name": "Academy Course Content",
+    "plural": "Academy Courses Contents",
+    "description": "Acamedy contents linked to Academy Courses",
+    "ico": "check-square",
+    "secret": "",
+    "model": {
+      "CourseId": {
+        "name": "Course",
+        "description": "Course",
+        "type": "string",
+        "allow_null": "0",
+        "index": "1",
+        "minlength": "2",
+        "view": "1",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1",
+        "interface": {
+          "type": "select"
+        }
+      },
+      "ContentTitle": {
+        "name": "Content Title",
+        "description": "Content Title",
+        "type": "string",
+        "allow_null": "0",
+        "index": "1",
+        "minlength": "2",
+        "view": "1",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1"
+      },
+      "ContentIntro": {
+        "name": "Short intro",
+        "description": "Short Description",
+        "type": "string",
+        "allow_null": "0",
+        "index": "0",
+        "view": "0",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1",
+        "interface": {
+          "type": "html"
+        }
+      },
+      "ContentInformation": {
+        "name": "Complete Information",
+        "description": "HTML content of the course",
+        "type": "string",
+        "allow_null": "0",
+        "index": "0",
+        "view": "0",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1",
+        "interface": {
+          "type": "html"
+        }
+      },
+      "Position": {
+        "name": "Order Number",
+        "description": "Position of the content",
+        "type": "integer",
+        "allow_null": "0",
+        "index": "1",
+        "view": "1",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1"
+      },
+      "Materials": {
+        "name": "Materials",
+        "description": "Materials",
+        "type": "json",
+        "allow_null": "0",
+        "index": "1",
+        "view": "0",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1",
+        "interface": {
+          "type": "json"
+        }
+      },
+      "Active": {
+        "name": "Active",
+        "description": "Says if the Content is Active to be accessed",
+        "type": "boolean",
+        "allow_null": "0",
+        "index": "1",
+        "defaultvalue": "true",
+        "view": "1",
+        "insert": "1",
+        "display": "1",
+        "update": "1",
+        "copy": "1",
+        "interface": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "model": {
+    "model": {
+      "CourseId": [
+        "string",
+        "integer|mandatory|index|minlength:2|description:Course"
+      ],
+      "ContentTitle": [
+        "string",
+        "integer|mandatory|index|minlength:2|description:Content Title"
+      ],
+      "ContentIntro": [
+        "string",
+        "integer|mandatory|description:Short Description"
+      ],
+      "ContentInformation": [
+        "string",
+        "integer|mandatory|description:HTML content of the course"
+      ],
+      "Position": [
+        "integer",
+        "integer|mandatory|index|description:Position of the content"
+      ],
+      "Materials": [
+        "json",
+        "string|allowNull|index|description:Materials"
+      ],
+      "Active": [
+        "boolean",
+        "integer|mandatory|index|defaultvalue:true|description:Says if the Content is Active to be accessed"
+      ]
+    },
+    "dependencies": [
+      "CloudFrameWorkAcademyCourses"
+    ]
+  },
+  "securityAndFields": {
+    "security": {
+      "cfo_locked": "1",
+      "backups": {
+        "insert": "1",
+        "update": "1",
+        "delete": "1"
+      },
+      "user_privileges": [
+        "ecm-admin",
+        "ecm-user",
+        "development-user",
+        "development-admin"
+      ]
+    },
+    "fields": {
+      "KeyId": {
+        "name": "ContentId"
+      },
+      "CourseId": {
+        "name": "Course",
+        "type": "select",
+        "external_values": "datastore",
+        "entity": "CloudFrameWorkAcademyCourses",
+        "linked_field": "KeyId",
+        "fields": "CourseTitle"
+      },
+      "ContentTitle": {
+        "name": "Content Title"
+      },
+      "Position": {
+        "name": "Order Number"
+      },
+      "ContentIntro": {
+        "name": "Short intro",
+        "type": "html"
+      },
+      "ContentInformation": {
+        "name": "Complete Information",
+        "type": "html"
+      },
+      "Materials": {
+        "name": "Materials",
+        "type": "json",
+        "contextual": {
+          "title": "Opciones para Gestión de Materiales de un curso",
+          "icon": "fa-question",
+          "url": "/ajax/cfa.html?api=/erp/dev-docs?tag=ecm-links:/cfos/CloudFrameWorkAcademyContents/Materials%26props={\"namespace\":\"cloudframework\",\"contextual\":true}",
+          "tooltip": "Más info"
+        },
+        "defaultvalue": "{}"
+      },
+      "Active": {
+        "name": "Active",
+        "type": "boolean",
+        "defaultvalue": "1"
+      }
+    }
+  },
+  "status": "IN DEVELOPMENT",
+  "type": "ds"
+}
