@@ -389,21 +389,35 @@ class Script extends CoreScripts
 
             //region FETCH checks for Process and SubProcesses
             $all_checks = [];
+            $process_checks_count = 0;
+            $subprocess_checks_count = 0;
 
             // Fetch checks for the Process itself
             $process_key_id = $process['KeyId'] ?? null;
             if ($process_key_id) {
+                $this->sendTerminal("   - Fetching checks for Process [{$key_name}]...");
                 $process_checks = $this->fetchChecksForEntity('CloudFrameWorkDevDocumentationForProcesses', $process_key_id);
+                $process_checks_count = count($process_checks);
                 $all_checks = array_merge($all_checks, $process_checks);
             }
 
             // Fetch checks for each SubProcess
-            foreach ($subprocesses as $subprocess) {
-                $subprocess_key_id = $subprocess['KeyId'] ?? null;
-                if ($subprocess_key_id) {
-                    $subprocess_checks = $this->fetchChecksForEntity('CloudFrameWorkDevDocumentationForSubProcesses', $subprocess_key_id);
-                    $all_checks = array_merge($all_checks, $subprocess_checks);
+            if (count($subprocesses) > 0) {
+                $this->sendTerminal("   - Fetching checks for " . count($subprocesses) . " SubProcesses...");
+                foreach ($subprocesses as $subprocess) {
+                    $subprocess_key_id = $subprocess['KeyId'] ?? null;
+                    if ($subprocess_key_id) {
+                        $subprocess_checks = $this->fetchChecksForEntity('CloudFrameWorkDevDocumentationForSubProcesses', $subprocess_key_id);
+                        $subprocess_checks_count += count($subprocess_checks);
+                        $all_checks = array_merge($all_checks, $subprocess_checks);
+                    }
                 }
+            }
+
+            // Show checks summary
+            $total_checks = count($all_checks);
+            if ($total_checks > 0) {
+                $this->sendTerminal("   - Checks found: {$total_checks} (Process: {$process_checks_count}, SubProcesses: {$subprocess_checks_count})");
             }
 
             // Sort all checks by KeyId
