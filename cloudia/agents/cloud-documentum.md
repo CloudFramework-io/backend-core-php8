@@ -2005,25 +2005,86 @@ The `_cloudia/courses.php` script manages CLOUD Academy Course documentation by 
 
 ### Questions JSON Structure
 
-The `Questions` field uses this structure for quizzes:
+The `Questions` field defines quiz questions for course exams. Each question is an object with a unique key.
+
+**Question Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| **Key** | string | Unique question identifier (e.g., "Module1: Installation requirements") |
+| `title` | string | Full question text displayed to the user |
+| `type` | string | `checkbox` (multiple answers) or `radio` (single answer) |
+| `category` | string | Category for grouping questions (e.g., "Introduction", "Advanced") |
+| `points` | number | Points awarded for this question (typically 1) |
+| `shuffle` | boolean | `true` to randomize answer order |
+| `answers` | array | List of possible answers |
+
+**Answer Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `title` | string | Answer text |
+| `grade` | number | Correctness percentage (0-100). Sum of correct grades must equal 100 |
+
+**Grade Scoring System:**
+- `grade: 0` → Incorrect answer
+- `grade: 100` → 100% correct (for `radio` type with single correct answer)
+- `grade: 50` → Partially correct (for `checkbox` with 2 correct answers)
+- `grade: 33` → For `checkbox` with 3 correct answers
+- `grade: 25` → For `checkbox` with 4 correct answers
+
+**Rule:** The sum of all `grade` values for correct answers must equal **100**.
+
+**Example with multiple questions:**
 
 ```json
 {
-  "Question Key": {
-    "title": "Question text?",
-    "type": "checkbox|radio",
-    "category": "Category name",
+  "Module1: Installation requirements": {
+    "title": "What do you need to install to use CloudFramework?",
+    "type": "checkbox",
+    "category": "Installation",
     "points": 1,
     "shuffle": true,
     "answers": [
-      {"title": "Wrong answer", "grade": 0},
-      {"title": "Correct answer", "grade": 50},
-      {"title": "Another correct", "grade": 50},
-      {"title": "Wrong answer", "grade": 0}
+      {"title": "An FTP server", "grade": 0},
+      {"title": "composer", "grade": 50},
+      {"title": "PHP version 7.3 or higher", "grade": 50},
+      {"title": "Java 11", "grade": 0}
+    ]
+  },
+  "Module1: Install command": {
+    "title": "What is the command to install dependencies?",
+    "type": "radio",
+    "category": "Installation",
+    "points": 1,
+    "shuffle": true,
+    "answers": [
+      {"title": "npm install", "grade": 0},
+      {"title": "composer install", "grade": 100},
+      {"title": "pip install", "grade": 0},
+      {"title": "apt-get install", "grade": 0}
+    ]
+  },
+  "Module2: Architecture": {
+    "title": "Which class is the central Service Locator in CloudFramework?",
+    "type": "radio",
+    "category": "Architecture",
+    "points": 2,
+    "shuffle": false,
+    "answers": [
+      {"title": "RESTful", "grade": 0},
+      {"title": "Core7", "grade": 100},
+      {"title": "DataStore", "grade": 0},
+      {"title": "Buckets", "grade": 0}
     ]
   }
 }
 ```
+
+**Best Practices:**
+- Use unique, descriptive keys that identify the question topic
+- Group related questions with the same `category` for result analysis
+- Set `shuffle: true` to prevent answer memorization by position
+- Assign higher `points` to more difficult questions
+- Ensure grade values for correct answers sum to exactly 100
 
 ### Usage Examples
 
