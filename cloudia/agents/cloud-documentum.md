@@ -301,8 +301,8 @@ Each `route` value matches a Check's `Route` field for bidirectional linking.
 | **Development Groups** | `CloudFrameWorkDevDocumentation` | - | Groups via `DocumentationId` |
 | **APIs** | `CloudFrameWorkDevDocumentationForAPIs` | `CloudFrameWorkDevDocumentationForAPIEndPoints` | `API` → KeyName |
 | **Libraries** | `CloudFrameWorkDevDocumentationForLibraries` | `CloudFrameWorkDevDocumentationForLibrariesModules` | `Library` → KeyName |
-| **Processes** | `CloudFrameWorkDevDocumentationForProcesses` | `CloudFrameWorkDevDocumentationForSubProcesses` | `Process` → KeyName |
-| **Checks** | `CloudFrameWorkDevDocumentationForProcessTests` | - | `CFOEntity` + `CFOId` |
+| **Processes** | `CloudFrameWorkDevDocumentationForProcesses` | `CloudFrameWorkDevDocumentationForSubProcesses` + `CloudFrameWorkDevDocumentationForProcessTests` (Checks) | Managed via `_cloudia/processes` |
+| **Checks** | `CloudFrameWorkDevDocumentationForProcessTests` | - | `CFOEntity` + `CFOId` (except Processes) |
 | **WebApps** | `CloudFrameWorkDevDocumentationForWebApps` | `CloudFrameWorkDevDocumentationForWebAppsModules` | `WebApp` → KeyName |
 | **Courses** | `CloudFrameWorkAcademyCourses` | `CloudFrameWorkAcademyContents` | `CourseId` → KeyId |
 | **Resources** | `CloudFrameWorkInfrastructureResources` | `CloudFrameWorkInfrastructureResourcesAccesses` | `ResourceId` → KeyId |
@@ -776,7 +776,75 @@ for i = 0 to segments.length-1:
 
 > **IMPORTANT**: Never include `KeyId` when creating new SubProcesses.
 
+### Processes Backup File Structure (with Checks)
+
+The Processes backup now includes all checks associated with the Process and its SubProcesses:
+
+```json
+{
+    "CloudFrameWorkDevDocumentationForProcesses": {
+        "KeyName": "/cloud-hrms",
+        "Title": "CLOUD HRMS",
+        "...": "..."
+    },
+    "CloudFrameWorkDevDocumentationForSubProcesses": [
+        {"Title": "Module 1", "Process": "/cloud-hrms", "...": "..."},
+        {"Title": "Module 2", "Process": "/cloud-hrms", "...": "..."}
+    ],
+    "CloudFrameWorkDevDocumentationForProcessTests": [
+        {
+            "CFOEntity": "CloudFrameWorkDevDocumentationForProcesses",
+            "CFOId": "/cloud-hrms",
+            "CFOField": "JSON",
+            "Route": "/check-route",
+            "Title": "Process Check",
+            "...": "..."
+        },
+        {
+            "CFOEntity": "CloudFrameWorkDevDocumentationForSubProcesses",
+            "CFOId": "5551234567890",
+            "CFOField": "JSON",
+            "Route": "/module-check",
+            "Title": "Module Check",
+            "...": "..."
+        }
+    ]
+}
+```
+
+> **IMPORTANT - Processes Checks Management**:
+> - Checks for Processes and SubProcesses are **managed directly via `_cloudia/processes`**
+> - **DO NOT use `_cloudia/checks`** for Process/SubProcess checks
+> - `backup-from-remote`: Downloads Process + SubProcesses + all Checks
+> - `update-from-backup`: Syncs Process + SubProcesses + Checks (with delete confirmation)
+> - `insert-from-backup`: Creates Process + SubProcesses + Checks
+
+**Commands:**
+```bash
+# Backup Process with SubProcesses and Checks
+composer script -- "_cloudia/processes/backup-from-remote?id=/process-keyname"
+
+# Update Process, SubProcesses and Checks from local backup
+composer script -- "_cloudia/processes/update-from-backup?id=/process-keyname"
+
+# Insert new Process with SubProcesses and Checks
+composer script -- "_cloudia/processes/insert-from-backup?id=/process-keyname"
+```
+
 ## Checks Documentation
+
+> **⚠️ IMPORTANT - Checks Management by Entity Type:**
+>
+> | CFOEntity | Managed via | Script |
+> |-----------|-------------|--------|
+> | `CloudFrameWorkDevDocumentationForProcesses` | Processes backup | `_cloudia/processes` |
+> | `CloudFrameWorkDevDocumentationForSubProcesses` | Processes backup | `_cloudia/processes` |
+> | `CloudFrameWorkProjectsTasks` | Tasks CRUD | `_cloudia/tasks` |
+> | `CloudFrameWorkDevDocumentationForWebApps` | Checks backup | `_cloudia/checks` |
+> | `CloudFrameWorkDevDocumentationForWebAppsModules` | Checks backup | `_cloudia/checks` |
+> | Other CFOEntities | Checks backup | `_cloudia/checks` |
+>
+> **DO NOT use `_cloudia/checks` for Process/SubProcess checks** - they are managed directly in the Processes backup.
 
 ### Mandatory Fields for Checks
 
