@@ -1938,6 +1938,178 @@ composer script -- "_cloudia/auth/info?_reset"
 |-----------|-------------|
 | `_reset` | Add to any command to reset the platform token and force re-authentication |
 
+## Courses Script
+
+The `_cloudia/courses.php` script manages CLOUD Academy Course documentation by backing up, inserting, and updating courses and their contents.
+
+### CFOs Used
+
+| CFO | Description |
+|-----|-------------|
+| `CloudFrameWorkAcademyCourses` | Main course records with configuration |
+| `CloudFrameWorkAcademyContents` | Individual content/chapters within courses |
+| `CloudFrameWorkAcademyGroups` | Course groups/categories |
+| `CloudFrameWorkAcademyAnswers` | User exam answers and progress |
+
+### Available Commands
+
+| Command | Description |
+|---------|-------------|
+| `/list-remote` | List all Courses in remote platform |
+| `/list-local` | List all Courses in local backup |
+| `/backup-from-remote` | Backup all Courses from remote platform |
+| `/backup-from-remote?id=KEYID` | Backup specific Course by KeyId |
+| `/insert-from-backup?id=KEYID` | Insert new Course to remote platform |
+| `/update-from-backup?id=KEYID` | Update existing Course in remote platform |
+| `/backup-groups` | Backup Course Groups from remote platform |
+
+### Course Fields (CloudFrameWorkAcademyCourses)
+
+**Required Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `GroupId` | string | Course group reference (KeyId of CloudFrameWorkAcademyGroups) |
+| `CourseOrder` | integer | Display order within the group |
+| `CourseTitle` | string | Course title (min 2 characters) |
+| `Active` | boolean | Whether the course is active |
+
+**Optional Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `CourseLogo` | string | URL to course logo image |
+| `CourseTeacher` | string | Teacher's user email (KeyName from CloudFrameWorkUsers) |
+| `CourseDescription` | string | HTML description of the course |
+| `CourseMinPoints` | float | Minimum points required to pass |
+| `CourseMaxTries` | float | Maximum number of exam attempts |
+| `CourseMaxTime` | integer | Maximum time in minutes for exam |
+| `Questions` | json | Quiz questions structure |
+| `UserGroups` | list | User groups with access (empty = all) |
+| `DocumentationId` | string | Link to documentation group |
+
+### Content Fields (CloudFrameWorkAcademyContents)
+
+**Required Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `CourseId` | string | Course KeyId this content belongs to |
+| `Position` | integer | Order position within the course |
+| `ContentTitle` | string | Title of the content/chapter |
+
+**Optional Fields:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `ContentDescription` | string | HTML content description |
+| `ContentType` | string | Type of content (video, text, quiz, etc.) |
+| `ContentURL` | string | URL to external content |
+| `Active` | boolean | Whether content is active |
+
+### Questions JSON Structure
+
+The `Questions` field uses this structure for quizzes:
+
+```json
+{
+  "Question Key": {
+    "title": "Question text?",
+    "type": "checkbox|radio",
+    "category": "Category name",
+    "points": 1,
+    "shuffle": true,
+    "answers": [
+      {"title": "Wrong answer", "grade": 0},
+      {"title": "Correct answer", "grade": 50},
+      {"title": "Another correct", "grade": 50},
+      {"title": "Wrong answer", "grade": 0}
+    ]
+  }
+}
+```
+
+### Usage Examples
+
+```bash
+# List all courses in remote platform
+composer script -- "_cloudia/courses/list-remote"
+
+# List courses in local backup
+composer script -- "_cloudia/courses/list-local"
+
+# Backup all courses from remote
+composer script -- "_cloudia/courses/backup-from-remote"
+
+# Backup a specific course (with its contents)
+composer script -- "_cloudia/courses/backup-from-remote?id=5077124951572480"
+
+# Backup course groups
+composer script -- "_cloudia/courses/backup-groups"
+
+# Insert a new course from local backup
+composer script -- "_cloudia/courses/insert-from-backup?id=5077124951572480"
+
+# Update existing course from local backup
+composer script -- "_cloudia/courses/update-from-backup?id=5077124951572480"
+```
+
+### Backup File Structure
+
+Each course backup file (`/buckets/backups/Courses/{platform}/{KeyId}.json`) contains:
+
+```json
+{
+  "CloudFrameWorkAcademyCourses": {
+    "KeyId": "5077124951572480",
+    "GroupId": "6234567890123456",
+    "CourseOrder": 1,
+    "CourseTitle": "Introduction to CloudFramework",
+    "CourseDescription": "<h1>Welcome</h1><p>Course description...</p>",
+    "CourseTeacher": "teacher@example.com",
+    "Active": true,
+    "CourseMinPoints": 70,
+    "CourseMaxTries": 3,
+    "CourseMaxTime": 60,
+    "Questions": {...}
+  },
+  "CloudFrameWorkAcademyContents": [
+    {
+      "KeyId": "1234567890123456",
+      "CourseId": "5077124951572480",
+      "Position": 1,
+      "ContentTitle": "Chapter 1: Getting Started",
+      "ContentDescription": "<p>Content...</p>",
+      "Active": true
+    }
+  ]
+}
+```
+
+### Groups File Structure
+
+The groups file (`/buckets/backups/Courses/{platform}/groups.json`) contains:
+
+```json
+{
+  "CloudFrameWorkAcademyGroups": [
+    {
+      "KeyId": "6234567890123456",
+      "GroupName": "Development Courses",
+      "Position": 1,
+      "Active": true
+    }
+  ]
+}
+```
+
+### Sync Behavior
+
+The `/update-from-backup` command performs intelligent sync:
+- **Course**: Updates if different, inserts if not found
+- **Contents**:
+  - Compares local vs remote contents
+  - Updates modified contents
+  - Inserts new contents (local only)
+  - Deletes removed contents (remote only)
+- After sync, automatically backs up the latest version
+
 ## CloudECM Rendering Functions
 
 The CloudECM class provides HTML rendering for documentation:
