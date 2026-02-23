@@ -184,6 +184,118 @@ class Script extends CoreScripts
     }
 
     /**
+     * Validate a single check record
+     *
+     * Validates:
+     * - Required fields: Title, Status, Route
+     * - CFOEntity must be CloudFrameWorkDevDocumentationForProcesses or CloudFrameWorkDevDocumentationForSubProcesses
+     * - CFOField must be 'JSON'
+     * - Status must be valid (pending, in-progress, blocked, in-qa, ok)
+     * - Results is REQUIRED when status is: blocked, in-qa, ok
+     * - Description should be present (warning if empty)
+     *
+     * @param array $check The check data
+     * @param int $index The check index in the array (for error messages)
+     * @return array ['valid' => bool, 'errors' => array, 'warnings' => array]
+     */
+    private function validateCheckFields(array $check, int $index): array
+    {
+        $result = [
+            'valid' => true,
+            'errors' => [],
+            'warnings' => []
+        ];
+
+        $checkLabel = "Check #" . ($index + 1) . (isset($check['Title']) ? " ({$check['Title']})" : "");
+
+        // Required fields
+        $requiredFields = [
+            'Title' => 'Check Title',
+            'Status' => 'Check Status',
+            'Route' => 'Check Route'
+        ];
+
+        foreach ($requiredFields as $field => $label) {
+            if (!isset($check[$field]) || (is_string($check[$field]) && trim($check[$field]) === '')) {
+                $result['errors'][] = "{$checkLabel}: Missing required field '{$field}'";
+                $result['valid'] = false;
+            }
+        }
+
+        // CFOEntity validation - must be Process or SubProcess entity
+        $validCFOEntities = ['CloudFrameWorkDevDocumentationForProcesses', 'CloudFrameWorkDevDocumentationForSubProcesses'];
+        if (isset($check['CFOEntity']) && !in_array($check['CFOEntity'], $validCFOEntities)) {
+            $result['errors'][] = "{$checkLabel}: CFOEntity must be one of: " . implode(', ', $validCFOEntities) . ", found: '{$check['CFOEntity']}'";
+            $result['valid'] = false;
+        }
+
+        // CFOField MUST be 'JSON' for process checks
+        if (isset($check['CFOField']) && $check['CFOField'] !== 'JSON') {
+            $result['errors'][] = "{$checkLabel}: CFOField must be 'JSON', found: '{$check['CFOField']}'";
+            $result['valid'] = false;
+        }
+
+        // Valid Status values for checks
+        // pending = Pendiente de definir
+        // in-progress = En curso
+        // blocked = Bloqueado
+        // in-qa = En QA
+        // ok = Finalizado (OK)
+        $validStatuses = ['pending', 'in-progress', 'blocked', 'in-qa', 'ok'];
+        if (isset($check['Status']) && !in_array($check['Status'], $validStatuses)) {
+            $result['errors'][] = "{$checkLabel}: Status '{$check['Status']}' is not valid. Allowed: " . implode(', ', $validStatuses);
+            $result['valid'] = false;
+        }
+
+        // Description field validation (PLANNING phase - defines the objective, should be present for all checks)
+        if (!isset($check['Description']) || (is_string($check['Description']) && trim(strip_tags($check['Description'])) === '')) {
+            $result['warnings'][] = "{$checkLabel}: 'Description' field is empty - should define the objective/what needs to be achieved (planning phase)";
+        }
+
+        // Results field validation
+        // Results is REQUIRED when status is: blocked, in-qa, ok
+        // Results is optional when status is: pending, in-progress
+        $resultsRequiredStatuses = ['blocked', 'in-qa', 'ok'];
+        if (isset($check['Status']) && in_array($check['Status'], $resultsRequiredStatuses)) {
+            // Status requires Results
+            if (!isset($check['Results']) || (is_string($check['Results']) && trim(strip_tags($check['Results'])) === '')) {
+                $result['errors'][] = "{$checkLabel}: 'Results' field is REQUIRED when status is '{$check['Status']}'";
+                $result['valid'] = false;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
+     * Validate all checks in an array
+     *
+     * @param array $checks Array of check records
+     * @return array ['valid' => bool, 'errors' => array, 'warnings' => array]
+     */
+    private function validateAllChecks(array $checks): array
+    {
+        $result = [
+            'valid' => true,
+            'errors' => [],
+            'warnings' => []
+        ];
+
+        foreach ($checks as $index => $check) {
+            $checkValidation = $this->validateCheckFields($check, $index);
+
+            $result['errors'] = array_merge($result['errors'], $checkValidation['errors']);
+            $result['warnings'] = array_merge($result['warnings'], $checkValidation['warnings']);
+
+            if (!$checkValidation['valid']) {
+                $result['valid'] = false;
+            }
+        }
+
+        return $result;
+    }
+
+    /**
      * List all Processes in remote platform
      */
     public function METHOD_list_remote()
@@ -641,6 +753,26 @@ class Script extends CoreScripts
         $local_checks = $process_data['CloudFrameWorkDevDocumentationForProcessTests'] ?? [];
         $this->sendTerminal(" - Local checks in backup: " . count($local_checks));
 
+        // Validate checks before syncing
+        if (count($local_checks) > 0) {
+            $this->sendTerminal(" - Validating checks...");
+            $checksValidation = $this->validateAllChecks($local_checks);
+
+            // Show warnings
+            foreach ($checksValidation['warnings'] as $warning) {
+                $this->sendTerminal("   ! Warning: {$warning}");
+            }
+
+            // Show errors and abort if validation fails
+            if (!$checksValidation['valid']) {
+                foreach ($checksValidation['errors'] as $error) {
+                    $this->sendTerminal("   # Error: {$error}");
+                }
+                return $this->addError("Check validation failed. Fix the errors above before updating.");
+            }
+            $this->sendTerminal("   + Checks validation passed");
+        }
+
         // Build list of valid CFOEntity/CFOId pairs from current process and subprocesses
         $valid_cfo_pairs = [];
 
@@ -932,6 +1064,24 @@ class Script extends CoreScripts
         //region INSERT checks in remote platform
         $checks = $process_data['CloudFrameWorkDevDocumentationForProcessTests'] ?? [];
         if ($checks) {
+            // Validate checks before inserting
+            $this->sendTerminal(" - Validating " . count($checks) . " checks...");
+            $checksValidation = $this->validateAllChecks($checks);
+
+            // Show warnings
+            foreach ($checksValidation['warnings'] as $warning) {
+                $this->sendTerminal("   ! Warning: {$warning}");
+            }
+
+            // Show errors and abort if validation fails
+            if (!$checksValidation['valid']) {
+                foreach ($checksValidation['errors'] as $error) {
+                    $this->sendTerminal("   # Error: {$error}");
+                }
+                return $this->addError("Check validation failed. Fix the errors above before inserting.");
+            }
+            $this->sendTerminal("   + Checks validation passed");
+
             $this->sendTerminal(" - Inserting " . count($checks) . " checks...");
             $checks_inserted = 0;
             $checks_failed = 0;
