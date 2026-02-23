@@ -85,16 +85,24 @@ class Script extends CoreScripts
     public function METHOD_default()
     {
         $this->sendTerminal("Available commands:");
-        $this->sendTerminal("  /backup-from-remote        - Backup all Processes from remote platform");
-        $this->sendTerminal("  /backup-from-remote?id=xx  - Backup specific Process from remote platform");
-        $this->sendTerminal("  /insert-from-backup?id=xx  - Insert new Process in remote platform from local backup");
-        $this->sendTerminal("  /update-from-backup?id=xx  - Update existing Process in remote platform from local backup");
+        $this->sendTerminal("  /backup-from-remote        - Backup all Processes + checks from remote platform");
+        $this->sendTerminal("  /backup-from-remote?id=xx  - Backup specific Process + checks from remote platform");
+        $this->sendTerminal("  /insert-from-backup?id=xx  - Insert new Process + checks in remote platform from local backup");
+        $this->sendTerminal("  /update-from-backup?id=xx  - Update existing Process + checks in remote platform from local backup");
+        $this->sendTerminal("  /update-from-backup?id=xx&delete=yes|no - Confirm or skip deletion of remote checks");
         $this->sendTerminal("  /list-remote               - List all Processes in remote platform");
         $this->sendTerminal("  /list-local                - List all Processes in local backup");
         $this->sendTerminal("");
+        $this->sendTerminal("Backup file structure:");
+        $this->sendTerminal("  CloudFrameWorkDevDocumentationForProcesses    - Process record");
+        $this->sendTerminal("  CloudFrameWorkDevDocumentationForSubProcesses - SubProcess records");
+        $this->sendTerminal("  CloudFrameWorkDevDocumentationForProcessTests - Checks (Process + SubProcesses)");
+        $this->sendTerminal("");
         $this->sendTerminal("Examples:");
-        $this->sendTerminal("  composer run-script script \"_cloudia/processes/backup-from-remote?id=HIPOTECH-001\"");
-        $this->sendTerminal("  composer run-script script _cloudia/processes/list-remote");
+        $this->sendTerminal("  composer script -- \"_cloudia/processes/backup-from-remote?id=HIPOTECH-001\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/processes/update-from-backup?id=HIPOTECH-001\"");
+        $this->sendTerminal("  composer script -- \"_cloudia/processes/update-from-backup?id=HIPOTECH-001&delete=yes\"");
+        $this->sendTerminal("  composer script -- _cloudia/processes/list-remote");
     }
 
     /**
@@ -135,6 +143,44 @@ class Script extends CoreScripts
             return false;
         }
         return $backup_dir;
+    }
+
+    /**
+     * Fetch checks (CloudFrameWorkDevDocumentationForProcessTests) for a given entity
+     *
+     * @param string $cfo_entity CFO entity name (e.g., CloudFrameWorkDevDocumentationForProcesses)
+     * @param string $cfo_id Entity KeyId
+     * @return array Array of checks or empty array on error
+     */
+    private function fetchChecksForEntity($cfo_entity, $cfo_id)
+    {
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => $cfo_entity,
+                'filter_CFOId' => $cfo_id,
+                '_order' => 'Route',
+                'cfo_limit' => 500,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        if ($this->core->request->error || !($response['data'] ?? null)) {
+            return [];
+        }
+
+        $checks = $response['data'];
+        // Sort checks by KeyId and keys
+        foreach ($checks as &$check) {
+            ksort($check);
+        }
+        usort($checks, function ($a, $b) {
+            return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+        });
+
+        return $checks;
     }
 
     /**
@@ -341,10 +387,36 @@ class Script extends CoreScripts
             ksort($process);
             //endregion
 
+            //region FETCH checks for Process and SubProcesses
+            $all_checks = [];
+
+            // Fetch checks for the Process itself
+            $process_key_id = $process['KeyId'] ?? null;
+            if ($process_key_id) {
+                $process_checks = $this->fetchChecksForEntity('CloudFrameWorkDevDocumentationForProcesses', $process_key_id);
+                $all_checks = array_merge($all_checks, $process_checks);
+            }
+
+            // Fetch checks for each SubProcess
+            foreach ($subprocesses as $subprocess) {
+                $subprocess_key_id = $subprocess['KeyId'] ?? null;
+                if ($subprocess_key_id) {
+                    $subprocess_checks = $this->fetchChecksForEntity('CloudFrameWorkDevDocumentationForSubProcesses', $subprocess_key_id);
+                    $all_checks = array_merge($all_checks, $subprocess_checks);
+                }
+            }
+
+            // Sort all checks by KeyId
+            usort($all_checks, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+            //endregion
+
             //region BUILD $process_data structure
             $process_data = [
                 'CloudFrameWorkDevDocumentationForProcesses' => $process,
-                'CloudFrameWorkDevDocumentationForSubProcesses' => $subprocesses
+                'CloudFrameWorkDevDocumentationForSubProcesses' => $subprocesses,
+                'CloudFrameWorkDevDocumentationForProcessTests' => $all_checks
             ];
             //endregion
 
@@ -368,7 +440,8 @@ class Script extends CoreScripts
             }
             $saved_count++;
             $subprocess_count = count($subprocesses);
-            $this->sendTerminal("   + Saved: {$filename} ({$subprocess_count} subprocesses)");
+            $checks_count = count($all_checks);
+            $this->sendTerminal("   + Saved: {$filename} ({$subprocess_count} subprocesses, {$checks_count} checks)");
             //endregion
         }
         //endregion
@@ -550,6 +623,175 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region SYNC checks (CloudFrameWorkDevDocumentationForProcessTests)
+        $local_checks = $process_data['CloudFrameWorkDevDocumentationForProcessTests'] ?? [];
+        $this->sendTerminal(" - Local checks in backup: " . count($local_checks));
+
+        // Build list of valid CFOEntity/CFOId pairs from current process and subprocesses
+        $valid_cfo_pairs = [];
+
+        // Process itself
+        $process_key_id = $process['KeyId'] ?? null;
+        if ($process_key_id) {
+            $valid_cfo_pairs[] = ['entity' => 'CloudFrameWorkDevDocumentationForProcesses', 'id' => $process_key_id];
+        }
+
+        // SubProcesses (use remote subprocesses since they have the correct KeyIds after insert)
+        foreach ($subprocesses as $subprocess) {
+            $subprocess_key_id = $subprocess['KeyId'] ?? null;
+            if ($subprocess_key_id) {
+                $valid_cfo_pairs[] = ['entity' => 'CloudFrameWorkDevDocumentationForSubProcesses', 'id' => $subprocess_key_id];
+            }
+        }
+
+        // Fetch remote checks for all valid CFO pairs
+        $this->sendTerminal(" - Fetching remote checks for comparison...");
+        $remote_checks = [];
+        foreach ($valid_cfo_pairs as $pair) {
+            $entity_checks = $this->fetchChecksForEntity($pair['entity'], $pair['id']);
+            foreach ($entity_checks as $check) {
+                $remote_checks[$check['KeyId']] = $check;
+            }
+        }
+        $this->sendTerminal(" - Remote checks: " . count($remote_checks));
+
+        // Index local checks by KeyId (only those that have KeyId)
+        $local_indexed = [];
+        $local_new_checks = []; // Checks without KeyId (to be inserted)
+        foreach ($local_checks as $check) {
+            if ($keyId = $check['KeyId'] ?? null) {
+                ksort($check);
+                $local_indexed[$keyId] = $check;
+            } else {
+                $local_new_checks[] = $check;
+            }
+        }
+
+        // Identify checks to delete (exist in remote but not in local)
+        $checks_to_delete = [];
+        foreach ($remote_checks as $keyId => $remote_check) {
+            if (!isset($local_indexed[$keyId])) {
+                $checks_to_delete[$keyId] = $remote_check;
+            }
+        }
+
+        // Check if delete confirmation is needed
+        $allow_delete = false;
+        if (!empty($checks_to_delete)) {
+            $delete_param = $this->formParams['delete'] ?? null;
+
+            if ($delete_param === null) {
+                // Show checks that will be deleted and require confirmation
+                $this->sendTerminal("");
+                $this->sendTerminal(" !! WARNING: The following checks exist in REMOTE but NOT in LOCAL:");
+                $this->sendTerminal(str_repeat('-', 100));
+                foreach ($checks_to_delete as $keyId => $check) {
+                    $cfo_entity = $check['CFOEntity'] ?? 'unknown';
+                    $this->sendTerminal("    - [{$keyId}] {$check['Title']} ({$cfo_entity})");
+                }
+                $this->sendTerminal(str_repeat('-', 100));
+                $this->sendTerminal("");
+                $this->sendTerminal(" These checks will be DELETED from remote if you proceed.");
+                $this->sendTerminal(" To confirm deletion, re-run the command with: delete=yes");
+                $this->sendTerminal(" To skip deletion (only update/insert), re-run with: delete=no");
+                $this->sendTerminal("");
+                $this->sendTerminal(" Example:");
+                $this->sendTerminal("   composer script -- \"_cloudia/processes/update-from-backup?id={$process_id}&delete=yes\"");
+                $this->sendTerminal("   composer script -- \"_cloudia/processes/update-from-backup?id={$process_id}&delete=no\"");
+                $this->sendTerminal("");
+                return $this->addError("Delete confirmation required. Use delete=yes or delete=no parameter.");
+            }
+
+            $allow_delete = ($delete_param === 'yes');
+            if (!$allow_delete && $delete_param !== 'no') {
+                return $this->addError("Invalid delete parameter value. Use delete=yes or delete=no");
+            }
+
+            if ($allow_delete) {
+                $this->sendTerminal(" - Delete parameter: yes (will delete " . count($checks_to_delete) . " remote checks)");
+            } else {
+                $this->sendTerminal(" - Delete parameter: no (skipping deletion of " . count($checks_to_delete) . " remote checks)");
+            }
+        }
+
+        // Sync checks
+        $this->sendTerminal(" - Syncing checks...");
+        $checks_updated = 0;
+        $checks_inserted = 0;
+        $checks_deleted = 0;
+        $checks_unchanged = 0;
+        $checks_skipped = 0;
+
+        // Process remote checks: update, delete, or skip
+        foreach ($remote_checks as $keyId => $remote_check) {
+            if (!isset($local_indexed[$keyId])) {
+                // Remote check not in local - delete or skip based on parameter
+                if ($allow_delete) {
+                    $this->sendTerminal("   - Deleting check: {$remote_check['Title']}");
+                    $this->core->request->delete(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw",
+                        $this->headers
+                    );
+                    $checks_deleted++;
+                } else {
+                    $checks_skipped++;
+                }
+            } else {
+                // Check exists in both - compare and update if different
+                $local_check_sorted = $local_indexed[$keyId];
+                $remote_check_sorted = $remote_check;
+                ksort($remote_check_sorted);
+
+                if (json_encode($local_check_sorted) !== json_encode($remote_check_sorted)) {
+                    $this->sendTerminal("   - Updating check: {$local_indexed[$keyId]['Title']}");
+                    $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw&_timezone=UTC",
+                        $local_indexed[$keyId],
+                        $this->headers,
+                        true
+                    );
+                    $checks_updated++;
+                } else {
+                    $checks_unchanged++;
+                }
+                unset($local_indexed[$keyId]);
+            }
+        }
+
+        // Insert checks that have KeyId but don't exist in remote
+        foreach ($local_indexed as $keyId => $local_check) {
+            $this->sendTerminal("   - Inserting check: {$local_check['Title']}");
+            unset($local_check['KeyId']); // Remove KeyId for insert
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                $local_check,
+                $this->headers
+            );
+            $checks_inserted++;
+        }
+
+        // Insert new checks (those without KeyId)
+        foreach ($local_new_checks as $local_check) {
+            $this->sendTerminal("   - Inserting new check: {$local_check['Title']}");
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                $local_check,
+                $this->headers
+            );
+            $checks_inserted++;
+        }
+
+        // Build summary message
+        $summary_parts = [];
+        if ($checks_updated > 0) $summary_parts[] = "{$checks_updated} updated";
+        if ($checks_inserted > 0) $summary_parts[] = "{$checks_inserted} inserted";
+        if ($checks_deleted > 0) $summary_parts[] = "{$checks_deleted} deleted";
+        if ($checks_unchanged > 0) $summary_parts[] = "{$checks_unchanged} unchanged";
+        if ($checks_skipped > 0) $summary_parts[] = "{$checks_skipped} skipped (not deleted)";
+
+        $this->sendTerminal(" - Checks: " . implode(', ', $summary_parts));
+        //endregion
+
         //region SEND success message to terminal
         $this->sendTerminal(str_repeat('-', 50));
         $this->sendTerminal(" + Process [{$process_id}] updated successfully in remote platform");
@@ -670,6 +912,41 @@ class Script extends CoreScripts
                 }
             }
             $this->sendTerminal(" + Subprocesses inserted");
+        }
+        //endregion
+
+        //region INSERT checks in remote platform
+        $checks = $process_data['CloudFrameWorkDevDocumentationForProcessTests'] ?? [];
+        if ($checks) {
+            $this->sendTerminal(" - Inserting " . count($checks) . " checks...");
+            $checks_inserted = 0;
+            $checks_failed = 0;
+
+            foreach ($checks as $check) {
+                // Remove KeyId to ensure a new record is created
+                unset($check['KeyId']);
+
+                $response = $this->core->request->post_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
+                    $check,
+                    $this->headers
+                );
+
+                if ($this->core->request->error || !($response['success'] ?? false)) {
+                    $check_name = $check['Title'] ?? $check['Route'] ?? 'unknown';
+                    $this->sendTerminal("   # Warning: Failed to insert check [{$check_name}]");
+                    $checks_failed++;
+                } else {
+                    $checks_inserted++;
+                }
+            }
+
+            if ($checks_inserted > 0) {
+                $this->sendTerminal(" + Checks inserted: {$checks_inserted}");
+            }
+            if ($checks_failed > 0) {
+                $this->sendTerminal(" # Checks failed: {$checks_failed}");
+            }
         }
         //endregion
 
