@@ -890,6 +890,8 @@ class Script extends CoreScripts
 
                 if (json_encode($local_check_sorted) !== json_encode($remote_check_sorted)) {
                     $this->sendTerminal("   - Updating check: {$local_indexed[$keyId]['Title']}");
+                    // Ensure CFOField is set before update
+                    $local_indexed[$keyId]['CFOField'] = 'JSON';
                     $this->core->request->put_json_decode(
                         "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests/{$keyId}?_raw&_timezone=UTC",
                         $local_indexed[$keyId],
@@ -908,6 +910,8 @@ class Script extends CoreScripts
         foreach ($local_indexed as $keyId => $local_check) {
             $this->sendTerminal("   - Inserting check: {$local_check['Title']}");
             unset($local_check['KeyId']); // Remove KeyId for insert
+            // Ensure CFOField is set before insert
+            $local_check['CFOField'] = 'JSON';
             $this->core->request->post_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
                 $local_check,
@@ -919,6 +923,8 @@ class Script extends CoreScripts
         // Insert new checks (those without KeyId)
         foreach ($local_new_checks as $local_check) {
             $this->sendTerminal("   - Inserting new check: {$local_check['Title']}");
+            // Ensure CFOField is set before insert
+            $local_check['CFOField'] = 'JSON';
             $this->core->request->post_json_decode(
                 "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
                 $local_check,
@@ -1089,6 +1095,8 @@ class Script extends CoreScripts
             foreach ($checks as $check) {
                 // Remove KeyId to ensure a new record is created
                 unset($check['KeyId']);
+                // Ensure CFOField is set before insert
+                $check['CFOField'] = 'JSON';
 
                 $response = $this->core->request->post_json_decode(
                     "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForProcessTests?_raw&_timezone=UTC",
