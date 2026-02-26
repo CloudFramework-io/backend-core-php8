@@ -575,6 +575,7 @@ class CFOs {
         $this->core->config->set("dbProxyHeaders",$credentials['dbProxyHeaders']??null);
         $this->core->config->set("dbCharset",$credentials['dbCharset']??null);
         $this->core->config->set("dbPort",$credentials['dbPort']??'3306');
+        if(isset($credentials['dbSSL'])) $this->core->config->set("dbSSL",$credentials['dbSSL']);
         if($this->core->is->localEnvironment()) $this->core->config->set("dbSocket",null);
 
         // SET to null dbSocket if you are in localhost

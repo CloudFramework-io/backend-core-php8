@@ -79,6 +79,7 @@ if (!defined ("_MYSQLI_CLASS_") ) {
         var $cfmode = true;
         var $_dbProxy = null;
         var $_dbProxyHeaders = null;
+        var $_dbSSL = true;           // SSL enabled by default. Set 'dbSSL' config to false to disable
         var $_onlyCreateQuery = false;
 
         protected $core = null;
@@ -126,6 +127,7 @@ if (!defined ("_MYSQLI_CLASS_") ) {
         }
 
         function loadCoreConfigVars() {
+
             $this->_dbserver = trim($this->core->config->get("dbServer")??'');
             $this->_dbuser = trim($this->core->config->get("dbUser")??'');
             $this->_dbpassword = trim($this->core->config->get("dbPassword")??'');
@@ -136,6 +138,8 @@ if (!defined ("_MYSQLI_CLASS_") ) {
             $this->_dbcharset = ($this->core->config->get("dbCharset")??null)?$this->core->config->get("dbCharset"):'';
             if(strlen(trim($this->core->config->get("dbPort")??'')))
                 $this->_dbport = trim($this->core->config->get("dbPort")??'');
+            if($this->core->config->get("dbSSL") || is_bool($this->core->config->get("dbSSL")))
+                $this->_dbSSL = (bool)$this->core->config->get("dbSSL");
 
         }
 
@@ -150,8 +154,9 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                 case 'dbCharset':$this->_dbcharset = $value; break;
                 case 'dbProxy':$this->_dbProxy = $value; break;
                 case 'dbProxyHeaders':$this->_dbProxyHeaders = $value; break;
+                case 'dbSSL':$this->_dbSSL = (bool)$value; break;
                 default:
-                    $this->setError('Unknown "confVar". Please use: dbServer, dbUer, dbPassword, dbName, dbSocket, dbPort, dbCharset, dbProxyHeaders');
+                    $this->setError('Unknown "confVar". Please use: dbServer, dbUser, dbPassword, dbName, dbSocket, dbPort, dbCharset, dbSSL, dbProxyHeaders');
                     break;
             }
         }
@@ -160,7 +165,7 @@ if (!defined ("_MYSQLI_CLASS_") ) {
             $ret ='';
             switch ($var) {
                 case 'dbServer':$ret = $this->_dbserver; break;
-                case 'dbUer':$ret = $this->_dbuser; break;
+                case 'dbUser':$ret = $this->_dbuser; break;
                 case 'dbPassword':$ret = $this->_dbpassword; break;
                 case 'dbName':$ret = $this->_dbdatabase; break;
                 case 'dbSocket':$ret = $this->_dbsocket; break;
@@ -168,8 +173,9 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                 case 'dbCharset':$ret = $this->_dbcharset; break;
                 case 'dbProxy':$ret = $this->_dbProxy; break;
                 case 'dbProxyHeaders':$ret = $this->_dbProxyHeaders; break;
+                case 'dbSSL':$ret = $this->_dbSSL; break;
                 default:
-                    $ret = 'Unknown "confVar". Please use: dbServer, dbUer, dbPassword, dbName, dbSocket, dbPort, dbProxyHeaders';
+                    $ret = 'Unknown "confVar". Please use: dbServer, dbUser, dbPassword, dbName, dbSocket, dbPort, dbSSL, dbProxyHeaders';
                     break;
             }
             return($ret);
@@ -183,9 +189,10 @@ if (!defined ("_MYSQLI_CLASS_") ) {
          * @param string $port Port. Default 3306
          * @param string $socket Socket
          * @param string $charset Allow to specify a charste. Ex:
+         * @param bool $ssl ssl connection, true by default
          * @return bool True if connection is ok.
          */
-        function connect($h='',$u='',$p='',$db='',$port="3306",$socket='',$charset='') {
+        function connect($h='',$u='',$p='',$db='',$port="3306",$socket='',$charset='',$ssl=true) {
 
             if($this->_dbProxy) return true; // avoid to stablish a connection with dbproxy
             if($this->_dblink)  return($this->_dblink); // Optimize current connection.
@@ -198,14 +205,29 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                 $this->_dbport = $port;
                 $this->_dbsocket = $socket;
                 $this->_dbcharset = $charset;
+                $this->_dbSSL = $ssl;
             }
 
             if(strlen($this->_dbserver??'') || strlen($this->_dbsocket??'')) {
                 try {
-                    if(strlen($this->_dbsocket??''))
-                        $this->_db = new mysqli(null, $this->_dbuser, $this->_dbpassword, $this->_dbdatabase, 0,$this->_dbsocket);
-                    else
-                        $this->_db = new mysqli($this->_dbserver, $this->_dbuser, $this->_dbpassword, $this->_dbdatabase, $this->_dbport);
+                    $this->_db = mysqli_init();
+
+                    // SSL is enabled by default for TCP connections. Use dbSSL=false to disable
+                    if($this->_dbSSL && !strlen($this->_dbsocket??'')) {
+                        $this->_db->options(MYSQLI_OPT_SSL_VERIFY_SERVER_CERT, false);
+                        $this->_db->ssl_set(null, null, null, null, null);
+                        $flags = MYSQLI_CLIENT_SSL;
+                        if(defined('MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT'))
+                            $flags |= MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT;
+                    } else {
+                        $flags = 0;
+                    }
+
+                    if(strlen($this->_dbsocket??'')) {
+                        $this->_db->real_connect(null, $this->_dbuser, $this->_dbpassword, $this->_dbdatabase, 0, $this->_dbsocket, 0);
+                    }else {
+                        $this->_db->real_connect($this->_dbserver, $this->_dbuser, $this->_dbpassword, $this->_dbdatabase, (int)$this->_dbport, null, $flags);
+                    }
 
                     if($this->_db->connect_error)  $this->setError('Connect Error to: '.((strlen($this->_dbsocket))?$this->_dbsocket:$this->_dbserver).' (' . $this->_db->connect_errno . ') '. $this->_db->connect_error);
                     else $this->_dblink = true;

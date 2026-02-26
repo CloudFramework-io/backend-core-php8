@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.38';  // 2026-02-23
+        var $_version = '8.4.39';  // 2026-02-26
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -3314,7 +3314,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $token_info = $client->verifyIdToken($token);
                 return $token_info;
             } catch (Exception $e) {
-                $this->addError($e->getMessage());
+                $this->addError(['getGoogleIdentityTokenInfo',$e->getMessage()]);
                 return null;
             }
 
@@ -6058,7 +6058,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $platform_id Optional. Platform identifier; if not provided, a default configuration value will be used.
          * @return mixed Returns the result of the processPlatformUserData method or null on error.
          */
-        function loadPlatformUserWithGoogleAccessToken(string $user, string $access_token, string $platform_id='')
+        function loadPlatformUserWithGoogleAccessToken(string $user, string $access_token, string $platform_id='',?string $auth_code='')
         {
             //region VERIFY $namespace
             if(!$platform_id && !( $platform_id = $this->core->config->get('core.erp.platform_id')))
@@ -6071,14 +6071,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'token'=> $access_token,
                 'type'=>'google-token'
             ];
+            if($auth_code)
+                $payload['google_authenticator_code'] = $auth_code;
             //endregion
 
             //region SET $user_erp_token CALLING https://api.cloudframework.io/core/signin/cloudframework/in to get ERP Token
-            $url = 'https://api.cloudframework.io/core/signin/'.$platform_id.'/in';
-            $userLoginData = $this->core->request->post_json_decode($url,$payload, ['X-WEB-KEY'=>'getERPTokenWithGoogleAccessToken']);
+            $url = 'https://api.cloudframework.dev/core/signin/'.$platform_id.'/in';
+            $userLoginData = $this->core->request->post_json_decode($url,$payload, ['X-WEB-KEY'=>'loadPlatformUserWithGoogleAccessToken']);
             if($this->core->request->error) {
                 $this->core->request->reset();
                 return($this->addError(($userLoginData['code']??$this->core->request->getLastResponseCode()),$userLoginData['message']??$this->core->request->errorMsg));
+            }
+            if($this->core->request->getLastResponseCode() == 200) {
+                return $this->addError($userLoginData['data']['code']??'params-error',$userLoginData['data']);
             }
             //endregion
 
@@ -8072,6 +8077,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     $this->dbConnections[$this->dbConnection]->setConf('dbCharset', $db_credentials['dbCharset'] ?? null);
                     $this->dbConnections[$this->dbConnection]->setConf('dbProxy', $db_credentials['dbProxy'] ?? null);
                     $this->dbConnections[$this->dbConnection]->setConf('dbProxyHeaders', $db_credentials['dbProxyHeaders'] ?? null);
+                    if(isset($db_credentials['dbSSL']))
+                        $this->dbConnections[$this->dbConnection]->setConf('dbSSL', $db_credentials['dbSSL']);
                 }
                 if(!$this->dbConnections[$this->dbConnection]->connect()) $this->addError($this->dbConnections[$this->dbConnection]->getError());
             }
@@ -9451,15 +9458,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Try to authenticate $this->core->user using access token generated with local user configuration
+         * Authenticates a platform user using a local access token or Google access token.
+         * If a platform user is not authenticated, it attempts to acquire the necessary tokens and validates them.
          *
-         * @param string $namespace The unique namespace identifier for the platform.
-         * If not provided, it will attempt to retrieve it from the configuration variable `core.erp.platform_id`.
-         * @param string $user The user email associated with the Google account.
-         * If not provided, it will attempt to retrieve it from the cache or fetch it using the getGoogleEmailAccount method.
-         * @return string|false The platform-specific token if retrieval is successful, or false if there are errors during the process.
+         * @param string $namespace The namespace of the platform (e.g., system identifier or application domain). Optional.
+         * @param string $user The user email or identifier. Optional.
+         * @param string $integration_key The integration key for the platform. Optional.
+         * @param string|null $auth_code An optional authorization code for specific use cases. Optional.
+         * @return bool Returns true if the user is successfully authenticated, otherwise false.
          */
-        function authPlatformUserWithLocalAccessToken($namespace='',$user='',$integration_key='') {
+        function authPlatformUserWithLocalAccessToken($namespace='',$user='',$integration_key='',?string $auth_code='') {
 
             $hash = md5($namespace.$user);
             $token = $this->cache->get('user-token-'.$hash);
@@ -9484,8 +9492,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->cache->delete('user-email-'.$hash);
                 if(!$access_token = $this->getUserGoogleAccessToken(($user??''),false)) return false;
                 $this->cache->set('user-email-'.$hash,$access_token['email']);
-                if(!$this->core->user->loadPlatformUserWithGoogleAccessToken($access_token['email'],$access_token['token'],$namespace))
-                    return $this->addError($this->core->user->errorMsg??'Unknown error');
+                if(!$this->core->user->loadPlatformUserWithGoogleAccessToken($access_token['email'],$access_token['token'],$namespace,$auth_code)) {
+                    if($this->core->user->errorCode=='google-authenticator') {
+                        return $this->addError('IT REQUIRE GOOGLE AUTHENTICATOR CODE');
+                    } else {
+                        return $this->addError($this->core->user->errorMsg ?? 'Unknown error');
+                    }
+                }
 
                 $this->cache->set('user-token-'.$hash,$this->core->user->token,3600*24);
             }

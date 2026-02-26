@@ -16,14 +16,20 @@ class Script extends CoreScripts
         $this->platform_id = $this->core->config->get('core.erp.platform_id');
         if (!$this->platform_id) return $this->addError('config-error', 'core.platform_id is not defined');
         $this->sendTerminal("Platform ID: {$this->platform_id}");
+        $auth_code = $this->formParams['authenticator_code'] ?? null;
+        $reset = ($this->formParams['_reset']??$auth_code)?true:false;
         //endregion
 
 
         //region AUTHENTICATE user and SET $this->headers (authentication headers for API requests)
-        if(isset($this->formParams['_reset'])) $this->resetPlatformToken($this->platform_id);
-        if (!$this->authPlatformUserWithLocalAccessToken($this->platform_id)) {
+        if($reset) $this->resetPlatformToken($this->platform_id);
+        if (!$this->authPlatformUserWithLocalAccessToken($this->platform_id,'','',$auth_code)) {
             $this->sendTerminal("Authentication failed");
-            $this->sendTerminal($this->errorMsg);
+            if($this->core->user->errorCode=='google-authenticator') {
+                $this->sendTerminal("ERROR. IT REQUIRES ?authenticator_code=xxxx to authenticate using 2fa");
+            } else {
+                $this->sendTerminal($this->errorMsg);
+            }
             $this->reset();
             return false;
         }
@@ -50,7 +56,8 @@ class Script extends CoreScripts
         $this->sendTerminal("  /info              - Return authenticated user email");
         $this->sendTerminal("  /x-ds-token        - Return your token to connect with your EaaS");
         $this->sendTerminal("  /access-token      - Return your Google Access Token");
-        $this->sendTerminal("Send ?_reset to reset your token and re-authenticate");
+        $this->sendTerminal("Send ?authenticator_code=xxxx to authenticate using 2fa");
+        $this->sendTerminal("Send ?_reset to reset your token and re-authenticate. It requires authcode");
     }
 
     public function METHOD_info() {

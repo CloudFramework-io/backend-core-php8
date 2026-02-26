@@ -514,7 +514,6 @@ class DataSQL
         }
         if(!$sqlFields) return($this->addError('No fields to select found: '.json_encode($fields)));
         //endregion
-
         //region READ $ret with $SQL
         $ret= $this->core->model->dbQuery($this->entity_name.' fetch by querys: '.json_encode($keysWhere),$SQL,$params,$this->entity_schema['model']);
 
