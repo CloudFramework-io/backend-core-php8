@@ -564,6 +564,8 @@ Virtual elements allow complex display configurations:
 
 ### Multiselect Actions
 
+Permite realizar acciones masivas sobre múltiples registros seleccionados en el listado.
+
 ```json
 "multiselect": {
   "active": true,
@@ -571,16 +573,149 @@ Virtual elements allow complex display configurations:
     {
       "title": "Activar seleccionados",
       "type": "cfo-update-fields",
+      "ico": "check",
+      "color": "green",
       "values": {"status": 1}
     },
     {
       "title": "Exportar",
       "type": "external-api",
-      "api": "/erp/export/bulk"
+      "api": "/erp/export/bulk",
+      "ico": "download"
     }
   ]
 }
 ```
+
+**Propiedades de cada opción del menú:**
+
+| Propiedad | Tipo | Descripción |
+|-----------|------|-------------|
+| `title` | string | Texto visible en el menú |
+| `type` | string | Tipo de acción: `cfo-update-fields`, `external-api` |
+| `ico` | string | Icono FontAwesome (sin prefijo `fa-`) |
+| `color` | string | Color del texto/icono (nombre CSS o hex: `red`, `green`, `#06afc7`) |
+| `values` | object | Para `cfo-update-fields`: campos y valores a actualizar |
+| `api` | string | Para `external-api`: URL del endpoint a llamar |
+| `only_if_filters` | object | Condición para mostrar la opción según filtros activos |
+
+### Multiselect con Opciones Condicionales (only_if_filters)
+
+La propiedad `only_if_filters` permite mostrar opciones del menú solo cuando ciertos filtros tienen valores específicos. Esto es útil para mostrar "Cambiar a Activo" solo cuando se están viendo registros inactivos, y viceversa.
+
+**Estructura de only_if_filters:**
+```json
+"only_if_filters": {
+  "campo_filtro": [valor1, valor2, ...]
+}
+```
+
+**Valores especiales:**
+- `"__null__"`: El filtro no tiene valor seleccionado (muestra todos)
+- `true` / `false`: Valores booleanos
+- `"true"` / `"false"`: Valores booleanos como string
+
+**Ejemplo completo - Activar/Desactivar registros:**
+
+```json
+"multiselect": {
+  "active": true,
+  "menu": [
+    {
+      "only_if_filters": {
+        "PlayerActive": ["__null__", "true", true]
+      },
+      "type": "cfo-update-fields",
+      "title": "Cambiar a Inactivo",
+      "ico": "user-slash",
+      "color": "red",
+      "values": {
+        "PlayerActive": false
+      }
+    },
+    {
+      "only_if_filters": {
+        "PlayerActive": ["__null__", "false", false]
+      },
+      "type": "cfo-update-fields",
+      "title": "Cambiar a Activo",
+      "ico": "user-check",
+      "color": "green",
+      "values": {
+        "PlayerActive": true
+      }
+    }
+  ]
+}
+```
+
+**Explicación del ejemplo:**
+- **"Cambiar a Inactivo"**: Se muestra cuando el filtro `PlayerActive` es `null` (todos), `"true"` o `true`. Permite desactivar registros activos.
+- **"Cambiar a Activo"**: Se muestra cuando el filtro `PlayerActive` es `null` (todos), `"false"` o `false`. Permite activar registros inactivos.
+
+**Ejemplo avanzado - Múltiples acciones con condiciones:**
+
+```json
+"multiselect": {
+  "active": true,
+  "menu": [
+    {
+      "only_if_filters": {
+        "UserActive": ["__null__", true]
+      },
+      "type": "cfo-update-fields",
+      "title": "Cambiar a inactivo",
+      "ico": "hand-middle-finger",
+      "color": "red",
+      "values": {
+        "UserActive": false
+      }
+    },
+    {
+      "only_if_filters": {
+        "UserActive": ["__null__", true]
+      },
+      "type": "cfo-update-fields",
+      "title": "Quitar Superadmin",
+      "ico": "angle-double-down",
+      "color": "#06afc7",
+      "values": {
+        "UserSuperAdmin": false
+      }
+    },
+    {
+      "only_if_filters": {
+        "UserActive": ["__null__", true]
+      },
+      "type": "cfo-update-fields",
+      "title": "Activar Superadmin",
+      "ico": "angle-double-up",
+      "color": "#0d9607",
+      "values": {
+        "UserSuperAdmin": true
+      }
+    },
+    {
+      "only_if_filters": {
+        "UserActive": ["__null__", false]
+      },
+      "type": "cfo-update-fields",
+      "title": "Cambiar a activo",
+      "ico": "hand-peace",
+      "color": "green",
+      "values": {
+        "UserActive": true
+      }
+    }
+  ]
+}
+```
+
+**Notas importantes:**
+- Incluir tanto el valor booleano (`true`/`false`) como el string (`"true"`/`"false"`) para cubrir ambos casos según cómo llegue el valor del filtro
+- `"__null__"` representa cuando el filtro muestra "Todos" (sin filtro aplicado)
+- Los iconos son de FontAwesome sin el prefijo `fa-`
+- Los colores pueden ser nombres CSS (`red`, `green`, `blue`) o valores hexadecimales (`#ff0000`)
 
 ### Field Sets
 
