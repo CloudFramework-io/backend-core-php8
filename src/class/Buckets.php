@@ -450,9 +450,11 @@ if (!defined ("_Buckets_CLASS_") ) {
             //endregion
 
             //region CHECK if $base_dir is a directory
-            if(!$this->mkdir($base_dir)) {
-                $this->core->__p->add('Buckets.manageUploadFiles',null , 'endnote');
-                return($this->addError('the path to write the files does not exist: '.$base_dir));
+            if(!str_starts_with($this->bucket,'gs://')) {
+                if (!$this->mkdir($base_dir)) {
+                    $this->core->__p->add('Buckets.manageUploadFiles', null, 'endnote');
+                    return ($this->addError('the path to write the files does not exist: ' . $base_dir));
+                }
             }
             //endregion
 
@@ -1950,26 +1952,33 @@ if (!defined ("_Buckets_CLASS_") ) {
         }
 
         /**
-         * Set an error in the class initiating $this->errorMsg
-         * @ignore
-         * @param $msg
-         * @param string $code
+         * Sets an error message and code, and stores it in the error messages container.
+         *
+         * @param string $msg The error message to be set.
+         * @param string $code An optional error code associated with the message.
+         *
+         * @return bool Always returns false.
          */
-        private function setError($msg,$code='') {
+        private function setError($msg,$code=''): bool
+        {
             $this->errorMsg = array();
-            $this->addError($msg,$code);
+            return $this->addError($msg,$code);
         }
 
         /**
-         * Add an error in the class in the array $this->errorMsg
-         * @ignore
-         * @param $msg
-         * @param string $code
+         * Adds an error message and code to the error handler.
+         *
+         * @param string $msg The error message to be added.
+         * @param string $code The error code associated with the error (optional).
+         * @return bool Always returns false to indicate an error occurred.
          */
-        private function addError($msg,$code='') {
+        private function addError($msg,$code=''): bool
+        {
             $this->error = true;
             $this->errorMsg[] = $msg;
             $this->errorCode = $code;
+
+            return false;
         }
     }
 }
