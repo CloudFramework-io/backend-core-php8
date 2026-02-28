@@ -110,10 +110,10 @@ if (!defined("_RESTfull_CLASS_")) {
             }
 
             // URL splits
-            $this->url = (isset($_SERVER['REQUEST_URI']))?str_replace('/_eval/','/',$_SERVER['REQUEST_URI']):'';
+            $this->url = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:'';
             $this->urlParams = '';
             if (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '?') !== false)
-                list($this->url, $this->urlParams) = explode('?', str_replace('/_eval/','/',$_SERVER['REQUEST_URI']), 2);
+                list($this->url, $this->urlParams) = explode('?', $_SERVER['REQUEST_URI'], 2);
 
             // API URL Split. If $this->core->system->url['parts_base_url'] take it out
             $url = $this->url;
