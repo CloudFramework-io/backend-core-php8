@@ -2367,9 +2367,19 @@ $content = preg_replace_callback('/<pre[^>]*>.*?<\/pre>/s', function($m) {
 
 ## CHECKs for Project Tasks
 
+### 🔴 MANDATORY: Use `_cloudia/tasks` for ALL Task and Task-CHECK Operations
+
+> **⚠️ CRITICAL**: When creating, modifying, or managing Tasks and their associated CHECKs, you **MUST** use `_cloudia/tasks` scripts.
+>
+> **DO NOT** use `_cloudia/checks` directly for Task CHECKs. Using `_cloudia/checks` will create the CHECK but will NOT update the Task's `JSON` field with the route reference, causing broken linking.
+
 ### Overview
 
-CHECKs can also be associated with **Project Tasks** (not just documentation elements). This allows tracking objectives, deliverables, and verification points for specific tasks within a project.
+CHECKs can be associated with **Project Tasks** to track objectives, deliverables, and verification points. The `_cloudia/tasks` script manages both the Task data AND its associated CHECKs in a single workflow, ensuring:
+- The Task's `JSON` field is updated with CHECK route references
+- CHECKs are properly linked to the Task via `CFOEntity`/`CFOId`
+- All validations are performed (Results required when status=ok, etc.)
+- TimeSpent is automatically calculated from activity inputs and events
 
 ### Configuration
 
@@ -2381,20 +2391,17 @@ CHECKs can also be associated with **Project Tasks** (not just documentation ele
 
 ### How it Works
 
-1. **Task JSON field**: The task's `JSON` field contains the route references to CHECKs:
+1. **Task JSON field**: Contains route references to CHECKs:
    ```json
    {
        "Phase 1: Setup": {
            "Install dependencies": {"route": "/check-install-deps"},
            "Create templates": {"route": "/check-templates"}
-       },
-       "Phase 2: Implementation": {
-           "Implement feature X": {"route": "/check-feature-x"}
        }
    }
    ```
 
-2. **CHECK records**: Created in `CloudFrameWorkDevDocumentationForProcessTests` with:
+2. **CHECK records**: Stored in `CloudFrameWorkDevDocumentationForProcessTests` with:
    - `CFOEntity`: `CloudFrameWorkProjectsTasks`
    - `CFOId`: The task's KeyId (numeric string)
    - `CFOField`: `JSON`
@@ -2422,22 +2429,30 @@ The task's JSON field should **ONLY contain route references**, NOT status attri
 }
 ```
 
-The status is tracked in the CHECK record itself (`Status` field: `pending`, `in-progress`, `ok`, etc.), NOT in the task's JSON.
+### Task File Structure (from `_cloudia/tasks/get`)
 
-### Backup File Structure
+The `_cloudia/tasks/get` command exports a task file containing BOTH the task data AND its CHECKs:
 
 ```json
 {
-    "CFOEntity": "CloudFrameWorkProjectsTasks",
-    "CFOId": "4540222531960832",
+    "CloudFrameWorkProjectsTasks": {
+        "KeyId": "4540222531960832",
+        "Title": "Implement feature X",
+        "JSON": {
+            "Category": {
+                "Check Title": {"route": "/check-route"}
+            }
+        }
+    },
     "CloudFrameWorkDevDocumentationForProcessTests": [
         {
             "CFOEntity": "CloudFrameWorkProjectsTasks",
             "CFOField": "JSON",
             "CFOId": "4540222531960832",
-            "Route": "/check-install-deps",
-            "Title": "Install dependencies",
-            "Description": "<p>Install mustache/mustache via composer</p>",
+            "Route": "/check-route",
+            "Title": "Check Title",
+            "Description": "<p>What needs to be achieved</p>",
+            "Results": "<p>What was done (required when status=ok)</p>",
             "Status": "ok",
             "DateDueDate": "2026-01-25",
             "Owner": "cloudia@cloudframework.io"
@@ -2446,40 +2461,57 @@ The status is tracked in the CHECK record itself (`Status` field: `pending`, `in
 }
 ```
 
-> **⚠️ DateDueDate Rule for Task CHECKs**:
-> - **New CHECKs**: Set `DateDueDate` to estimated completion date
-> - **Completed CHECKs** (Status: `ok`): Set `DateDueDate` to today's date if empty
-> - Format: `YYYY-MM-DD`
+**File Location**: `local_data/_cloudia/tasks/{TaskKeyId}.json`
 
-**Filename**: `CloudFrameWorkProjectsTasks__{TaskKeyId}.json`
-**Location**: `buckets/backups/Checks/{platform}/`
+### Required CHECK Fields
 
-### Sync Commands
+| Field | Required | Notes |
+|-------|----------|-------|
+| `Title` | **Yes** | CHECK title |
+| `Status` | **Yes** | `pending`, `in-progress`, `blocked`, `in-qa`, `ok` |
+| `Route` | **Yes** | Must match route in Task's JSON field |
+| `Description` | Recommended | What needs to be achieved (WARNING if empty) |
+| `Results` | **Required*** | What was done - **ERROR if empty when status is `blocked`, `in-qa`, or `ok`** |
+
+### 🔴 MANDATORY Workflow for Task CHECKs
+
+**ALWAYS use this workflow for ANY Task or Task-CHECK modification:**
 
 ```bash
-# Backup CHECKs for a task
+# 1. Export task to local file (includes task data + all CHECKs)
+composer script -- "_cloudia/tasks/get?id={TaskKeyId}"
+
+# 2. Edit the local file: local_data/_cloudia/tasks/{TaskKeyId}.json
+#    - Modify Task fields in "CloudFrameWorkProjectsTasks" section
+#    - Add route reference in Task's JSON field: {"Category": {"Title": {"route": "/route"}}}
+#    - Add/modify CHECKs in "CloudFrameWorkDevDocumentationForProcessTests" array
+#    - Ensure Results field is populated for completed CHECKs
+
+# 3. Update task and sync all changes to remote
+composer script -- "_cloudia/tasks/update?id={TaskKeyId}"
+```
+
+### Available Task Commands
+
+```bash
+composer script -- "_cloudia/tasks/show?id={TaskKeyId}"    # View task with CHECKs (read-only)
+composer script -- "_cloudia/tasks/get?id={TaskKeyId}"     # Export task to local file for editing
+composer script -- "_cloudia/tasks/update?id={TaskKeyId}"  # Sync local file to remote (task + CHECKs)
+composer script -- "_cloudia/tasks/insert?title=X&project=X&milestone=X"  # Create new task
+```
+
+### ❌ DO NOT USE for Task CHECKs
+
+The following commands should **NOT** be used for Task CHECKs (they don't update the Task's JSON field):
+
+```bash
+# ❌ DO NOT USE these for Task CHECKs:
 composer script -- "_cloudia/checks/backup-from-remote?entity=CloudFrameWorkProjectsTasks&id={TaskKeyId}"
-
-# Insert new CHECKs for a task
 composer script -- "_cloudia/checks/insert-from-backup?entity=CloudFrameWorkProjectsTasks&id={TaskKeyId}"
-
-# Update CHECKs for a task
 composer script -- "_cloudia/checks/update-from-backup?entity=CloudFrameWorkProjectsTasks&id={TaskKeyId}"
 ```
 
-### Workflow for Creating Task CHECKs
-
-⚠️ **CRITICAL: Always backup FIRST before creating or modifying CHECKs**
-
-1. **Backup existing CHECKs** (if any exist):
-   ```bash
-   composer script -- "_cloudia/checks/backup-from-remote?entity=CloudFrameWorkProjectsTasks&id={TaskKeyId}"
-   ```
-2. **Update task JSON field** with route references (no status attributes)
-3. **Sync task to remote**: `_cloudia/projects/update-from-backup?id={project-keyname}`
-4. **Create/update CHECK backup file** in `buckets/backups/Checks/{platform}/`
-5. **Sync CHECKs to remote**: `_cloudia/checks/insert-from-backup?entity=CloudFrameWorkProjectsTasks&id={TaskKeyId}` (for new) or `update-from-backup` (for existing)
-6. **Backup from remote** to get generated KeyIds and confirm sync: `_cloudia/checks/backup-from-remote?entity=CloudFrameWorkProjectsTasks&id={TaskKeyId}`
+These `_cloudia/checks` commands are for CHECKs on OTHER entities (WebApps, Processes, etc.), NOT for Task CHECKs.
 
 ## TaskCloudia Command
 
