@@ -499,6 +499,18 @@ if (!defined("_RESTfull_CLASS_")) {
         }
 
         /**
+         * Resets the error state by clearing all error-related properties.
+         * @return void
+         */
+        public function resetError()
+        {
+            $this->error = 0;
+            $this->errorMsg = [];
+            $this->code = null;
+            $this->message = "";
+        }
+
+        /**
          * Add a header to the list of extra headers
          * @param string $key The name of the header
          * @param string $value The value of the header
