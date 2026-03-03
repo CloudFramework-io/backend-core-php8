@@ -1,4 +1,5 @@
 <?php
+use Google\Cloud\Storage\StorageClient;
 use Google\Cloud\Storage\StorageObject;
 use Google\Cloud\Kms\V1\Client\KeyManagementServiceClient;
 use Google\Cloud\Kms\V1\EncryptRequest;
@@ -100,9 +101,9 @@ if (!defined ("_Buckets_CLASS_") ) {
          * ```
          * @ignore
          * @param Core7 $core
-         * @param string $bucket
+         * @param array|string $bucket_options
          */
-        function __construct (Core7 &$core,$bucket='') {
+        function __construct (Core7 &$core,array|string $bucket_options='') {
 
             //Performance
             $time = microtime(true);
@@ -110,6 +111,13 @@ if (!defined ("_Buckets_CLASS_") ) {
             $this->core->__p->add('Buckets', $bucket??'', 'note');
 
             if($this->core->is->development()) $this->debug = true;
+
+            //retro compatibility
+            if(is_string($bucket_options)) $bucket = $bucket_options;
+            else $bucket = $bucket_options['bucket']??'';
+
+            //sa option
+            $sa = $bucket_options['sa']??null;
 
             if(strlen($bucket??'')) $this->bucket = $bucket;
             else $this->bucket = $this->core->config->get('bucketUploadPath');
@@ -119,10 +127,33 @@ if (!defined ("_Buckets_CLASS_") ) {
                 // take the bucket name: ex: gs://cloudframework/adnbp/.. -> cloudframework
                 $bucket_root = preg_replace('/\/.*/','',str_replace('gs://','',$this->bucket));
                 try {
-                    $this->gs_bucket = $this->core->gc_datastorage_client->bucket($bucket_root);
-                    if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
+                    //region SET $storageClient from $sa (service account) or default gc_datastorage_client
+                    if($sa) {
+                        $clientOptions = [];
+                        if (is_array($sa)) {
+                            $clientOptions['keyFile'] = $sa;
+                        } elseif (is_string($sa)) {
+                            $decoded = json_decode($sa, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                $clientOptions['keyFile'] = $decoded;
+                            } elseif (is_file($sa)) {
+                                $clientOptions['keyFilePath'] = $sa;
+                            } else {
+                                return($this->addError('sa option is not a valid JSON string nor an existing file path', 'params-error'));
+                            }
+                        } else {
+                            return($this->addError('sa option must be an array, JSON string, or file path', 'params-error'));
+                        }
+                        $storageClient = new StorageClient($clientOptions);
+                    } else {
+                        $storageClient = $this->core->gc_datastorage_client;
+                    }
+                    //endregion
+
+                    $this->gs_bucket = $storageClient->bucket($bucket_root);
+                    //if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
                     $this->gs_bucket_url = 'https://console.cloud.google.com/storage/browser/'.$bucket_root;
-                    $this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
+                    //$this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
                 } catch (Exception $e) {
                     $this->addError($e->getMessage(),'bucket-can-not-be-assigned');
                 }
