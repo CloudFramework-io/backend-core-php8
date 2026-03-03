@@ -80,10 +80,17 @@ if (!defined ("_GOOGLEAPPSEMAIL_CLASS_") ) {
 
         function setHtmlTemplate($txt) {
             $this->data['htmlTemplate']= $txt;
-            if(is_file("./templates/$txt")) {
-                $this->setHtmlBody(file_get_contents("./templates/$txt"));
+            $txt = basename($txt);
+            $templates_dir = realpath("./templates");
+            if($templates_dir) {
+                $path = realpath("./templates/$txt");
+                if($path && str_starts_with($path, $templates_dir . DIRECTORY_SEPARATOR)) {
+                    $this->setHtmlBody(file_get_contents($path));
+                } else {
+                    $this->setError("Template not found");
+                }
             } else {
-                $this->setError("Template $txt no found");
+                $this->setError("Templates directory not found");
             }
         }
 
