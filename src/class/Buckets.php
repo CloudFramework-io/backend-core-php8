@@ -151,9 +151,9 @@ if (!defined ("_Buckets_CLASS_") ) {
                     //endregion
 
                     $this->gs_bucket = $storageClient->bucket($bucket_root);
-                    //if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
+                    if(!$this->gs_bucket->exists()) $this->addError('I can not find bucket: '.$this->bucket,'bucket-not-found');
                     $this->gs_bucket_url = 'https://console.cloud.google.com/storage/browser/'.$bucket_root;
-                    //$this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
+                    $this->bucketInfo = $this->gs_bucket->info(['projection'=>'full']);
                 } catch (Exception $e) {
                     $this->addError($e->getMessage(),'bucket-can-not-be-assigned');
                 }
