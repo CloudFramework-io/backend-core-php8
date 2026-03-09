@@ -809,6 +809,10 @@ class DataSQL
                     $where.="{$this->entity_name}.{$key} != ''";
                     break;
                 default:
+
+                    // skip null filters — no añade condición al WHERE                                                                                                            
+                    if($value === null) continue 2;  
+
                     // IN
                     if(is_array($value)) {
                         if($this->fields[$key]=='int') {
