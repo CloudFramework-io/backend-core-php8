@@ -408,6 +408,13 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region REMOVE internal fields that cannot be rewritten via API
+        $internal_fields = ['Fingerprint', 'DateInsertion', 'DateUpdating'];
+        foreach ($internal_fields as $field) {
+            unset($module[$field]);
+        }
+        //endregion
+
         //region FETCH remote Menu Module and COMPARE with local backup
         $this->sendTerminal(" - Fetching remote Menu Module for comparison...");
         $remote_response = $this->core->request->get_json_decode(
@@ -441,11 +448,13 @@ class Script extends CoreScripts
         );
 
         if ($this->core->request->error) {
-            return $this->addError("API request failed: " . $this->core->request->errorMsg);
+            $err = $this->core->request->errorMsg;
+            if (is_array($err)) $err = implode(', ', array_map(function($v) { return is_array($v) ? json_encode($v) : $v; }, $err));
+            return $this->addError("API request failed: " . $err);
         }
 
         if (!($response['success'] ?? false)) {
-            $error_msg = $response['errorMsg'] ?? 'Unknown error';
+            $error_msg = $response['errorMsg'] ?? $response['message'] ?? 'Unknown error';
             if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
             return $this->addError("API returned error: {$error_msg}");
         }
@@ -506,6 +515,13 @@ class Script extends CoreScripts
         $module = $module_data['CloudFrameWorkModules'] ?? $module_data;
         if (!$module || ($module['KeyName'] ?? null) !== $module_id) {
             return $this->addError("KeyName mismatch: file contains '{$module['KeyName']}' but expected '{$module_id}'");
+        }
+        //endregion
+
+        //region REMOVE internal fields that cannot be rewritten via API
+        $internal_fields = ['Fingerprint', 'DateInsertion', 'DateUpdating'];
+        foreach ($internal_fields as $field) {
+            unset($module[$field]);
         }
         //endregion
 
