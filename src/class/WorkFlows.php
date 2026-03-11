@@ -830,8 +830,8 @@ class WorkFlows
         $entity["Tags"]=$message['tags'];
         $entity["Opens"]=$info['opens']??0;
         $entity["Clicks"]=$info['clicks']??0;
-        $entity["BODY_HTML"]=$this->core->utf8Encode($message['html']);
-        $entity["BODY_TXT"]=$this->core->utf8Encode($message['text']);
+        $entity["BODY_HTML"]=$this->core->utf8Encode($message['html'] ?? '');
+        $entity["BODY_TXT"]=$this->core->utf8Encode($message['text'] ?? '');
         $entity["DateProcessing"]=date('Y-m-d H:i:s',$message['ts']);
         $entity["UpdateProcessing"]=$update_processing;
         $entity["StatusProcessing"]=$info['state']??'unknown';
