@@ -425,6 +425,29 @@ class Script extends CoreScripts
 
         if (!$this->core->request->error && ($remote_response['data'] ?? null)) {
             $remote_module = $remote_response['data'];
+
+            //region CHECK if remote is more recent than local
+            $local_date_updated = $module_data['CloudFrameWorkModules']['DateUpdating'] ?? null;
+            $remote_date_updated = $remote_module['DateUpdating'] ?? null;
+
+            if ($local_date_updated && $remote_date_updated) {
+                $local_timestamp = strtotime($local_date_updated);
+                $remote_timestamp = strtotime($remote_date_updated);
+
+                if ($remote_timestamp > $local_timestamp) {
+                    $this->sendTerminal("");
+                    $this->sendTerminal(" !! ERROR: Remote Menu Module is more recent than local file");
+                    $this->sendTerminal("    - Local DateUpdating:  {$local_date_updated}");
+                    $this->sendTerminal("    - Remote DateUpdating: {$remote_date_updated}");
+                    $this->sendTerminal("");
+                    $this->sendTerminal(" >> Please run backup-from-remote first to get the latest version:");
+                    $this->sendTerminal("    composer script -- \"_cloudia/menu/backup-from-remote?id={$module_id}\"");
+                    $this->sendTerminal("");
+                    return $this->addError("Remote Menu Module is more recent than local file. Run backup-from-remote first.");
+                }
+            }
+            //endregion
+
             ksort($remote_module);
             ksort($module);
 
@@ -527,11 +550,35 @@ class Script extends CoreScripts
 
         //region CHECK if Menu Module already exists in remote platform
         $check_response = $this->core->request->get_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkModules/" . urlencode($module_id) . '?_raw&_timezone=UTC',
-            [],
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkModules/display/" . urlencode($module_id) . '?_raw&_timezone=UTC',
+            ['_raw' => 1, '_timezone' => 'UTC'],
             $this->headers
         );
         if (!$this->core->request->error && ($check_response['data'] ?? null)) {
+            $remote_module = $check_response['data'];
+
+            //region CHECK if remote is more recent than local
+            $local_date_updated = $module_data['CloudFrameWorkModules']['DateUpdating'] ?? null;
+            $remote_date_updated = $remote_module['DateUpdating'] ?? null;
+
+            if ($local_date_updated && $remote_date_updated) {
+                $local_timestamp = strtotime($local_date_updated);
+                $remote_timestamp = strtotime($remote_date_updated);
+
+                if ($remote_timestamp > $local_timestamp) {
+                    $this->sendTerminal("");
+                    $this->sendTerminal(" !! ERROR: Remote Menu Module is more recent than local file");
+                    $this->sendTerminal("    - Local DateUpdating:  {$local_date_updated}");
+                    $this->sendTerminal("    - Remote DateUpdating: {$remote_date_updated}");
+                    $this->sendTerminal("");
+                    $this->sendTerminal(" >> Please run backup-from-remote first to get the latest version:");
+                    $this->sendTerminal("    composer script -- \"_cloudia/menu/backup-from-remote?id={$module_id}\"");
+                    $this->sendTerminal("");
+                    return $this->addError("Remote Menu Module is more recent than local file. Run backup-from-remote first.");
+                }
+            }
+            //endregion
+
             return $this->addError("Menu Module [{$module_id}] already exists in remote platform. Use update-from-backup instead.");
         }
         //endregion
