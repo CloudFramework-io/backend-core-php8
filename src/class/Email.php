@@ -80,6 +80,8 @@ if (!defined ("_GOOGLEAPPSEMAIL_CLASS_") ) {
 
         function setHtmlTemplate($txt) {
             $this->data['htmlTemplate']= $txt;
+            // HIGH-07 (ISO 27001 A.14.2.5 / OWASP A01:2021): Prevent path traversal attacks.
+            // Strip directory components and validate the resolved path stays within templates/.
             $txt = basename($txt);
             $templates_dir = realpath("./templates");
             if($templates_dir) {
