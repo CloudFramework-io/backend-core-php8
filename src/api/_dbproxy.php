@@ -131,8 +131,8 @@ class API extends RESTful
             $this->returnData['app_security'] = $security;
         //endregion
 
-        //if there is no security then any user can access. Then just return true;
-        if (!$security) return true;
+        // Sin seguridad configurada = acceso denegado por defecto (principio de mínimo privilegio)
+        if (!$security) return ($sendAPIError) ? $this->setErrorFromCodelib('not-allowed', 'No security configuration found. Access denied by default (fail-closed policy)') : false;
 
         //check spacenames security
         if (isset($security['spacenames']) && is_array($security['spacenames']) && $security['spacenames']) {
@@ -192,6 +192,13 @@ class API extends RESTful
 
         if ($sec_error) {
             if ($sendAPIError) return ($this->setErrorFromCodelib('not-allowed', 'Your privileges does not match with ' . $sec_error . ' privilege app: ' . json_encode($security)));
+            else return false;
+        }
+
+        // Si no se evaluó ninguna regla de seguridad (security config vacía o sin reglas conocidas), denegar acceso
+        $has_rules = isset($security['spacenames']) || isset($security['user_spacenames']) || isset($security['user_privileges']) || isset($security['user_organizations']);
+        if (!$has_rules) {
+            if ($sendAPIError) return ($this->setErrorFromCodelib('not-allowed', 'Security configuration has no valid rules. Access denied by default (fail-closed policy)'));
             else return false;
         }
 
