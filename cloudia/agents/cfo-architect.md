@@ -120,11 +120,35 @@ The `lowCode` section defines the data model structure:
   "description": "Internal documentation",
   "secret": "SECRET_NAME.connection",
   "model": { ... },
+  "fields_groups": { ... },
   "dependencies": ["CFO1", "CFO2"],
   "behaviour": [],
   "ecm": ""
 }
 ```
+
+### lowCode.fields_groups (Optional)
+
+Defines logical groups for organizing fields in CLOUD Documentum. This is an object indexed by group IDs, where each group has a `title` and `description`. Fields in `lowCode.model` can then reference a group via the `field_group` property.
+
+```json
+"fields_groups": {
+  "identification": {
+    "title": "Identification",
+    "description": "Fields related to entity identification and unique keys"
+  },
+  "personal_data": {
+    "title": "Personal Data",
+    "description": "Personal information fields like name, email, phone"
+  },
+  "audit": {
+    "title": "Audit",
+    "description": "Tracking fields for record creation and modification"
+  }
+}
+```
+
+Both `fields_groups` and `field_group` are optional. They serve a documentation/organizational purpose, allowing CLOUD Documentum to represent field grouping more clearly.
 
 ### lowCode.model Field Structure
 
@@ -148,6 +172,7 @@ Each field in `lowCode.model` has these properties:
   "copy": false,
   "maxlength": 100,
   "minlength": 0,
+  "field_group": "group_id",
   "foreign_key": { ... }
 }
 ```
