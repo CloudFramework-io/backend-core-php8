@@ -587,7 +587,10 @@ if (!defined ("_Buckets_CLASS_") ) {
 
                         // Let's try to move the temporal files to their destinations.
                         try {
-                            if(move_uploaded_file($value['tmp_name'],$dest)) {
+                            $file_uploaded = str_replace($this->bucket,'',$dest);
+                            if($upload = $this->uploadFile($file_uploaded,$value['tmp_name'])) {
+                            //if(move_uploaded_file($value['tmp_name'],$dest)) {
+                                unlink($value['tmp_name']);
                                 //region SET $this->uploadedFiles[$key][$i]['movedTo']
                                 $this->uploadedFiles[$key][$i]['movedTo'] = $dest;
                                 //endregion
@@ -608,7 +611,7 @@ if (!defined ("_Buckets_CLASS_") ) {
                                 }
                                 //endregion
                             } else {
-                                $this->addError(error_get_last());
+                                //$this->addError(error_get_last());
                                 $this->uploadedFiles[$key][$i]['error'] = $this->errorMsg;
                             }
 
@@ -1019,7 +1022,7 @@ if (!defined ("_Buckets_CLASS_") ) {
          *     @type string $predefinedAcl defines the access of the file. It can be: "authenticatedRead", "bucketOwnerFullControl", "bucketOwnerRead", "private", "projectPrivate", and "publicRead"
          *     @type array $metadata for the object to create: contentType, cacheControl.. More info in: : https://cloud.google.com/storage/docs/json_api/v1/objects/insert#request-body
          * }
-         * @return array with the object created in the bucket
+         * @return array|false the object created in the bucket or false if error
          */
         function uploadFile(string $filename_path, string $source_file_path,array $options = [] ) {
             try{
