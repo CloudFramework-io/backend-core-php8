@@ -7744,57 +7744,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     list($_foo,$table) = explode(':',$object,2);
                     //endregion
 
-                    //                    //region EVALUATE $this->models[$object]['data']['extends']
-                    //                    if(isset($this->models[$object]['data']['extends']) && $this->models[$object]['data']['extends']) {
-                    //                        $model_extended = 'db:'.$this->models[$object]['data']['extends'];
-                    //                        if(!isset($this->models[$model_extended])) {
-                    //                            if(!$this->readModelsFromCloudFramework(preg_replace('/.*:/','',$model_extended),$options['cf_models_api_key'])) return false;
-                    //                            if(!isset($this->models[$model_extended])) {
-                    //                                return ($this->addError("Model extended $model_extended from model: $object does not exist", 404));
-                    //                            }
-                    //                        }
-                    //
-                    //                        // Rewrite hasExternalWorkFlows,workFlows and model if it is defined
-                    //                        $this->models[$model_extended]['data']['hasExternalWorkFlows'] = (bool)(($this->models[$object]['data']['hasExternalWorkFlows'] ?? false));
-                    //                        $this->models[$model_extended]['data']['workFlows'] =  $this->models[$object]['data']['workFlows']??null;
-                    //                        if(isset($this->models[$object]['data']['model']) && $this->models[$object]['data']['model']) {
-                    //                            $this->models[$model_extended]['data']['model'] =  $this->models[$object]['data']['model'];
-                    //                        }
-                    //
-                    //                        //Merge variables with the extended object.
-                    //                        if(is_array($this->models[$object]['data']['interface']??null))
-                    //                            foreach ($this->models[$object]['data']['interface'] as $object_property=>$object_content) {
-                    //                                //merge objects
-                    //                                if(in_array($object_property,['fields'])) {
-                    //                                    $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$object_content);
-                    //                                }
-                    //                                //replace objects
-                    //                                else {
-                    //                                    $this->models[$model_extended]['data']['interface'][$object_property] = $object_content;
-                    //                                }
-                    //                            }
-                    //
-                    //                        $this->models[$object]['data'] = array_merge(
-                    //                            ['extended_from'=>$this->models[$object]['data']['extends']],
-                    //                            array_merge(
-                    //                                $this->models[$model_extended]['data'],
-                    //                                array_merge(
-                    //                                    $this->models[$object]['data'],
-                    //                                    $this->models[$model_extended]['data']
-                    //                                )
-                    //                            )
-                    //                        );
-                    //
-                    //                    }
-                    //                    //endregion
-
                     //region UPDATE $table IF $this->models[$object]['data']['interface']['object'] || $this->models[$object]['data']['entity']
                     if(isset($this->models[$object]['data']['entity'])) $table = $this->models[$object]['data']['entity'];
                     if(isset($this->models[$object]['data']['interface']['object'])) $table = $this->models[$object]['data']['interface']['object'];
                     //endregion
 
                     //region INIT AND RETURN $object_db as an object of Class DataSQL using [$table,$this->models[$object]['data']]
-                    if(!is_object($object_db = $this->core->loadClass('DataSQL',[$table,$this->models[$object]['data']]))) return;
+                    if(!is_object($object_db = $this->core->loadClass('DataSQL',[$table,$this->models[$object]['data']]))) return false;
 
                     return($object_db);
                     //endregion
@@ -7811,47 +7767,6 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                         $namespace=$this->models[$object]['data']['interface']['namespace'];
                     if(empty($namespace)) return($this->addError('Missing DataStoreSpaceName config var or $options["namespace"] parameter'));
                     //endregion
-
-                    //                    //region EVALUATE $this->models[$object]['data']['extends']
-                    //                    if(isset($this->models[$object]['data']['extends']) && $this->models[$object]['data']['extends']) {
-                    //                        // look for the model
-                    //                        $model_extended = 'ds:'.$this->models[$object]['data']['extends'];
-                    //                        if(!isset($this->models[$model_extended])) return($this->addError("Model [$object] extends [$model_extended] and it does not previously read",404));
-                    //
-                    //                        // Rewrite hasExternalWorkFlows,workFlows and model if it is defined
-                    //                        $this->models[$model_extended]['data']['hasExternalWorkFlows'] = (bool)(($this->models[$object]['data']['hasExternalWorkFlows'] ?? false));
-                    //                        $this->models[$model_extended]['data']['workFlows'] =  $this->models[$object]['data']['workFlows']??null;
-                    //                        if(isset($this->models[$object]['data']['model'])) {
-                    //                            $this->models[$model_extended]['data']['model'] =  $this->models[$object]['data']['model'];
-                    //                        }
-                    //
-                    //                        //Merge variables with the extended object.
-                    //                        if(is_array($this->models[$object]['data']['interface']??null))
-                    //                            foreach ($this->models[$object]['data']['interface'] as $object_property=>$object_content) {
-                    //                                //merge objects
-                    //                                if(in_array($object_property,['fields'])) {
-                    //                                    $this->models[$model_extended]['data']['interface'][$object_property] = array_merge($this->models[$model_extended]['data']['interface'][$object_property],$object_content);
-                    //                                }
-                    //                                //replace objects
-                    //                                else {
-                    //                                    $this->models[$model_extended]['data']['interface'][$object_property] = $object_content;
-                    //                                }
-                    //                            }
-                    //
-                    //                        $this->models[$object]['data'] = array_merge(
-                    //                                ['extended_from'=>$this->models[$object]['data']['extends']],
-                    //                                array_merge(
-                    //                                    $this->models[$model_extended]['data'],
-                    //                                    array_merge(
-                    //                                        $this->models[$object]['data'],
-                    //                                        $this->models[$model_extended]['data']
-                    //                                    )
-                    //                                )
-                    //                        );
-                    //
-                    //                        $entity = $this->models[$object]['data']['extends'];
-                    //                    }
-                    //                    //endregion
 
                     //region UPDATE $entity IF $this->models[$object]['data']['interface']['object'] || $this->models[$object]['data']['entity']
                     if(isset($this->models[$object]['data']['entity'])) $entity = $this->models[$object]['data']['entity'];
@@ -7873,6 +7788,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     }
                     if(!isset($options['namespace']) && isset($this->models[$object]['data']['interface']['namespace']) && $this->models[$object]['data']['interface']['namespace']) $options['namespace'] = $this->models[$object]['data']['interface']['namespace'];
                     //endregion
+
 
                     //region INIT AND RETURN $object_ds as an object of Class DataStore using [$entity,$namespace,$this->models[$object]['data'],$options]
                     if(!is_object($object_ds = $this->core->loadClass('DataStore',[$entity,$namespace,$this->models[$object]['data'],$options]))) return;

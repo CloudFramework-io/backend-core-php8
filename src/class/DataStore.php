@@ -44,6 +44,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
         var $cacheSecretIV = '';
         var $cache_data = null;
         var $project_id = '';
+        var $database_id = '(default)';
         var $namespace = 'default';
         var $service_account = null;
         var $secret_id = null;
@@ -114,6 +115,12 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
             // ASSIGN $this->datastore to global $datastore o to a new DatastoreClient
             if((($options['projectId']??null) && $this->project_id!=$options['projectId']) || ($options['keyFile']??null) || !is_object($datastore)) {
                 try {
+                    //rewrite databaseId
+                    if($options['keyFile']['database_id']??null) {
+                        $options['databaseId'] = $options['keyFile']['database_id'];
+                        $this->database_id = $options['databaseId'];
+                        unset($options['keyFile']['database_id']);
+                    }
                     $this->datastore = new DatastoreClient($options);
                     $this->project_id = $options['projectId'];
                     if(isset($options['keyFile'])) $this->service_account = $options['keyFile']['client_email']??($options['keyFile']['service_account_impersonation_url']??null);
