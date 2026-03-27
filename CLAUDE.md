@@ -893,6 +893,7 @@ None. / List of breaking changes.
 │       ├── CloudFrameWorkDevDocumentationForProcesses.json
 │       ├── CloudFrameWorkDevDocumentationForProcessTests.json
 │       ├── CloudFrameWorkDevDocumentationForWebApps.json
+│       ├── CloudFrameWorkDevRequirements.json
 │       ├── CloudFrameWorkECMPages.json
 │       ├── CloudFrameWorkInfrastructureResources.json
 │       ├── CloudFrameWorkInfrastructureResourcesAccesses.json
@@ -972,6 +973,7 @@ The `cloudia/cfos/` directory contains JSON definitions for CLOUD Documentum ent
 | `CloudFrameWorkDevDocumentationForSubProcesses` | Sub-processes |
 | `CloudFrameWorkDevDocumentationForProcessTests` | Checks and tests |
 | `CloudFrameWorkDevDocumentationForWebApps` | Web applications |
+| `CloudFrameWorkDevRequirements` | Functional requirements linked to Documentum objects |
 | `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp modules |
 | `CloudFrameWorkECMPages` | ECM content pages |
 | `CloudFrameWorkInfrastructureResources` | Infrastructure resources (servers, computers, domains) |

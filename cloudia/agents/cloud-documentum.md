@@ -1,7 +1,7 @@
 ---
 name: cloud-documentum
 description: |
-  Use this agent when the user needs to work with CLOUD Documentum documentation system. This includes: creating/modifying/managing Projects, Tasks and its Checks, Milestones, WebApps (Unidades de desarrollo, Devunits, unitDevs are synonymous) , APIs, Libraries, Processes, Checks, Resources, WebPages, Courses, or any documentation entity. Also use for understanding how these elements are structured, their relationships, backup/sync operations, and best practices.
+  Use this agent when the user needs to work with CLOUD Documentum documentation system. This includes: creating/modifying/managing Projects, Tasks and its Checks, Milestones, WebApps (Unidades de desarrollo, Devunits, unitDevs are synonymous) , APIs, Libraries, Processes, Checks, Requirements (functional requirements), Resources, WebPages, Courses, or any documentation entity. Also use for understanding how these elements are structured, their relationships, backup/sync operations, and best practices.
 
   **MANDATORY**: This agent MUST be used for ALL CLOUD Documentum operations. The documentation system has complex entity relationships (parent-child CFOs, Checks associations) that require specialized knowledge. Attempting to manage documentation without this agent leads to wrong entity associations, duplicate records, and broken linking.
 
@@ -66,6 +66,7 @@ CLOUD Documentum is the documentation management system for:
 - **WebApps** (also called **"Unidades de Desarrollo"** in the UI) and their Modules
 - **Resources** (infrastructure resources)
 - **WebPages** (ECM content pages)
+- **Requirements** (functional requirements linked to any Documentum object)
 - **Localizations** (i18n dictionary tags organized by App/Cat/Code)
 - **Courses** (CLOUD Academy)
 - **Menu Modules** (navigation configuration)
@@ -307,6 +308,7 @@ Each `route` value matches a Check's `Route` field for bidirectional linking.
 | **Courses** | `CloudFrameWorkAcademyCourses` | `CloudFrameWorkAcademyContents` | `CourseId` → KeyId |
 | **Resources** | `CloudFrameWorkInfrastructureResources` | `CloudFrameWorkInfrastructureResourcesAccesses` | `ResourceId` → KeyId |
 | **Modules** | `CloudFrameWorkModules` | - | Menu configuration |
+| **Requirements** | `CloudFrameWorkDevRequirements` | - | `CFOEntity` + `CFOId` (links to any Documentum object) |
 | **WebPages** | `CloudFrameWorkECMPages` | - | ECM content |
 | **Projects** | `CloudFrameWorkProjectsEntries` | `CloudFrameWorkProjectsMilestones` | `ProjectId` → KeyName |
 | **Tasks** | `CloudFrameWorkProjectsTasks` | `CloudFrameWorkDevDocumentationForProcessTests` (Checks) | Managed via `_cloudia/tasks` |
@@ -1233,6 +1235,118 @@ composer script -- "_cloudia/localize/update-from-backup?id=cloudframework;commo
 When localizations are inserted or updated, the CFO triggers hooks to:
 1. **Refresh cache** for the affected app/category
 2. **Generate/regenerate Firestore dictionary** for real-time access
+
+## Requirements (Functional Requirements)
+
+The `CloudFrameWorkDevRequirements` CFO provides a **Requirements Management** module within CLOUD Documentum. The **meaning and downstream effect** of a requirement changes depending on the entity it is associated with.
+
+### Use Cases by Associated Entity
+
+#### On Process / SubProcess → New functional element
+
+Indicates that a **new functional element** must be added to the business knowledge. Triggers downstream creation of DevUnits and Tasks.
+
+```
+Requirement (approved) → New SubProcess/feature in Process
+                       → DevUnits created to implement
+                       → Tasks generated from DevUnit Checks
+```
+
+#### On WebApp / Module → Functional requirement to implement
+
+Defines a **functional requirement** that the development unit must satisfy. Tasks associated to the WebApp/Module must take this requirement into account; Checks verify compliance.
+
+#### On Library / Library Module → Implementation specification
+
+Defines a **concrete technical specification** for how the library or function must behave. Direct implementation constraint.
+
+#### On API / API EndPoint → API contract requirement
+
+Defines a **contract requirement** for API behavior, input/output format, or integration constraints.
+
+### Summary
+
+| Associated Entity | Requirement Means | Downstream Effect |
+|-------------------|-------------------|-------------------|
+| **Process / SubProcess** | New functional element needed | Creates SubProcesses → DevUnits → Tasks |
+| **WebApp / Module** | Functional requirement to implement | Tasks must satisfy it; Checks verify it |
+| **Library / Library Module** | Concrete implementation spec | Direct technical constraint |
+| **API / API EndPoint** | API contract/behavior spec | Endpoint implementation constraint |
+
+### CloudFrameWorkDevRequirements Structure
+
+| Field | Type | Mandatory | Description |
+|-------|------|-----------|-------------|
+| `CFOEntity` | select | No | Associated Documentum CFO entity |
+| `CFOId` | string | No | KeyName/KeyId of the associated object |
+| `Title` | string | Yes | Requirement title |
+| `Priority` | select | No | MoSCoW: `must`, `should`, `could`, `wont` |
+| `Status` | select | No | `draft`, `pending-review`, `approved`, `rejected`, `implemented`, `deprecated` |
+| `Open` | boolean | Yes | Auto-calculated: `false` when `implemented` or `deprecated` |
+| `Owner` | string | Yes | Owner email |
+| `AssignedTo` | multiselect | No | Assigned users (development/ecm privileges) |
+| `DateDueDate` | date | No | Target completion date |
+| `Description` | html (zip) | Yes | Functional requirement description |
+| `CloudIAAnalysis` | html (zip) | No | AI-generated analysis |
+| `AcceptanceCriteria` | html (zip) | No | Formal acceptance criteria |
+| `Results` | html (zip) | No | Implementation results |
+| `Documents` | server_documents | No | Attached files |
+| `Tags` | list | No | Search tags |
+| `JSON` | json | No | Extra structured data |
+
+### Associable CFOEntities
+
+| CFOEntity Value | Object | Requirement Type |
+|-----------------|--------|------------------|
+| `CloudFrameWorkDevDocumentationForProcesses` | Processes | New functional element → generates DevUnits |
+| `CloudFrameWorkDevDocumentationForSubProcesses` | SubProcesses | New functional element → generates DevUnits |
+| `CloudFrameWorkDevDocumentationForWebApps` | WebApps (DevUnits) | Functional req → tasks must satisfy |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp Modules | Functional req → tasks must satisfy |
+| `CloudFrameWorkDevDocumentationForLibraries` | Libraries | Implementation specification |
+| `CloudFrameWorkDevDocumentationForLibrariesModules` | Library Modules | Implementation specification |
+| `CloudFrameWorkDevDocumentationForAPIs` | APIs | API contract requirement |
+| `CloudFrameWorkDevDocumentationForAPIEndPoints` | API EndPoints | API contract requirement |
+
+### Status Lifecycle
+
+| Status | Deletable | Open |
+|--------|-----------|------|
+| `draft` | **Yes** | Yes |
+| `pending-review` | No | Yes |
+| `approved` | No | Yes |
+| `rejected` | No | Yes |
+| `implemented` | No | **No** |
+| `deprecated` | No | **No** |
+
+> **Delete rule**: Only requirements with `Status == 'draft'` can be deleted.
+
+### Priority (MoSCoW)
+
+| Priority | Label |
+|----------|-------|
+| `must` | Must Have |
+| `should` | Should Have |
+| `could` | Could Have |
+| `wont` | Won't Have (this time) |
+
+### Security
+
+- **CFO Locked**: Yes
+- **Required Privileges**: `development-admin`, `development-user`, `ecm-admin`, `ecm-user`
+- **Data Type**: `ds` (Google Datastore)
+- **GroupName**: CLOUD Documentum
+
+### Key Characteristics
+
+- Uses the **same `CFOEntity`/`CFOId` linking pattern** as Checks, but with different semantics depending on the associated entity (see Use Cases above)
+- **On Processes**: Requirements signal new functionality that will flow through the full methodology (Process → DevUnit → Task)
+- **On WebApps**: Requirements are functional constraints that tasks must implement
+- **On Libraries/APIs**: Requirements are direct implementation/contract specifications
+- The `Open` field is auto-calculated: `false` when Status is `implemented` or `deprecated`
+- The `CloudIAAnalysis` field enables AI-assisted analysis of requirements
+- `Documents` supports file attachments stored in `gs://{{Platform:company-bucket}}/{{Platform:namespace}}/requirements`
+
+---
 
 ## Projects, Milestones and Tasks
 
