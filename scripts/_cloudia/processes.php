@@ -14,6 +14,8 @@
  * Each Process backup file contains:
  * - CloudFrameWorkDevDocumentationForProcesses: Main Process documentation
  * - CloudFrameWorkDevDocumentationForSubProcesses: Individual subprocess documentation
+ * - CloudFrameWorkDevDocumentationForProcessTests: Checks (Process + SubProcesses)
+ * - CloudFrameWorkDevRequirements: Functional requirements (Process + SubProcesses)
  *
  * Usage:
  *   _cloudia/processes/backup-from-remote           - Backup all Processes from remote
@@ -43,10 +45,11 @@ class Script extends CoreScripts
     function main()
     {
         //region SET $this->platform_id from configuration
-        $this->platform_id = $this->core->config->get('core.erp.platform_id');
+        $this->platform_id = $this->formParams['platform_id'] ?? $this->core->config->get('core.erp.platform_id');
         if (!$this->platform_id) {
             return $this->addError('config-error', 'core.erp.platform_id is not defined');
         }
+        $this->core->cache->setNameSpace($this->platform_id);
         //endregion
 
         //region AUTHENTICATE user and SET $this->headers
@@ -97,6 +100,7 @@ class Script extends CoreScripts
         $this->sendTerminal("  CloudFrameWorkDevDocumentationForProcesses    - Process record");
         $this->sendTerminal("  CloudFrameWorkDevDocumentationForSubProcesses - SubProcess records");
         $this->sendTerminal("  CloudFrameWorkDevDocumentationForProcessTests - Checks (Process + SubProcesses)");
+        $this->sendTerminal("  CloudFrameWorkDevRequirements                - Requirements (Process + SubProcesses)");
         $this->sendTerminal("");
         $this->sendTerminal("Examples:");
         $this->sendTerminal("  composer script -- \"_cloudia/processes/backup-from-remote?id=HIPOTECH-001\"");
@@ -181,6 +185,43 @@ class Script extends CoreScripts
         });
 
         return $checks;
+    }
+
+    /**
+     * Fetch requirements (CloudFrameWorkDevRequirements) for a given entity
+     *
+     * @param string $cfo_entity CFO entity name (e.g., CloudFrameWorkDevDocumentationForProcesses)
+     * @param string $cfo_id Entity KeyName or KeyId
+     * @return array Array of requirements or empty array on error
+     */
+    private function fetchRequirementsForEntity($cfo_entity, $cfo_id)
+    {
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => $cfo_entity,
+                'filter_CFOId' => $cfo_id,
+                '_order' => 'DateUpdated DESC',
+                'cfo_limit' => 500,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        if ($this->core->request->error || !($response['data'] ?? null)) {
+            return [];
+        }
+
+        $requirements = $response['data'];
+        foreach ($requirements as &$req) {
+            ksort($req);
+        }
+        usort($requirements, function ($a, $b) {
+            return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+        });
+
+        return $requirements;
     }
 
     /**
@@ -538,11 +579,50 @@ class Script extends CoreScripts
             });
             //endregion
 
+            //region FETCH requirements for Process and SubProcesses
+            $all_requirements = [];
+            $process_reqs_count = 0;
+            $subprocess_reqs_count = 0;
+
+            // Fetch requirements for the Process itself
+            if ($process_key_id) {
+                $this->sendTerminal("   - Fetching requirements for Process [{$key_name}]...");
+                $process_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForProcesses', $key_name);
+                $process_reqs_count = count($process_reqs);
+                $all_requirements = array_merge($all_requirements, $process_reqs);
+            }
+
+            // Fetch requirements for each SubProcess
+            if (count($subprocesses) > 0) {
+                $this->sendTerminal("   - Fetching requirements for " . count($subprocesses) . " SubProcesses...");
+                foreach ($subprocesses as $subprocess) {
+                    $subprocess_key_id = $subprocess['KeyId'] ?? null;
+                    if ($subprocess_key_id) {
+                        $sp_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForSubProcesses', $subprocess_key_id);
+                        $subprocess_reqs_count += count($sp_reqs);
+                        $all_requirements = array_merge($all_requirements, $sp_reqs);
+                    }
+                }
+            }
+
+            // Show requirements summary
+            $total_requirements = count($all_requirements);
+            if ($total_requirements > 0) {
+                $this->sendTerminal("   - Requirements found: {$total_requirements} (Process: {$process_reqs_count}, SubProcesses: {$subprocess_reqs_count})");
+            }
+
+            // Sort all requirements by KeyId
+            usort($all_requirements, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+            //endregion
+
             //region BUILD $process_data structure
             $process_data = [
                 'CloudFrameWorkDevDocumentationForProcesses' => $process,
                 'CloudFrameWorkDevDocumentationForSubProcesses' => $subprocesses,
-                'CloudFrameWorkDevDocumentationForProcessTests' => $all_checks
+                'CloudFrameWorkDevDocumentationForProcessTests' => $all_checks,
+                'CloudFrameWorkDevRequirements' => $all_requirements
             ];
             //endregion
 
@@ -567,7 +647,8 @@ class Script extends CoreScripts
             $saved_count++;
             $subprocess_count = count($subprocesses);
             $checks_count = count($all_checks);
-            $this->sendTerminal("   + Saved: {$filename} ({$subprocess_count} subprocesses, {$checks_count} checks)");
+            $reqs_count = count($all_requirements);
+            $this->sendTerminal("   + Saved: {$filename} ({$subprocess_count} subprocesses, {$checks_count} checks, {$reqs_count} requirements)");
             //endregion
         }
         //endregion
@@ -944,6 +1025,104 @@ class Script extends CoreScripts
         $this->sendTerminal(" - Checks: " . implode(', ', $summary_parts));
         //endregion
 
+        //region SYNC requirements (CloudFrameWorkDevRequirements)
+        $local_requirements = $process_data['CloudFrameWorkDevRequirements'] ?? [];
+        $this->sendTerminal(" - Local requirements in backup: " . count($local_requirements));
+
+        // Fetch remote requirements for all valid CFO pairs (reuse $process and $subprocesses)
+        $this->sendTerminal(" - Fetching remote requirements for comparison...");
+        $remote_requirements = [];
+
+        // Requirements for Process (uses KeyName as CFOId)
+        $process_remote_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForProcesses', $process['KeyName']);
+        foreach ($process_remote_reqs as $req) {
+            $remote_requirements[$req['KeyId']] = $req;
+        }
+
+        // Requirements for SubProcesses (uses KeyId as CFOId)
+        foreach ($subprocesses as $subprocess) {
+            $sp_key_id = $subprocess['KeyId'] ?? null;
+            if ($sp_key_id) {
+                $sp_remote_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForSubProcesses', $sp_key_id);
+                foreach ($sp_remote_reqs as $req) {
+                    $remote_requirements[$req['KeyId']] = $req;
+                }
+            }
+        }
+        $this->sendTerminal(" - Remote requirements: " . count($remote_requirements));
+
+        // Index local requirements by KeyId
+        $local_reqs_indexed = [];
+        $local_reqs_new = [];
+        foreach ($local_requirements as $req) {
+            if ($keyId = $req['KeyId'] ?? null) {
+                ksort($req);
+                $local_reqs_indexed[$keyId] = $req;
+            } else {
+                $local_reqs_new[] = $req;
+            }
+        }
+
+        // Sync requirements
+        $this->sendTerminal(" - Syncing requirements...");
+        $reqs_updated = 0;
+        $reqs_inserted = 0;
+        $reqs_unchanged = 0;
+
+        // Update existing requirements
+        foreach ($remote_requirements as $keyId => $remote_req) {
+            if (isset($local_reqs_indexed[$keyId])) {
+                $local_req_sorted = $local_reqs_indexed[$keyId];
+                $remote_req_sorted = $remote_req;
+                ksort($remote_req_sorted);
+
+                if (json_encode($local_req_sorted) !== json_encode($remote_req_sorted)) {
+                    $this->sendTerminal("   - Updating requirement: {$local_reqs_indexed[$keyId]['Title']}");
+                    $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements/{$keyId}?_raw&_timezone=UTC",
+                        $local_reqs_indexed[$keyId],
+                        $this->headers,
+                        true
+                    );
+                    $reqs_updated++;
+                } else {
+                    $reqs_unchanged++;
+                }
+                unset($local_reqs_indexed[$keyId]);
+            }
+        }
+
+        // Insert requirements that have KeyId but don't exist in remote
+        foreach ($local_reqs_indexed as $keyId => $local_req) {
+            $this->sendTerminal("   - Inserting requirement: {$local_req['Title']}");
+            unset($local_req['KeyId']);
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+                $local_req,
+                $this->headers
+            );
+            $reqs_inserted++;
+        }
+
+        // Insert new requirements (those without KeyId)
+        foreach ($local_reqs_new as $local_req) {
+            $this->sendTerminal("   - Inserting new requirement: {$local_req['Title']}");
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+                $local_req,
+                $this->headers
+            );
+            $reqs_inserted++;
+        }
+
+        // Summary
+        $reqs_summary = [];
+        if ($reqs_updated > 0) $reqs_summary[] = "{$reqs_updated} updated";
+        if ($reqs_inserted > 0) $reqs_summary[] = "{$reqs_inserted} inserted";
+        if ($reqs_unchanged > 0) $reqs_summary[] = "{$reqs_unchanged} unchanged";
+        $this->sendTerminal(" - Requirements: " . ($reqs_summary ? implode(', ', $reqs_summary) : 'none'));
+        //endregion
+
         //region SEND success message to terminal
         $this->sendTerminal(str_repeat('-', 50));
         $this->sendTerminal(" + Process [{$process_id}] updated successfully in remote platform");
@@ -1118,6 +1297,40 @@ class Script extends CoreScripts
             }
             if ($checks_failed > 0) {
                 $this->sendTerminal(" # Checks failed: {$checks_failed}");
+            }
+        }
+        //endregion
+
+        //region INSERT requirements in remote platform
+        $requirements = $process_data['CloudFrameWorkDevRequirements'] ?? [];
+        if ($requirements) {
+            $this->sendTerminal(" - Inserting " . count($requirements) . " requirements...");
+            $reqs_inserted = 0;
+            $reqs_failed = 0;
+
+            foreach ($requirements as $req) {
+                unset($req['KeyId']); // Remove KeyId to ensure a new record is created
+
+                $response = $this->core->request->post_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+                    $req,
+                    $this->headers
+                );
+
+                if ($this->core->request->error || !($response['success'] ?? false)) {
+                    $req_name = $req['Title'] ?? 'unknown';
+                    $this->sendTerminal("   # Warning: Failed to insert requirement [{$req_name}]");
+                    $reqs_failed++;
+                } else {
+                    $reqs_inserted++;
+                }
+            }
+
+            if ($reqs_inserted > 0) {
+                $this->sendTerminal(" + Requirements inserted: {$reqs_inserted}");
+            }
+            if ($reqs_failed > 0) {
+                $this->sendTerminal(" # Requirements failed: {$reqs_failed}");
             }
         }
         //endregion
