@@ -1346,6 +1346,160 @@ Defines a **contract requirement** for API behavior, input/output format, or int
 - The `CloudIAAnalysis` field enables AI-assisted analysis of requirements
 - `Documents` supports file attachments stored in `gs://{{Platform:company-bucket}}/{{Platform:namespace}}/requirements`
 
+### Requirement Analysis Workflow (CloudIA)
+
+When the user asks to **analyze a requirement** (e.g., "analiza el requisito id=XXXX" or "analiza el requisito XXXX del proceso /my-process"), the AI MUST follow this exact workflow:
+
+#### Step 1: Locate the Requirement
+
+Find the requirement by its KeyId. Two scenarios:
+
+**If Process is known:**
+```bash
+# Backup the process (includes requirements)
+composer script -- "_cloudia/processes/backup-from-remote?id=/process-keyname"
+```
+Then search for the requirement KeyId inside the `CloudFrameWorkDevRequirements` array in the backup JSON.
+
+**If Process is NOT known:**
+Search across local process backups for the requirement KeyId:
+```bash
+# List local processes
+composer script -- "_cloudia/processes/list-local"
+```
+Then search the backup JSON files in `buckets/backups/Processes/{platform}/` for a `CloudFrameWorkDevRequirements` entry matching the KeyId.
+
+**Output of this step:** The requirement record AND the parent process backup (Process + SubProcesses + Checks + Requirements).
+
+#### Step 2: Backup Latest Version from Remote
+
+ALWAYS download the latest version before analyzing:
+```bash
+composer script -- "_cloudia/processes/backup-from-remote?id=/process-keyname"
+```
+Read the downloaded backup file to have the current state of Process, SubProcesses, Checks, and Requirements.
+
+#### Step 3: Analyze the Requirement Description
+
+Read and understand the requirement's `Description` field. Identify:
+- **What** the system must do (functional objective)
+- **Who** benefits (user role, customer, business)
+- **Why** it matters (business value, compliance, UX improvement)
+- **Scope boundaries** (what is included and what is not)
+
+#### Step 4: Analyze Process and SubProcesses Coverage
+
+Examine the Process and all its SubProcesses to determine if the requirement is already covered:
+
+1. **Read the Process** `Introduction` and `Description` — does it mention this functionality?
+2. **Read each SubProcess** `Title`, `Description`, and `JSON` checks — is the functional element already documented?
+3. **Identify gaps:**
+   - Is there a SubProcess that should describe this functionality but doesn't?
+   - Should a new SubProcess be created?
+   - Do existing SubProcesses need their Description updated to include this functional element?
+
+**Propose modifications** to Process/SubProcess content. Remember:
+- Process/SubProcess content is **business-oriented** — written for customers and stakeholders, NOT technical
+- Use language a non-technical person can understand
+- Focus on WHAT the user can do, not HOW it's implemented
+- Describe user capabilities, business rules, and expected outcomes
+
+#### Step 5: Analyze Development Units (WebApps) Coverage
+
+Examine the WebApps (DevUnits) associated to the process:
+
+1. **Find associated WebApps** via:
+   - SubProcesses' `WebApps` field (direct association)
+   - Process' `DocumentationId` → WebApps with same `DocumentationId`
+2. **Read each WebApp and its Modules** — do they cover the technical implementation needed?
+3. **Identify gaps:**
+   - Which existing WebApp/Module should implement parts of this requirement?
+   - Are new WebApps or Modules needed?
+   - What Checks should be added to verify the implementation?
+
+**Propose WebApp changes:**
+- Which existing WebApps/Modules need modifications
+- New WebApps/Modules to create (with suggested EndPoint, Title, Description)
+- New Checks to add for verification
+
+#### Step 6: Write Analysis and Acceptance Criteria
+
+Update the requirement record with two fields:
+
+**`CloudIAAnalysis`** — Write a structured HTML analysis:
+
+```html
+<h4>Análisis del Requisito</h4>
+<p><b>Resumen:</b> [One paragraph explaining what the requirement asks for and its business impact]</p>
+
+<h4>Cobertura en Proceso/SubProcesos</h4>
+<p><b>Estado actual:</b> [What is already documented in the process]</p>
+<ul>
+  <li><b>[SubProcess Title]:</b> [How it relates to the requirement - covers/partially covers/not covered]</li>
+</ul>
+<p><b>Modificaciones propuestas:</b></p>
+<ul>
+  <li>[Proposed change to Process Introduction/Description]</li>
+  <li>[Proposed new SubProcess or modification to existing one]</li>
+</ul>
+
+<h4>Cobertura en Unidades de Desarrollo</h4>
+<p><b>Estado actual:</b> [What WebApps/Modules exist that relate to this requirement]</p>
+<ul>
+  <li><b>[WebApp KeyName]:</b> [How it relates - covers/needs modification/not covered]</li>
+</ul>
+<p><b>Modificaciones propuestas:</b></p>
+<ul>
+  <li>[Existing WebApp/Module to modify and what to add]</li>
+  <li>[New WebApp/Module to create with suggested structure]</li>
+</ul>
+
+<h4>Riesgos y Dependencias</h4>
+<ul>
+  <li>[Any risks, dependencies on other requirements, or blocking issues]</li>
+</ul>
+```
+
+**`AcceptanceCriteria`** — Write formal acceptance criteria in HTML:
+
+```html
+<h4>Criterios de Aceptación</h4>
+<ol>
+  <li><b>[Criterion title]:</b> [Description of what must be true for this to be considered done]</li>
+  <li><b>[Criterion title]:</b> [Another acceptance criterion]</li>
+</ol>
+
+<h4>Criterios de Verificación</h4>
+<ul>
+  <li>[How to verify criterion 1 - manual test, automated check, user validation]</li>
+  <li>[How to verify criterion 2]</li>
+</ul>
+```
+
+#### Step 7: Update the Requirement
+
+After writing the analysis:
+
+1. **Edit the requirement** in the local process backup file (`CloudFrameWorkDevRequirements` array)
+2. **Set `CloudIAAnalysis`** with the HTML analysis from Step 6
+3. **Set `AcceptanceCriteria`** with the HTML criteria from Step 6
+4. **Sync to remote:**
+```bash
+composer script -- "_cloudia/processes/update-from-backup?id=/process-keyname"
+```
+
+#### Complete Example
+
+User says: "Analiza el requisito 5421957012520960 del proceso /cloud-documentum"
+
+1. `backup-from-remote?id=/cloud-documentum` → get latest data
+2. Find requirement `5421957012520960` in `CloudFrameWorkDevRequirements` array
+3. Read its Description: "Tener un sistema de gestión de Requisitos"
+4. Analyze `/cloud-documentum` Process + 23 SubProcesses → is requirements management described?
+5. Analyze WebApps linked via DocumentationId → do any DevUnits implement requirements management?
+6. Write `CloudIAAnalysis` (gaps found, proposals) + `AcceptanceCriteria` (what "done" looks like)
+7. Update backup file and `update-from-backup?id=/cloud-documentum`
+
 ---
 
 ## Projects, Milestones and Tasks
