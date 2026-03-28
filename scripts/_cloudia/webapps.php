@@ -531,6 +531,7 @@ class Script extends CoreScripts
         //endregion
 
         //region FETCH remote WebApp and COMPARE with local backup
+        $webapp_changed = true;
         $this->sendTerminal(" - Fetching remote WebApp for comparison...");
         $remote_response = $this->core->request->get_json_decode(
             "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebApps/display/" . urlencode($webapp_id) . '?_raw&_timezone=UTC',
@@ -549,30 +550,32 @@ class Script extends CoreScripts
 
             if ($remote_json === $local_json) {
                 $this->sendTerminal(" = [CloudFrameWorkDevDocumentationForWebApps] is unchanged (local backup equals remote)");
-                return true;
+                $webapp_changed = false;
             }
         }
         //endregion
 
-        //region UPDATE WebApp in remote platform via API
-        $this->sendTerminal(" - Updating WebApp in remote platform...");
-        $response = $this->core->request->put_json_decode(
-            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebApps/" . urlencode($webapp_id) . "?_raw&_timezone=UTC",
-            $webapp,
-            $this->headers,
-            true
-        );
+        //region UPDATE WebApp in remote platform via API (only if changed)
+        if ($webapp_changed) {
+            $this->sendTerminal(" - Updating WebApp in remote platform...");
+            $response = $this->core->request->put_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevDocumentationForWebApps/" . urlencode($webapp_id) . "?_raw&_timezone=UTC",
+                $webapp,
+                $this->headers,
+                true
+            );
 
-        if ($this->core->request->error) {
-            return $this->addError("API request failed: " . $this->core->request->errorMsg);
-        }
+            if ($this->core->request->error) {
+                return $this->addError("API request failed: " . $this->core->request->errorMsg);
+            }
 
-        if (!($response['success'] ?? false)) {
-            $error_msg = $response['errorMsg'] ?? 'Unknown error';
-            if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
-            return $this->addError("API returned error: {$error_msg}");
+            if (!($response['success'] ?? false)) {
+                $error_msg = $response['errorMsg'] ?? 'Unknown error';
+                if (is_array($error_msg)) $error_msg = implode(', ', $error_msg);
+                return $this->addError("API returned error: {$error_msg}");
+            }
+            $this->sendTerminal(" + WebApp record updated");
         }
-        $this->sendTerminal(" + WebApp record updated");
         //endregion
 
         //region UPDATE modules in remote platform
