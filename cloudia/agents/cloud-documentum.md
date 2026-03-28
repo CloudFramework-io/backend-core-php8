@@ -49,6 +49,33 @@ description: |
   Sync operations require knowing which script to use and the correct parameters. The cloud-documentum agent knows all the _cloudia scripts.
   </commentary>
   </example>
+
+  <example>
+  Context: User wants to analyze a requirement
+  user: "Analiza el requisito 5421957012520960 del proceso /cloud-documentum"
+  assistant: "Voy a usar el agente cloud-documentum para analizar el requisito siguiendo el workflow de análisis CloudIA"
+  <commentary>
+  Requirement analysis requires downloading the process, analyzing Process/SubProcess coverage, analyzing WebApp/DevUnit coverage, and writing CloudIAAnalysis + AcceptanceCriteria. The cloud-documentum agent has the complete workflow.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User wants to create or manage requirements
+  user: "Crea un requisito para el proceso /cloud-hrms"
+  assistant: "Usaré el agente cloud-documentum para crear el requisito con la vinculación correcta al proceso"
+  <commentary>
+  Requirements use CFOEntity/CFOId linking and are synced via _cloudia/processes. The cloud-documentum agent knows the correct structure and sync workflow.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User mentions requirements/requisitos in any context
+  user: "¿Qué requisitos tiene el proceso /cloud-documentum?"
+  assistant: "Voy a usar el agente cloud-documentum para consultar los requisitos del proceso"
+  <commentary>
+  ANY operation involving requirements (list, create, edit, delete, analyze, query) MUST use the cloud-documentum agent. Requirements are part of the Process backup and have specific sync rules.
+  </commentary>
+  </example>
 model: opus
 color: pink
 ---
