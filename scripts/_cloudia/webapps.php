@@ -14,6 +14,7 @@
  * Each WebApp backup file contains:
  * - CloudFrameWorkDevDocumentationForWebApps: Main WebApp documentation
  * - CloudFrameWorkDevDocumentationForWebAppsModules: Individual module documentation
+ * - CloudFrameWorkDevRequirements: Functional requirements (WebApp + Modules)
  *
  * Usage:
  *   _cloudia/webapps/backup-from-remote                              - Backup all WebApps from remote
@@ -43,10 +44,11 @@ class Script extends CoreScripts
     function main()
     {
         //region SET $this->platform_id from configuration
-        $this->platform_id = $this->core->config->get('core.erp.platform_id');
+        $this->platform_id = $this->formParams['platform_id'] ?? $this->core->config->get('core.erp.platform_id');
         if (!$this->platform_id) {
             return $this->addError('config-error', 'core.erp.platform_id is not defined');
         }
+        $this->core->cache->setNameSpace($this->platform_id);
         //endregion
 
         //region AUTHENTICATE user and SET $this->headers
@@ -151,6 +153,43 @@ class Script extends CoreScripts
             return false;
         }
         return $backup_dir;
+    }
+
+    /**
+     * Fetch requirements (CloudFrameWorkDevRequirements) for a given entity
+     *
+     * @param string $cfo_entity CFO entity name
+     * @param string $cfo_id Entity KeyName or KeyId
+     * @return array Array of requirements or empty array on error
+     */
+    private function fetchRequirementsForEntity($cfo_entity, $cfo_id)
+    {
+        $response = $this->core->request->get_json_decode(
+            "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+            [
+                'filter_CFOEntity' => $cfo_entity,
+                'filter_CFOId' => $cfo_id,
+                '_order' => 'DateUpdated DESC',
+                'cfo_limit' => 500,
+                '_raw' => 1,
+                '_timezone' => 'UTC'
+            ],
+            $this->headers
+        );
+
+        if ($this->core->request->error || !($response['data'] ?? null)) {
+            return [];
+        }
+
+        $requirements = $response['data'];
+        foreach ($requirements as &$req) {
+            ksort($req);
+        }
+        usort($requirements, function ($a, $b) {
+            return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+        });
+
+        return $requirements;
     }
 
     /**
@@ -364,10 +403,49 @@ class Script extends CoreScripts
             ksort($webapp);
             //endregion
 
+            //region FETCH requirements for WebApp and Modules
+            $all_requirements = [];
+            $webapp_reqs_count = 0;
+            $module_reqs_count = 0;
+
+            // Fetch requirements for the WebApp itself (uses KeyName as CFOId)
+            if ($key_name) {
+                $this->sendTerminal("   - Fetching requirements for WebApp [{$key_name}]...");
+                $webapp_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForWebApps', $key_name);
+                $webapp_reqs_count = count($webapp_reqs);
+                $all_requirements = array_merge($all_requirements, $webapp_reqs);
+            }
+
+            // Fetch requirements for each Module (uses KeyId as CFOId)
+            if (count($modules) > 0) {
+                $this->sendTerminal("   - Fetching requirements for " . count($modules) . " Modules...");
+                foreach ($modules as $module) {
+                    $module_key_id = $module['KeyId'] ?? null;
+                    if ($module_key_id) {
+                        $mod_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForWebAppsModules', $module_key_id);
+                        $module_reqs_count += count($mod_reqs);
+                        $all_requirements = array_merge($all_requirements, $mod_reqs);
+                    }
+                }
+            }
+
+            // Show requirements summary
+            $total_requirements = count($all_requirements);
+            if ($total_requirements > 0) {
+                $this->sendTerminal("   - Requirements found: {$total_requirements} (WebApp: {$webapp_reqs_count}, Modules: {$module_reqs_count})");
+            }
+
+            // Sort all requirements by KeyId
+            usort($all_requirements, function ($a, $b) {
+                return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
+            });
+            //endregion
+
             //region BUILD $webapp_data structure
             $webapp_data = [
                 'CloudFrameWorkDevDocumentationForWebApps' => $webapp,
-                'CloudFrameWorkDevDocumentationForWebAppsModules' => $modules
+                'CloudFrameWorkDevDocumentationForWebAppsModules' => $modules,
+                'CloudFrameWorkDevRequirements' => $all_requirements
             ];
             //endregion
 
@@ -391,7 +469,8 @@ class Script extends CoreScripts
             }
             $saved_count++;
             $module_count = count($modules);
-            $this->sendTerminal("   + Saved: {$filename} ({$module_count} modules)");
+            $reqs_count = count($all_requirements);
+            $this->sendTerminal("   + Saved: {$filename} ({$module_count} modules, {$reqs_count} requirements)");
             //endregion
         }
         //endregion
@@ -528,6 +607,104 @@ class Script extends CoreScripts
         }
         //endregion
 
+        //region SYNC requirements (CloudFrameWorkDevRequirements)
+        $local_requirements = $webapp_data['CloudFrameWorkDevRequirements'] ?? [];
+        $this->sendTerminal(" - Local requirements in backup: " . count($local_requirements));
+
+        // Fetch remote requirements for WebApp and Modules
+        $this->sendTerminal(" - Fetching remote requirements for comparison...");
+        $remote_requirements = [];
+
+        // Requirements for WebApp (uses KeyName as CFOId)
+        $webapp_remote_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForWebApps', $webapp_id);
+        foreach ($webapp_remote_reqs as $req) {
+            $remote_requirements[$req['KeyId']] = $req;
+        }
+
+        // Requirements for Modules (uses KeyId as CFOId)
+        foreach ($modules as $module) {
+            $mod_key_id = $module['KeyId'] ?? null;
+            if ($mod_key_id) {
+                $mod_remote_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForWebAppsModules', $mod_key_id);
+                foreach ($mod_remote_reqs as $req) {
+                    $remote_requirements[$req['KeyId']] = $req;
+                }
+            }
+        }
+        $this->sendTerminal(" - Remote requirements: " . count($remote_requirements));
+
+        // Index local requirements by KeyId
+        $local_reqs_indexed = [];
+        $local_reqs_new = [];
+        foreach ($local_requirements as $req) {
+            if ($keyId = $req['KeyId'] ?? null) {
+                ksort($req);
+                $local_reqs_indexed[$keyId] = $req;
+            } else {
+                $local_reqs_new[] = $req;
+            }
+        }
+
+        // Sync requirements
+        $this->sendTerminal(" - Syncing requirements...");
+        $reqs_updated = 0;
+        $reqs_inserted = 0;
+        $reqs_unchanged = 0;
+
+        // Update existing requirements
+        foreach ($remote_requirements as $keyId => $remote_req) {
+            if (isset($local_reqs_indexed[$keyId])) {
+                $local_req_sorted = $local_reqs_indexed[$keyId];
+                $remote_req_sorted = $remote_req;
+                ksort($remote_req_sorted);
+
+                if (json_encode($local_req_sorted) !== json_encode($remote_req_sorted)) {
+                    $this->sendTerminal("   - Updating requirement: {$local_reqs_indexed[$keyId]['Title']}");
+                    $this->core->request->put_json_decode(
+                        "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements/{$keyId}?_raw&_timezone=UTC",
+                        $local_reqs_indexed[$keyId],
+                        $this->headers,
+                        true
+                    );
+                    $reqs_updated++;
+                } else {
+                    $reqs_unchanged++;
+                }
+                unset($local_reqs_indexed[$keyId]);
+            }
+        }
+
+        // Insert requirements that have KeyId but don't exist in remote
+        foreach ($local_reqs_indexed as $keyId => $local_req) {
+            $this->sendTerminal("   - Inserting requirement: {$local_req['Title']}");
+            unset($local_req['KeyId']);
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+                $local_req,
+                $this->headers
+            );
+            $reqs_inserted++;
+        }
+
+        // Insert new requirements (those without KeyId)
+        foreach ($local_reqs_new as $local_req) {
+            $this->sendTerminal("   - Inserting new requirement: {$local_req['Title']}");
+            $this->core->request->post_json_decode(
+                "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+                $local_req,
+                $this->headers
+            );
+            $reqs_inserted++;
+        }
+
+        // Summary
+        $reqs_summary = [];
+        if ($reqs_updated > 0) $reqs_summary[] = "{$reqs_updated} updated";
+        if ($reqs_inserted > 0) $reqs_summary[] = "{$reqs_inserted} inserted";
+        if ($reqs_unchanged > 0) $reqs_summary[] = "{$reqs_unchanged} unchanged";
+        $this->sendTerminal(" - Requirements: " . ($reqs_summary ? implode(', ', $reqs_summary) : 'none'));
+        //endregion
+
         //region SEND success message to terminal
         $this->sendTerminal(str_repeat('-', 50));
         $this->sendTerminal(" + WebApp [{$webapp_id}] updated successfully in remote platform");
@@ -651,6 +828,40 @@ class Script extends CoreScripts
                 }
             }
             $this->sendTerminal(" + Modules inserted");
+        }
+        //endregion
+
+        //region INSERT requirements in remote platform
+        $requirements = $webapp_data['CloudFrameWorkDevRequirements'] ?? [];
+        if ($requirements) {
+            $this->sendTerminal(" - Inserting " . count($requirements) . " requirements...");
+            $reqs_inserted = 0;
+            $reqs_failed = 0;
+
+            foreach ($requirements as $req) {
+                unset($req['KeyId']);
+
+                $response = $this->core->request->post_json_decode(
+                    "{$this->api_base_url}/core/cfo/cfi/CloudFrameWorkDevRequirements?_raw&_timezone=UTC",
+                    $req,
+                    $this->headers
+                );
+
+                if ($this->core->request->error || !($response['success'] ?? false)) {
+                    $req_name = $req['Title'] ?? 'unknown';
+                    $this->sendTerminal("   # Warning: Failed to insert requirement [{$req_name}]");
+                    $reqs_failed++;
+                } else {
+                    $reqs_inserted++;
+                }
+            }
+
+            if ($reqs_inserted > 0) {
+                $this->sendTerminal(" + Requirements inserted: {$reqs_inserted}");
+            }
+            if ($reqs_failed > 0) {
+                $this->sendTerminal(" # Requirements failed: {$reqs_failed}");
+            }
         }
         //endregion
 
