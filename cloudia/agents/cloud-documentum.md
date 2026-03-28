@@ -1448,9 +1448,9 @@ This ensures every new requirement is immediately analyzed and has proposed acce
 
 ---
 
-### Requirement Analysis Workflow (CloudIA)
+### Requirement Analysis Workflow — Process Context (CloudIA)
 
-When the user asks to **analyze a requirement** (e.g., "analiza el requisito id=XXXX" or "analiza el requisito XXXX del proceso /my-process"), the AI MUST follow this exact workflow:
+When the user asks to **analyze a requirement linked to a Process** (e.g., "analiza el requisito id=XXXX" or "analiza el requisito XXXX del proceso /my-process"), the AI MUST follow this exact workflow:
 
 #### Step 1: Locate the Requirement
 
@@ -1601,6 +1601,161 @@ User says: "Analiza el requisito 5421957012520960 del proceso /cloud-documentum"
 5. Analyze WebApps linked via DocumentationId → do any DevUnits implement requirements management?
 6. Write `CloudIAAnalysis` (gaps found, proposals) + `AcceptanceCriteria` (what "done" looks like)
 7. Update backup file and `update-from-backup?id=/cloud-documentum`
+
+---
+
+### Requirement Analysis Workflow — WebApp/DevUnit Context (CloudIA)
+
+When the user asks to **analyze a requirement linked to a WebApp** (e.g., "analiza el requisito XXXX de la webapp /cloud-documentum/processes"), the AI MUST follow this workflow:
+
+#### Step 1: Locate the Requirement
+
+Find the requirement by its KeyId in WebApp backups.
+
+**If WebApp is known:**
+```bash
+composer script -- "_cloudia/webapps/backup-from-remote?id=/webapp-keyname"
+```
+Then search for the requirement KeyId inside the `CloudFrameWorkDevRequirements` array in the backup JSON.
+
+**If WebApp is NOT known:**
+Search local WebApp backups in `buckets/backups/WebApps/{platform}/` for a `CloudFrameWorkDevRequirements` entry matching the KeyId.
+
+**Output:** The requirement record AND the parent WebApp backup (WebApp + Modules + Requirements).
+
+#### Step 2: Backup Latest Version from Remote
+
+ALWAYS download the latest version before analyzing:
+```bash
+composer script -- "_cloudia/webapps/backup-from-remote?id=/webapp-keyname"
+```
+Read the backup file to have the current state of WebApp, Modules, and Requirements.
+
+#### Step 3: Analyze the Requirement Description
+
+Read the requirement's `Description` field. Identify:
+- **What** must be implemented (technical objective)
+- **Where** it fits within the WebApp architecture (which module, which endpoint)
+- **Why** it matters (user story, business rule, technical debt)
+- **Scope boundaries** (what is included and what is not)
+
+#### Step 4: Analyze WebApp and Modules Coverage
+
+Examine the WebApp and all its Modules to determine if the requirement is already covered in the development strategy:
+
+1. **Read the WebApp** `Description` and `JSON` checks — does it describe this functionality in its development strategy?
+2. **Read each Module** `Title`, `Description`, `EndPoint`, and `JSON` checks — is the technical element already planned or implemented?
+3. **Identify gaps:**
+   - Is there a Module that should cover this functionality but doesn't?
+   - Should a new Module be created?
+   - Do existing Modules need their Description updated to include this technical element?
+
+**Propose modifications** to WebApp/Module content. Remember:
+- WebApp/Module content is **technical** — written for the development team
+- Focus on WHAT needs to be built, which endpoints, which data models
+- Describe the technical approach, architecture decisions, and implementation notes
+- This content will be used to plan and create Tasks
+
+#### Step 5: Analyze Checks and Tasks Coverage
+
+Examine existing Checks and Tasks to determine if execution is planned:
+
+1. **Analyze Checks** in the WebApp's `JSON` field and each Module's `JSON` field:
+   - Do existing Checks verify parts of this requirement?
+   - Which new Checks should be added to verify the implementation?
+   - Propose new Check routes and descriptions
+
+2. **Analyze Tasks** associated to the WebApp:
+   - Fetch tasks linked via `WebApps` field in `CloudFrameWorkProjectsTasks`
+   - Are there existing tasks that contribute to fulfilling this requirement?
+   - Which new tasks should be created?
+
+3. **Propose execution plan:**
+   - New Modules to create (with suggested EndPoint, Title, Description)
+   - New Checks to add to existing or new Modules
+   - New Tasks to create (with suggested Title, Description, Milestone)
+
+#### Step 6: Write Analysis and Acceptance Criteria
+
+Update the requirement record with two fields:
+
+**`CloudIAAnalysis`** — Write a structured HTML analysis:
+
+```html
+<h4>Análisis del Requisito</h4>
+<p><b>Resumen:</b> [One paragraph explaining the technical requirement and its impact on the WebApp]</p>
+
+<h4>Cobertura en WebApp/Módulos</h4>
+<p><b>Estado actual:</b> [What is already described in the WebApp development strategy]</p>
+<ul>
+  <li><b>[Module EndPoint]:</b> [How it relates - covers/partially covers/not covered]</li>
+</ul>
+<p><b>Modificaciones propuestas:</b></p>
+<ul>
+  <li>[Proposed change to WebApp Description or existing Module]</li>
+  <li>[New Module to create: EndPoint, Title, Description]</li>
+</ul>
+
+<h4>Cobertura en Checks y Tareas</h4>
+<p><b>Checks existentes:</b> [Which checks already verify parts of this requirement]</p>
+<p><b>Tareas existentes:</b> [Which tasks contribute to fulfilling this requirement]</p>
+<p><b>Nuevos elementos propuestos:</b></p>
+<ul>
+  <li><b>Check:</b> [Route] - [Description of what it verifies]</li>
+  <li><b>Task:</b> [Title] - [Description and suggested milestone]</li>
+</ul>
+
+<h4>Riesgos y Dependencias</h4>
+<ul>
+  <li>[Technical risks, dependencies on APIs/Libraries, or blocking issues]</li>
+</ul>
+```
+
+**`AcceptanceCriteria`** — Write formal acceptance criteria:
+
+```html
+<h4>Criterios de Aceptación</h4>
+<ol>
+  <li><b>[Criterion]:</b> [What must be true technically for this to be done]</li>
+  <li><b>[Criterion]:</b> [Another technical acceptance criterion]</li>
+</ol>
+
+<h4>Criterios de Verificación</h4>
+<ul>
+  <li>[How to verify: automated test, manual QA, code review, Check status]</li>
+</ul>
+```
+
+#### Step 7: Update the Requirement
+
+1. Edit the requirement in the local WebApp backup file (`CloudFrameWorkDevRequirements` array)
+2. Set `CloudIAAnalysis` and `AcceptanceCriteria`
+3. Sync:
+```bash
+composer script -- "_cloudia/webapps/update-from-backup?id=/webapp-keyname"
+```
+
+#### Determining Context: Process vs WebApp
+
+When the user asks to analyze a requirement without specifying context, determine the type by checking `CFOEntity`:
+
+| CFOEntity | Context | Workflow |
+|-----------|---------|----------|
+| `CloudFrameWorkDevDocumentationForProcesses` | Process | Use **Process Context** workflow |
+| `CloudFrameWorkDevDocumentationForSubProcesses` | Process | Use **Process Context** workflow |
+| `CloudFrameWorkDevDocumentationForWebApps` | WebApp | Use **WebApp Context** workflow |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp | Use **WebApp Context** workflow |
+| `CloudFrameWorkDevDocumentationForLibraries` | Library | Adapt **WebApp Context** for library specifics |
+| `CloudFrameWorkDevDocumentationForLibrariesModules` | Library | Adapt **WebApp Context** for library specifics |
+
+**To find the requirement**, search in both Process and WebApp backups, or use the CFI API:
+```bash
+# Search in process backups
+grep -rl "REQUIREMENT_KEYID" buckets/backups/Processes/{platform}/
+
+# Search in webapp backups
+grep -rl "REQUIREMENT_KEYID" buckets/backups/WebApps/{platform}/
+```
 
 ---
 

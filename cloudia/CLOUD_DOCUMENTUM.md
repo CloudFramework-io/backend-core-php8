@@ -449,17 +449,27 @@ Requirements complement the existing Documentum methodology at **different level
 
 ### Requirement Analysis (CloudIA)
 
-When an AI analyzes a requirement, it follows a structured workflow:
+The analysis workflow depends on the **context** (determined by `CFOEntity`):
 
-1. **Locate** the requirement by KeyId and backup the latest process version from remote
+#### On Process/SubProcess — Business-oriented analysis
+
+1. **Locate** the requirement and backup the process from remote
 2. **Analyze** the requirement's Description (what, who, why, scope)
-3. **Analyze Process/SubProcess coverage** — is the functional element already described in business terms? Propose modifications using non-technical, customer-facing language
-4. **Analyze WebApp/DevUnit coverage** — do existing development units implement this requirement? Propose new or modified WebApps/Modules
-5. **Write `CloudIAAnalysis`** — structured HTML with coverage gaps, proposed Process changes, proposed DevUnit changes, and risks
-6. **Write `AcceptanceCriteria`** — formal criteria that define "done" for this requirement
-7. **Sync** the updated requirement back to remote via `_cloudia/processes/update-from-backup`
+3. **Analyze Process/SubProcess coverage** — is the functional element described in business terms? Propose modifications in non-technical, customer-facing language
+4. **Analyze WebApp/DevUnit coverage** — do existing DevUnits implement this requirement? Propose new or modified WebApps/Modules
+5. **Write `CloudIAAnalysis`** + **`AcceptanceCriteria`**
+6. **Sync** via `_cloudia/processes/update-from-backup`
 
-> **Complete workflow details:** See `agents/cloud-documentum.md` → "Requirement Analysis Workflow (CloudIA)"
+#### On WebApp/Module — Technical analysis
+
+1. **Locate** the requirement and backup the WebApp from remote
+2. **Analyze** the requirement's Description (what to implement, where, why)
+3. **Analyze WebApp/Module coverage** — is the technical element in the development strategy? Propose modifications in technical language for the dev team
+4. **Analyze Checks and Tasks** — do existing Checks verify parts of this requirement? Are there Tasks that contribute? Propose new Modules, Checks, and Tasks
+5. **Write `CloudIAAnalysis`** + **`AcceptanceCriteria`**
+6. **Sync** via `_cloudia/webapps/update-from-backup`
+
+> **Complete workflow details:** See `agents/cloud-documentum.md` → "Requirement Analysis Workflow" sections
 
 ---
 
