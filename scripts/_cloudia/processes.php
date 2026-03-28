@@ -584,8 +584,8 @@ class Script extends CoreScripts
             $process_reqs_count = 0;
             $subprocess_reqs_count = 0;
 
-            // Fetch requirements for the Process itself
-            if ($process_key_id) {
+            // Fetch requirements for the Process itself (uses KeyName as CFOId)
+            if ($key_name) {
                 $this->sendTerminal("   - Fetching requirements for Process [{$key_name}]...");
                 $process_reqs = $this->fetchRequirementsForEntity('CloudFrameWorkDevDocumentationForProcesses', $key_name);
                 $process_reqs_count = count($process_reqs);
