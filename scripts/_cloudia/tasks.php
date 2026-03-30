@@ -51,10 +51,11 @@ class Script extends CoreScripts
     {
 
         //region SET $this->platform_id from configuration
-        $this->platform_id = $this->core->config->get('core.erp.platform_id');
+        $this->platform_id = $this->formParams['platform_id'] ?? $this->core->config->get('core.erp.platform_id');
         if (!$this->platform_id) {
             return $this->addError('config-error', 'core.erp.platform_id is not defined');
         }
+        $this->core->cache->setNameSpace($this->platform_id);
         //endregion
 
         //region AUTHENTICATE user and SET $this->headers
@@ -63,6 +64,7 @@ class Script extends CoreScripts
         }
         $this->user_email = $this->core->user->id;
         //endregion
+
 
         //region VERIFY privileges
         $this->sendTerminal("Executing {$this->params[0]}/{$this->params[1]} from platform [{$this->platform_id}] user [{$this->user_email}]");

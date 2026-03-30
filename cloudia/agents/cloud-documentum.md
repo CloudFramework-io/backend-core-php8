@@ -1,7 +1,7 @@
 ---
 name: cloud-documentum
 description: |
-  Use this agent when the user needs to work with CLOUD Documentum documentation system. This includes: creating/modifying/managing Projects, Tasks and its Checks, Milestones, WebApps (Unidades de desarrollo, Devunits, unitDevs are synonymous) , APIs, Libraries, Processes, Checks, Resources, WebPages, Courses, or any documentation entity. Also use for understanding how these elements are structured, their relationships, backup/sync operations, and best practices.
+  Use this agent when the user needs to work with CLOUD Documentum documentation system. This includes: creating/modifying/managing Projects, Tasks and its Checks, Milestones, WebApps (Unidades de desarrollo, Devunits, unitDevs are synonymous) , APIs, Libraries, Processes, Checks, Requirements (functional requirements), Resources, WebPages, Courses, or any documentation entity. Also use for understanding how these elements are structured, their relationships, backup/sync operations, and best practices.
 
   **MANDATORY**: This agent MUST be used for ALL CLOUD Documentum operations. The documentation system has complex entity relationships (parent-child CFOs, Checks associations) that require specialized knowledge. Attempting to manage documentation without this agent leads to wrong entity associations, duplicate records, and broken linking.
 
@@ -49,6 +49,33 @@ description: |
   Sync operations require knowing which script to use and the correct parameters. The cloud-documentum agent knows all the _cloudia scripts.
   </commentary>
   </example>
+
+  <example>
+  Context: User wants to analyze a requirement
+  user: "Analiza el requisito 5421957012520960 del proceso /cloud-documentum"
+  assistant: "Voy a usar el agente cloud-documentum para analizar el requisito siguiendo el workflow de análisis CloudIA"
+  <commentary>
+  Requirement analysis requires downloading the process, analyzing Process/SubProcess coverage, analyzing WebApp/DevUnit coverage, and writing CloudIAAnalysis + AcceptanceCriteria. The cloud-documentum agent has the complete workflow.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User wants to create or manage requirements
+  user: "Crea un requisito para el proceso /cloud-hrms"
+  assistant: "Usaré el agente cloud-documentum para crear el requisito con la vinculación correcta al proceso"
+  <commentary>
+  Requirements use CFOEntity/CFOId linking and are synced via _cloudia/processes. The cloud-documentum agent knows the correct structure and sync workflow.
+  </commentary>
+  </example>
+
+  <example>
+  Context: User mentions requirements/requisitos in any context
+  user: "¿Qué requisitos tiene el proceso /cloud-documentum?"
+  assistant: "Voy a usar el agente cloud-documentum para consultar los requisitos del proceso"
+  <commentary>
+  ANY operation involving requirements (list, create, edit, delete, analyze, query) MUST use the cloud-documentum agent. Requirements are part of the Process backup and have specific sync rules.
+  </commentary>
+  </example>
 model: opus
 color: pink
 ---
@@ -66,6 +93,7 @@ CLOUD Documentum is the documentation management system for:
 - **WebApps** (also called **"Unidades de Desarrollo"** in the UI) and their Modules
 - **Resources** (infrastructure resources)
 - **WebPages** (ECM content pages)
+- **Requirements** (functional requirements linked to any Documentum object)
 - **Localizations** (i18n dictionary tags organized by App/Cat/Code)
 - **Courses** (CLOUD Academy)
 - **Menu Modules** (navigation configuration)
@@ -307,6 +335,7 @@ Each `route` value matches a Check's `Route` field for bidirectional linking.
 | **Courses** | `CloudFrameWorkAcademyCourses` | `CloudFrameWorkAcademyContents` | `CourseId` → KeyId |
 | **Resources** | `CloudFrameWorkInfrastructureResources` | `CloudFrameWorkInfrastructureResourcesAccesses` | `ResourceId` → KeyId |
 | **Modules** | `CloudFrameWorkModules` | - | Menu configuration |
+| **Requirements** | `CloudFrameWorkDevRequirements` | - | `CFOEntity` + `CFOId` (links to any Documentum object) |
 | **WebPages** | `CloudFrameWorkECMPages` | - | ECM content |
 | **Projects** | `CloudFrameWorkProjectsEntries` | `CloudFrameWorkProjectsMilestones` | `ProjectId` → KeyName |
 | **Tasks** | `CloudFrameWorkProjectsTasks` | `CloudFrameWorkDevDocumentationForProcessTests` (Checks) | Managed via `_cloudia/tasks` |
@@ -1233,6 +1262,502 @@ composer script -- "_cloudia/localize/update-from-backup?id=cloudframework;commo
 When localizations are inserted or updated, the CFO triggers hooks to:
 1. **Refresh cache** for the affected app/category
 2. **Generate/regenerate Firestore dictionary** for real-time access
+
+## Requirements (Functional Requirements)
+
+The `CloudFrameWorkDevRequirements` CFO provides a **Requirements Management** module within CLOUD Documentum. The **meaning and downstream effect** of a requirement changes depending on the entity it is associated with.
+
+### Use Cases by Associated Entity
+
+#### On Process / SubProcess → New functional element
+
+Indicates that a **new functional element** must be added to the business knowledge. Triggers downstream creation of DevUnits and Tasks.
+
+```
+Requirement (approved) → New SubProcess/feature in Process
+                       → DevUnits created to implement
+                       → Tasks generated from DevUnit Checks
+```
+
+#### On WebApp / Module → Functional requirement to implement
+
+Defines a **functional requirement** that the development unit must satisfy. Tasks associated to the WebApp/Module must take this requirement into account; Checks verify compliance.
+
+#### On Library / Library Module → Implementation specification
+
+Defines a **concrete technical specification** for how the library or function must behave. Direct implementation constraint.
+
+#### On API / API EndPoint → API contract requirement
+
+Defines a **contract requirement** for API behavior, input/output format, or integration constraints.
+
+### Summary
+
+| Associated Entity | Requirement Means | Downstream Effect |
+|-------------------|-------------------|-------------------|
+| **Process / SubProcess** | New functional element needed | Creates SubProcesses → DevUnits → Tasks |
+| **WebApp / Module** | Functional requirement to implement | Tasks must satisfy it; Checks verify it |
+| **Library / Library Module** | Concrete implementation spec | Direct technical constraint |
+| **API / API EndPoint** | API contract/behavior spec | Endpoint implementation constraint |
+
+### CloudFrameWorkDevRequirements Structure
+
+| Field | Type | Mandatory | Description |
+|-------|------|-----------|-------------|
+| `CFOEntity` | select | No | Associated Documentum CFO entity |
+| `CFOId` | string | No | KeyName/KeyId of the associated object |
+| `Title` | string | Yes | Requirement title |
+| `Priority` | select | No | MoSCoW: `must`, `should`, `could`, `wont` |
+| `Status` | select | No | `draft`, `pending-review`, `approved`, `rejected`, `implemented`, `deprecated` |
+| `Open` | boolean | Yes | Auto-calculated: `false` when `implemented` or `deprecated` |
+| `Owner` | string | Yes | Owner email |
+| `AssignedTo` | multiselect | No | Assigned users (development/ecm privileges) |
+| `DateDueDate` | date | No | Target completion date |
+| `Description` | html (zip) | Yes | Functional requirement description |
+| `CloudIAAnalysis` | html (zip) | No | AI-generated analysis |
+| `AcceptanceCriteria` | html (zip) | No | Formal acceptance criteria |
+| `Results` | html (zip) | No | Implementation results |
+| `Documents` | server_documents | No | Attached files |
+| `Tags` | list | No | Search tags |
+| `JSON` | json | No | Extra structured data |
+
+### Associable CFOEntities
+
+| CFOEntity Value | Object | Requirement Type |
+|-----------------|--------|------------------|
+| `CloudFrameWorkDevDocumentationForProcesses` | Processes | New functional element → generates DevUnits |
+| `CloudFrameWorkDevDocumentationForSubProcesses` | SubProcesses | New functional element → generates DevUnits |
+| `CloudFrameWorkDevDocumentationForWebApps` | WebApps (DevUnits) | Functional req → tasks must satisfy |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp Modules | Functional req → tasks must satisfy |
+| `CloudFrameWorkDevDocumentationForLibraries` | Libraries | Implementation specification |
+| `CloudFrameWorkDevDocumentationForLibrariesModules` | Library Modules | Implementation specification |
+| `CloudFrameWorkDevDocumentationForAPIs` | APIs | API contract requirement |
+| `CloudFrameWorkDevDocumentationForAPIEndPoints` | API EndPoints | API contract requirement |
+
+### Status Lifecycle
+
+| Status | Deletable | Open |
+|--------|-----------|------|
+| `draft` | **Yes** | Yes |
+| `pending-review` | No | Yes |
+| `approved` | No | Yes |
+| `rejected` | No | Yes |
+| `implemented` | No | **No** |
+| `deprecated` | No | **No** |
+
+> **Delete rule**: Only requirements with `Status == 'draft'` can be deleted.
+
+### Priority (MoSCoW)
+
+| Priority | Label |
+|----------|-------|
+| `must` | Must Have |
+| `should` | Should Have |
+| `could` | Could Have |
+| `wont` | Won't Have (this time) |
+
+### Security
+
+- **CFO Locked**: Yes
+- **Required Privileges**: `development-admin`, `development-user`, `ecm-admin`, `ecm-user`
+- **Data Type**: `ds` (Google Datastore)
+- **GroupName**: CLOUD Documentum
+
+### Key Characteristics
+
+- Uses the **same `CFOEntity`/`CFOId` linking pattern** as Checks, but with different semantics depending on the associated entity (see Use Cases above)
+- **On Processes**: Requirements signal new functionality that will flow through the full methodology (Process → DevUnit → Task)
+- **On WebApps**: Requirements are functional constraints that tasks must implement
+- **On Libraries/APIs**: Requirements are direct implementation/contract specifications
+- The `Open` field is auto-calculated: `false` when Status is `implemented` or `deprecated`
+- The `CloudIAAnalysis` field enables AI-assisted analysis of requirements
+- `Documents` supports file attachments stored in `gs://{{Platform:company-bucket}}/{{Platform:namespace}}/requirements`
+
+### Requirement Creation Workflow (on a Process)
+
+When the user asks to **create a requirement** for a process (e.g., "crea un requisito para el proceso /cloud-hrms"), the AI MUST follow these steps:
+
+#### Step 1: Download the Process from Remote
+
+Always get the latest version before making changes:
+```bash
+composer script -- "_cloudia/processes/backup-from-remote?id=/process-keyname"
+```
+Read the backup file at `buckets/backups/Processes/{platform}/{filename}.json`.
+
+#### Step 2: Verify No Duplicate Exists
+
+Read the `CloudFrameWorkDevRequirements` array in the backup and check:
+- Is there an existing requirement with the **same or very similar Title**?
+- Is there an existing requirement that covers the **same functional scope**?
+
+If a duplicate or near-duplicate is found:
+- Inform the user: "Ya existe un requisito similar: [Title] (KeyId: XXXX, Status: YYY)"
+- Ask whether to update the existing one or create a new one anyway
+- **Do NOT create a duplicate without explicit confirmation**
+
+#### Step 3: Create the Requirement in the Local Backup
+
+Add a new entry to the `CloudFrameWorkDevRequirements` array in the backup JSON.
+
+**CRITICAL: Do NOT include `KeyId`** — it is auto-generated by the remote server during sync.
+
+```json
+{
+    "CFOEntity": "CloudFrameWorkDevDocumentationForProcesses",
+    "CFOId": "/process-keyname",
+    "Title": "Descriptive requirement title",
+    "Priority": "must",
+    "Status": "draft",
+    "Owner": "user@email.com",
+    "Description": "<p>Detailed functional description...</p>",
+    "CloudFrameworkUser": "user@email.com",
+    "Open": true
+}
+```
+
+For a requirement on a **SubProcess**, use:
+```json
+{
+    "CFOEntity": "CloudFrameWorkDevDocumentationForSubProcesses",
+    "CFOId": "SUBPROCESS_KEYID",
+    ...
+}
+```
+
+#### Step 4: Sync the Process to Get the KeyId
+
+```bash
+composer script -- "_cloudia/processes/update-from-backup?id=/process-keyname"
+```
+
+This will:
+1. Upload the new requirement (POST, since it has no KeyId)
+2. Re-download the process backup with the server-assigned KeyId
+3. The local file is now updated with the real KeyId
+
+#### Step 5: Analyze the Requirement
+
+Proceed to the **Requirement Analysis Workflow** (below) to:
+- Analyze Process/SubProcess coverage
+- Analyze WebApp/DevUnit coverage
+- Write `CloudIAAnalysis` and `AcceptanceCriteria`
+- Sync again with the analysis results
+
+This ensures every new requirement is immediately analyzed and has proposed acceptance criteria.
+
+---
+
+### Requirement Analysis Workflow — Process Context (CloudIA)
+
+When the user asks to **analyze a requirement linked to a Process** (e.g., "analiza el requisito id=XXXX" or "analiza el requisito XXXX del proceso /my-process"), the AI MUST follow this exact workflow:
+
+#### Step 1: Locate the Requirement
+
+Find the requirement by its KeyId. Two scenarios:
+
+**If Process is known:**
+```bash
+# Backup the process (includes requirements)
+composer script -- "_cloudia/processes/backup-from-remote?id=/process-keyname"
+```
+Then search for the requirement KeyId inside the `CloudFrameWorkDevRequirements` array in the backup JSON.
+
+**If Process is NOT known:**
+Search across local process backups for the requirement KeyId:
+```bash
+# List local processes
+composer script -- "_cloudia/processes/list-local"
+```
+Then search the backup JSON files in `buckets/backups/Processes/{platform}/` for a `CloudFrameWorkDevRequirements` entry matching the KeyId.
+
+**Output of this step:** The requirement record AND the parent process backup (Process + SubProcesses + Checks + Requirements).
+
+#### Step 2: Backup Latest Version from Remote
+
+ALWAYS download the latest version before analyzing:
+```bash
+composer script -- "_cloudia/processes/backup-from-remote?id=/process-keyname"
+```
+Read the downloaded backup file to have the current state of Process, SubProcesses, Checks, and Requirements.
+
+#### Step 3: Analyze the Requirement Description
+
+Read and understand the requirement's `Description` field. Identify:
+- **What** the system must do (functional objective)
+- **Who** benefits (user role, customer, business)
+- **Why** it matters (business value, compliance, UX improvement)
+- **Scope boundaries** (what is included and what is not)
+
+#### Step 4: Analyze Process and SubProcesses Coverage
+
+Examine the Process and all its SubProcesses to determine if the requirement is already covered:
+
+1. **Read the Process** `Introduction` and `Description` — does it mention this functionality?
+2. **Read each SubProcess** `Title`, `Description`, and `JSON` checks — is the functional element already documented?
+3. **Identify gaps:**
+   - Is there a SubProcess that should describe this functionality but doesn't?
+   - Should a new SubProcess be created?
+   - Do existing SubProcesses need their Description updated to include this functional element?
+
+**Propose modifications** to Process/SubProcess content. Remember:
+- Process/SubProcess content is **business-oriented** — written for customers and stakeholders, NOT technical
+- Use language a non-technical person can understand
+- Focus on WHAT the user can do, not HOW it's implemented
+- Describe user capabilities, business rules, and expected outcomes
+
+#### Step 5: Analyze Development Units (WebApps) Coverage
+
+Examine the WebApps (DevUnits) associated to the process:
+
+1. **Find associated WebApps** via:
+   - SubProcesses' `WebApps` field (direct association)
+   - Process' `DocumentationId` → WebApps with same `DocumentationId`
+2. **Read each WebApp and its Modules** — do they cover the technical implementation needed?
+3. **Identify gaps:**
+   - Which existing WebApp/Module should implement parts of this requirement?
+   - Are new WebApps or Modules needed?
+   - What Checks should be added to verify the implementation?
+
+**Propose WebApp changes:**
+- Which existing WebApps/Modules need modifications
+- New WebApps/Modules to create (with suggested EndPoint, Title, Description)
+- New Checks to add for verification
+
+#### Step 6: Write Analysis and Acceptance Criteria
+
+Update the requirement record with two fields:
+
+**`CloudIAAnalysis`** — Write a structured HTML analysis:
+
+```html
+<h4>Análisis del Requisito</h4>
+<p><b>Resumen:</b> [One paragraph explaining what the requirement asks for and its business impact]</p>
+
+<h4>Cobertura en Proceso/SubProcesos</h4>
+<p><b>Estado actual:</b> [What is already documented in the process]</p>
+<ul>
+  <li><b>[SubProcess Title]:</b> [How it relates to the requirement - covers/partially covers/not covered]</li>
+</ul>
+<p><b>Modificaciones propuestas:</b></p>
+<ul>
+  <li>[Proposed change to Process Introduction/Description]</li>
+  <li>[Proposed new SubProcess or modification to existing one]</li>
+</ul>
+
+<h4>Cobertura en Unidades de Desarrollo</h4>
+<p><b>Estado actual:</b> [What WebApps/Modules exist that relate to this requirement]</p>
+<ul>
+  <li><b>[WebApp KeyName]:</b> [How it relates - covers/needs modification/not covered]</li>
+</ul>
+<p><b>Modificaciones propuestas:</b></p>
+<ul>
+  <li>[Existing WebApp/Module to modify and what to add]</li>
+  <li>[New WebApp/Module to create with suggested structure]</li>
+</ul>
+
+<h4>Riesgos y Dependencias</h4>
+<ul>
+  <li>[Any risks, dependencies on other requirements, or blocking issues]</li>
+</ul>
+```
+
+**`AcceptanceCriteria`** — Write formal acceptance criteria in HTML:
+
+```html
+<h4>Criterios de Aceptación</h4>
+<ol>
+  <li><b>[Criterion title]:</b> [Description of what must be true for this to be considered done]</li>
+  <li><b>[Criterion title]:</b> [Another acceptance criterion]</li>
+</ol>
+
+<h4>Criterios de Verificación</h4>
+<ul>
+  <li>[How to verify criterion 1 - manual test, automated check, user validation]</li>
+  <li>[How to verify criterion 2]</li>
+</ul>
+```
+
+#### Step 7: Update the Requirement
+
+After writing the analysis:
+
+1. **Edit the requirement** in the local process backup file (`CloudFrameWorkDevRequirements` array)
+2. **Set `CloudIAAnalysis`** with the HTML analysis from Step 6
+3. **Set `AcceptanceCriteria`** with the HTML criteria from Step 6
+4. **Sync to remote:**
+```bash
+composer script -- "_cloudia/processes/update-from-backup?id=/process-keyname"
+```
+
+#### Complete Example
+
+User says: "Analiza el requisito 5421957012520960 del proceso /cloud-documentum"
+
+1. `backup-from-remote?id=/cloud-documentum` → get latest data
+2. Find requirement `5421957012520960` in `CloudFrameWorkDevRequirements` array
+3. Read its Description: "Tener un sistema de gestión de Requisitos"
+4. Analyze `/cloud-documentum` Process + 23 SubProcesses → is requirements management described?
+5. Analyze WebApps linked via DocumentationId → do any DevUnits implement requirements management?
+6. Write `CloudIAAnalysis` (gaps found, proposals) + `AcceptanceCriteria` (what "done" looks like)
+7. Update backup file and `update-from-backup?id=/cloud-documentum`
+
+---
+
+### Requirement Analysis Workflow — WebApp/DevUnit Context (CloudIA)
+
+When the user asks to **analyze a requirement linked to a WebApp** (e.g., "analiza el requisito XXXX de la webapp /cloud-documentum/processes"), the AI MUST follow this workflow:
+
+#### Step 1: Locate the Requirement
+
+Find the requirement by its KeyId in WebApp backups.
+
+**If WebApp is known:**
+```bash
+composer script -- "_cloudia/webapps/backup-from-remote?id=/webapp-keyname"
+```
+Then search for the requirement KeyId inside the `CloudFrameWorkDevRequirements` array in the backup JSON.
+
+**If WebApp is NOT known:**
+Search local WebApp backups in `buckets/backups/WebApps/{platform}/` for a `CloudFrameWorkDevRequirements` entry matching the KeyId.
+
+**Output:** The requirement record AND the parent WebApp backup (WebApp + Modules + Requirements).
+
+#### Step 2: Backup Latest Version from Remote
+
+ALWAYS download the latest version before analyzing:
+```bash
+composer script -- "_cloudia/webapps/backup-from-remote?id=/webapp-keyname"
+```
+Read the backup file to have the current state of WebApp, Modules, and Requirements.
+
+#### Step 3: Analyze the Requirement Description
+
+Read the requirement's `Description` field. Identify:
+- **What** must be implemented (technical objective)
+- **Where** it fits within the WebApp architecture (which module, which endpoint)
+- **Why** it matters (user story, business rule, technical debt)
+- **Scope boundaries** (what is included and what is not)
+
+#### Step 4: Analyze WebApp and Modules Coverage
+
+Examine the WebApp and all its Modules to determine if the requirement is already covered in the development strategy:
+
+1. **Read the WebApp** `Description` and `JSON` checks — does it describe this functionality in its development strategy?
+2. **Read each Module** `Title`, `Description`, `EndPoint`, and `JSON` checks — is the technical element already planned or implemented?
+3. **Identify gaps:**
+   - Is there a Module that should cover this functionality but doesn't?
+   - Should a new Module be created?
+   - Do existing Modules need their Description updated to include this technical element?
+
+**Propose modifications** to WebApp/Module content. Remember:
+- WebApp/Module content is **technical** — written for the development team
+- Focus on WHAT needs to be built, which endpoints, which data models
+- Describe the technical approach, architecture decisions, and implementation notes
+- This content will be used to plan and create Tasks
+
+#### Step 5: Analyze Checks and Tasks Coverage
+
+Examine existing Checks and Tasks to determine if execution is planned:
+
+1. **Analyze Checks** in the WebApp's `JSON` field and each Module's `JSON` field:
+   - Do existing Checks verify parts of this requirement?
+   - Which new Checks should be added to verify the implementation?
+   - Propose new Check routes and descriptions
+
+2. **Analyze Tasks** associated to the WebApp:
+   - Fetch tasks linked via `WebApps` field in `CloudFrameWorkProjectsTasks`
+   - Are there existing tasks that contribute to fulfilling this requirement?
+   - Which new tasks should be created?
+
+3. **Propose execution plan:**
+   - New Modules to create (with suggested EndPoint, Title, Description)
+   - New Checks to add to existing or new Modules
+   - New Tasks to create (with suggested Title, Description, Milestone)
+
+#### Step 6: Write Analysis and Acceptance Criteria
+
+Update the requirement record with two fields:
+
+**`CloudIAAnalysis`** — Write a structured HTML analysis:
+
+```html
+<h4>Análisis del Requisito</h4>
+<p><b>Resumen:</b> [One paragraph explaining the technical requirement and its impact on the WebApp]</p>
+
+<h4>Cobertura en WebApp/Módulos</h4>
+<p><b>Estado actual:</b> [What is already described in the WebApp development strategy]</p>
+<ul>
+  <li><b>[Module EndPoint]:</b> [How it relates - covers/partially covers/not covered]</li>
+</ul>
+<p><b>Modificaciones propuestas:</b></p>
+<ul>
+  <li>[Proposed change to WebApp Description or existing Module]</li>
+  <li>[New Module to create: EndPoint, Title, Description]</li>
+</ul>
+
+<h4>Cobertura en Checks y Tareas</h4>
+<p><b>Checks existentes:</b> [Which checks already verify parts of this requirement]</p>
+<p><b>Tareas existentes:</b> [Which tasks contribute to fulfilling this requirement]</p>
+<p><b>Nuevos elementos propuestos:</b></p>
+<ul>
+  <li><b>Check:</b> [Route] - [Description of what it verifies]</li>
+  <li><b>Task:</b> [Title] - [Description and suggested milestone]</li>
+</ul>
+
+<h4>Riesgos y Dependencias</h4>
+<ul>
+  <li>[Technical risks, dependencies on APIs/Libraries, or blocking issues]</li>
+</ul>
+```
+
+**`AcceptanceCriteria`** — Write formal acceptance criteria:
+
+```html
+<h4>Criterios de Aceptación</h4>
+<ol>
+  <li><b>[Criterion]:</b> [What must be true technically for this to be done]</li>
+  <li><b>[Criterion]:</b> [Another technical acceptance criterion]</li>
+</ol>
+
+<h4>Criterios de Verificación</h4>
+<ul>
+  <li>[How to verify: automated test, manual QA, code review, Check status]</li>
+</ul>
+```
+
+#### Step 7: Update the Requirement
+
+1. Edit the requirement in the local WebApp backup file (`CloudFrameWorkDevRequirements` array)
+2. Set `CloudIAAnalysis` and `AcceptanceCriteria`
+3. Sync:
+```bash
+composer script -- "_cloudia/webapps/update-from-backup?id=/webapp-keyname"
+```
+
+#### Determining Context: Process vs WebApp
+
+When the user asks to analyze a requirement without specifying context, determine the type by checking `CFOEntity`:
+
+| CFOEntity | Context | Workflow |
+|-----------|---------|----------|
+| `CloudFrameWorkDevDocumentationForProcesses` | Process | Use **Process Context** workflow |
+| `CloudFrameWorkDevDocumentationForSubProcesses` | Process | Use **Process Context** workflow |
+| `CloudFrameWorkDevDocumentationForWebApps` | WebApp | Use **WebApp Context** workflow |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp | Use **WebApp Context** workflow |
+| `CloudFrameWorkDevDocumentationForLibraries` | Library | Adapt **WebApp Context** for library specifics |
+| `CloudFrameWorkDevDocumentationForLibrariesModules` | Library | Adapt **WebApp Context** for library specifics |
+
+**To find the requirement**, search in both Process and WebApp backups, or use the CFI API:
+```bash
+# Search in process backups
+grep -rl "REQUIREMENT_KEYID" buckets/backups/Processes/{platform}/
+
+# Search in webapp backups
+grep -rl "REQUIREMENT_KEYID" buckets/backups/WebApps/{platform}/
+```
+
+---
 
 ## Projects, Milestones and Tasks
 

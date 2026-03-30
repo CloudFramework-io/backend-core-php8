@@ -587,7 +587,10 @@ if (!defined ("_Buckets_CLASS_") ) {
 
                         // Let's try to move the temporal files to their destinations.
                         try {
-                            $file_uploaded = str_replace($this->bucket,'',$dest);
+                            if(str_starts_with($dest,'gs://'))
+                                $file_uploaded = str_replace('gs://'.$this->gs_bucket->name(),'',$dest);
+                            else
+                                $file_uploaded = $dest;
                             if($upload = $this->uploadFile($file_uploaded,$value['tmp_name'])) {
                             //if(move_uploaded_file($value['tmp_name'],$dest)) {
                                 unlink($value['tmp_name']);

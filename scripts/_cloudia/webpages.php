@@ -42,10 +42,11 @@ class Script extends CoreScripts
     function main()
     {
         //region SET $this->platform_id from configuration
-        $this->platform_id = $this->core->config->get('core.erp.platform_id');
+        $this->platform_id = $this->formParams['platform_id'] ?? $this->core->config->get('core.erp.platform_id');
         if (!$this->platform_id) {
             return $this->addError('config-error', 'core.erp.platform_id is not defined');
         }
+        $this->core->cache->setNameSpace($this->platform_id);
         //endregion
 
         //region AUTHENTICATE user and SET $this->headers

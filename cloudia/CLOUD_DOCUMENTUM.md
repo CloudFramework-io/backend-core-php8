@@ -140,6 +140,7 @@ When working with CLOUD Documentum to develop a product or solution, an AI must:
 | **WebApp** | Technical application implementing features |
 | **Module** | Specific functionality within a WebApp |
 | **Check** | Acceptance criteria and verification points |
+| **Requirement** | Functional requirements linked to any Documentum object |
 | **Project** | Execution tracking container |
 | **Milestone** | Delivery phase matching feature categories |
 | **Task** | Executable work item with verification |
@@ -201,6 +202,7 @@ This separation ensures:
 | **APIs** | REST API documentation with endpoints |
 | **Libraries** | Code libraries and function documentation |
 | **Courses** | CLOUD Academy learning content |
+| **Requirements** | Functional requirements associated to Documentum objects (Processes, SubProcesses, WebApps, etc.) |
 | **Activity** | Time tracking and event logging (TimeSpent on tasks is calculated from activity) |
 | **Localizations** | Multi-language dictionary tags for i18n support |
 
@@ -280,6 +282,194 @@ Workflow-oriented guide for execution:
 ```
 Use this skill for task execution and time tracking operations.
 ```
+
+---
+
+## Requirements (Functional Requirements)
+
+CLOUD Documentum includes a **Requirements Management** module (`CloudFrameWorkDevRequirements`) that allows defining functional requirements associated to any Documentum object. The **meaning and impact** of a requirement changes depending on the entity it is associated with.
+
+### Use Cases by Associated Entity
+
+The `CFOEntity`/`CFOId` association determines the nature and downstream effect of each requirement:
+
+#### Associated to Process / SubProcess → New functional element
+
+When a requirement is linked to a **Process** or **SubProcess**, it indicates that a **new functional element** needs to be added to the business knowledge. This triggers a downstream workflow:
+
+```
+Requirement (approved) → New SubProcess/feature documented in the Process
+                       → WebApps (DevUnits) created to implement the functionality
+                       → Tasks generated from the WebApp Checks
+```
+
+**Example**: A requirement on Process `/cloud-hrms` stating "The system must allow employees to request schedule changes" means a new SubProcess will be documented, then DevUnits will be created to implement it.
+
+#### Associated to WebApp / Module → Implementation requirement
+
+When a requirement is linked to a **WebApp** (DevUnit) or **Module**, it defines a **functional requirement to implement** within that development unit. Tasks associated to the WebApp/Module must take this requirement into account.
+
+```
+Requirement (approved) → Acceptance criteria for the WebApp/Module
+                       → Tasks must satisfy the requirement
+                       → Checks verify compliance
+```
+
+**Example**: A requirement on WebApp `/cloud-hrms/schedule-management` stating "The calendar must show pending approvals with visual differentiation" is a functional spec that developers must implement and tasks must verify.
+
+#### Associated to Library / Library Module → Implementation specification
+
+When a requirement is linked to a **Library** or **Library function**, it defines a **concrete implementation requirement** — a technical specification for how the library/function must behave.
+
+```
+Requirement (approved) → Technical spec for the library/function
+                       → Direct implementation constraint
+```
+
+**Example**: A requirement on Library `/cloud-solutions/cloud-ecm/class/CloudECM` stating "The method `generatePDF` must support watermarks with configurable opacity" is a direct technical specification.
+
+#### Associated to API / API EndPoint → API contract requirement
+
+When a requirement is linked to an **API** or **EndPoint**, it defines a **contract requirement** for the API behavior, input/output, or integration constraints.
+
+### Summary Table
+
+| Associated Entity | Requirement Means | Downstream Effect |
+|-------------------|-------------------|-------------------|
+| **Process / SubProcess** | New functional element needed | Creates SubProcesses → DevUnits → Tasks |
+| **WebApp / Module** | Functional requirement to implement | Tasks must satisfy it; Checks verify it |
+| **Library / Library Module** | Concrete implementation specification | Direct technical constraint |
+| **API / API EndPoint** | API contract/behavior requirement | Endpoint implementation constraint |
+
+### CloudFrameWorkDevRequirements Structure
+
+| Field | Type | Mandatory | Description |
+|-------|------|-----------|-------------|
+| `CFOEntity` | select | No | Associated Documentum CFO (APIs, Processes, SubProcesses, WebApps, Modules, Libraries) |
+| `CFOId` | string | No | KeyName/KeyId of the associated object |
+| `Title` | string | Yes | Requirement title |
+| `Priority` | select | No | MoSCoW priority: `must`, `should`, `could`, `wont` |
+| `Status` | select | No | Lifecycle: `draft`, `pending-review`, `approved`, `rejected`, `implemented`, `deprecated` |
+| `Open` | boolean | Yes | Auto-calculated: `false` when Status is `implemented` or `deprecated` |
+| `Owner` | string | Yes | Requirement owner email |
+| `AssignedTo` | multiselect | No | Assigned users (filtered by development/ecm privileges) |
+| `DateDueDate` | date | No | Target completion date |
+| `Description` | html (zip) | Yes | Detailed functional requirement description |
+| `CloudIAAnalysis` | html (zip) | No | AI-generated analysis of the requirement |
+| `AcceptanceCriteria` | html (zip) | No | Formal acceptance criteria |
+| `Results` | html (zip) | No | Implementation results and notes |
+| `Documents` | server_documents | No | Attached documentation files |
+| `Tags` | list | No | Search tags |
+| `JSON` | json | No | Extra structured data |
+
+### Associable CFOEntities
+
+| CFOEntity Value | Object | Requirement Type |
+|-----------------|--------|------------------|
+| `CloudFrameWorkDevDocumentationForProcesses` | Processes | New functional element → generates DevUnits |
+| `CloudFrameWorkDevDocumentationForSubProcesses` | SubProcesses | New functional element → generates DevUnits |
+| `CloudFrameWorkDevDocumentationForWebApps` | WebApps (DevUnits) | Functional requirement → tasks must satisfy |
+| `CloudFrameWorkDevDocumentationForWebAppsModules` | WebApp Modules | Functional requirement → tasks must satisfy |
+| `CloudFrameWorkDevDocumentationForLibraries` | Libraries | Implementation specification |
+| `CloudFrameWorkDevDocumentationForLibrariesModules` | Library Modules | Implementation specification |
+| `CloudFrameWorkDevDocumentationForAPIs` | APIs | API contract requirement |
+| `CloudFrameWorkDevDocumentationForAPIEndPoints` | API EndPoints | API contract requirement |
+
+### Status Lifecycle
+
+```
+draft → pending-review → approved → implemented
+                       ↘ rejected
+                                     deprecated
+```
+
+| Status | Description | Deletable | Open |
+|--------|-------------|-----------|------|
+| `draft` | Initial draft, still being written | **Yes** | Yes |
+| `pending-review` | Submitted for stakeholder review | No | Yes |
+| `approved` | Approved for implementation | No | Yes |
+| `rejected` | Rejected, not to be implemented | No | Yes |
+| `implemented` | Successfully implemented | No | **No** |
+| `deprecated` | No longer relevant | No | **No** |
+
+> **Delete rule**: Only requirements with `Status == 'draft'` can be deleted.
+
+### Priority (MoSCoW Method)
+
+| Priority | Label | Description |
+|----------|-------|-------------|
+| `must` | Must Have | Critical requirement, non-negotiable |
+| `should` | Should Have | Important but not critical |
+| `could` | Could Have | Desirable if time/resources allow |
+| `wont` | Won't Have (this time) | Explicitly excluded from current scope |
+
+### Security
+
+| Setting | Value |
+|---------|-------|
+| CFO Locked | Yes |
+| Required Privileges | `development-admin`, `development-user`, `ecm-admin`, `ecm-user` |
+| Backups | Update and delete tracked |
+| Delete restriction | Only when `Status == 'draft'` |
+
+### Data Type
+
+- **Type**: `ds` (Google Datastore)
+- **GroupName**: CLOUD Documentum
+- **Interface icon**: `clipboard-list`
+
+### Relationship with Other Documentum Elements
+
+```
+Process/SubProcess (Business Knowledge)
+    │
+    ├── Requirements (on Process) → "Add new functional element"
+    │       └── Generates → new SubProcesses → new DevUnits → new Tasks
+    │
+    ├── WebApps/Modules (Technical Implementation)
+    │   ├── Requirements (on WebApp) → "Implement this functionality"
+    │   │       └── Tasks must satisfy → Checks verify compliance
+    │   └── Checks (Verification Points)
+    │
+    ├── Libraries (Code Implementation)
+    │   └── Requirements (on Library) → "Concrete implementation spec"
+    │
+    ├── APIs (Contracts)
+    │   └── Requirements (on API) → "API behavior/contract spec"
+    │
+    └── Tasks (Execution)
+            └── Checks (Task Verification)
+```
+
+Requirements complement the existing Documentum methodology at **different levels** depending on association:
+1. **On Processes**: Signal that new functionality must be designed and built end-to-end
+2. **On WebApps/Modules**: Define functional constraints that tasks must implement
+3. **On Libraries**: Specify concrete technical behavior
+4. **On APIs**: Define contract and integration requirements
+
+### Requirement Analysis (CloudIA)
+
+The analysis workflow depends on the **context** (determined by `CFOEntity`):
+
+#### On Process/SubProcess — Business-oriented analysis
+
+1. **Locate** the requirement and backup the process from remote
+2. **Analyze** the requirement's Description (what, who, why, scope)
+3. **Analyze Process/SubProcess coverage** — is the functional element described in business terms? Propose modifications in non-technical, customer-facing language
+4. **Analyze WebApp/DevUnit coverage** — do existing DevUnits implement this requirement? Propose new or modified WebApps/Modules
+5. **Write `CloudIAAnalysis`** + **`AcceptanceCriteria`**
+6. **Sync** via `_cloudia/processes/update-from-backup`
+
+#### On WebApp/Module — Technical analysis
+
+1. **Locate** the requirement and backup the WebApp from remote
+2. **Analyze** the requirement's Description (what to implement, where, why)
+3. **Analyze WebApp/Module coverage** — is the technical element in the development strategy? Propose modifications in technical language for the dev team
+4. **Analyze Checks and Tasks** — do existing Checks verify parts of this requirement? Are there Tasks that contribute? Propose new Modules, Checks, and Tasks
+5. **Write `CloudIAAnalysis`** + **`AcceptanceCriteria`**
+6. **Sync** via `_cloudia/webapps/update-from-backup`
+
+> **Complete workflow details:** See `agents/cloud-documentum.md` → "Requirement Analysis Workflow" sections
 
 ---
 
