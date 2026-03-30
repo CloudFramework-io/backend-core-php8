@@ -47,8 +47,6 @@ if (!defined ("_Buckets_CLASS_") ) {
         var $bucket = '';
         /** @ignore */
         var $bucketInfo = [];
-        /** @ignore */
-        var $pathPrefix = '';
         /**
          * If there is an error in the last execution
          *
