@@ -383,7 +383,7 @@ class Script extends CoreScripts
             //region FETCH modules for this WebApp using KeyName
             $modules_response = [];
             if (isset($all_modules[$key_name])) {
-                $modules_response = ['data' => &$all_modules[$key_name]];
+                $modules_response = ['data' => $all_modules[$key_name]];
             }
 
             $modules = [];
@@ -393,11 +393,13 @@ class Script extends CoreScripts
                 foreach ($modules as &$module) {
                     ksort($module);
                 }
+                unset($module); // Break reference to avoid PHP foreach-by-ref bug
                 usort($modules, function ($a, $b) {
                     return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
                 });
             }
             //endregion
+
 
             //region SORT $webapp keys alphabetically
             ksort($webapp);
@@ -440,6 +442,7 @@ class Script extends CoreScripts
                 return strcmp($a['KeyId'] ?? '', $b['KeyId'] ?? '');
             });
             //endregion
+
 
             //region BUILD $webapp_data structure
             $webapp_data = [
