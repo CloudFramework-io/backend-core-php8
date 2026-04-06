@@ -653,31 +653,27 @@ class WorkFlows
                 'from_name' => $from_name,
                 'headers' => $headers,
                 'important' => $important,
-                'track_opens' => null, //true by default
-                'track_clicks' => null, //true by default
-                'auto_text' => null,
-                'auto_html' => null,
-                'inline_css' => null,
-                'url_strip_qs' => null,
-                'preserve_recipients' => null,
-                'view_content_link' => null,
+                'track_opens' => $params['track_opens'] ?? null, //true by default in Mandrill
+                'track_clicks' => $params['track_clicks'] ?? null, //true by default in Mandrill
+                'auto_text' => $params['auto_text'] ?? null,
+                'auto_html' => $params['auto_html'] ?? null,
+                'inline_css' => $params['inline_css'] ?? null,
+                'url_strip_qs' => $params['url_strip_qs'] ?? null,
+                'preserve_recipients' => $params['preserve_recipients'] ?? null,
+                'view_content_link' => $params['view_content_link'] ?? null,
                 'bcc_address' => ($email_bcc && $this->core->is->validEmail($email_bcc))?$email_bcc:null,
-                'tracking_domain' => null,
-                'signing_domain' => null,
-                'return_path_domain' => null,
+                'tracking_domain' => $params['tracking_domain'] ?? null,
+                'signing_domain' => $params['signing_domain'] ?? null,
+                'return_path_domain' => $params['return_path_domain'] ?? null,
                 'merge' => true,
                 'tags' => $tags?:null,
-                //'google_analytics_domains' => array($domain),
-                //'google_analytics_campaign' => $domain,
-                //'metadata' => array('website' => $domain)
+                'google_analytics_domains' => $params['google_analytics_domains'] ?? null,
+                'google_analytics_campaign' => $params['google_analytics_campaign'] ?? null,
+                'metadata' => $params['metadata'] ?? null,
+                'subaccount' => $params['subaccount'] ?? null,
             );
             if(!$slug)
                 $message['html'] = $html;
-
-            // It will preserve to: emails, and cc: emails to the receivers
-            if($params['preserve_recipients']??null)
-                $message['preserve_recipients'] = true;  // It shows in the email the to: emails and cc: emails
-
 
             //region to: into $message['to']
             $message['to'] = [];
