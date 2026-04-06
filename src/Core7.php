@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.46';  // 2026-04-06
+        var $_version = '8.4.47';  // 2026-04-06
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -6555,6 +6555,118 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //$this->expirationTime = $userData['data']['User']['Expires']??time();
             $this->tokenExpiresIn = ($userData['data']['User']['Expires']??time())-time();
             $this->cachedTokenExpiresIn =  intval($this->cacheExpiresIn - (microtime(true)-$userData['tokens'][$token]['time']));
+            unset($userData);
+            $this->core->namespace = $namespace;
+            //endregion
+
+            return true;
+
+        }
+
+
+        /**
+         * Verify that a token is valid and update the following properties: namespace, userId, userData
+         * It allows to work with several active tokens at the same time
+         * @param string $token Token to verify with CloudFramework ERP
+         * @param string $integration_key Integration Key to call CloudFramework API for signing
+         * @param string $authenticator_code optional to send an authenticator code
+         * @param bool $refresh if true it ignores cached data and call CLOUD-DIRECTORY API to refresh information
+         * @return false|void
+         */
+        function loadPlatformUserWithMCPToken(string $mcp_token, string $integration_key, string $authenticator_code='', bool $refresh=false)
+        {
+            // Reset $user variables
+            $this->reset();
+
+            //region SET $user,$namespace,$key from token structure or return errorCode: WRONG_TOKEN_FORMAT
+            $tokenParts = explode('__',$mcp_token);
+            if(count($tokenParts) != 3
+                || !($namespace=$tokenParts[0])
+                || !($user_token=$tokenParts[1])
+                || !($key=$tokenParts[2]) )
+                return($this->addError('WRONG_TOKEN_FORMAT','The structure of the token is not right'));
+            //endregion
+
+            //region SET $userData trying to get the info from cache deleting expired tokens and checking $this->maxTokens
+            $updateCache = false;
+            $userData = $this->core->cache->get($namespace.'_'.$user_token);
+            if(!is_array($userData['mcp_tokens']??null) || $refresh){
+                $userData = ['id'=>null,'mcp_tokens'=>[],'data'=>[]];
+            }
+            else {
+                $now = microtime(true);
+                $num_tokens = 0;
+                foreach ($userData['mcp_tokens'] as $tokenId=>$tokenInfo) {
+                    if(($now - $tokenInfo['time']) > $this->cacheExpiresIn) {
+                        unset($userData['mcp_tokens'][$tokenId]);
+                        $updateCache = true;
+                    } else {
+                        $num_tokens++;
+                        if(!isset($userData['mcp_tokens'][$mcp_token]) && $num_tokens>=$this->maxTokens) {
+                            unset($userData['mcp_tokens'][$tokenId]);
+                            $updateCache = true;
+                        }
+                    }
+                }
+
+                //update Cache with the deleted tokens
+                if($updateCache) $this->core->cache->set($namespace.'_'.$user_token,$userData);
+
+                $this->cached = true;
+            }
+            if($userData['mcp_tokens'][$mcp_token]['error']??null)
+                unset($userData['mcp_tokens'][$mcp_token]);
+            //endregion
+
+            //region CALL CloudFramework API Service IF $token DOEST not exist in $userData OR $refresh
+            if(!isset($userData['mcp_tokens'][$mcp_token])  || $authenticator_code || $refresh) {
+
+                $this->cached = false;
+                $userData['mcp_tokens'][$mcp_token] =
+                    ['error'=>null,'time'=>microtime(true)
+                    ];
+
+                $params = ['Fingerprint'=>$this->core->system->getRequestFingerPrint()];
+                if($authenticator_code) $params['google_authenticator_code'] = $authenticator_code;
+                $cfUserInfo = $this->core->request->post_json_decode(
+                    $this::APIServices.'/'.$namespace.'/mcp?_user_data&loadPlatformUserWithMCPToken'
+                    ,$params
+                    ,['X-WEB-KEY'=>'Core7.loadPlatformUserWithMCPToken'
+                    ,'Authorization'=>'Bearer '.$mcp_token
+                    ,'X-EXTRA-INFO'=>$integration_key
+                ]);
+
+                if($this->core->request->error) {
+                    $userData['mcp_tokens'][$mcp_token]['error'] = $this->core->request->errorMsg;
+                    $this->addError($cfUserInfo['code']??$this->core->request->getLastResponseCode(), $cfUserInfo['message']??$this->core->request->errorMsg);
+                }elseif(($cfUserInfo['data']['google_authenticator_code'])??null) {
+                    $this->id = $cfUserInfo['data']['user_id']??null;
+                    $this->data['google_authenticator_code'] = 'required';
+                    return true;
+                }elseif(!($cfUserInfo['data']['token'])) {
+                    $userData['mcp_tokens'][$mcp_token]['error'] = ['Missing data.token in the response',$cfUserInfo];
+                    $this->addError('conflict', $userData['mcp_tokens'][$mcp_token]['error']);
+                }else {
+                    $userData['mcp_tokens'][$mcp_token]['token'] = $cfUserInfo['data']['token'];
+                    $userData['data'] =  $cfUserInfo['data'];
+                    $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
+                }
+                $this->core->request->reset();
+                $this->core->cache->set($namespace.'_'.$user_token,$userData);
+                if($this->error) return false;
+            }
+            //endregion
+
+            //region SET $this->{isAuth, namespace, token, id, data}
+            $this->isAuth = true;
+            $this->token = $userData['mcp_tokens'][$mcp_token]['token'];
+            $this->activeTokens = count($userData['mcp_tokens']);
+            $this->namespace = $namespace;
+            $this->id = $userData['id'];
+            $this->data = $userData['data'];
+            //$this->expirationTime = $userData['data']['User']['Expires']??time();
+            $this->tokenExpiresIn = ($userData['data']['User']['Expires']??time())-time();
+            $this->cachedTokenExpiresIn =  intval($this->cacheExpiresIn - (microtime(true)-$userData['mcp_tokens'][$mcp_token]['time']));
             unset($userData);
             $this->core->namespace = $namespace;
             //endregion
