@@ -541,7 +541,7 @@ class WorkFlows
                             "Tags" => $tags,
                             "Opens" => 0,
                             "Clicks" => 0,
-                            "BODY_HTML" => $this->core->utf8Encode($html),
+                            "BODY_HTML" => $this->core->utf8Encode($html ?? ''),
                             "DateProcessing" => "now",
                             "UpdateProcessing" => "now",
                             "StatusProcessing" => $item['status'] ?? 'unknown',
