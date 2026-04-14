@@ -30,7 +30,7 @@ class DataSQL
     var $default_time_zone_to_read = 'UTC';
     var $default_time_zone_to_write = 'UTC';
     private $joins = [];
-    public $queryFields = '';
+    private $queryFields = '';
     private $queryWhere = [];
     private $extraWhere = '';
     private $virtualFields = [];
