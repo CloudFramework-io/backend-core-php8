@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.4.47';  // 2026-04-06
+        var $_version = '8.4.48';  // 2026-05-08
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -641,8 +641,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function jsonEncode($input, $options=null)
         {
-            if($options) $json = json_encode($input, JSON_UNESCAPED_UNICODE | $options);
-            else $json = json_encode($input, JSON_UNESCAPED_UNICODE );
+            if($options) $json = json_encode($input, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | $options);
+            else $json = json_encode($input, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
             if (function_exists('json_last_error') && $errno = json_last_error()) {
                 $this->errors->add(['json_encode error',$errno],'jsonEncode');
@@ -1642,7 +1642,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // Evaluate to write in syslog
             if(null !==  $syslog_title) {
                 if(null==$syslog_type) $syslog_type = $this->syslog_type;
-                $this->sendToSysLog($syslog_title.': '. json_encode($data,JSON_FORCE_OBJECT),$syslog_type);
+                $this->sendToSysLog($syslog_title.': '. json_encode($data,JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),$syslog_type);
                 //syslog($syslog_type, $syslog_title.': '. json_encode($data,JSON_FORCE_OBJECT));
                 // Change the data sent to say that the info has been sent to syslog
                 if(is_string($data))
@@ -1671,7 +1671,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param $syslog_type string|null values: error, info, warning, notice, debug, critical, alert, emergency
          */
         public function sendToSysLog($data, $syslog_type=null) {
-            if(!is_string($data)) $data = json_encode($data,JSON_FORCE_OBJECT);
+            if(!is_string($data)) $data = json_encode($data,JSON_FORCE_OBJECT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             if(null==$syslog_type) $syslog_type = $this->syslog_type;
             // In development write the logs in a different way
             if(is_object($this->logger)) {
@@ -2278,7 +2278,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $_array = is_array($data);
 
             // Convert into string if we received an array
-            if ($_array) $data = json_encode($data);
+            if ($_array) $data = json_encode($data,JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             // Tags Conversions
             $data = str_replace('{{rootPath}}', $this->core->system->root_path, $data??'');
             $data = str_replace('{{appPath}}', $this->core->system->app_path, $data??'');
