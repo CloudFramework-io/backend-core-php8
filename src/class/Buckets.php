@@ -957,6 +957,18 @@ if (!defined ("_Buckets_CLASS_") ) {
          * @return bool true if the path is file.
          */
         function isFile(string $path)  {
+            if(strpos($this->bucket,'gs:')===0 && is_object($this->gs_bucket)) {
+                try {
+                    $full_path = $this->getBucketPath($path);
+                    $gs_prefix = 'gs://' . $this->gs_bucket->name() . '/';
+                    $object_name = (strpos($full_path, $gs_prefix) === 0)
+                        ? substr($full_path, strlen($gs_prefix))
+                        : ltrim($path, '/');
+                    return $this->gs_bucket->object($object_name)->exists();
+                } catch(Exception $e) {
+                    return false;
+                }
+            }
             return(is_file($this->getBucketPath($path)));
         }
 
@@ -1175,9 +1187,14 @@ if (!defined ("_Buckets_CLASS_") ) {
 
             $ret = '';
             try{
-                $ret = @file_get_contents($this->bucket.$path.'/'.$file);
-                if($ret=== false) {
-                    $this->addError(error_get_last());
+                if(strpos($this->bucket,'gs:')===0 && is_object($this->gs_bucket)) {
+                    $object_name = ltrim($path.'/'.$file, '/');
+                    $ret = $this->gs_bucket->object($object_name)->downloadAsString();
+                } else {
+                    $ret = @file_get_contents($this->bucket.$path.'/'.$file);
+                    if($ret=== false) {
+                        $this->addError(error_get_last());
+                    }
                 }
             } catch(Exception $e) {
                 $this->addError($e->getMessage());
@@ -1201,10 +1218,18 @@ if (!defined ("_Buckets_CLASS_") ) {
         function deleteFile(string $filename_path) {
             if(!$filename_path = $this->checkFileNamePath($filename_path)) return false;
             try{
-                if(!$this->isFile($filename_path)) return false;
-                $ret = unlink($this->bucket.$filename_path);
-                if($ret === false) return $this->addError(error_get_last());
-                else return true;
+                if(strpos($this->bucket,'gs:')===0 && is_object($this->gs_bucket)) {
+                    $object_name = ltrim($filename_path, '/');
+                    $object = $this->gs_bucket->object($object_name);
+                    if(!$object->exists()) return false;
+                    $object->delete();
+                    return true;
+                } else {
+                    if(!$this->isFile($filename_path)) return false;
+                    $ret = unlink($this->bucket.$filename_path);
+                    if($ret === false) return $this->addError(error_get_last());
+                    else return true;
+                }
             } catch(Exception $e) {
                 $this->addError($e->getMessage());
                 $this->addError(error_get_last());
@@ -1231,11 +1256,22 @@ if (!defined ("_Buckets_CLASS_") ) {
             if(!$filename_path_target = $this->checkFileNamePath($filename_path_target)) return false;
             if($filename_path_source == $filename_path_target)  return $this->addError($this->bucket.$filename_path_source.' source files is equals to target_file');
             try{
-                if(!$this->isFile($this->bucket.$filename_path_source)) return $this->addError($this->bucket.$filename_path_source.' does not exist');
-                if(!copy($this->bucket.$filename_path_source,$this->bucket.$filename_path_target))
-                    return $this->addError([$this->bucket.$filename_path_source,$this->bucket.$filename_path_target,error_get_last()]);
-                else
+                if(strpos($this->bucket,'gs:')===0 && is_object($this->gs_bucket)) {
+                    $source_name = ltrim($filename_path_source, '/');
+                    $target_name = ltrim($filename_path_target, '/');
+                    $object = $this->gs_bucket->object($source_name);
+                    if(!$object->exists()) return $this->addError($this->bucket.$filename_path_source.' does not exist');
+                    $copied = $object->copy($this->gs_bucket, ['name' => $target_name]);
+                    if(!is_object($copied) || !$copied->exists())
+                        return $this->addError('Failed to copy '.$this->bucket.$filename_path_source.' to '.$this->bucket.$filename_path_target);
                     return true;
+                } else {
+                    if(!$this->isFile($this->bucket.$filename_path_source)) return $this->addError($this->bucket.$filename_path_source.' does not exist');
+                    if(!copy($this->bucket.$filename_path_source,$this->bucket.$filename_path_target))
+                        return $this->addError([$this->bucket.$filename_path_source,$this->bucket.$filename_path_target,error_get_last()]);
+                    else
+                        return true;
+                }
             } catch(Exception $e) {
                 $this->addError($e->getMessage());
                 $this->addError(error_get_last());
@@ -1263,12 +1299,32 @@ if (!defined ("_Buckets_CLASS_") ) {
             if(!$filename_path_target = $this->checkFileNamePath($filename_path_target)) return false;
             if($filename_path_source == $filename_path_target)  return $this->addError($this->bucket.$filename_path_source.' source files is equals to target_file');
             try{
-                $bucket = 'gs://'.$this->gs_bucket->name();
-                if(!$this->isFile($bucket.$filename_path_source)) return $this->addError($bucket.$filename_path_source.' does not exist');
-                if(!rename($bucket.$filename_path_source,$bucket.$filename_path_target))
-                    return $this->addError([$bucket.$filename_path_source,$bucket.$filename_path_target,error_get_last()]);
-                else
+                if(strpos($this->bucket,'gs:')===0 && is_object($this->gs_bucket)) {
+                    $bucket_uri = 'gs://'.$this->gs_bucket->name();
+                    $source_name = ltrim($filename_path_source, '/');
+                    $target_name = ltrim($filename_path_target, '/');
+                    $object = $this->gs_bucket->object($source_name);
+                    if(!$object->exists()) return $this->addError($bucket_uri.$filename_path_source.' does not exist');
+                    $copied = $object->copy($this->gs_bucket, ['name' => $target_name]);
+                    if(!is_object($copied) || !$copied->exists())
+                        return $this->addError('Failed to copy '.$bucket_uri.$filename_path_source.' to '.$bucket_uri.$filename_path_target);
+                    try {
+                        $object->delete();
+                    } catch(Exception $e) {
+                        // Source delete failed after a successful copy: roll back the target so we don't leave a duplicate.
+                        try { $copied->delete(); } catch(Exception $e2) {
+                            $this->addError('Rollback failed deleting target '.$bucket_uri.$filename_path_target.': '.$e2->getMessage());
+                        }
+                        return $this->addError('Move failed deleting source '.$bucket_uri.$filename_path_source.': '.$e->getMessage());
+                    }
                     return true;
+                } else {
+                    if(!$this->isFile($this->bucket.$filename_path_source)) return $this->addError($this->bucket.$filename_path_source.' does not exist');
+                    if(!rename($this->bucket.$filename_path_source,$this->bucket.$filename_path_target))
+                        return $this->addError([$this->bucket.$filename_path_source,$this->bucket.$filename_path_target,error_get_last()]);
+                    else
+                        return true;
+                }
             } catch(Exception $e) {
                 $this->addError($e->getMessage());
                 $this->addError(error_get_last());

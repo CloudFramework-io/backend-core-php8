@@ -782,7 +782,7 @@ if (!defined("_RESTfull_CLASS_")) {
          */
         public function setErrorFromCodelib(string $code,$extramsg='') {
             $formatted_message =$extramsg;
-            if(is_array($formatted_message)) $formatted_message = json_encode($formatted_message,JSON_PRETTY_PRINT);
+            if(is_array($formatted_message)) $formatted_message = $this->core->jsonEncode($formatted_message);
             if(strlen($formatted_message??'')) $formatted_message = " [{$formatted_message}]";
 
             // Delete from code any character :.* to delete potential comments
