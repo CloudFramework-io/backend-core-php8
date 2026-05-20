@@ -1244,11 +1244,15 @@ class CFOWorkFlows {
         }
 
         $_eval = false;
-        try {
-            $_eval_expression = '$_eval = ('.str_replace(';','',$this->core->replaceCloudFrameworkTagsAndVariables($workflow['conditional'],$data)).');';
-            eval($_eval_expression);
-        } catch (Throwable $t) {
-            $this->workflows_report($workflow['id'],"Error of expression in attribute [conditional] [{$_eval_expression}] in workflow {$event}[{$_i}]: ".$t->getMessage());
+        // ISO 27001 CRIT-05: Replace eval() with safe expression evaluator.
+        // After replaceCloudFrameworkTagsAndVariables(), the conditional contains only
+        // literal string/number values combined with comparison and logical operators.
+        // No PHP variables, function calls, or code constructs are expected.
+        $_eval_expression = str_replace(';', '', $this->core->replaceCloudFrameworkTagsAndVariables($workflow['conditional'], $data));
+        $_eval = $this->safeEvalExpression($_eval_expression, $workflow['id'], $event, $_i);
+        if ($_eval === null) {
+            // safeEvalExpression already reported the error; treat as false
+            $_eval = false;
         }
         if(!$_eval) {
             $this->workflows_report($workflow['id'],['result'=>'[conditional] has returned [false] in workflow.'.$workflow['action'].' '.$event."[$_i]"]);
@@ -1262,6 +1266,274 @@ class CFOWorkFlows {
         }
 
         return $_eval;
+    }
+
+    /**
+     * Safely evaluate a boolean conditional expression from a workflow.
+     *
+     * ISO 27001 CRIT-05: This method replaces eval() for workflow conditionals.
+     *
+     * After tag/variable substitution, expressions contain only:
+     *   - String literals (single or double quoted)
+     *   - Integer/float numeric literals
+     *   - Comparison operators: ==, !=, >, <, >=, <=
+     *   - Logical operators: &&, ||, !
+     *   - Parentheses for grouping
+     *   - Whitespace
+     *
+     * Examples of valid resolved expressions:
+     *   'active' == 'active'
+     *   'pending' != 'closed' && 'foo' == 'bar'
+     *   ('open' == 'open' || 'draft' == 'closed') && !('done' == 'done')
+     *   1 > 0
+     *   'value' == ''
+     *
+     * Any expression that does not match the safe whitelist pattern is rejected
+     * and null is returned (treated as false by the caller).
+     *
+     * @param string $expression  The resolved expression string (no PHP variables).
+     * @param string $workflow_id Workflow identifier for error reporting.
+     * @param string $event       Event name for error reporting.
+     * @param int    $_i          Workflow index for error reporting.
+     * @return bool|null  true/false on successful evaluation, null if expression is unsafe or invalid.
+     */
+    private function safeEvalExpression(string $expression, string $workflow_id, string $event, int $_i): ?bool
+    {
+        // Whitelist pattern: allow only string literals (single/double quoted), numbers,
+        // comparison and logical operators, parentheses, whitespace, and empty string ''.
+        // This explicitly rejects: $variables, function calls, semicolons, backticks,
+        // shell operators, PHP keywords, etc.
+        $safe_pattern = '/^[\s\d\'\".()\[\]=!<>&|+\-*\/%,]+$/u';
+        if (!preg_match($safe_pattern, $expression)) {
+            $this->workflows_report(
+                $workflow_id,
+                "Security: unsafe conditional expression rejected in workflow {$event}[{$_i}]: " . substr($expression, 0, 200)
+            );
+            return null;
+        }
+
+        // Additional check: reject any token that looks like a PHP construct or variable
+        // (dollar sign, backtick, curly braces not from tags, angle-bracket HTML, heredoc)
+        if (preg_match('/[\$`{}\\\\]|<[a-zA-Z]/', $expression)) {
+            $this->workflows_report(
+                $workflow_id,
+                "Security: conditional expression contains forbidden tokens in workflow {$event}[{$_i}]: " . substr($expression, 0, 200)
+            );
+            return null;
+        }
+
+        // Tokenize and evaluate using a simple recursive descent parser.
+        // Supported grammar:
+        //   expr      := or_expr
+        //   or_expr   := and_expr ( '||' and_expr )*
+        //   and_expr  := not_expr ( '&&' not_expr )*
+        //   not_expr  := '!' not_expr | comparison
+        //   comparison:= value ( ('=='|'!='|'>='|'<='|'>'|'<') value )?
+        //   value     := string_literal | number_literal | '(' expr ')'
+        try {
+            $tokens = $this->tokenizeSafeExpression($expression);
+            if ($tokens === null) {
+                $this->workflows_report(
+                    $workflow_id,
+                    "Security: conditional expression could not be tokenized in workflow {$event}[{$_i}]: " . substr($expression, 0, 200)
+                );
+                return null;
+            }
+            $pos = 0;
+            $result = $this->parseOrExpr($tokens, $pos);
+            // Ensure all tokens were consumed (no trailing garbage)
+            if ($pos !== count($tokens)) {
+                $this->workflows_report(
+                    $workflow_id,
+                    "Security: conditional expression has unexpected tokens at position {$pos} in workflow {$event}[{$_i}]: " . substr($expression, 0, 200)
+                );
+                return null;
+            }
+            return (bool) $result;
+        } catch (Throwable $t) {
+            $this->workflows_report(
+                $workflow_id,
+                "Error evaluating conditional expression in workflow {$event}[{$_i}]: " . $t->getMessage() . " | expression: " . substr($expression, 0, 200)
+            );
+            return null;
+        }
+    }
+
+    /**
+     * Tokenize a safe boolean expression into an array of typed tokens.
+     * Returns null if any unrecognised character sequence is found.
+     *
+     * Token format: ['type' => string, 'value' => mixed]
+     * Types: 'string', 'number', 'op' (operators and parentheses), 'bool'
+     *
+     * @param string $expression
+     * @return array|null
+     */
+    private function tokenizeSafeExpression(string $expression): ?array
+    {
+        $tokens = [];
+        $len = strlen($expression);
+        $i = 0;
+        while ($i < $len) {
+            // Skip whitespace
+            if (ctype_space($expression[$i])) { $i++; continue; }
+
+            // String literal: single-quoted
+            if ($expression[$i] === "'") {
+                $i++;
+                $str = '';
+                while ($i < $len && $expression[$i] !== "'") {
+                    if ($expression[$i] === '\\' && $i + 1 < $len) { $i++; }
+                    $str .= $expression[$i++];
+                }
+                if ($i >= $len) return null; // unterminated string
+                $i++; // consume closing quote
+                $tokens[] = ['type' => 'string', 'value' => $str];
+                continue;
+            }
+
+            // String literal: double-quoted
+            if ($expression[$i] === '"') {
+                $i++;
+                $str = '';
+                while ($i < $len && $expression[$i] !== '"') {
+                    if ($expression[$i] === '\\' && $i + 1 < $len) { $i++; }
+                    $str .= $expression[$i++];
+                }
+                if ($i >= $len) return null; // unterminated string
+                $i++; // consume closing quote
+                $tokens[] = ['type' => 'string', 'value' => $str];
+                continue;
+            }
+
+            // Numeric literal (integer or float, optionally negative)
+            if (ctype_digit($expression[$i]) || ($expression[$i] === '-' && $i + 1 < $len && ctype_digit($expression[$i + 1]))) {
+                $num = '';
+                if ($expression[$i] === '-') $num .= $expression[$i++];
+                while ($i < $len && (ctype_digit($expression[$i]) || $expression[$i] === '.')) {
+                    $num .= $expression[$i++];
+                }
+                $tokens[] = ['type' => 'number', 'value' => strpos($num, '.') !== false ? (float)$num : (int)$num];
+                continue;
+            }
+
+            // Two-character operators
+            if ($i + 1 < $len) {
+                $two = substr($expression, $i, 2);
+                if (in_array($two, ['==', '!=', '>=', '<=', '&&', '||'], true)) {
+                    $tokens[] = ['type' => 'op', 'value' => $two];
+                    $i += 2;
+                    continue;
+                }
+            }
+
+            // Single-character operators and parentheses
+            if (in_array($expression[$i], ['>', '<', '!', '(', ')'], true)) {
+                $tokens[] = ['type' => 'op', 'value' => $expression[$i]];
+                $i++;
+                continue;
+            }
+
+            // Unknown character — reject
+            return null;
+        }
+        return $tokens;
+    }
+
+    /**
+     * Parse OR expression: and_expr ( '||' and_expr )*
+     */
+    private function parseOrExpr(array &$tokens, int &$pos): bool
+    {
+        $result = $this->parseAndExpr($tokens, $pos);
+        while ($pos < count($tokens) && ($tokens[$pos]['type'] === 'op') && $tokens[$pos]['value'] === '||') {
+            $pos++;
+            $right = $this->parseAndExpr($tokens, $pos);
+            $result = $result || $right;
+        }
+        return $result;
+    }
+
+    /**
+     * Parse AND expression: not_expr ( '&&' not_expr )*
+     */
+    private function parseAndExpr(array &$tokens, int &$pos): bool
+    {
+        $result = $this->parseNotExpr($tokens, $pos);
+        while ($pos < count($tokens) && ($tokens[$pos]['type'] === 'op') && $tokens[$pos]['value'] === '&&') {
+            $pos++;
+            $right = $this->parseNotExpr($tokens, $pos);
+            $result = $result && $right;
+        }
+        return $result;
+    }
+
+    /**
+     * Parse NOT expression: '!' not_expr | comparison
+     */
+    private function parseNotExpr(array &$tokens, int &$pos): bool
+    {
+        if ($pos < count($tokens) && ($tokens[$pos]['type'] === 'op') && $tokens[$pos]['value'] === '!') {
+            // Make sure this is not '!=' (already consumed as two-char op)
+            $pos++;
+            return !$this->parseNotExpr($tokens, $pos);
+        }
+        return $this->parseComparison($tokens, $pos);
+    }
+
+    /**
+     * Parse comparison: value ( ('=='|'!='|'>='|'<='|'>'|'<') value )?
+     */
+    private function parseComparison(array &$tokens, int &$pos): bool
+    {
+        $left = $this->parseValue($tokens, $pos);
+        $compare_ops = ['==', '!=', '>=', '<=', '>', '<'];
+        if ($pos < count($tokens) && $tokens[$pos]['type'] === 'op' && in_array($tokens[$pos]['value'], $compare_ops, true)) {
+            $op = $tokens[$pos]['value'];
+            $pos++;
+            $right = $this->parseValue($tokens, $pos);
+            switch ($op) {
+                case '==': return $left == $right;
+                case '!=': return $left != $right;
+                case '>':  return $left >  $right;
+                case '<':  return $left <  $right;
+                case '>=': return $left >= $right;
+                case '<=': return $left <= $right;
+            }
+        }
+        // No operator: treat value itself as boolean
+        return (bool) $left;
+    }
+
+    /**
+     * Parse a value: string literal, number literal, or parenthesised expression.
+     * Returns the raw value (string or number) for comparison, or bool for grouped expr.
+     *
+     * @return string|int|float|bool
+     */
+    private function parseValue(array &$tokens, int &$pos)
+    {
+        if ($pos >= count($tokens)) {
+            throw new \RuntimeException('Unexpected end of expression');
+        }
+        $token = $tokens[$pos];
+
+        if ($token['type'] === 'string' || $token['type'] === 'number') {
+            $pos++;
+            return $token['value'];
+        }
+
+        if ($token['type'] === 'op' && $token['value'] === '(') {
+            $pos++; // consume '('
+            $result = $this->parseOrExpr($tokens, $pos);
+            if ($pos >= count($tokens) || $tokens[$pos]['value'] !== ')') {
+                throw new \RuntimeException('Expected closing parenthesis');
+            }
+            $pos++; // consume ')'
+            return $result;
+        }
+
+        throw new \RuntimeException('Unexpected token: ' . json_encode($token));
     }
 
     /**
