@@ -6465,7 +6465,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $token Token to verify with CloudFramework ERP
          * @param string $integration_key Integration Key to call CloudFramework API for signing
          * @param bool $refresh if true it ignores cached data and call CLOUD-DIRECTORY API to refresh information
-         * @return false|void
+         * @return bool
          */
         function loadPlatformUserWithToken(string $token, string $integration_key, bool $refresh=false)
         {
@@ -6541,7 +6541,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 }
                 $this->core->request->reset();
                 $this->core->cache->set($namespace.'_'.$user_token,$userData);
-                if($this->error) return;
+                if($this->error) return false;
             }
             //endregion
 
@@ -7085,6 +7085,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 && ($this->data['User']['KeyId']??false)
                 && $this->isAuth()
                 && $this->token;
+        }
+
+        /**
+         * Retrieves the email address of the user from the data array from PLATFORM User or PORTAL User
+         * @return string|null The email address of the user or null if not found.
+         */
+        function getEmail(): ?string
+        {
+            return ($this->data['User']['UserEmail']??($this->data['User']['Email']??null));
         }
 
         /**
