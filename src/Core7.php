@@ -6484,7 +6484,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region SET $userData trying to get the info from cache deleting expired tokens and checking $this->maxTokens
             $updateCache = false;
             $userData = $this->core->cache->get($namespace.'_'.$user_token);
-            if(!$userData || $refresh) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
+            if(!$userData || !is_array($userData) || !isset($userData['tokens']) || $refresh) $userData = ['id'=>null,'tokens'=>[],'data'=>[]];
             else {
                 $now = microtime(true);
                 $num_tokens = 0;

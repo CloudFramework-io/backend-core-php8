@@ -188,33 +188,65 @@ if (!defined ("_DATAVALIDATION_CLASS_") ) {
             $type = preg_replace('/\(.*/','',$type);
             switch (strtolower($type)) {
                 case "varbinary": case "varchar": case "char": case "string": return is_string($data);
-                case "text": case "txt": return is_string($data);
+                case "text": case "txt": case "longtext": case "mediumtext": case "html": case "markdown": return is_string($data);
+                case "password": return is_string($data);
+                case "color":
+                    // Accepts #rgb, #rrggbb, #rrggbbaa, named CSS colors, or any non-empty string fallback
+                    return is_string($data) && strlen($data) > 0;
+                case "file": case "image":
+                    // Stored as string reference (GCS URL or KeyId). Empty fails (the upstream check), non-empty string passes.
+                    return is_string($data);
                 case "number": $data = trim($data); return !preg_match('/[^0-9]/',$data);
-                case "tinyint":case "integer": if(strval(intval($data))===strval($data)) $data=intval($data);return is_integer($data);
-                case "double": case "decimal": case "float": if(floatval($data)!=0 || $data==="0"|| preg_match('/^0\.0*$/',$data) || $data === 0) $data=floatval($data);return is_float($data);
+                case "int": case "tinyint": case "smallint": case "mediumint": case "bigint": case "integer": if(strval(intval($data))===strval($data)) $data=intval($data);return is_integer($data);
+                case "double": case "decimal": case "float": case "currency":
+                    if(floatval($data)!=0 || $data==="0"|| preg_match('/^0\.0*$/',$data) || $data === 0) $data=floatval($data);
+                    return is_float($data) || is_int($data);
                 case "bit": if(strval(intval($data))===strval($data)) $data=intval($data);return ($data==0 || $data==1);
                 case "model": return is_array($data) && !empty($data);
                 case "json":
-                case "jsonzip": if(is_array($data)) $data = json_encode($data);return is_string($data) && is_array(json_decode($data,true));
+                case "jsonzip":
+                    if(is_array($data)) { $data = json_encode($data); return is_string($data); }
+                    return is_string($data) && is_array(json_decode($data,true));
                 case "name": return $this->validateName($key,$data);
                 case "ip": return filter_var($data,FILTER_VALIDATE_IP);
-                case "url": return filter_var($data,FILTER_VALIDATE_URL);
+                case "url": return is_string($data) && (bool)filter_var($data,FILTER_VALIDATE_URL);
                 case "email": return is_string($data) && $this->validateEmail($key,"email",$data);
                 case "emails": return is_array($data) && $this->validateEmail($key,"email",$data);
-                case "phone": return is_string($data);
+                case "phone":
+                    // Accepts +XX YYYYYYYY, digits with spaces, dashes and parens; non-empty string
+                    if (!is_string($data)) return false;
+                    $stripped = preg_replace('/[\s()\-]/', '', $data);
+                    return (bool)preg_match('/^\+?[0-9]{4,20}$/', $stripped);
                 case "zip": return is_string($data);
                 case "keyname": return is_string($data);
                 case "keyid":
                 case "key": return strval(intval($data)) == $data;
                 case "date": return $this->validateDate($data);
                 case "datetime": return $this->validateDateTime($data);
+                case "time":
+                    // Accept H:i or H:i:s (24h)
+                    return is_string($data) && (bool)preg_match('/^([01]?\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/', trim($data));
                 case "timestamp": return $this->validateDateTime($data);
                 case "datetimeiso": return $this->validateDateTimeISO($data);
-                case "currency": return is_numeric($data);
-                case "boolean": if(!is_bool($data) && ($data=='1' || $data=='0')) $data = ($data == '1'); if(!is_bool($data) && ($data=='true' || $data=='false')) $data = ($data == 'true');return is_bool($data);
+                case "boolean": case "bool": if(!is_bool($data) && ($data=='1' || $data=='0')) $data = ($data == '1'); if(!is_bool($data) && ($data=='true' || $data=='false')) $data = ($data == 'true');return is_bool($data);
                 case "array": return is_array($data);
                 case "list": if(is_string($data)) $data = array_map('trim',explode(',',$data)); return is_array($data);
+                case "multiselect":
+                    // Multi-value enum: array of strings/ints, or CSV string normalized to array
+                    if (is_string($data)) $data = ($data === '') ? [] : array_map('trim', explode(',', $data));
+                    return is_array($data);
+                case "select":
+                case "radio":
+                case "checkbox":
+                case "external_select":
+                    // Closed-enum: stored value is a scalar (string/int/bool). Option-set validation happens
+                    // at the CFO layer (DevCFOs::checkCFOStructure), not here.
+                    return is_scalar($data);
                 case "array_to_string": if(is_array($data)) $data=implode(",",$data);return is_string($data);
+                case "geo": return is_array($data) || is_string($data);
+                case "virtual":
+                    // UI-only field with no data backing; accept anything (or nothing)
+                    return true;
                 default: return false;
             }
         }
