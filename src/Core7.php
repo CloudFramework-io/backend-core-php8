@@ -7980,7 +7980,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //endregion
 
             //region EVALUATE TO $this->readModelsFromCloudFramework if !$this->models[$object]
-            if((!strpos($object,':') || !isset($this->models[$object])) && $options['cf_models_api_key']??null ) {
+            if((!strpos($object,':') || !isset($this->models[$object])) && ($options['cf_models_api_key']??null) ) {
                 if(!$this->readModelsFromCloudFramework(preg_replace('/.*:/','',$object),$options['cf_models_api_key']))
                     return false;
             }
