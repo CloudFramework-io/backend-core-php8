@@ -2661,6 +2661,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $cache_iv = null;
         var $secret_vars = null;
         var $last_key_cache = null;     // To control double read of: readERPDeveloperEncryptedSubKeys
+        var $isDev=false;
 
 
         function __construct(Core7 &$core)
@@ -2670,6 +2671,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->cache_iv = ($this->core->config->get('core.gcp.secrets.cache_encrypt_iv'))?:'iveTFs7++f9niowHcuafMzTeKLG4X';
             $this->platform = $this->core->config->get('core.erp.platform_id')?:null;
         }
+
+
+        /**
+         * Sets the development environment status for external calls
+         *
+         * @param bool $activate Determines whether to activate or deactivate the development environment. Defaults to true.
+         * @return void
+         */
+        public function setDevEnvironment($activate=true) {
+            $this->isDev = $activate;
+        }
+
 
         /**
          * Assgin a $secret_value to the secret $secret_key
@@ -2982,7 +2995,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 return($this->addError('Called from readPlatformSecretVars(..)'));
 
             //region READ $user_secrets from cache and RETURN it if it exist
-            $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id;
+            $key = 'getMyERPSecrets_'.$this->core->gc_project_id.'_'.$erp_platform_id.'_'.$erp_secret_id.($this->isDev?'_dev':'');
             $user_secrets = $this->getCache($key,'ERP.secrets');
 
             //verify $user_secrets['id'] match with $erp_user
@@ -3023,10 +3036,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             //region CALL secret CF API and set $user_secrets['secrets']
             if($erp_secret_id!=$user_secrets['id']){
-                $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/system-secrets/'.$user_secrets['id'].'/'.$erp_secret_id;
+                $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/system-secrets/'.$user_secrets['id'].'/'.$erp_secret_id.($this->isDev?'?_dev=1':'');
             }
             else{
-                $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/my-secrets/'.$user_secrets['id'];
+                $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/my-secrets/'.$user_secrets['id'].($this->isDev?'?_dev=1':'');
             }
 
             $headers = ['X-WEB-KEY'=>$user_secrets['id'],'X-DS-TOKEN'=>$token];

@@ -643,6 +643,7 @@ class CFOs {
         // read from remote platform and return false if error
         if(!strpos($platform_secret_id,'.')) return $this->addError('function-conflict',"CFOs.readPlatformSecret(\$secret) has a wrong format. Use {secret_id}.{varname}");
         list($secret_id, $var_id ) = explode('.',$platform_secret_id,2);
+        $this->core->security->setDevEnvironment($this->isDev);
         $this->secrets[$platform_id][$platform_secret_id] = $this->core->security->getPlatformSecretVar($var_id,$secret_id,$platform_id);
         if($this->core->security->error) {
             $this->addError('platform-secret-error', ['CFOs.readPlatformSecret($secret) has produced an error.', $this->core->security->errorMsg]);
