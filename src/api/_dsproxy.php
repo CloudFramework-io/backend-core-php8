@@ -20,7 +20,7 @@ class API extends RESTful
             $ds_serialize = serialize($ds);
 
             $ret = $this->core->request->post_json_decode('http://localhost:9999/_dsproxy/fetchAll',['dsobject'=>$ds_serialize]);
-            if($ret) $ret = unserialize(gzuncompress(utf8_decode($ret['data'])));
+            if($ret) $ret = unserialize(gzuncompress(mb_convert_encoding($ret['data'], 'ISO-8859-1', 'UTF-8')));
             if(!$this->core->request->error)  $this->addReturnData($ret);
             else $this->setErrorFromCodelib('system-error');
             return;
@@ -36,7 +36,7 @@ class API extends RESTful
             switch ($this->params[0]) {
                 case "fetchAll":
                     $ret = $this->ds->fetchAll();
-                    $this->addReturnData(utf8_encode(gzcompress((serialize($ret)))));
+                    $this->addReturnData(mb_convert_encoding(gzcompress((serialize($ret))), 'UTF-8', 'ISO-8859-1'));
                     break;
                 default:
                     return($this->setErrorFromCodelib('params-error','method not found'));

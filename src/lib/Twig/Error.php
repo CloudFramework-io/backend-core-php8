@@ -55,7 +55,7 @@ class Twig_Error extends Exception
      * @param string    $filename The template file name where the error occurred
      * @param Exception $previous The previous exception
      */
-    public function __construct($message, $lineno = -1, $filename = null, Exception $previous = null)
+    public function __construct($message, $lineno = -1, $filename = null, ?Exception $previous = null)
     {
         if (PHP_VERSION_ID < 50300) {
             $this->previous = $previous;

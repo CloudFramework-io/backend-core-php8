@@ -19,7 +19,7 @@ class API extends RESTful
             else {
                 $this->dbproxy = $this->info['dbproxy'][$this->params[0]];
                 switch ($this->params[1]) {
-                    case null;
+                    case null:
                         $this->showTables();
                         break;
                     default:

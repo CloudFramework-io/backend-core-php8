@@ -364,7 +364,12 @@ class OpauthStrategy {
         }
         $context = stream_context_create($options);
         $content = file_get_contents($url, false, $context);
-        $responseHeaders = implode("\r\n", $http_response_header);
+        // $http_response_header is deprecated in PHP 8.5 (compile-time notice on any literal
+        // reference, hence the dynamic access in the fallback for PHP < 8.5)
+        $rawResponseHeaders = function_exists('http_get_last_response_headers')
+            ? (http_get_last_response_headers() ?? [])
+            : (${'http_response_header'} ?? []);
+        $responseHeaders = implode("\r\n", $rawResponseHeaders);
         return $content;
     }
     /**

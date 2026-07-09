@@ -57,7 +57,8 @@ if (!defined ("_Google_CLASS_") ) {
          */
         public function closeCurlHandler()
         {
-            curl_close($this->_curlHandler);
+            // CurlHandle objects are freed automatically; curl_close() is deprecated in PHP 8.5
+            $this->_curlHandler = null;
         }
         /**
          * Sets Token

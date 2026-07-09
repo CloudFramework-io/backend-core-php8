@@ -127,7 +127,7 @@ class Twig_NodeVisitor_SafeAnalysis extends Twig_BaseNodeVisitor
         return $node;
     }
 
-    protected function intersectSafe(array $a = null, array $b = null)
+    protected function intersectSafe(?array $a = null, ?array $b = null)
     {
         if (null === $a || null === $b) {
             return array();

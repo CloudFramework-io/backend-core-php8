@@ -23,7 +23,7 @@
  */
 class Twig_Node_Expression_Test_Defined extends Twig_Node_Expression_Test
 {
-    public function __construct(Twig_NodeInterface $node, $name, Twig_NodeInterface $arguments = null, $lineno)
+    public function __construct(Twig_NodeInterface $node, $name, ?Twig_NodeInterface $arguments, $lineno)
     {
         if ($node instanceof Twig_Node_Expression_Name) {
             $node->setAttribute('is_defined_test', true);

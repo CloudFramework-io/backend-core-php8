@@ -2275,7 +2275,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->addError(['Curl url' => $route]);
                 $ret = false;
             }
-            curl_close($ch);
+            unset($ch); // CurlHandle objects are freed automatically; curl_close() is deprecated in PHP 8.5
 
             if($this->sendSysLogs) {
                 $_time = round(microtime(TRUE) -$_time,4);
@@ -2624,9 +2624,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             try {
                 $ret = @file_get_contents($route, false, $context);
 
-                // Return response headers
-                if(isset($http_response_header)) $this->responseHeaders = $http_response_header;
-                else $this->responseHeaders = ['$http_response_header'=>'undefined'];
+                // Return response headers: $http_response_header is deprecated in PHP 8.5 (compile-time notice
+                // on any literal reference, hence the dynamic access in the fallback for PHP < 8.5)
+                if(function_exists('http_get_last_response_headers')) $this->responseHeaders = http_get_last_response_headers() ?? ['$http_response_header'=>'undefined'];
+                else $this->responseHeaders = ${'http_response_header'} ?? ['$http_response_header'=>'undefined'];
 
                 // If we have an error
                 if ($ret === false) {

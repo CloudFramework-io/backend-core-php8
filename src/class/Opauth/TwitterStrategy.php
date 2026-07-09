@@ -773,7 +773,7 @@ class tmhOAuth {
         $info = curl_getinfo($c);
         $error = curl_error($c);
         $errno = curl_errno($c);
-        curl_close($c);
+        unset($c); // CurlHandle objects are freed automatically; curl_close() is deprecated in PHP 8.5
         // store the response
         $this->response['code'] = $code;
         $this->response['response'] = $response;

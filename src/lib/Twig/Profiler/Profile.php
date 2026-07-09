@@ -143,6 +143,7 @@ class Twig_Profiler_Profile implements IteratorAggregate, Serializable
         );
     }
 
+    #[\ReturnTypeWillChange]
     public function getIterator()
     {
         return new ArrayIterator($this->profiles);
@@ -150,11 +151,22 @@ class Twig_Profiler_Profile implements IteratorAggregate, Serializable
 
     public function serialize()
     {
-        return serialize(array($this->template, $this->name, $this->type, $this->starts, $this->ends, $this->profiles));
+        return serialize($this->__serialize());
     }
 
     public function unserialize($data)
     {
-        list($this->template, $this->name, $this->type, $this->starts, $this->ends, $this->profiles) = unserialize($data);
+        $this->__unserialize(unserialize($data));
+    }
+
+    // Defining __serialize/__unserialize alongside Serializable avoids the PHP 8.1+ interface deprecation
+    public function __serialize()
+    {
+        return array($this->template, $this->name, $this->type, $this->starts, $this->ends, $this->profiles);
+    }
+
+    public function __unserialize(array $data)
+    {
+        list($this->template, $this->name, $this->type, $this->starts, $this->ends, $this->profiles) = $data;
     }
 }
