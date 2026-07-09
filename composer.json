@@ -6,7 +6,7 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "require": {
-    "php": ">=8.3",
+    "php": ">=8.4",
     "google/cloud-core": "^1.68",
     "google/cloud-datastore": "^1.34",
     "google/cloud-storage": "^1.48",

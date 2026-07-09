@@ -10,7 +10,7 @@ The framework codebase was swept against the official PHP 8.5 migration guide (d
 
 - **0 syntax errors and 0 compile-time deprecations** under PHP 8.5 (`php -l`, `E_ALL`) across the whole tree.
 - **0 runtime deprecations** when bootstrapping `Core7` and loading the patched Twig classes under PHP 8.5.
-- The tree still lints clean under PHP 8.4 and **PHP 8.3, which is the actual minimum version** (see Findings below); it does NOT parse under PHP 8.1/8.2 — this was already true before this branch.
+- The tree still lints clean under PHP 8.4 (**the supported minimum version**) and 8.3 (the technical parse floor); it does NOT parse under PHP 8.1/8.2 — this was already true before this branch.
 
 ## Fixes applied (first-party code)
 
@@ -21,7 +21,7 @@ The framework codebase was swept against the official PHP 8.5 migration guide (d
 | `curl_close()` / handles freed automatically | 8.5 | `src/Core7.php`, `src/class/Firebase.php`, `src/class/Opauth/TwitterStrategy.php`, `runapi.php` | Calls removed (`unset($handle)` / `= null`); `curl_close()` has been a no-op since PHP 8.0. |
 | `utf8_encode()` / `utf8_decode()` | 8.2 | `src/api/_dsproxy.php` | Replaced with `mb_convert_encoding($s, 'UTF-8', 'ISO-8859-1')` and inverse — byte-identical, wire-compatible with older framework versions. |
 | Dead `create_function()` in comment block | (hygiene) | `src/class/CloudSQL.php` | Commented-out block removed. |
-| Missing `php` constraint | (hygiene) | `composer.json` | Added `"php": ">=8.3"`. |
+| Missing `php` constraint | (hygiene) | `composer.json` | Added `"php": ">=8.4"` (supported minimum per project policy). |
 
 ## Fixes applied (vendored libraries — minimal patch, no version upgrade)
 
@@ -39,8 +39,8 @@ Verified clean by grep/lint against the full PHP 8.5 deprecation list: non-canon
 
 ## Findings — pre-existing, out of scope for this branch
 
-1. **Real minimum PHP version is 8.3, not 8.1.** The tree does not parse under 8.1/8.2: standalone `false`/`true` types (`src/Core7.php:8414`, `src/class/RESTful.php:702`, PHP 8.2+) and typed class constants (`src/class/Buckets.php:43`, PHP 8.3+). Pre-existing; `composer.json` now declares `>=8.3`. Consider updating `install/app-dist.yaml` (`runtime: php81`) to `php83`+ in a follow-up.
-2. **Dynamic properties** (deprecated 8.2, removed in PHP 9): no `#[\AllowDynamicProperties]` anywhere; the code relies on 717 `var $` declarations. `Core7` bootstraps clean under 8.5 `E_ALL`, but exhaustive coverage of all 408 classes needs static analysis (PHPStan level 0+ or Rector) — recommended as phase 2, ideally in CI.
+1. **Supported minimum PHP version is 8.4** (project policy); the technical parse floor is 8.3 (typed class constants in `src/class/Buckets.php:43`; standalone `false`/`true` types in `src/Core7.php:8414` and `src/class/RESTful.php:702` need 8.2+). The tree does not parse under 8.1/8.2 — pre-existing. `composer.json` now declares `>=8.4`. Consider updating `install/app-dist.yaml` (`runtime: php81`) to `php84`+ in a follow-up.
+2. **Dynamic properties** (deprecated 8.2, removed in PHP 9): already remediated in previous framework versions; no dynamic-property notices were observed bootstrapping `Core7` and loading the patched Twig classes under 8.5 `E_ALL`. Exhaustive confirmation across all 408 classes via static analysis (PHPStan level 0+ or Rector) remains a phase-2 routine check, ideally in CI.
 3. **Twig 1.x / Parsedown upgrade**: this branch patches signatures only. A move to `twig/twig` v3 via composer (adapting `src/class/RenderTwig.php`) remains the long-term fix, and is the only path that removes the deprecated `Serializable` interface usage entirely (PHP 9 risk).
 4. **`eval()` usage** in `src/class/CFOs.php:1254`, `src/class/RenderTwig.php:47` and `src/api/_eval.php`: not a compatibility issue, but a standing security concern (ISO 27001) — review separately.
 5. **PHP 8.5 behavioral changes to watch in integration tests** (no static indicator either way): weak comparison of incomparable objects now follows `(bool)$object`; `printf` family without precision no longer resets it; `$_SESSION` keys containing `|` emit a warning; `array`/`callable` no longer valid in `class_alias()`.
