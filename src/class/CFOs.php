@@ -644,7 +644,11 @@ class CFOs {
         if(!strpos($platform_secret_id,'.')) return $this->addError('function-conflict',"CFOs.readPlatformSecret(\$secret) has a wrong format. Use {secret_id}.{varname}");
         list($secret_id, $var_id ) = explode('.',$platform_secret_id,2);
         $this->core->security->setDevEnvironment($this->isDev);
-        $this->secrets[$platform_id][$platform_secret_id] = $this->core->security->getPlatformSecretVar($var_id,$secret_id,$platform_id);
+        // Under dev the namespace carries the "_dev" suffix, but the security layer ALREADY resolves the dev
+        // environment (setDevEnvironment above → cache suffix + ?_dev=1 on /core/secrets). Pass the BASE
+        // platform id to avoid a "{platform}_dev_dev" lookup → 404 "the secret does not exist".
+        $lookup_platform_id = ($this->isDev) ? preg_replace('/_dev$/','',$platform_id) : $platform_id;
+        $this->secrets[$platform_id][$platform_secret_id] = $this->core->security->getPlatformSecretVar($var_id,$secret_id,$lookup_platform_id);
         if($this->core->security->error) {
             $this->addError('platform-secret-error', ['CFOs.readPlatformSecret($secret) has produced an error.', $this->core->security->errorMsg]);
             $this->core->security->resetError();

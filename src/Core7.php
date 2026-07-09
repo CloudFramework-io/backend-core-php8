@@ -2929,9 +2929,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if(!$erp_platform_id) return($this->addError('getPlatformSecretVar(..) missing function-var($erp_platform_id) or config-var(core.erp.platform_id)'));
             }
 
+            // isDev is part of the memo identity: dev and prod share the same base platform id,
+            // so without this check a dev↔prod toggle would serve secrets of the wrong environment
             if($this->secret_vars ===null
                 || ($erp_secret_id && $this->secret_vars['secret-id']!=$erp_secret_id)
                 || ($this->secret_vars['platform']??null)!=$erp_platform_id
+                || ($this->secret_vars['isDev']??false)!==$this->isDev
             ) {
                 if (!$this->readPlatformSecretVars($erp_secret_id, $erp_platform_id, $erp_user)) return false;
             }
@@ -3009,6 +3012,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     'id'=>$user_secrets['id'],
                     'secret-id'=>$user_secrets['secret-id'],
                     'platform'=>$user_secrets['platform'],
+                    'isDev'=>$this->isDev,
                     'secrets'=>$user_secrets['secrets']
                 ];
                 return true;
@@ -3065,6 +3069,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'id'=>$user_secrets['id'],
                 'secret-id'=>$user_secrets['secret-id'],
                 'platform'=>$user_secrets['platform'],
+                'isDev'=>$this->isDev,
                 'secrets'=>$user_secrets['secrets']];
             return true;
             //endregion
