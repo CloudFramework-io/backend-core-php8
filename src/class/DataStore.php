@@ -765,7 +765,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     $comp = '=';
 
                     //evaluate if there is any comparator in $key
-                    if (is_string($key) && preg_match('/[=><]/', $key)) {
+                    if (is_string($key) && preg_match('/^(!=|[=><])/', $key)) {
                         unset($where[$key]);
                         if (strpos($key, '>=') === 0 || strpos($key, '<=') === 0 || strpos($key, '!=') === 0) {
                             $comp = substr($key, 0, 2);
@@ -804,7 +804,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                             $value = '>0001-01-01 00:00:00';
                         }
 
-                        if (is_string($value) && $value && preg_match('/[=><]/', $value)) {
+                        if (is_string($value) && $value && preg_match('/^[=><]/', $value)) {
                             if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
                                 $comp = substr($value, 0, 2);
                                 $value=substr($value,2);
@@ -873,7 +873,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     else {
 
                         //region IF $value starts with '>=<' use it as $comp
-                        if (is_string($value) && preg_match('/[=><]/', $value)) {
+                        if (is_string($value) && preg_match('/^[=><]/', $value)) {
                             if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
                                 $comp = substr($value, 0, 2);
                                 $value=substr($value,2);
@@ -1398,7 +1398,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                 foreach ($where as $key => $value) {
                     $comp = '=';
 
-                    if (is_string($key) && preg_match('/[=><]/', $key)) {
+                    if (is_string($key) && preg_match('/^(!=|[=><])/', $key)) {
                         unset($where[$key]);
                         if (strpos($key, '>=') === 0 || strpos($key, '<=') === 0 || strpos($key, '!=') === 0) {
                             $comp = substr($key, 0, 2);
@@ -1429,7 +1429,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     {
 
                         if(stripos($value,'now')!==false) $value = str_ireplace('now',date('Y-m-d'),$value);
-                        if (is_string($value) && preg_match('/[=><]/', $value)) {
+                        if (is_string($value) && preg_match('/^[=><]/', $value)) {
                             if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
                                 $comp = substr($value, 0, 2);
                                 $value=substr($value,2);
@@ -1475,7 +1475,7 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     else {
 
                         //region IF $value starts with '>=<' use it as $comp
-                        if (is_string($value) && preg_match('/[=><]/', $value)) {
+                        if (is_string($value) && preg_match('/^[=><]/', $value)) {
                             if (strpos($value, '>=') === 0 || strpos($value, '<=') === 0) {
                                 $comp = substr($value, 0, 2);
                                 $value=substr($value,2);
