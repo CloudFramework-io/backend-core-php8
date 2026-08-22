@@ -821,7 +821,12 @@ if (!defined ("_MYSQLI_CLASS_") ) {
                 // If GET params _nocache or _reloadDBFields are passed the reload from DB the columns
                 if(!is_array($this->_queryFieldTypes[$table]) || isset($_GET['_nocache']) || isset($_GET['_reloadDBFields'])) {
                     $this->_queryFieldTypes[$table] = $this->getDataFromQuery("SHOW COLUMNS FROM %s", $table);
-                    $this->core->cache->set('cloudFrameWork_show_colums_'.$table,$this->_queryFieldTypes[$table]);
+                    // La clave DEBE incluir la base de datos, igual que el get de :826. Sin ella el
+                    // get no acertaba NUNCA y SHOW COLUMNS se ejecutaba en cada request.
+                    // Se alinea el SET al GET y no al reves: quitar la BD del get haria colisionar
+                    // dos bases con tablas homonimas, cambiando un problema de rendimiento por uno
+                    // de correccion.
+                    $this->core->cache->set('cloudFrameWork_show_colums_'.$this->_dbdatabase.'_'.$table,$this->_queryFieldTypes[$table]);
                 }
             }
             if($this->error()) return(false);

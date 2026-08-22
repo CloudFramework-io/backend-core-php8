@@ -332,6 +332,13 @@ if (!defined ("_DATASTORECLIENT_CLASS_") ) {
                     elseif ($this->schema['props'][$_key][1] == 'keyname') {
                         $schema_keyname = $value;
 
+                        // Guarda SIMETRICA a la de 'key' en :329, que faltaba. Un KeyName vacio es
+                        // una invariante rota de Datastore: el SDK rechaza el BATCH ENTERO con
+                        // "The key path element name is the empty string", y ese fallo no siempre
+                        // llega a la peticion HTTP que lo origino — puede devolver 200 pese a no
+                        // haber escrito nada. Vale mas un error explicito aqui que un 200 mentiroso.
+                        if (!strlen((string)$schema_keyname)) return $this->setError('wrong KeyName value');
+
                         // else explore the data.
                     }
                     elseif ($this->schema['props'][$_key][1] == 'boolean') {
