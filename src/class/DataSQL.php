@@ -337,10 +337,26 @@ class DataSQL
      * @return array|void
      */
     function fetchOne($keysWhere=[], $fields=null, $params=[]) {
+        // El limit es estado de INSTANCIA, y $cfos->db('X') devuelve SIEMPRE la misma
+        // instancia por tabla durante la request. Sin restaurarlo, el siguiente fetch() sobre
+        // esa tabla heredaba el LIMIT 1 y devolvia una sola fila: sintoma reproducido en el CFI
+        // de HRMS applicants, donde un desplegable de 19 opciones se quedaba en 1.
+        //
+        // Se restaura tambien $offset porque fetch() lo recalcula como $limit*$page (:509): con
+        // el limit forzado a 1, un consumidor que tuviera page fijado veia su offset corrompido.
+        //
+        // finally, no restore al final del cuerpo: garantiza el restore aunque fetch() lance.
+        $prev_limit  = $this->limit;
+        $prev_offset = $this->offset;
         $this->limit = 1;
-        $ret = $this->fetch($keysWhere, $fields, $params);
-        if($ret) $ret=$ret[0];
-        return($ret);
+        try {
+            $ret = $this->fetch($keysWhere, $fields, $params);
+            if($ret) $ret=$ret[0];
+            return($ret);
+        } finally {
+            $this->limit  = $prev_limit;
+            $this->offset = $prev_offset;
+        }
     }
 
 
