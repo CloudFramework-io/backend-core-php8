@@ -216,7 +216,19 @@ class DataSQL
      * @param string $fields if null $fields = $this->getFields()
      */
     function fetchByKeys($keysWhere, $fields='') {
-        if($this->error) return;
+        // El error describe la operacion EN CURSO, no la vida del handler. CFOs::db() devuelve
+        // la MISMA instancia por tabla durante toda la request, asi que heredar el error de una
+        // llamada ajena dejaba MUDA la tabla entera: se devolvia sin consultar y el siguiente
+        // consumidor reportaba un fallo que no habia causado.
+        //
+        // No se pierde nada al limpiar: addError() ya acumulo el mensaje en $this->errorMsg y lo
+        // registro en $this->core->errors, que es de Core y sobrevive a esta limpieza.
+        //
+        // Solo aqui y en fetch()/fetchByKeys(). Los guards de :421 y :473 comprueban un error que
+        // el propio metodo acaba de causar en getQuerySQLWhereAndParams() y ahi rendirse es
+        // correcto: sin ellos se ejecutaria la consulta con el where malformado.
+        // Actividad 4965672979529728, checks 02 y 03.
+        $this->error = false; $this->errorMsg = '';
 
         // Keys to find
         if(!is_array($keysWhere)) $keysWhere = [$keysWhere];
@@ -464,7 +476,19 @@ class DataSQL
      */
     function fetch($keysWhere=[], $fields=null, $params=[]) {
 
-        if($this->error) return false;
+        // El error describe la operacion EN CURSO, no la vida del handler. CFOs::db() devuelve
+        // la MISMA instancia por tabla durante toda la request, asi que heredar el error de una
+        // llamada ajena dejaba MUDA la tabla entera: se devolvia sin consultar y el siguiente
+        // consumidor reportaba un fallo que no habia causado.
+        //
+        // No se pierde nada al limpiar: addError() ya acumulo el mensaje en $this->errorMsg y lo
+        // registro en $this->core->errors, que es de Core y sobrevive a esta limpieza.
+        //
+        // Solo aqui y en fetch()/fetchByKeys(). Los guards de :421 y :473 comprueban un error que
+        // el propio metodo acaba de causar en getQuerySQLWhereAndParams() y ahi rendirse es
+        // correcto: sin ellos se ejecutaria la consulta con el where malformado.
+        // Actividad 4965672979529728, checks 02 y 03.
+        $this->error = false; $this->errorMsg = '';
 
         //region SET $where
         // Array with key=>value or empty
