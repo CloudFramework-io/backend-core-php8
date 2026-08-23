@@ -1135,11 +1135,6 @@ class DataSQL
 
 
     /**
-     * Adds an error to the class error message array and to $this->core->errors object
-     * @param mixed $msg The error value to be added.
-     * @return bool Always returns false to facilite caller return
-     */
-    /**
      * Error de un metodo BUILDER (setQueryWhere, addOrder, setView...) de la operacion en curso.
      * Se distingue de addError() porque fetch() SI debe abortar ante el: la consulta que se iba a
      * construir esta mal. Un where que no llego a asignarse haria un SELECT sin WHERE.
@@ -1150,6 +1145,11 @@ class DataSQL
         return $this->addError($msg);
     }
 
+    /**
+     * Adds an error to the class error message array and to $this->core->errors object
+     * @param mixed $msg The error value to be added.
+     * @return bool Always returns false to facilite caller return
+     */
     function addError($msg): bool
     {
         $this->error = true;
