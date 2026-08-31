@@ -698,7 +698,7 @@ class Auth extends \MCPCore7
      */
     private function parseToken(string $token): ?array
     {
-        if (!strpos($token, '__')) {
+        if (strpos($token, '__') === false) {
             return null;
         }
         list($platform, $tokenData) = explode('__', $token, 2);
