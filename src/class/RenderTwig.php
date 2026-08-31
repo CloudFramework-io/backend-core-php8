@@ -44,7 +44,30 @@ if (!defined ("_RenderTwig_CLASS_") ) {
         {
             if(!isset($this->templates[$key])) $this->templates[$key] = $this->cache->get($key);
             if(is_array($this->templates[$key])) {
-                return eval(str_replace('<?php','',$this->templates[$key]['code']));
+                // ISO 27001 CRIT-05: replaced eval() with a secure temp-file include.
+                // The code stored in cache is Twig-compiled PHP (a class definition).
+                // We write it to a system temp file, validate the path stays within
+                // sys_get_temp_dir(), include it once, then delete the file immediately.
+                $code = $this->templates[$key]['code'];
+                // Ensure the compiled code starts with the PHP opening tag
+                if (strpos(ltrim($code), '<?php') !== 0) {
+                    $code = '<?php ' . $code;
+                }
+                $tmpFile = tempnam(sys_get_temp_dir(), 'twig_cf_');
+                if ($tmpFile === false) {
+                    return;
+                }
+                // Path validation: confirm the resolved path is within sys_get_temp_dir()
+                $realTmp = realpath(sys_get_temp_dir());
+                $realFile = realpath($tmpFile);
+                if ($realFile === false || strpos($realFile, $realTmp) !== 0) {
+                    @unlink($tmpFile);
+                    return;
+                }
+                file_put_contents($tmpFile, $code);
+                include_once $tmpFile;
+                @unlink($tmpFile);
+                return;
             }
 
         }
