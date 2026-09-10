@@ -32,6 +32,8 @@ class DataSQL
     private $joins = [];
     private $queryFields = '';
     private $queryWhere = [];
+    /** Un builder de ESTA operacion fallo. Distinto de $error, que puede venir heredado. */
+    private $build_error = false;
     private $extraWhere = '';
     private $virtualFields = [];
     private $groupBy = '';
@@ -114,6 +116,7 @@ class DataSQL
         $this->view = null;
         $this->error = false;
         $this->errorMsg = '';
+        $this->build_error = false;
     }
 
     /**
@@ -216,7 +219,24 @@ class DataSQL
      * @param string $fields if null $fields = $this->getFields()
      */
     function fetchByKeys($keysWhere, $fields='') {
-        if($this->error) return;
+        // El error describe la operacion EN CURSO, no la vida del handler. CFOs::db() devuelve
+        // la MISMA instancia por tabla durante toda la request, asi que heredar el error de una
+        // llamada ajena dejaba MUDA la tabla entera: se devolvia sin consultar y el siguiente
+        // consumidor reportaba un fallo que no habia causado.
+        //
+        // No se pierde nada al limpiar: addError() ya acumulo el mensaje en $this->errorMsg y lo
+        // registro en $this->core->errors, que es de Core y sobrevive a esta limpieza.
+        //
+        // Solo aqui y en fetch()/fetchByKeys(). Los guards de :421 y :473 comprueban un error que
+        // el propio metodo acaba de causar en getQuerySQLWhereAndParams() y ahi rendirse es
+        // correcto: sin ellos se ejecutaria la consulta con el where malformado.
+        // Actividad 4965672979529728, checks 02 y 03.
+        // Si un BUILDER de esta operacion fallo, la consulta que se iba a construir esta mal:
+        // abortar como siempre, SIN limpiar, para que el llamador vea su error. Es el caso de
+        // setQueryWhere([]) — retorna antes de asignar queryWhere, asi que seguir adelante
+        // ejecutaria un SELECT sin WHERE y devolveria la tabla entera.
+        if($this->build_error) { $this->build_error = false; return ; }
+        $this->error = false; $this->errorMsg = '';
 
         // Keys to find
         if(!is_array($keysWhere)) $keysWhere = [$keysWhere];
@@ -301,7 +321,7 @@ class DataSQL
      * @param Array $keysWhere
      */
     function setQueryWhere($keysWhere) {
-        if(empty($keysWhere) ) return($this->addError('setQueryWhere($keysWhere) $keyWhere can not be empty'));
+        if(empty($keysWhere) ) return($this->addBuildError('setQueryWhere($keysWhere) $keyWhere can not be empty'));
         $this->queryWhere = $keysWhere;
     }
 
@@ -316,8 +336,8 @@ class DataSQL
      * @param Array $keysWhere
      */
     function addQueryWhere($keysWhere) {
-        if(empty($keysWhere) ) return($this->addError('setQueryWhere($keysWhere) $keyWhere can not be empty'));
-        if(!is_array($keysWhere)) return($this->addError('setQueryWhere($keysWhere) $keyWhere is not an array'));
+        if(empty($keysWhere) ) return($this->addBuildError('setQueryWhere($keysWhere) $keyWhere can not be empty'));
+        if(!is_array($keysWhere)) return($this->addBuildError('setQueryWhere($keysWhere) $keyWhere is not an array'));
         $this->queryWhere = array_merge($this->queryWhere ,$keysWhere);
     }
 
@@ -464,7 +484,24 @@ class DataSQL
      */
     function fetch($keysWhere=[], $fields=null, $params=[]) {
 
-        if($this->error) return false;
+        // El error describe la operacion EN CURSO, no la vida del handler. CFOs::db() devuelve
+        // la MISMA instancia por tabla durante toda la request, asi que heredar el error de una
+        // llamada ajena dejaba MUDA la tabla entera: se devolvia sin consultar y el siguiente
+        // consumidor reportaba un fallo que no habia causado.
+        //
+        // No se pierde nada al limpiar: addError() ya acumulo el mensaje en $this->errorMsg y lo
+        // registro en $this->core->errors, que es de Core y sobrevive a esta limpieza.
+        //
+        // Solo aqui y en fetch()/fetchByKeys(). Los guards de :421 y :473 comprueban un error que
+        // el propio metodo acaba de causar en getQuerySQLWhereAndParams() y ahi rendirse es
+        // correcto: sin ellos se ejecutaria la consulta con el where malformado.
+        // Actividad 4965672979529728, checks 02 y 03.
+        // Si un BUILDER de esta operacion fallo, la consulta que se iba a construir esta mal:
+        // abortar como siempre, SIN limpiar, para que el llamador vea su error. Es el caso de
+        // setQueryWhere([]) — retorna antes de asignar queryWhere, asi que seguir adelante
+        // ejecutaria un SELECT sin WHERE y devolveria la tabla entera.
+        if($this->build_error) { $this->build_error = false; return false; }
+        $this->error = false; $this->errorMsg = '';
 
         //region SET $where
         // Array with key=>value or empty
@@ -732,7 +769,7 @@ class DataSQL
                 if(strlen($this->order)) $this->order.=', ';
                 $this->order.= $this->entity_name.'.'.$field.((strtoupper(trim($type))=='DESC')?' DESC':' ASC');
             } else {
-                $this->addError($field.' does not exist to order by');
+                $this->addBuildError($field.' does not exist to order by');
             }
         }
 
@@ -1057,7 +1094,7 @@ class DataSQL
     }
 
     public function setView($view) {
-        if(!is_string($view) && null !==$view) return($this->addError('setView($view), Wrong value'));
+        if(!is_string($view) && null !==$view) return($this->addBuildError('setView($view), Wrong value'));
 
         $this->view = $view;
     }
@@ -1096,6 +1133,17 @@ class DataSQL
         $this->virtualFields = [$field=>$value];
     }
 
+
+    /**
+     * Error de un metodo BUILDER (setQueryWhere, addOrder, setView...) de la operacion en curso.
+     * Se distingue de addError() porque fetch() SI debe abortar ante el: la consulta que se iba a
+     * construir esta mal. Un where que no llego a asignarse haria un SELECT sin WHERE.
+     */
+    function addBuildError($msg): bool
+    {
+        $this->build_error = true;
+        return $this->addError($msg);
+    }
 
     /**
      * Adds an error to the class error message array and to $this->core->errors object
