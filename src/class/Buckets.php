@@ -1426,7 +1426,9 @@ if (!defined ("_Buckets_CLASS_") ) {
                 ];
                 if($download_options['responseDisposition']??null) $options['responseDisposition'] = $download_options['responseDisposition'];
                 $url = $object->signedUrl(
-                # This URL is valid for 15 minutes
+                # Expires in $expiration_in_minutes minutes — THE DEFAULT IS 1, not 15.
+                # Pass it explicitly whenever the link is going to travel (email, chat, an agent
+                # handing it to a person): a one-minute link is dead before it is opened.
                     new \DateTime($expiration_in_minutes.' min'),$options
                 );
                 return $url;
