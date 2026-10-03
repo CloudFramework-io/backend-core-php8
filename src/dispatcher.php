@@ -3,11 +3,23 @@
 if (($_SERVER['REQUEST_METHOD']??'')=='OPTIONS') {
     $_origin = ((array_key_exists('HTTP_ORIGIN',$_SERVER) && strlen($_SERVER['HTTP_ORIGIN'])) ? preg_replace('/\/$/', '', $_SERVER['HTTP_ORIGIN']) : '*');
     header("Access-Control-Allow-Origin: {$_origin}");
-    header("Access-Control-Allow-Methods: *");
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH");
     header("Access-Control-Allow-Headers: *");
     header('Access-Control-Max-Age: 1000');
     header("HTTP/1.1 204 OK");
     exit();
+}
+//endregion
+
+//region SECURITY HEADERS (ISO 27001 A.13.1.1, A.14.1.2 / OWASP A05:2021)
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: camera=(), microphone=(), geolocation=()');
+// HSTS only when HTTPS (App Engine handles HTTPS termination)
+if (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
 }
 //endregion
 

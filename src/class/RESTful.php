@@ -185,7 +185,7 @@ if (!defined("_RESTfull_CLASS_")) {
                 if(is_string($allow_origins)) $allow_origins = explode(',',$allow_origins);
                 $_found=false;
                 foreach ($allow_origins as $allow_origin) {
-                    if(strpos($origin,trim($allow_origin))!==false) {
+                    if($origin === trim($allow_origin) || str_ends_with($origin, '.' . trim($allow_origin))) {
                         $_found=true;
                     }
                 }
