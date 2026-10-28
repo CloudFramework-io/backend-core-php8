@@ -3661,11 +3661,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Change the status = 0
+         * It also removes the token from the validation cache of CoreUser::loadPlatformUserWithToken(), so the
+         * APIs of this app reject it in the next request instead of accepting it until the cache expires.
          * @param $token
          * @return array|bool|void If the deletion is right it return the array with the recored deleted
          */
         function deactivateDSToken($token)
         {
+            //region DELETE $token from the validation cache even if the token entity does not exist
+            if(is_string($token) && $token) $this->core->user->deleteTokenFromCache($token);
+            //endregion
+
             // Check if object has been created
             if (null === $this->dsToken) if(!$this->createDSToken()) return;
             $retToken = $this->dsToken->fetchByKeys($token);
@@ -6265,6 +6271,26 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Remove $token from the validation cache used by loadPlatformUserWithToken() without resetting the
+         * current user of the request (deletePlatformToken() does reset it).
+         * Called by CoreSecurity::deactivateDSToken() so a revoked token is rejected in the next request.
+         * @param string $token Platform token with the structure {namespace}__{prefix}__{hash}
+         * @return bool false if the token does not have the right structure
+         */
+        function deleteTokenFromCache(string $token): bool
+        {
+            $tokenParts = explode('__', $token);
+            if (count($tokenParts) != 3 || !$tokenParts[0] || !$tokenParts[1] || !$tokenParts[2]) return false;
+            $key_cache = $tokenParts[0] . '_' . $tokenParts[1];
+            $userData = $this->core->cache->get($key_cache);
+            if (is_array($userData) && isset($userData['tokens'][$token])) {
+                unset($userData['tokens'][$token]);
+                $this->core->cache->set($key_cache, $userData);
+            }
+            return true;
+        }
+
+        /**
          * Logout the user
          * @param string $token
          * @param string $delete_all_tokens
@@ -6507,8 +6533,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             else {
                 $now = microtime(true);
                 $num_tokens = 0;
+                $token_expired = false;
                 foreach ($userData['tokens'] as $tokenId=>$tokenInfo) {
-                    if(($now - $tokenInfo['time']) > $this->cacheExpiresIn) {
+                    // a token whose own expiration has passed leaves the cache even if the cache time has not expired
+                    $tokenExpired = !empty($tokenInfo['expires']) && $tokenInfo['expires'] <= time();
+                    if($tokenExpired && $tokenId === $token) $token_expired = true;
+                    if($tokenExpired || ($now - $tokenInfo['time']) > $this->cacheExpiresIn) {
                         unset($userData['tokens'][$tokenId]);
                         $updateCache = true;
                     } else {
@@ -6520,8 +6550,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     }
                 }
 
+                // a valid token cached before 'expires' was stored is validated again once
+                if(isset($userData['tokens'][$token]) && !$userData['tokens'][$token]['error'] && !array_key_exists('expires',$userData['tokens'][$token])) {
+                    unset($userData['tokens'][$token]);
+                    $updateCache = true;
+                }
+
                 //update Cache with the deleted tokens
                 if($updateCache) $this->core->cache->set($namespace.'_'.$user_token,$userData);
+
+                // Verify $token has not expired
+                if($token_expired) {
+                    return($this->addError('TOKEN_EXPIRED','The token has expired'));
+                }
 
                 // Verify $token is not a token with error
                 if(isset($userData['tokens'][$token]) && $userData['tokens'][$token]['error']) {
@@ -6557,6 +6598,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 } else {
                     $userData['data'] =  $cfUserInfo['data'];
                     $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
+                    // expiration of THIS token: $userData['data'] is shared by the tokens of the same prefix.
+                    // Only a future value is kept: the issuer answers time() when the token has no Expires
+                    $expires = intval($cfUserInfo['data']['User']['Expires']??0);
+                    $userData['tokens'][$token]['expires'] = ($expires > time())?$expires:null;
                 }
                 $this->core->request->reset();
                 $this->core->cache->set($namespace.'_'.$user_token,$userData);
@@ -6572,7 +6617,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->id = $userData['id'];
             $this->data = $userData['data'];
             //$this->expirationTime = $userData['data']['User']['Expires']??time();
-            $this->tokenExpiresIn = ($userData['data']['User']['Expires']??time())-time();
+            $this->tokenExpiresIn = (($userData['tokens'][$token]['expires']??null)?:($userData['data']['User']['Expires']??time()))-time();
             $this->cachedTokenExpiresIn =  intval($this->cacheExpiresIn - (microtime(true)-$userData['tokens'][$token]['time']));
             unset($userData);
             $this->core->namespace = $namespace;
@@ -6635,6 +6680,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             if($userData['mcp_tokens'][$mcp_token]['error']??null)
                 unset($userData['mcp_tokens'][$mcp_token]);
+            // the derived platform token has expired: validate again to get a new one instead of returning an expired one
+            if(!empty($userData['mcp_tokens'][$mcp_token]['expires']) && $userData['mcp_tokens'][$mcp_token]['expires'] <= time())
+                unset($userData['mcp_tokens'][$mcp_token]);
             //endregion
 
             //region CALL CloudFramework API Service IF $token DOEST not exist in $userData OR $refresh
@@ -6667,6 +6715,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     $this->addError('conflict', $userData['mcp_tokens'][$mcp_token]['error']);
                 }else {
                     $userData['mcp_tokens'][$mcp_token]['token'] = $cfUserInfo['data']['token'];
+                    // expiration of the derived platform token. Only a future value is kept
+                    $expires = intval($cfUserInfo['data']['User']['Expires']??0);
+                    $userData['mcp_tokens'][$mcp_token]['expires'] = ($expires > time())?$expires:null;
                     $userData['data'] =  $cfUserInfo['data'];
                     $userData['id'] = $cfUserInfo['data']['User']['KeyName'];
                 }
