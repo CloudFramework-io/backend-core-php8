@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.1';  // 2026-10-28
+        var $_version = '8.5.2';  // 2026-10-29
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -6271,22 +6271,45 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Remove $token from the validation cache used by loadPlatformUserWithToken() without resetting the
-         * current user of the request (deletePlatformToken() does reset it).
+         * Remove $token from the validation cache used by loadPlatformUserWithToken() and
+         * loadPlatformUserWithMCPToken() without resetting the current user of the request (deletePlatformToken() does reset it).
          * Called by CoreSecurity::deactivateDSToken() so a revoked token is rejected in the next request.
-         * @param string $token Platform token with the structure {namespace}__{prefix}__{hash}
+         *
+         * The cache key is prefixed with the cache namespace active when the token was validated, and each API sets its own:
+         * the default cacheSpacename ('cloudframework'), the platform or the platform with '_dev' (CFAPI2026). So the token is
+         * removed in all of them and not only in the namespace of the request that revokes it.
+         * @param string $token Platform or MCP token with the structure {namespace}__{prefix}__{hash}
+         * @param bool $whole_key true removes every token cached under {namespace}_{prefix} (all the tokens of that user and prefix)
          * @return bool false if the token does not have the right structure
          */
-        function deleteTokenFromCache(string $token): bool
+        function deleteTokenFromCache(string $token, bool $whole_key = false): bool
         {
             $tokenParts = explode('__', $token);
             if (count($tokenParts) != 3 || !$tokenParts[0] || !$tokenParts[1] || !$tokenParts[2]) return false;
             $key_cache = $tokenParts[0] . '_' . $tokenParts[1];
-            $userData = $this->core->cache->get($key_cache);
-            if (is_array($userData) && isset($userData['tokens'][$token])) {
-                unset($userData['tokens'][$token]);
-                $this->core->cache->set($key_cache, $userData);
+
+            //region SET $spacenames where the token can have been validated
+            $current_spacename = $this->core->cache->spacename;
+            $platform = preg_replace('/_dev$/', '', $tokenParts[0]);
+            $spacenames = array_unique([$this->core->config->get('cacheSpacename') ?: 'cloudframework', $platform, $platform . '_dev']);
+            //endregion
+
+            //region DELETE $token in the current cache namespace and in $spacenames
+            foreach (array_merge([null], $spacenames) as $spacename) {
+                if ($spacename !== null) $this->core->cache->setNameSpace($spacename);
+                if ($whole_key) {
+                    $this->core->cache->delete($key_cache);
+                    continue;
+                }
+                $userData = $this->core->cache->get($key_cache);
+                if (is_array($userData) && (isset($userData['tokens'][$token]) || isset($userData['mcp_tokens'][$token]))) {
+                    unset($userData['tokens'][$token], $userData['mcp_tokens'][$token]);
+                    $this->core->cache->set($key_cache, $userData);
+                }
             }
+            $this->core->cache->spacename = $current_spacename;
+            //endregion
+
             return true;
         }
 
