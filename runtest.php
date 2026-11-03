@@ -24,6 +24,7 @@ if(!is_dir($rootPath.'/local_data/cache')) {
 //region SET $core Core7 object
 include_once __DIR__.'/src/Core7.php';
 $core = new Core7($rootPath);
+$core->exitOnStartupError(); // since 8.5.13: mandatory cache keys
 //endregion
 
 //region SET $script & $formParams

@@ -50,6 +50,7 @@ Security is critical for any web application. CloudFramework provides built-in s
 - [ ] Logging and monitoring enabled
 - [ ] Service account permissions minimized
 - [ ] Secrets stored in environment variables
+- [ ] Own random cache and encryption keys configured, one pair per environment (see [Framework Encryption Keys](#framework-encryption-keys))
 - [ ] HTTPS enforced
 - [ ] File upload validation implemented
 
@@ -804,15 +805,45 @@ private function checkRateLimit(): bool
 
 ## Encryption & Data Protection
 
+### Framework Encryption Keys
+
+The framework uses two pairs of keys. Generate them yourself: random values, never reused between applications or environments.
+
+| Pair | Protects | Config-vars | Environment variables | Required |
+|------|----------|-------------|-----------------------|----------|
+| Cache keys | Encrypted cache entries: configuration and `env_vars` secret, security groups, daily subkeys | `core.gcp.secrets.cache_encrypt_key` / `core.gcp.secrets.cache_encrypt_iv` | `CF_CACHE_ENCRYPT_KEY` / `CF_CACHE_ENCRYPT_IV` | **Yes, since 8.5.13** |
+| Data keys | `$this->core->security->encrypt()` / `decrypt()` called without explicit keys | `core.security.encrypt_key` / `core.security.encrypt_secret` | `CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET` | Yes in strict mode (`core.security.encrypt_require_key: true`) |
+
+**Since 8.5.13 the cache keys are mandatory.** There is no built-in default: without both values the entry points (`dispatcher.php`, `mcp-server.php`, `runscript.php`, `runapi.php`, `runtest.php`) stop before serving anything. HTTP calls get a `503` with a generic message and the detail (`security-cache-key-missing`) goes to the log; scripts print it and exit with code 1.
+
+**Generate each value** with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).
+
+```bash
+openssl rand -base64 32   # cache_encrypt_key  (or CF_CACHE_ENCRYPT_KEY)
+openssl rand -base64 32   # cache_encrypt_iv   (or CF_CACHE_ENCRYPT_IV)
+openssl rand -base64 32   # encrypt_key        (or CF_ENCRYPT_KEY)
+openssl rand -base64 32   # encrypt_secret     (or CF_ENCRYPT_SECRET)
+```
+
+Recommendations:
+
+- **Do not type, reuse or derive the values** from names, passwords or other keys. Short or hand-written values make the encryption guessable.
+- **One pair per environment.** Development must not be able to read production data. Share a pair only between services that share the same data (same Datastore namespaces and cache).
+- **Keep them out of the repository.** Prefer a value injected at deploy time or Secret Manager over a committed `config.json`. Anyone who can read the repository can read a committed key.
+- **The cache keys can not live in the `env_vars` secret**: they encrypt the cached copy of that secret, so they are read with `getenv()` only. The data keys can live in the `env_vars` secret (`CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET`).
+- **Never print or log them.** When you check a configuration, compare names or hashes, not values.
+- **Rotating the cache keys** only empties the encrypted cache: it is rebuilt on the next requests. **Rotating the data keys** makes the values encrypted with the old keys unreadable, so decrypt and encrypt them again with the new keys before removing the old ones.
+
 ### Encrypt Sensitive Data
 
 ```php
-// Configuration
+// Configuration: a key and a secret (see Framework Encryption Keys)
 $encryptionKey = $this->core->config->get('security.encryption.key');
+$encryptionSecret = $this->core->config->get('security.encryption.secret');
 
 // Encrypt data before storing
 $sensitiveData = 'credit card number';
-$encrypted = $this->core->security->encrypt($sensitiveData, $encryptionKey);
+$encrypted = $this->core->security->encrypt($sensitiveData, $encryptionKey, $encryptionSecret);
 
 // Store encrypted data
 $ds = $this->core->loadClass('DataStore', ['Users']);
@@ -823,7 +854,7 @@ $ds->createEntity([
 
 // Decrypt when needed
 $user = $ds->fetchOne($userId);
-$decrypted = $this->core->security->decrypt($user['payment_info'], $encryptionKey);
+$decrypted = $this->core->security->decrypt($user['payment_info'], $encryptionKey, $encryptionSecret);
 ```
 
 ### Hash Passwords

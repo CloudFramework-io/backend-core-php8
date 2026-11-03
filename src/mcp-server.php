@@ -19,6 +19,7 @@ include_once(__DIR__ . "/class/RESTful.php"); //
 include_once(__DIR__ . "/mcp/MCPCore7.php"); //
 include_once(__DIR__ . "/mcp/Auth.php"); // Cargar explícitamente para el discovery
 $core = new Core7();
+$core->exitOnStartupError(); // since 8.5.13: mandatory cache keys
 //endregion
 
 // Configure session settings before any session starts (must be before headers sent)

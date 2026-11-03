@@ -3360,6 +3360,7 @@ if(!is_dir($rootPath.'/local_data/cache')) {
 echo "CloudFramworkTest v202010\nroot_path: {$rootPath}\n";
 //region SET $core Core7 object
 $core = new Core7($rootPath);
+$core->exitOnStartupError(); // since 8.5.13: mandatory cache keys
 // Set the cache to be written in local_data
 $core->cache->activateCacheFile($rootPath.'/local_data/cache');
 //endregion

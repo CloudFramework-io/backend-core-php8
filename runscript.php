@@ -10,6 +10,7 @@ require_once  $rootPath.'/vendor/autoload.php';
 include_once __DIR__.'/src/Core7.php';
 $core = new Core7($rootPath);
 echo "CloudFramWork (CFW) Core7.Script ".$core->_version."\n";
+$core->exitOnStartupError(); // since 8.5.13: mandatory cache keys
 //endregion
 
 //region IF core.erp.platform_id READ user email/id account

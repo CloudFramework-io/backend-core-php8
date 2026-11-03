@@ -20,6 +20,7 @@ require_once  $_root_path.'/vendor/autoload.php';
 //region INIT $core = new Core7();
 include_once(__DIR__ . "/Core7.php"); //
 $core = new Core7();
+$core->exitOnStartupError(); // since 8.5.13: mandatory cache keys
 //endregion
 
 //region SET $logger
