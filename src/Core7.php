@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.6.0';  // 2026-11-03
+        var $_version = '8.5.12';  // 2026-11-03
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -2671,7 +2671,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /** @var bool $cache_iv_is_default true when $cache_iv comes from the built-in default (no config-var, no env var) */
         var $cache_iv_is_default = false;
 
-        // Built-in default keys. Kept in 8.6.x for backward compatibility; they will be removed in 9.0.0.
+        // Built-in default keys. Kept in 8.5.x for backward compatibility; they will be removed in 9.0.0.
         private const DEFAULT_CACHE_ENCRYPT_KEY = 'T8K1Ogtl5E9R9CDbWIdV6Vs4yBY4';
         private const DEFAULT_CACHE_ENCRYPT_IV = 'iveTFs7++f9niowHcuafMzTeKLG4X';
         private const DEFAULT_ENCRYPT_KEY = 'ybdqfG3MTPfzct3jR28qbix/yvbodtT0';
@@ -2910,8 +2910,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             //region SET $url, $key_cache, $keys=[];
             $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/my-daily-encryption-subkeys/'.$erp_user;
-            // Since 8.6.0 the subkeys are cached ENCRYPTED with the base cache keys under a new cache key, so
-            // versions < 8.6.0 (plain entry) and >= 8.6.0 (encrypted entry) do not overwrite each other.
+            // Since 8.5.12 the subkeys are cached ENCRYPTED with the base cache keys under a new cache key, so
+            // versions < 8.5.12 (plain entry) and >= 8.5.12 (encrypted entry) do not overwrite each other.
             $key_cache = '/my-daily-encryption-subkeys-v2/'.$erp_user;
             $legacy_key_cache = '/my-daily-encryption-subkeys/'.$erp_user;
             $keys = [];
@@ -3810,7 +3810,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * method to encrypt a plain text string
          *
          * Formats:
-         *   - v1 (default in 8.6.x): AES-256-CBC with a static IV derived from $secret_iv, base64 output without prefix.
+         *   - v1 (default in 8.5.x): AES-256-CBC with a static IV derived from $secret_iv, base64 output without prefix.
          *     based on: https://gist.github.com/joashp/a1ae9cb30fa533f4ad94
          *   - v2 (opt-in with config-var core.security.encrypt_format = 'v2'): AES-256-GCM, see encryptV2().
          * decrypt() reads both formats, so v2 can be activated without breaking stored v1 values.
