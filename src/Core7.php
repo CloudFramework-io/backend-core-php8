@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.2';  // 2026-10-29
+        var $_version = '8.6.0';  // 2026-11-03
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -1784,9 +1784,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     }
             }
 
-            // Cache secrets to encrypt data in Cache
-            $this->cache_secret_key=$this->get('core.gcp.secrets.cache_encrypt_key');
-            $this->cache_secret_iv=$this->get('core.gcp.secrets.cache_encrypt_iv');
+            // Cache secrets to encrypt data in Cache.
+            // Order: config-vars core.gcp.secrets.cache_encrypt_key / cache_encrypt_iv -> environment
+            // variables CF_CACHE_ENCRYPT_KEY / CF_CACHE_ENCRYPT_IV (getenv() only: these keys protect the
+            // cache of the env_vars secret, so they can not come from it). There is no default: if both
+            // are empty the env_vars cache is stored without encryption, as before.
+            $this->cache_secret_key=($this->get('core.gcp.secrets.cache_encrypt_key'))?:(getenv('CF_CACHE_ENCRYPT_KEY')?:'');
+            $this->cache_secret_iv=($this->get('core.gcp.secrets.cache_encrypt_iv'))?:(getenv('CF_CACHE_ENCRYPT_IV')?:'');
 
             // Update $this->get('core.scripts.path') and $this->get('core.api.path')
             if($this->get('core.scripts.path')) $this->core->system->script_path = $this->get('core.scripts.path');
@@ -2662,14 +2666,84 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $secret_vars = null;
         var $last_key_cache = null;     // To control double read of: readERPDeveloperEncryptedSubKeys
         var $isDev=false;
+        /** @var bool $cache_key_is_default true when $cache_key comes from the built-in default (no config-var, no env var) */
+        var $cache_key_is_default = false;
+        /** @var bool $cache_iv_is_default true when $cache_iv comes from the built-in default (no config-var, no env var) */
+        var $cache_iv_is_default = false;
+
+        // Built-in default keys. Kept in 8.6.x for backward compatibility; they will be removed in 9.0.0.
+        private const DEFAULT_CACHE_ENCRYPT_KEY = 'T8K1Ogtl5E9R9CDbWIdV6Vs4yBY4';
+        private const DEFAULT_CACHE_ENCRYPT_IV = 'iveTFs7++f9niowHcuafMzTeKLG4X';
+        private const DEFAULT_ENCRYPT_KEY = 'ybdqfG3MTPfzct3jR28qbix/yvbodtT0';
+        private const DEFAULT_ENCRYPT_SECRET = 'sadf&$sad_dkuYWER$T__6ttre';
+
+        /** @var string $cache_key_base $cache_key before the daily subkey is appended (see readERPDeveloperEncryptedSubKeys) */
+        private $cache_key_base = '';
+        /** @var string $cache_iv_base $cache_iv before the daily subkey is appended (see readERPDeveloperEncryptedSubKeys) */
+        private $cache_iv_base = '';
+        /** @var array $encrypt_env_vars lazy memo of CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET read with getEnvVar() */
+        private $encrypt_env_vars = [];
+        /** @var bool $resolving_encrypt_env_var re-entrance guard while getEnvVar() is running */
+        private $resolving_encrypt_env_var = false;
+        /** @var array $notes_sent one-note-per-request control for the encryption notes/warnings */
+        private $notes_sent = [];
 
 
+        /**
+         * CoreSecurity constructor.
+         *
+         * Keys used to encrypt the framework cache ($this->cache_key / $this->cache_iv). Order:
+         *   1. config-vars core.gcp.secrets.cache_encrypt_key / core.gcp.secrets.cache_encrypt_iv
+         *   2. environment variables CF_CACHE_ENCRYPT_KEY / CF_CACHE_ENCRYPT_IV, read ONLY with getenv():
+         *      never with getEnvVar(), because these keys protect the cache of the env_vars secret itself.
+         *   3. built-in default (deprecated, removed in 9.0.0). Its use sets $cache_key_is_default /
+         *      $cache_iv_is_default and leaves one warning per request (security-default-cache-key-used).
+         *
+         * Keys used by encrypt()/decrypt() when they are called without explicit keys: see resolveEncryptKeys().
+         *
+         * @param Core7 $core
+         */
         function __construct(Core7 &$core)
         {
             $this->core = $core;
-            $this->cache_key = ($this->core->config->get('core.gcp.secrets.cache_encrypt_key'))?:'T8K1Ogtl5E9R9CDbWIdV6Vs4yBY4';
-            $this->cache_iv = ($this->core->config->get('core.gcp.secrets.cache_encrypt_iv'))?:'iveTFs7++f9niowHcuafMzTeKLG4X';
+
+            $this->cache_key = ($this->core->config->get('core.gcp.secrets.cache_encrypt_key'))?:(getenv('CF_CACHE_ENCRYPT_KEY')?:'');
+            if(!$this->cache_key) { $this->cache_key = self::DEFAULT_CACHE_ENCRYPT_KEY; $this->cache_key_is_default = true; }
+
+            $this->cache_iv = ($this->core->config->get('core.gcp.secrets.cache_encrypt_iv'))?:(getenv('CF_CACHE_ENCRYPT_IV')?:'');
+            if(!$this->cache_iv) { $this->cache_iv = self::DEFAULT_CACHE_ENCRYPT_IV; $this->cache_iv_is_default = true; }
+
+            $this->cache_key_base = $this->cache_key;
+            $this->cache_iv_base = $this->cache_iv;
+
             $this->platform = $this->core->config->get('core.erp.platform_id')?:null;
+        }
+
+        /**
+         * Leaves a warning (once per request) when the framework cache is encrypted with the built-in default keys.
+         * @return void
+         */
+        private function warnIfDefaultCacheKeys(): void
+        {
+            if(!$this->cache_key_is_default && !$this->cache_iv_is_default) return;
+            $this->sendNoteOnce('security-default-cache-key-used'
+                ,'security-default-cache-key-used: set core.gcp.secrets.cache_encrypt_key/cache_encrypt_iv or the env vars CF_CACHE_ENCRYPT_KEY/CF_CACHE_ENCRYPT_IV. The default keys will be removed in 9.0.0'
+                ,'warning');
+        }
+
+        /**
+         * Sends a note to the logs only once per request (one CoreSecurity instance per request).
+         * @param string $id identifier of the note
+         * @param string $message message without sensitive data
+         * @param string|null $syslog_type null: only in the request logs ($this->core->logs). 'warning': also in syslog
+         * @return void
+         */
+        private function sendNoteOnce(string $id, string $message, ?string $syslog_type=null): void
+        {
+            if(isset($this->notes_sent[$id])) return;
+            $this->notes_sent[$id] = true;
+            if($syslog_type) $this->core->logs->add($message,'CoreSecurity',$syslog_type);
+            else $this->core->logs->add('CoreSecurity: '.$message);
         }
 
 
@@ -2836,12 +2910,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             //region SET $url, $key_cache, $keys=[];
             $url = 'https://api.cloudframework.io/core/secrets/'.$erp_platform_id.'/my-daily-encryption-subkeys/'.$erp_user;
-            $key_cache = '/my-daily-encryption-subkeys/'.$erp_user;
+            // Since 8.6.0 the subkeys are cached ENCRYPTED with the base cache keys under a new cache key, so
+            // versions < 8.6.0 (plain entry) and >= 8.6.0 (encrypted entry) do not overwrite each other.
+            $key_cache = '/my-daily-encryption-subkeys-v2/'.$erp_user;
+            $legacy_key_cache = '/my-daily-encryption-subkeys/'.$erp_user;
             $keys = [];
+            $this->warnIfDefaultCacheKeys();
             //endregion
 
-            //region GET from cache $keys if we are in production servers
-            $keys = $this->core->cache->get($key_cache,3600*24,date('Y-m-d'));
+            //region GET from cache $keys if we are in production servers (a decryption failure is a cache miss)
+            $keys = $this->core->cache->get($key_cache,3600*24,date('Y-m-d'),$this->cache_key_base,$this->cache_iv_base);
             //endregion
 
             //region CALL $url and SET $keys if empty $keys
@@ -2852,8 +2930,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 if($this->core->request->error) return($this->addError(['Error in developer license for user: '.$erp_user,($keys['message']??'no-message')]));
                 //endregion
 
-                //region SAVE from cache $keys if we are in production servers
-                $this->core->cache->set($key_cache,$keys,date('Y-m-d'));
+                //region SAVE encrypted in cache $keys and DELETE the legacy plain entry (best-effort)
+                $this->core->cache->set($key_cache,$keys,date('Y-m-d'),$this->cache_key_base,$this->cache_iv_base);
+                $this->core->cache->delete($legacy_key_cache);
                 //endregion
             }
             //endregion
@@ -3729,25 +3808,32 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * method to encrypt a plain text string
-         * initialization vector(IV) has to be the same when encrypting and decrypting
-         * based on: https://gist.github.com/joashp/a1ae9cb30fa533f4ad94
+         *
+         * Formats:
+         *   - v1 (default in 8.6.x): AES-256-CBC with a static IV derived from $secret_iv, base64 output without prefix.
+         *     based on: https://gist.github.com/joashp/a1ae9cb30fa533f4ad94
+         *   - v2 (opt-in with config-var core.security.encrypt_format = 'v2'): AES-256-GCM, see encryptV2().
+         * decrypt() reads both formats, so v2 can be activated without breaking stored v1 values.
+         *
+         * When $secret_key or $secret_iv are empty they are resolved with resolveEncryptKeys():
+         * config-vars core.security.encrypt_key / core.security.encrypt_secret -> env vars CF_ENCRYPT_KEY /
+         * CF_ENCRYPT_SECRET (getEnvVar) -> built-in default (deprecated, removed in 9.0.0).
          *
          * @param string $text: string to encrypt
-         * @param string $secret_key  optional secret key. If empty it will take it from config-vars: core.security.encrypt_key
-         * @param string $secret_iv  optional secret key. If empty it will take it from config-vars: core.security.encrypt_secret
-         * @return string in base64
+         * @param string $secret_key  optional secret key. If empty it will be resolved with resolveEncryptKeys()
+         * @param string $secret_iv  optional secret key. If empty it will be resolved with resolveEncryptKeys()
+         * @return string in base64 ('v2:' prefixed when the v2 format is active)
          */
         function encrypt($text,$secret_key='',$secret_iv='') {
 
             if(!$text) return $text;
 
+            if(!$secret_key || !$secret_iv) $this->resolveEncryptKeys($secret_key,$secret_iv);
+
+            if($this->core->config->get('core.security.encrypt_format')==='v2')
+                return $this->encryptV2($text,$secret_key,$secret_iv);
+
             $encrypt_method = "AES-256-CBC";
-
-            if(!$secret_key)
-                $secret_key = ($this->core->config->get('core.security.encrypt_key'))?:'ybdqfG3MTPfzct3jR28qbix/yvbodtT0';
-
-            if(!$secret_iv)
-                $secret_iv = ($this->core->config->get('core.security.encrypt_secret'))?:'sadf&$sad_dkuYWER$T__6ttre';
 
             // hash
             $key = hash('sha256', $secret_key);
@@ -3759,25 +3845,28 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         }
 
-        /*
-         * Decrypt Encrypted Text
+        /**
+         * Decrypt Encrypted Text produced by encrypt() in any of its formats:
+         *   - 'v2:' prefix: AES-256-GCM (see decryptV2()). Returns false if it can not be authenticated.
+         *   - no prefix: legacy v1 AES-256-CBC, unchanged. A note 'legacy-cbc-format-read' is added once per request.
          *
          * @param string $encrypted_text base64 string
-         * @param string $secret_key  optional secret key. If empty it will take it from config-vars: core.security.encrypt_key
-         * @param string $text  optional secret key. If empty it will take it from config-vars: core.security.encrypt_secret
-         *
+         * @param string $secret_key  optional secret key. If empty it will be resolved with resolveEncryptKeys()
+         * @param string $secret_iv  optional secret key. If empty it will be resolved with resolveEncryptKeys()
+         * @return string|false
          */
         function decrypt($encrypted_text,$secret_key='',$secret_iv='') {
 
             if(!$encrypted_text) return $encrypted_text;
 
+            if(!$secret_key || !$secret_iv) $this->resolveEncryptKeys($secret_key,$secret_iv);
+
+            if(is_string($encrypted_text) && strncmp($encrypted_text,'v2:',3)===0)
+                return $this->decryptV2($encrypted_text,$secret_key,$secret_iv);
+
+            $this->sendNoteOnce('legacy-cbc-format-read','legacy-cbc-format-read');
+
             $encrypt_method = "AES-256-CBC";
-
-            if(!$secret_key)
-                $secret_key = ($this->core->config->get('core.security.encrypt_key'))?:'ybdqfG3MTPfzct3jR28qbix/yvbodtT0';
-
-            if(!$secret_iv)
-                $secret_iv = ($this->core->config->get('core.security.encrypt_secret'))?:'sadf&$sad_dkuYWER$T__6ttre';
 
             // hash
             $key = hash('sha256', $secret_key);
@@ -3786,6 +3875,116 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $iv = substr(hash('sha256', $secret_iv), 0, 16);
 
             return openssl_decrypt($encrypted_text, $encrypt_method, $key, 0, $iv);
+        }
+
+        /**
+         * Encrypt $text with the v2 format: AES-256-GCM, random 12-byte IV and 16-byte tag.
+         * Output: 'v2:' . base64(iv . tag . ciphertext).
+         * The 32-byte key is derived with HKDF-SHA256 from $secret_key . "\0" . $secret_iv (info
+         * 'cloudframework-encrypt-v2'), so $secret_iv keeps adding entropy to the key although it is not the IV.
+         *
+         * @param string $text string to encrypt
+         * @param string $secret_key optional. If empty it will be resolved with resolveEncryptKeys()
+         * @param string $secret_iv optional. If empty it will be resolved with resolveEncryptKeys()
+         * @return string|false
+         */
+        function encryptV2($text,$secret_key='',$secret_iv='') {
+
+            if(!$text) return $text;
+
+            if(!$secret_key || !$secret_iv) $this->resolveEncryptKeys($secret_key,$secret_iv);
+
+            $iv = random_bytes(12);
+            $tag = '';
+            $cipher_text = openssl_encrypt((string)$text,'aes-256-gcm',$this->deriveEncryptV2Key($secret_key,$secret_iv),OPENSSL_RAW_DATA,$iv,$tag,'',16);
+            if($cipher_text===false || strlen($tag)!==16) return false;
+
+            return 'v2:'.base64_encode($iv.$tag.$cipher_text);
+        }
+
+        /**
+         * Decrypt a text produced by encryptV2(). Any failure (missing prefix, corrupted base64, length < 28 bytes,
+         * wrong key or tampered data/tag) returns false.
+         *
+         * @param string $encrypted_text 'v2:' prefixed text
+         * @param string $secret_key optional. If empty it will be resolved with resolveEncryptKeys()
+         * @param string $secret_iv optional. If empty it will be resolved with resolveEncryptKeys()
+         * @return string|false
+         */
+        function decryptV2($encrypted_text,$secret_key='',$secret_iv='') {
+
+            if(!is_string($encrypted_text) || strncmp($encrypted_text,'v2:',3)!==0) return false;
+
+            if(!$secret_key || !$secret_iv) $this->resolveEncryptKeys($secret_key,$secret_iv);
+
+            $raw = base64_decode(substr($encrypted_text,3),true);
+            if($raw===false || strlen($raw)<28) return false;
+
+            $plain = openssl_decrypt(substr($raw,28),'aes-256-gcm',$this->deriveEncryptV2Key($secret_key,$secret_iv),OPENSSL_RAW_DATA,substr($raw,0,12),substr($raw,12,16));
+            return ($plain===false)?false:$plain;
+        }
+
+        /**
+         * Binary 32-byte key for the v2 format.
+         * @param string $secret_key
+         * @param string $secret_iv
+         * @return string
+         */
+        private function deriveEncryptV2Key($secret_key,$secret_iv): string
+        {
+            return hash_hkdf('sha256',(string)$secret_key."\0".(string)$secret_iv,32,'cloudframework-encrypt-v2');
+        }
+
+        /**
+         * Fills the empty $secret_key / $secret_iv used by encrypt()/decrypt() when they are called without explicit keys.
+         * Order (each value independently):
+         *   1. config-vars core.security.encrypt_key / core.security.encrypt_secret (read on every call, as before)
+         *   2. environment variables CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET via $this->core->config->getEnvVar(), that
+         *      reads getenv() and then the env_vars secret. Read lazily, only when a key is missing, and memorized
+         *      in this instance for the rest of the request.
+         *   3. built-in default (deprecated, removed in 9.0.0): one warning per request 'security-default-encrypt-key-used'.
+         * Calls with explicit keys (CoreCache) never reach this method.
+         *
+         * @param string $secret_key
+         * @param string $secret_iv
+         * @return void
+         */
+        private function resolveEncryptKeys(&$secret_key,&$secret_iv): void
+        {
+            $defaults = [];
+            if(!$secret_key) {
+                $secret_key = ($this->core->config->get('core.security.encrypt_key'))?:$this->getEncryptEnvVar('CF_ENCRYPT_KEY');
+                if(!$secret_key) { $secret_key = self::DEFAULT_ENCRYPT_KEY; $defaults[] = 'key'; }
+            }
+            if(!$secret_iv) {
+                $secret_iv = ($this->core->config->get('core.security.encrypt_secret'))?:$this->getEncryptEnvVar('CF_ENCRYPT_SECRET');
+                if(!$secret_iv) { $secret_iv = self::DEFAULT_ENCRYPT_SECRET; $defaults[] = 'secret'; }
+            }
+            if($defaults)
+                $this->sendNoteOnce('security-default-encrypt-key-used'
+                    ,'security-default-encrypt-key-used ['.implode(',',$defaults).']: set core.security.encrypt_key/encrypt_secret or the env vars CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET. The default keys will be removed in 9.0.0'
+                    ,'warning');
+        }
+
+        /**
+         * Lazy and memorized read of an encryption env var with getEnvVar().
+         * A re-entrant call (getEnvVar() running) returns '' without memorizing it, so it can never recurse.
+         * @param string $var
+         * @return string
+         */
+        private function getEncryptEnvVar(string $var): string
+        {
+            if(array_key_exists($var,$this->encrypt_env_vars)) return $this->encrypt_env_vars[$var];
+            if($this->resolving_encrypt_env_var) return '';
+
+            $this->resolving_encrypt_env_var = true;
+            try {
+                $value = $this->core->config->getEnvVar($var);
+            } finally {
+                $this->resolving_encrypt_env_var = false;
+            }
+
+            return $this->encrypt_env_vars[$var] = (is_string($value) || is_numeric($value))?(string)$value:'';
         }
 
         /**
@@ -4082,8 +4281,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @return array The cached data for the specified security group and space name.
          */
         public function readCache($security_group = 'default') {
-            if(!isset($this->cache[$security_group][$this->core->cache->spacename]))
+            if(!isset($this->cache[$security_group][$this->core->cache->spacename])) {
+                $this->warnIfDefaultCacheKeys();
                 $this->cache[$security_group][$this->core->cache->spacename] = ($this->core->cache->get('Core7.CoreSecurity.'.$security_group,3600*24,null,$this->cache_key,$this->cache_iv))?:[];
+            }
         }
 
         /**
@@ -4118,6 +4319,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function resetCache($security_group = 'default') {
             $this->cache[$security_group][$this->core->cache->spacename] = [];
+            $this->warnIfDefaultCacheKeys();
             $this->core->cache->set('Core7.CoreSecurity.'.$security_group,$this->cache[$security_group][$this->core->cache->spacename],null,$this->cache_key,$this->cache_iv);
             $this->core->logs->add('CoreSecurity.resetCache(\''.$security_group.'\') from '.$this->core->system->url['host_url_uri'],'CoreSecurity');
         }
