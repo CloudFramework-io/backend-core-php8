@@ -875,6 +875,38 @@
 
 <h2>Encryption & Data Protection</h2>
 
+<h3 id="framework-encryption-keys">Framework Encryption Keys</h3>
+
+<p>The framework uses two pairs of keys. Generate them yourself: random values, never reused between applications or environments.</p>
+
+<table>
+<thead><tr><th>Pair</th><th>Protects</th><th>Config-vars</th><th>Environment variables</th><th>Required</th></tr></thead>
+<tbody>
+<tr><td>Cache keys</td><td>Encrypted cache entries: configuration and <code>env_vars</code> secret, security groups, daily subkeys</td><td><code>core.gcp.secrets.cache_encrypt_key</code> / <code>core.gcp.secrets.cache_encrypt_iv</code></td><td><code>CF_CACHE_ENCRYPT_KEY</code> / <code>CF_CACHE_ENCRYPT_IV</code></td><td><strong>Yes, since 8.5.13</strong></td></tr>
+<tr><td>Data keys</td><td><code>$this->core->security->encrypt()</code> / <code>decrypt()</code> called without explicit keys</td><td><code>core.security.encrypt_key</code> / <code>core.security.encrypt_secret</code></td><td><code>CF_ENCRYPT_KEY</code> / <code>CF_ENCRYPT_SECRET</code></td><td>Yes in strict mode (<code>core.security.encrypt_require_key: true</code>)</td></tr>
+</tbody>
+</table>
+
+<p><strong>Since 8.5.13 the cache keys are mandatory.</strong> There is no built-in default: without both values the entry points (<code>dispatcher.php</code>, <code>mcp-server.php</code>, <code>runscript.php</code>, <code>runapi.php</code>, <code>runtest.php</code>) stop before serving anything. HTTP calls get a <code>503</code> with a generic message and the detail (<code>security-cache-key-missing</code>) goes to the log; scripts print it and exit with code 1.</p>
+
+<p><strong>Generate each value</strong> with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).</p>
+
+<pre><code>openssl rand -base64 32   # cache_encrypt_key  (or CF_CACHE_ENCRYPT_KEY)
+openssl rand -base64 32   # cache_encrypt_iv   (or CF_CACHE_ENCRYPT_IV)
+openssl rand -base64 32   # encrypt_key        (or CF_ENCRYPT_KEY)
+openssl rand -base64 32   # encrypt_secret     (or CF_ENCRYPT_SECRET)</code></pre>
+
+<p>Recommendations:</p>
+<ul>
+<li><strong>Do not type, reuse or derive the values</strong> from names, passwords or other keys. Short or hand-written values make the encryption guessable.</li>
+<li><strong>One pair per environment.</strong> Development must not be able to read production data. Share a pair only between services that share the same data (same Datastore namespaces and cache).</li>
+<li><strong>Keep them out of the repository.</strong> Prefer a value injected at deploy time or Secret Manager over a committed <code>config.json</code>. Anyone who can read the repository can read a committed key.</li>
+<li><strong>The cache keys can not live in the <code>env_vars</code> secret</strong>: they encrypt the cached copy of that secret, so they are read with <code>getenv()</code> only. The data keys can live in the <code>env_vars</code> secret (<code>CF_ENCRYPT_KEY</code> / <code>CF_ENCRYPT_SECRET</code>).</li>
+<li><strong>Adding the data keys to the <code>env_vars</code> secret takes effect without emptying the cache (since 8.5.14).</strong> The cached copy of the secret is kept per cache namespace, so a namespace cached before the keys were added would keep a copy without them. In strict mode, when the data keys are missing, the framework reads the secret again once per request without the cache, rewrites the cached copy of the current namespace and logs the warning <code>security-encrypt-env-vars-reloaded</code>. If the keys are still missing after that read, <code>encrypt()</code> / <code>decrypt()</code> return <code>false</code> and the error <code>security-encrypt-key-missing</code> is logged as before. Explicit keys, keys in the configuration and calls outside strict mode never trigger that read.</li>
+<li><strong>Never print or log them.</strong> When you check a configuration, compare names or hashes, not values.</li>
+<li><strong>Rotating the cache keys</strong> only empties the encrypted cache: it is rebuilt on the next requests. <strong>Rotating the data keys</strong> makes the values encrypted with the old keys unreadable, so decrypt and encrypt them again with the new keys before removing the old ones.</li>
+</ul>
+
 <h3>Encrypt Sensitive Data</h3>
 
 <pre><code>// Configuration
