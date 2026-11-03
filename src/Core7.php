@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.14';  // 2026-11-03
+        var $_version = '8.5.15';  // 2026-11-03
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -5188,10 +5188,15 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $automaticHeaders = true; // Add automatically the following headers if exist on config: X-CLOUDFRAMEWORK-SECURITY, X-SERVER-KEY, X-SERVER-KEY, X-DS-TOKEN,X-EXTRA-INFO
         /** @ignore */
         var $sendSysLogs = true;
-        /** @ignore */
-        var $default_options = array('ssl' => array('verify_peer' => false),'http'=>['protocol_version'=>'1.1','ignore_errors'=>'1','follow_location'=>true]);
+        /** @ignore TLS certificates are verified by default since 8.5.15 (see getSSLOptions()) */
+        var $default_options = array('ssl' => array('verify_peer' => true,'verify_peer_name' => true),'http'=>['protocol_version'=>'1.1','ignore_errors'=>'1','follow_location'=>true]);
         /** @ignore */
         var $cookies = [];
+        /** @ignore SSL context parameters accepted by addSSLParameter() and $extra_headers['ssl']: https://www.php.net/manual/en/context.ssl.php */
+        const SSL_PARAMETERS = ['peer_name','verify_peer','verify_peer_name','allow_self_signed','cafile','capath','local_cert','local_pk','passphrase'
+            ,'verify_depth','ciphers','capture_peer_cert','capture_peer_cert_chain','SNI_enabled','disable_compression','peer_fingerprint','security_level'];
+        /** @ignore hosts already reported with security-tls-verify-disabled in this request */
+        private $tls_notes_sent = [];
 
         /**
          * Class constructor
@@ -5217,27 +5222,90 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function addSSLParameter(string $parameter, $value): ?bool
         {
-            if (!in_array($parameter, ['peer_name',
-                'verify_peer',
-                'verify_peer_name',
-                'allow_self_signed',
-                'cafile',
-                'capath',
-                'local_cert',
-                'local_pk',
-                'passphrase',
-                'verify_depth',
-                'ciphers',
-                'capture_peer_cert',
-                'capture_peer_cert_chain',
-                'SNI_enabled',
-                'disable_compression',
-                'peer_fingerprint',
-                'security_level'])) return $this->addError("parameter [{$parameter}] is not supported in ssl");
+            if (!in_array($parameter, self::SSL_PARAMETERS)) return $this->addError("parameter [{$parameter}] is not supported in ssl");
 
             $this->default_options['ssl'][$parameter] = $value;
             return true;
 
+        }
+
+        /**
+         * Returns the SSL options of one call, without modifying $this->default_options.
+         *
+         * Order, each one overriding the previous: $this->default_options['ssl'] (certificates verified, plus what
+         * addSSLParameter() set for the request) → configuration → $call_ssl ($extra_headers['ssl'] of the call).
+         * Configuration: 'core.request.ssl.cafile' / 'core.request.ssl.capath' set the CA bundle when addSSLParameter()
+         * did not, and 'core.request.ssl_verify' === false (strictly the boolean) turns the verification off, for
+         * example in a local environment with its own certificate.
+         * When the verification ends up off, a warning 'security-tls-verify-disabled' with the host (never the full URL)
+         * is logged once per host and request.
+         *
+         * @param string $route URL of the call (only its host is logged)
+         * @param array|null $call_ssl SSL parameters of this call only
+         * @return array|false SSL options, or false when $call_ssl has a parameter not supported
+         */
+        public function getSSLOptions(string $route, ?array $call_ssl = null): array|false
+        {
+            $ssl = $this->default_options['ssl'] ?? [];
+            foreach (['cafile','capath'] as $parameter) {
+                if(!isset($ssl[$parameter]) && ($value = $this->core->config->get('core.request.ssl.'.$parameter)))
+                    $ssl[$parameter] = $value;
+            }
+            if($this->core->config->get('core.request.ssl_verify') === false) {
+                $ssl['verify_peer'] = false;
+                $ssl['verify_peer_name'] = false;
+            }
+            foreach ($call_ssl ?? [] as $parameter => $value) {
+                if (!in_array($parameter, self::SSL_PARAMETERS)) return $this->addError("parameter [{$parameter}] is not supported in ssl");
+                $ssl[$parameter] = $value;
+            }
+
+            // PHP casts these context values to bool: 0, '0' or '' turn the verification off as false does
+            $disabled = [];
+            if(!($ssl['verify_peer'] ?? true)) $disabled[] = 'verify_peer';
+            if(!($ssl['verify_peer_name'] ?? true)) $disabled[] = 'verify_peer_name';
+            if(!empty($ssl['allow_self_signed'])) $disabled[] = 'allow_self_signed';
+            if($disabled) {
+                $host = parse_url($route, PHP_URL_HOST) ?: 'unknown-host';
+                if(!isset($this->tls_notes_sent[$host])) {
+                    $this->tls_notes_sent[$host] = true;
+                    $this->core->logs->add('security-tls-verify-disabled ['.implode(',',$disabled).'] for host '.$host.': the TLS certificate of this host is not fully verified','CoreRequest','warning');
+                }
+            }
+            return $ssl;
+        }
+
+        /**
+         * Translates SSL context options into cURL options for getCurl().
+         * allow_self_signed, peer_name, peer_fingerprint and the rest of the parameters have no cURL equivalent here and are
+         * not applied: the verification stays as verify_peer / verify_peer_name say.
+         * @param array $ssl SSL options returned by getSSLOptions()
+         * @return array cURL options
+         */
+        private function getCurlSSLOptions(array $ssl): array
+        {
+            $curl_options = [
+                CURLOPT_SSL_VERIFYPEER => (bool)($ssl['verify_peer'] ?? true),
+                CURLOPT_SSL_VERIFYHOST => ($ssl['verify_peer_name'] ?? true) ? 2 : 0,
+            ];
+            if(!empty($ssl['cafile'])) $curl_options[CURLOPT_CAINFO] = $ssl['cafile'];
+            if(!empty($ssl['capath'])) $curl_options[CURLOPT_CAPATH] = $ssl['capath'];
+            if(!empty($ssl['local_cert'])) $curl_options[CURLOPT_SSLCERT] = $ssl['local_cert'];
+            if(!empty($ssl['local_pk'])) $curl_options[CURLOPT_SSLKEY] = $ssl['local_pk'];
+            if(isset($ssl['passphrase']) && strlen($ssl['passphrase'])) $curl_options[CURLOPT_KEYPASSWD] = $ssl['passphrase'];
+            if(!empty($ssl['ciphers'])) $curl_options[CURLOPT_SSL_CIPHER_LIST] = $ssl['ciphers'];
+            return $curl_options;
+        }
+
+        /**
+         * Adds an explicit error when a call failed because the TLS certificate of the host could not be verified
+         * @param string $route URL of the call (only its host is reported)
+         * @param string $detail system or cURL error message
+         */
+        private function addTLSVerifyError(string $route, string $detail): void
+        {
+            $host = parse_url($route, PHP_URL_HOST) ?: 'unknown-host';
+            $this->addError('tls-verify-failed: the TLS certificate of host '.$host.' could not be verified ('.$detail.'). Fix the certificate or the CA bundle (core.request.ssl.cafile); disable the verification only explicitly with $extra_headers[\'ssl\']');
         }
 
         /**
@@ -5315,6 +5383,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->responseHeaders = null;
             $options['http']['header'] = ['Connection: close', 'Expect:', 'ACCEPT:']; // improve perfomance and avoid 100 HTTP Header
 
+            // SSL options of this call: $extra_headers['ssl'] applies to this call only
+            $call_ssl = null;
+            if(is_array($extra_headers) && array_key_exists('ssl',$extra_headers)) {
+                $call_ssl = is_array($extra_headers['ssl']) ? $extra_headers['ssl'] : null;
+                unset($extra_headers['ssl']);
+            }
+            if(false === ($ssl = $this->getSSLOptions($route, $call_ssl))) return false;
+
 
             // Automatic send header for X-CLOUDFRAMEWORK-SECURITY if it is defined in config
             if (strlen($this->core->config->get("CloudServiceId")) && strlen($this->core->config->get("CloudServiceSecret")))
@@ -5368,21 +5444,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             $curl_options = [
-                CURLOPT_SSL_VERIFYPEER => false,
-                CURLOPT_SSL_VERIFYHOST => false,
                 CURLOPT_RETURNTRANSFER => true,
                 CURLOPT_HEADER => true,            // return headers
                 CURLOPT_FOLLOWLOCATION => false,
                 CURLOPT_HTTPHEADER => $options['http']['header'],
                 CURLOPT_CUSTOMREQUEST => $verb
 
-            ];
-            // Appengine  workaround
-            // $curl_options[CURLOPT_SSL_VERIFYPEER] = false;
-            // $curl_options[CURLOPT_SSL_VERIFYHOST] = false;
-            // Download https://pki.google.com/GIAG2.crt
-            // openssl x509 -in GIAG2.crt -inform DER -out google.pem -outform PEM
-            // $curl_options[CURLOPT_CAINFO] =__DIR__.'/google.pem';
+            ] + $this->getCurlSSLOptions($ssl);
 
             if (isset($options['http']['content'])) {
                 $curl_options[CURLOPT_POSTFIELDS] = $options['http']['content'];
@@ -5406,6 +5474,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->addError(error_get_last());
                 $this->addError([('Curl error ' . curl_errno($ch)) => curl_error($ch)]);
                 $this->addError(['Curl url' => $route]);
+                // 60: CURLE_PEER_FAILED_VERIFICATION (certificate or host name), 77: CURLE_SSL_CACERT_BADFILE
+                if(in_array(curl_errno($ch),[60,77])) $this->addTLSVerifyError($route, curl_error($ch));
                 $ret = false;
             }
             unset($ch); // CurlHandle objects are freed automatically; curl_close() is deprecated in PHP 8.5
@@ -5647,14 +5717,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->core->logs->add("request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'),'CoreRequest');
             //syslog(LOG_INFO,"request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'));
 
-            //region EVALUATE $extra_headers['ssl'] special headers
-            if(is_array($extra_headers['ssl']??null)) {
-                foreach ($extra_headers['ssl'] as $key => $value) {
-                    if(!$this->addSSLParameter($key,$value)) return false;
-                }
+            //region EVALUATE $extra_headers['ssl'] special headers: they apply to this call only (before 8.5.15 they stayed in $this->default_options)
+            $call_ssl = null;
+            if(is_array($extra_headers) && array_key_exists('ssl',$extra_headers)) {
+                $call_ssl = is_array($extra_headers['ssl']) ? $extra_headers['ssl'] : null;
                 unset($extra_headers['ssl']);
             }
             $options = $this->default_options;
+            if(false === ($options['ssl'] = $this->getSSLOptions($route, $call_ssl))) return false;
             //endregion
 
             //region EVALUATE to add in $options['http']['header'] Connection and Accept
@@ -5800,6 +5870,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // Context creation
             $context = stream_context_create($options);
 
+            // The TLS reason is in an earlier warning of file_get_contents(), not in error_get_last(): collect them, keeping the
+            // error handler of the application in the chain
+            $call_warnings = [];
+            $previous_error_handler = set_error_handler(function ($errno, $errstr, $errfile = '', $errline = 0) use (&$call_warnings, &$previous_error_handler) {
+                $call_warnings[] = $errstr;
+                return is_callable($previous_error_handler) ? $previous_error_handler($errno, $errstr, $errfile, $errline) : false;
+            });
             try {
                 $ret = file_get_contents($route, false, $context);
                 // Return response headers: $http_response_header is deprecated in PHP 8.5 (compile-time notice
@@ -5828,8 +5905,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     }
                 }
             } catch (Exception $e) {
+                $ret = false;
                 $this->addError(error_get_last());
                 $this->addError($e->getMessage());
+            } finally {
+                restore_error_handler();
+            }
+            if($ret === false) {
+                foreach ($call_warnings as $warning) {
+                    if(preg_match('/certificate verify failed|did not match expected CN|Peer certificate CN/i', $warning)) {
+                        $this->addTLSVerifyError($route, trim(preg_replace('/\s+/', ' ', $warning)));
+                        break;
+                    }
+                }
             }
             if($this->sendSysLogs) {
                 $_time = round(microtime(TRUE) -$_time,4);

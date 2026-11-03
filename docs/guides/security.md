@@ -835,6 +835,35 @@ Recommendations:
 - **Never print or log them.** When you check a configuration, compare names or hashes, not values.
 - **Rotating the cache keys** only empties the encrypted cache: it is rebuilt on the next requests. **Rotating the data keys** makes the values encrypted with the old keys unreadable, so decrypt and encrypt them again with the new keys before removing the old ones.
 
+### Outgoing TLS Verification
+
+**Since 8.5.15 the framework verifies the TLS certificate and the host name of every outgoing HTTPS call**: `$this->core->request->get()`, `post()`, `put()`, `patch()`, `delete()`, `call()`, the `*_json_decode()` variants, `getCurl()` and the `Firebase` class. Before 8.5.15 they did not verify it. A call to a host with an expired, self-signed, wrong-name or untrusted certificate now fails: it returns `false` and `$this->core->request->errorMsg` contains `tls-verify-failed` with the host.
+
+The certificates are checked against the CA store of the system. To use another bundle:
+
+| Config-var | Effect |
+|------------|--------|
+| `core.request.ssl.cafile` / `core.request.ssl.capath` | CA bundle file / directory used to verify the certificates |
+| `core.request.ssl_verify` | `false` (the boolean) turns the verification off for every call. `"false"`, `0` or `null` do not |
+
+Turning the verification off is always possible, explicitly, at three levels:
+
+```php
+// 1. One call only (the next calls verify again)
+$this->core->request->get($url, null, ['ssl' => ['verify_peer' => false, 'verify_peer_name' => false]]);
+
+// 2. Every call of the current request
+$this->core->request->addSSLParameter('verify_peer', false);
+$this->core->request->addSSLParameter('verify_peer_name', false);
+
+// 3. Every call of the environment, without code: in config.json
+// "core.request.ssl_verify": false
+```
+
+Each host reached without full verification logs the warning `security-tls-verify-disabled` once per request, with the host and never the URL. Use it only for a host you control (a local server with its own certificate) and prefer `core.request.ssl.cafile` with that certificate.
+
+`$extra_headers['ssl']` applies to its call only since 8.5.15. Before, it stayed in `$this->core->request->default_options` for the rest of the request. `getCurl()` honours the same SSL options (`cafile`, `capath`, `local_cert`, `local_pk`, `passphrase`, `ciphers`).
+
 ### Encrypt Sensitive Data
 
 ```php

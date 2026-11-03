@@ -208,7 +208,12 @@ if (!defined ("_Google_CLASS_") ) {
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_TIMEOUT, $this->_timeout);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $this->_timeout);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            // TLS certificate and host name verified (since 8.5.15); the CA bundle is the one of core.request.ssl.cafile when set
+            $curl_ssl = $this->core->request->getSSLOptions($url);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, (bool)($curl_ssl['verify_peer'] ?? true));
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, ($curl_ssl['verify_peer_name'] ?? true) ? 2 : 0);
+            if(!empty($curl_ssl['cafile'])) curl_setopt($ch, CURLOPT_CAINFO, $curl_ssl['cafile']);
+            if(!empty($curl_ssl['capath'])) curl_setopt($ch, CURLOPT_CAPATH, $curl_ssl['capath']);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $mode);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
