@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.13';  // 2026-11-03
+        var $_version = '8.5.14';  // 2026-11-03
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -2739,6 +2739,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         private $encrypt_env_vars = [];
         /** @var bool $resolving_encrypt_env_var re-entrance guard while getEnvVar() is running */
         private $resolving_encrypt_env_var = false;
+        /** @var bool $encrypt_env_vars_reloaded the env_vars secret was already read again without the cache in this request */
+        private $encrypt_env_vars_reloaded = false;
         /** @var array $notes_sent one-note-per-request control for the encryption notes/warnings */
         private $notes_sent = [];
 
@@ -4029,9 +4031,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          *      in this instance for the rest of the request.
          *   3. built-in default (deprecated, it will be removed in a future major version): one warning per request
          *      'security-default-encrypt-key-used'.
-         * In strict mode (config-var core.security.encrypt_require_key) step 3 does not exist: a missing key leaves
-         * an error 'security-encrypt-key-missing' once per request and the method returns false, also when the env_vars
-         * secret can not be read. decrypt() can still read v1 values written with the default keys (see decrypt()).
+         * In strict mode (config-var core.security.encrypt_require_key) step 3 does not exist. Before failing, the env_vars
+         * secret is read again once per request without the cache (see reloadEncryptEnvVars(), since 8.5.14): the cached copy
+         * lives per cache namespace and may predate the keys. If they are still missing an error 'security-encrypt-key-missing'
+         * is left once per request and the method returns false, also when the env_vars secret can not be read.
+         * decrypt() can still read v1 values written with the default keys (see decrypt()).
          * Calls with explicit keys (CoreCache) never reach this method.
          *
          * @param string $secret_key
@@ -4051,6 +4055,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!$missing) return true;
 
             if($this->isEncryptStrictMode()) {
+                if($this->reloadEncryptEnvVars()) {
+                    if(!$secret_key)
+                        $secret_key = ($this->core->config->get('core.security.encrypt_key'))?:$this->getEncryptEnvVar('CF_ENCRYPT_KEY');
+                    if(!$secret_iv)
+                        $secret_iv = ($this->core->config->get('core.security.encrypt_secret'))?:$this->getEncryptEnvVar('CF_ENCRYPT_SECRET');
+                    $missing = [];
+                    if(!$secret_key) $missing[] = 'key';
+                    if(!$secret_iv) $missing[] = 'secret';
+                    if(!$missing) return true;
+                }
                 $this->sendNoteOnce('security-encrypt-key-missing'
                     ,'security-encrypt-key-missing ['.implode(',',$missing).']: core.security.encrypt_require_key is active and core.security.encrypt_key/encrypt_secret or the env vars CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET are not available. Nothing was encrypted or decrypted'
                     ,'error');
@@ -4074,6 +4088,40 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         function isEncryptStrictMode(): bool
         {
             return in_array($this->core->config->get('core.security.encrypt_require_key'),[true,1,'1','true'],true);
+        }
+
+        /**
+         * Strict mode only (since 8.5.14): reads the env_vars secret again without the cache when CF_ENCRYPT_KEY /
+         * CF_ENCRYPT_SECRET are missing. The secret is cached per cache namespace (each platform keeps its own copy, see
+         * CoreConfig::readEnvVarsFromGCPSecrets), so a copy cached before the keys were added to the secret lacks them and
+         * resetting the cache of one namespace does not refresh the others. The reload also rewrites the copy of the
+         * current namespace, so the next requests of that platform read the keys from the cache again.
+         * At most once per request; leaves the warning 'security-encrypt-env-vars-reloaded' when it reads the secret.
+         * @return bool true when the secret was read again and the memo of CF_ENCRYPT_* was cleared
+         */
+        private function reloadEncryptEnvVars(): bool
+        {
+            if($this->encrypt_env_vars_reloaded || $this->resolving_encrypt_env_var) return false;
+            $this->encrypt_env_vars_reloaded = true;
+
+            $secret_id = $this->core->config->get('core.gcp.secrets.env_vars');
+            if(!$secret_id) return false;
+
+            $this->resolving_encrypt_env_var = true;
+            try {
+                $reloaded = $this->core->config->readEnvVarsFromGCPSecrets('','',true);
+            } catch (\Throwable $e) {
+                $reloaded = false;
+            } finally {
+                $this->resolving_encrypt_env_var = false;
+            }
+            if(!$reloaded) return false;
+
+            unset($this->encrypt_env_vars['CF_ENCRYPT_KEY'],$this->encrypt_env_vars['CF_ENCRYPT_SECRET']);
+            $this->sendNoteOnce('security-encrypt-env-vars-reloaded'
+                ,'security-encrypt-env-vars-reloaded: CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET were not in the cached env_vars of this cache namespace. The secret '.$secret_id.' was read again without the cache and its cached copy rewritten'
+                ,'warning');
+            return true;
         }
 
         /**
