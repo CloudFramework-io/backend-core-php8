@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.15';  // 2026-11-03
+        var $_version = '8.5.16';  // 2026-11-04
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -240,6 +240,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             //region SET $this->config and evaluate to read local_config.json and local_script.json
             $this->config = new CoreConfig($this, __DIR__ . '/config.json');
+            // CoreSystem is built before CoreConfig: give it the config to read core.log.sensitive_params (since 8.5.16)
+            $this->system->core_config = $this->config;
             if ($this->is->development() && is_file($this->system->root_path . '/local_config.json')) {
                 $this->config->readConfigJSONFile($this->system->root_path . '/local_config.json');
                 $this->logs->add('[development] loaded local_config.json');
@@ -1387,8 +1389,16 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
      */
     class CoreSystem
     {
+        /**
+         * Query parameters whose VALUE is never written to the logs (CFILog, getRequestFingerPrint()), since 8.5.16.
+         * The config-var core.log.sensitive_params can only add names to this list: see getSensitiveParams().
+         */
+        const LOG_SENSITIVE_PARAMS = ['code','state','token','access_token','id_token','password','key','secret'];
+
         var $url, $app,$root_path, $app_path, $app_url,$script_path,$api_path;
         var $config = [];
+        /** @var CoreConfig|null $core_config Assigned by Core7::__construct() right after creating $core->config (since 8.5.16) */
+        var $core_config = null;
         var $ip, $user_agent, $os, $lang, $format, $time_zone;
         var $geo;
 
@@ -1569,13 +1579,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /**
          * Retrieves the fingerprint data based on various server variables.
          *
+         * Since 8.5.16 'uri' and 'http_referer' are returned with the values of the sensitive query parameters masked
+         * (see maskUrl()), also when the fingerprint comes from a queue. The 'hash' does not use them and does not change.
+         *
          * @return array The fingerprint data consisting of user agent, host, software, hash, IP address, city, country, region, latitude and longitude, HTTP referer, timestamp, and URI.
          */
         public function getRequestFingerPrint(): array
         {
             // Return the fingerprint coming from a queue
             if (isset($_REQUEST['cloudframework_queued_fingerprint'])) {
-                return (json_decode($_REQUEST['cloudframework_queued_fingerprint'], true));
+                $ret = json_decode($_REQUEST['cloudframework_queued_fingerprint'], true);
+                if(is_array($ret)) $ret = $this->maskFingerPrint($ret);
+                return ($ret);
             }
 
             $ret['user_agent'] = (isset($_SERVER['HTTP_USER_AGENT']))?$_SERVER['HTTP_USER_AGENT']:'unknown';
@@ -1591,12 +1606,145 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(isset($_SERVER['HTTP_X_APPENGINE_REGION'])) $ret['getData']['region'] = $_SERVER['HTTP_X_APPENGINE_REGION'];
             if(isset($_SERVER['HTTP_X_APPENGINE_CITYLATLONG'])) $ret['getData']['latlong'] = $_SERVER['HTTP_X_APPENGINE_CITYLATLONG'];
 
-            $ret['http_referer'] = (array_key_exists('HTTP_REFERER',$_SERVER))?$_SERVER['HTTP_REFERER']:'unknown';
+            $ret['http_referer'] = (array_key_exists('HTTP_REFERER',$_SERVER))?$this->maskUrl((string)$_SERVER['HTTP_REFERER']):'unknown';
             $ret['time'] = date('Ymdhise');
-            $ret['uri'] = (isset($_SERVER['REQUEST_URI']))?$_SERVER['REQUEST_URI']:null;
+            $ret['uri'] = (isset($_SERVER['REQUEST_URI']))?$this->maskUrl((string)$_SERVER['REQUEST_URI']):null;
 
             return ($ret);
         }
+
+        //region LOG MASKING of sensitive query parameters (since 8.5.16)
+        /**
+         * Names of the query parameters whose value must not reach the logs: the LOG_SENSITIVE_PARAMS defaults plus the
+         * names of the config-var core.log.sensitive_params (an array or a comma-separated string). The config-var only
+         * ADDS names: the defaults can not be removed. It is read on every call because the config can change at runtime.
+         *
+         * @return array Normalized names (see normalizeParamName()), without duplicates
+         */
+        public function getSensitiveParams(): array
+        {
+            $names = self::LOG_SENSITIVE_PARAMS;
+            $extra = (is_object($this->core_config)) ? $this->core_config->get('core.log.sensitive_params') : null;
+            if(is_string($extra)) $extra = explode(',', $extra);
+            if(is_array($extra)) foreach ($extra as $name) if(is_string($name)) $names[] = $name;
+
+            $ret = [];
+            foreach ($names as $name) {
+                $name = self::normalizeParamName($name);
+                if(strlen($name) && !in_array($name, $ret, true)) $ret[] = $name;
+            }
+            return $ret;
+        }
+
+        /**
+         * Returns $url with the value of every sensitive query parameter (see getSensitiveParams()) replaced by '***'.
+         * Example: '/sso?code=abc&state=xyz&scope=email' => '/sso?code=***&state=***&scope=email'
+         *
+         * @param string|null $url A REQUEST_URI, a referer or any absolute URL
+         * @return string|null
+         */
+        public function maskUrl(?string $url): ?string
+        {
+            return self::maskSensitiveParamsInUrl($url, $this->getSensitiveParams());
+        }
+
+        /**
+         * Masks the URLs of a fingerprint array: 'uri' and 'http_referer', and recursively the same keys of
+         * 'local_fingerprint'. Any other key is returned untouched. Values that are not strings are not modified.
+         *
+         * @param array $fingerprint A fingerprint as returned by getRequestFingerPrint() or received from a caller
+         * @return array
+         */
+        public function maskFingerPrint(array $fingerprint): array
+        {
+            foreach (['uri','http_referer'] as $key)
+                if(isset($fingerprint[$key]) && is_string($fingerprint[$key])) $fingerprint[$key] = $this->maskUrl($fingerprint[$key]);
+            if(isset($fingerprint['local_fingerprint']) && is_array($fingerprint['local_fingerprint']))
+                $fingerprint['local_fingerprint'] = $this->maskFingerPrint($fingerprint['local_fingerprint']);
+            return $fingerprint;
+        }
+
+        /**
+         * Pure function: returns the same string with the VALUE of each parameter listed in $names replaced by $mask.
+         *
+         * - It applies to the query (after the first '?') and to the fragment ('#...') when the fragment has a query
+         *   form: the part after a '?' inside the fragment ('#/route?a=1') or, without '?', the whole fragment when it
+         *   contains '=' ('#access_token=...&token_type=bearer').
+         * - The path, the parameter names as they arrived (not re-encoded), their order, the '&' separators and the
+         *   values of the other parameters are kept byte by byte.
+         * - Names are compared normalized like PHP does with $_GET: urldecode, trim, lower case, '.' and ' ' as '_' and
+         *   without the array suffix ('code[]', 'code[0]' => 'code'). So 'postcode' or 'keyword' are not 'code' / 'key'.
+         * - A parameter without '=' and a parameter with an empty value ('code=') are left as they are: there is no value to hide.
+         * - null, '' or a URL without query nor fragment are returned unchanged. Masking twice gives the same result.
+         *
+         * @param string|null $url A REQUEST_URI ('/path?x=1') or an absolute URL ('https://host/path?x=1')
+         * @param array $names Parameter names to mask
+         * @param string $mask Replacement of the value
+         * @return string|null
+         */
+        public static function maskSensitiveParamsInUrl(?string $url, array $names, string $mask = '***'): ?string
+        {
+            if($url === null || $url === '') return $url;
+
+            $normalized = [];
+            foreach ($names as $name) if(is_string($name) && strlen($name = self::normalizeParamName($name))) $normalized[$name] = true;
+            if(!$normalized) return $url;
+
+            //region SPLIT $main and $fragment
+            $fragment = null;
+            if(($pos = strpos($url, '#')) !== false) {
+                $fragment = substr($url, $pos + 1);
+                $url = substr($url, 0, $pos);
+            }
+            //endregion
+
+            //region MASK the query of $main
+            if(($pos = strpos($url, '?')) !== false)
+                $url = substr($url, 0, $pos + 1) . self::maskQueryString(substr($url, $pos + 1), $normalized, $mask);
+            //endregion
+
+            //region MASK $fragment when it has a query form
+            if($fragment !== null) {
+                if(($pos = strpos($fragment, '?')) !== false)
+                    $fragment = substr($fragment, 0, $pos + 1) . self::maskQueryString(substr($fragment, $pos + 1), $normalized, $mask);
+                elseif(strpos($fragment, '=') !== false)
+                    $fragment = self::maskQueryString($fragment, $normalized, $mask);
+                $url .= '#' . $fragment;
+            }
+            //endregion
+
+            return $url;
+        }
+
+        /**
+         * Masks the values of the parameters of a raw query string ('a=1&b=2') whose normalized name is a key of $normalized
+         * @ignore
+         */
+        private static function maskQueryString(string $query, array $normalized, string $mask): string
+        {
+            if($query === '') return $query;
+            $parts = explode('&', $query);
+            foreach ($parts as $i => $part) {
+                if(($pos = strpos($part, '=')) === false) continue;     // parameter without '=': nothing to hide
+                if($pos + 1 === strlen($part)) continue;                // empty value: nothing to hide
+                $raw_name = substr($part, 0, $pos);
+                if(isset($normalized[self::normalizeParamName($raw_name)])) $parts[$i] = $raw_name . '=' . $mask;
+            }
+            return implode('&', $parts);
+        }
+
+        /**
+         * Normalizes a parameter name the way PHP builds $_GET keys: urldecode, trim, lower case, '.' and ' ' as '_',
+         * and without the array suffix ('code[]', 'code[0]' => 'code').
+         * @ignore
+         */
+        private static function normalizeParamName(string $name): string
+        {
+            $name = strtolower(trim(urldecode($name)));
+            if(($pos = strpos($name, '[')) !== false && $pos > 0) $name = substr($name, 0, $pos);
+            return str_replace(['.',' '], '_', trim($name));
+        }
+        //endregion
 
         /**
          * Gets the value of a specific header from the $_SERVER array.
@@ -6060,6 +6208,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Fingerprint that sendLog() forwards to the log service: getRequestFingerPrint() as pretty JSON, so the values of
+         * the sensitive query parameters of 'uri' and 'http_referer' are masked also for a fingerprint gathered from
+         * queue (since 8.5.16; before, the queued one was forwarded as it arrived).
+         *
+         * @return mixed The JSON string. A queued fingerprint that is not a JSON object is returned exactly as it arrived.
+         */
+        public function getLogFingerPrint()
+        {
+            $queued = $_REQUEST['cloudframework_queued_fingerprint'] ?? null;
+            // Invalid queued fingerprint: keep the previous behaviour and forward it as it arrived (getRequestFingerPrint() can not decode it)
+            if ($queued !== null && (!is_string($queued) || !is_array(json_decode($queued, true)))) return $queued;
+            return json_encode($this->core->system->getRequestFingerPrint(), JSON_PRETTY_PRINT);
+        }
+
+        /**
          * Sends log data to a cloud service or local log path.
          *
          * @param string $type The type of log being sent.
@@ -6096,11 +6259,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             else
                 $params['ip'] = $this->core->system->ip;
 
-            // IP gathered from queue
-            if (isset($_REQUEST['cloudframework_queued_fingerprint']))
-                $params['fingerprint'] = $_REQUEST['cloudframework_queued_fingerprint'];
-            else
-                $params['fingerprint'] = json_encode($this->core->system->getRequestFingerPrint(), JSON_PRETTY_PRINT);
+            // Fingerprint of the request, or the one gathered from queue, with its URLs masked (since 8.5.16)
+            $params['fingerprint'] = $this->getLogFingerPrint();
 
             // Tell the service to send email of the report.
             if (strlen($email) && filter_var($email, FILTER_VALIDATE_EMAIL))
@@ -8997,6 +9157,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             } else {
                 $rewrite_fingerprint = $fingerprint;
             }
+            // The fingerprint of the caller can come from outside (e.g. /core/logs): mask its URLs too (since 8.5.16)
+            $rewrite_fingerprint = $this->maskFingerprintUrls($rewrite_fingerprint);
             //endregion
 
             //region SET $entity
@@ -9010,7 +9172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $entity["Title"]=$title;
             $entity["Id"]=$id;
             $entity["JSON"]=[
-                'url'=>(array_key_exists('REQUEST_URI',$_SERVER))?$_SERVER['REQUEST_URI']:''
+                'url'=>(array_key_exists('REQUEST_URI',$_SERVER))?$this->core->system->maskUrl((string)$_SERVER['REQUEST_URI']):''
                 ,'http_referer'=> $rewrite_fingerprint['http_referer']
                 ,'data'=>$data
                 ,'fingerprint'=>$rewrite_fingerprint
@@ -9203,7 +9365,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!$this->initDSLogs()) return;
 
             //region SET $rewrite_fingerprint
-            $fingerprint = $this->core->system->getRequestFingerPrint();
+            $fingerprint = $this->maskFingerprintUrls($this->core->system->getRequestFingerPrint());
             if(!isset($fingerprint['ip'])) $fingerprint['ip'] = $this->core->system->ip;
             //endregion
             if(!$title) {
@@ -9223,7 +9385,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $entity["Ip"]=$fingerprint['ip'];
             $entity["Title"]=$title;
             $entity["JSON"]=[
-                'url'=>(array_key_exists('REQUEST_URI',$_SERVER))?$_SERVER['REQUEST_URI']:''
+                'url'=>(array_key_exists('REQUEST_URI',$_SERVER))?$this->core->system->maskUrl((string)$_SERVER['REQUEST_URI']):''
                 ,'http_referer'=> $fingerprint['http_referer']
 
             ];
@@ -9242,6 +9404,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 return $entity['KeyId'];
             }
             //endregion
+        }
+
+        /**
+         * Masks the values of the sensitive query parameters in the URLs of a fingerprint ('uri', 'http_referer' and,
+         * recursively, 'local_fingerprint') before it is stored. See CoreSystem::maskFingerPrint(). Since 8.5.16.
+         *
+         * @param mixed $fingerprint
+         * @return mixed The masked array, or $fingerprint unchanged when it is not an array
+         */
+        private function maskFingerprintUrls($fingerprint)
+        {
+            return (is_array($fingerprint)) ? $this->core->system->maskFingerPrint($fingerprint) : $fingerprint;
         }
 
         /**

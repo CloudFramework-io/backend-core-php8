@@ -1082,6 +1082,35 @@ public function ENDPOINT_users()
 }
 ```
 
+### Sensitive Query Parameters in Logs
+
+**Since 8.5.16 the framework masks the value of the sensitive query parameters before writing a URL to its logs**, so an OAuth callback (`code`, `state`) or a token passed in the URL is not stored. It applies to:
+
+- `$this->core->cfiLog->add()` (`CloudFrameWorkLogs`): `JSON.url`, `JSON.http_referer` and the stored `fingerprint`, including `local_fingerprint` and the fingerprint passed by the caller in `$rewrite_fingerprint`.
+- `$this->core->cfiLog->bitacora()` (`CloudFrameWorkBitacora`): `JSON.url` and `JSON.http_referer`.
+- `$this->core->system->getRequestFingerPrint()`: `uri` and `http_referer`, also for a fingerprint received from a queue (`cloudframework_queued_fingerprint`). The fingerprint `hash` does not use them and does not change.
+
+The masked parameters by default are `code`, `state`, `token`, `access_token`, `id_token`, `password`, `key` and `secret`. Names are compared like PHP builds `$_GET` (case-insensitive, url-decoded, `.` and space as `_`, without the `[]` suffix), so `CODE`, `access%5Ftoken` or `code[]` are masked and `postcode` or `keyword` are not. The path, the other parameters and their order are kept as they arrived. The `$data` you pass to `add()` or `bitacora()` is not modified: do not put secrets there.
+
+The config-var `core.log.sensitive_params` adds names (an array or a comma-separated string). It only adds: the default names can not be removed.
+
+```json
+{
+  "core.log.sensitive_params": ["otp", "session_id"]
+}
+```
+
+```php
+// GET /sso?code=abc123&state=xyz&scope=email
+$this->core->cfiLog->add('sso', 'callback', 'Google SSO', 'GET', $user);
+// JSON.url stored: /sso?code=***&state=***&scope=email
+
+// The same masking for your own logs
+$this->core->logs->add($this->core->system->maskUrl($url), 'audit');
+```
+
+The request log of App Engine (and of any load balancer or proxy in front of it) records the full URL and is **not** controlled by the framework. Treat it in Cloud Logging, for example with an exclusion filter on the callback routes or a restricted log bucket.
+
 ---
 
 ## GCP Security
