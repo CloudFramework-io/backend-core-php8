@@ -3,6 +3,8 @@
  * Isolated tests of the masking of sensitive query parameters in the logs, since 8.5.16:
  * CoreSystem::maskSensitiveParamsInUrl() / getSensitiveParams() / maskUrl(), getRequestFingerPrint() and
  * CFILog::add() / bitacora() (Datastore replaced by an in-memory double that captures the entities).
+ * Since 8.5.17 also: a queued fingerprint that is not a JSON object no longer breaks getRequestFingerPrint() nor is
+ * forwarded as it arrived, and sendLog() no longer calls count() on the integer counter of the logs (section f).
  *
  * Self-contained: no network, no Datastore, no Redis, no vendor/ autoload and no config.json of an application.
  * Every code, state and token is synthetic (SYNTH_*).
@@ -227,9 +229,8 @@ check('3 entities captured (2 logs + 1 bitacora)', count($ds_logs->captured) ===
 //endregion
 
 //region e) CoreRequest::sendLog() forwards a masked fingerprint (getLogFingerPrint())
-// sendLog() itself can not run here: with CloudServiceLog set it dies on count($this->core->logs->lines) (an int, a
-// TypeError in PHP 8, pre-existing at 8.5.15) and otherwise it returns before building $params. So the fingerprint it
-// forwards is tested through getLogFingerPrint(), and its source is checked to use it. No network.
+// The fingerprint that sendLog() forwards is tested through getLogFingerPrint(), and its source is checked to use it.
+// sendLog() itself runs in section f through its LogPath branch, which makes no network call.
 section('e) CoreRequest::sendLog() / getLogFingerPrint() forward a masked fingerprint');
 $req = new CoreRequest($core);
 $req->sendSysLogs = false;
@@ -257,14 +258,76 @@ check('queued: uri, http_referer and local_fingerprint masked', is_array($dec) &
 check('queued: no SYNTH_CODE_123 / SYNTH_STATE_456 / SYNTH_TOKEN in what sendLog() forwards', is_string($lfp) && strpos($lfp,'SYNTH_CODE_123') === false && strpos($lfp,'SYNTH_STATE_456') === false && strpos($lfp,'SYNTH_TOKEN') === false);
 check('queued: other keys kept (hash, ip)', is_array($dec) && ($dec['hash']??null) === 'SYNTH_HASH' && ($dec['ip']??null) === '10.0.0.1');
 
-// invalid queued fingerprint: forwarded as it arrived (previous behaviour)
-$_REQUEST['cloudframework_queued_fingerprint'] = 'not-json SYNTH_RAW';
+// invalid queued fingerprint: since 8.5.17 it is NOT forwarded as it arrived (it could carry unmasked values); the
+// fingerprint of the current request, masked, is forwarded instead
+$_REQUEST['cloudframework_queued_fingerprint'] = 'not-json /cb?code=SYNTH_RAW_CODE';
 $lfp = $has_lfp ? $req->getLogFingerPrint() : false;
-check('queued invalid JSON: forwarded exactly as it arrived', $lfp === 'not-json SYNTH_RAW', var_export($lfp,true));
+$dec = is_string($lfp) ? json_decode($lfp, true) : null;
+check('queued invalid JSON: the masked fingerprint of the current request is forwarded instead', is_array($dec) && ($dec['uri']??null) === SSO_MASKED, var_export($lfp,true));
+check('queued invalid JSON: its raw value is not forwarded', is_string($lfp) && strpos($lfp,'SYNTH_RAW_CODE') === false);
 $_REQUEST['cloudframework_queued_fingerprint'] = '"a json string, not an object"';
 $lfp = $has_lfp ? $req->getLogFingerPrint() : false;
-check('queued JSON that is not an object: forwarded exactly as it arrived', $lfp === '"a json string, not an object"', var_export($lfp,true));
+$dec = is_string($lfp) ? json_decode($lfp, true) : null;
+check('queued JSON that is not an object: the masked fingerprint of the current request is forwarded instead', is_array($dec) && ($dec['uri']??null) === SSO_MASKED && strpos($lfp,'a json string') === false, var_export($lfp,true));
 unset($_REQUEST['cloudframework_queued_fingerprint']);
+//endregion
+
+//region f) 8.5.17: invalid queued fingerprint and sendLog() with log lines
+section('f) 8.5.17: getRequestFingerPrint() with an invalid queued fingerprint, sendLog() with log lines');
+$_SERVER['REQUEST_URI'] = SSO_URI;
+$_SERVER['HTTP_REFERER'] = 'https://accounts.synth.example/cb?code=SYNTH_CODE_123&state=SYNTH_STATE_456';
+$live_hash = (function() use ($core) { unset($_REQUEST['cloudframework_queued_fingerprint']); return $core->system->getRequestFingerPrint()['hash'] ?? null; })();
+$invalid_values = [
+    'invalid JSON'            => 'not-json SYNTH_RAW',
+    'JSON string'             => '"SYNTH_STRING"',
+    'JSON number'             => '123',
+    'JSON null'               => 'null',
+    'JSON true'               => 'true',
+    'empty string'            => '',
+    'array instead of string' => ['SYNTH_ARRAY'],
+];
+foreach ($invalid_values as $label => $value) {
+    $_REQUEST['cloudframework_queued_fingerprint'] = $value;
+    try {
+        $fp = $core->system->getRequestFingerPrint();
+        check("queued $label: returns an array, no TypeError", is_array($fp));
+        check("queued $label: it is the fingerprint of the current request (same hash, uri and http_referer masked)",
+            ($fp['hash']??null) === $live_hash && ($fp['uri']??null) === SSO_MASKED && ($fp['http_referer']??null) === 'https://accounts.synth.example/cb?code=***&state=***',
+            json_encode([$fp['hash']??null, $fp['uri']??null]));
+    } catch (Throwable $e) {
+        check("queued $label: returns an array, no TypeError", false, get_class($e).': '.$e->getMessage());
+        check("queued $label: it is the fingerprint of the current request (same hash, uri and http_referer masked)", false, 'not reached');
+    }
+}
+// a valid queued fingerprint keeps winning over the current request
+$_REQUEST['cloudframework_queued_fingerprint'] = json_encode($queued);
+$fp = $core->system->getRequestFingerPrint();
+check('queued valid JSON object: still returned (masked) instead of the current request', ($fp['hash']??null) === 'SYNTH_HASH' && ($fp['uri']??null) === SSO_MASKED);
+unset($_REQUEST['cloudframework_queued_fingerprint']);
+
+// sendLog() through its LogPath branch (no network): with log lines it used to die on count() of an int
+$core->config->set('CloudServiceLog', false);
+$core->config->set('LogPath', $tmp_root.'/synth-logpath');
+$core->logs->add('SYNTH log line so that logs->lines > 0');
+check('precondition: logs->lines is an int greater than 0', is_int($core->logs->lines) && $core->logs->lines > 0, var_export($core->logs->lines,true));
+try {
+    $ret = $req->sendLog('test','cat','subcat','SYNTH title','SYNTH text');
+    check('sendLog() with log lines runs without TypeError (LogPath branch)', $ret === 'Sending to LogPath not yet implemented', var_export($ret,true));
+} catch (Throwable $e) {
+    check('sendLog() with log lines runs without TypeError (LogPath branch)', false, get_class($e).': '.$e->getMessage());
+}
+$_REQUEST['cloudframework_queued_fingerprint'] = 'not-json SYNTH_RAW';
+try {
+    $ret = $req->sendLog('test','cat','subcat','SYNTH title');
+    check('sendLog() with an invalid queued fingerprint runs without TypeError', $ret === 'Sending to LogPath not yet implemented', var_export($ret,true));
+} catch (Throwable $e) {
+    check('sendLog() with an invalid queued fingerprint runs without TypeError', false, get_class($e).': '.$e->getMessage());
+}
+unset($_REQUEST['cloudframework_queued_fingerprint']);
+$core->config->set('LogPath', '');
+$rm = new ReflectionMethod('CoreRequest','sendLog');
+$send_log_src = implode('', array_slice(file($rm->getFileName()), $rm->getStartLine()-1, $rm->getEndLine()-$rm->getStartLine()+1));
+check('sendLog() source no longer calls count() on logs->lines', strpos($send_log_src, 'count($this->core->logs->lines)') === false);
 //endregion
 
 if($php_warnings) { section('PHP warnings'); foreach (array_slice($php_warnings,0,10) as $w) echo "  $w\n"; }

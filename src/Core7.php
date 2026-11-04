@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.16';  // 2026-11-04
+        var $_version = '8.5.17';  // 2026-11-04
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -1581,6 +1581,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          *
          * Since 8.5.16 'uri' and 'http_referer' are returned with the values of the sensitive query parameters masked
          * (see maskUrl()), also when the fingerprint comes from a queue. The 'hash' does not use them and does not change.
+         * Since 8.5.17 a queued fingerprint ($_REQUEST['cloudframework_queued_fingerprint']) that is not a JSON object is
+         * ignored and the fingerprint of the current request is returned: before, it was returned as decoded (null, a
+         * string or a number) and the return type made it a TypeError that any client could trigger.
          *
          * @return array The fingerprint data consisting of user agent, host, software, hash, IP address, city, country, region, latitude and longitude, HTTP referer, timestamp, and URI.
          */
@@ -1588,9 +1591,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         {
             // Return the fingerprint coming from a queue
             if (isset($_REQUEST['cloudframework_queued_fingerprint'])) {
-                $ret = json_decode($_REQUEST['cloudframework_queued_fingerprint'], true);
-                if(is_array($ret)) $ret = $this->maskFingerPrint($ret);
-                return ($ret);
+                $queued = $_REQUEST['cloudframework_queued_fingerprint'];
+                $ret = is_string($queued) ? json_decode($queued, true) : null;
+                if (is_array($ret)) return $this->maskFingerPrint($ret);
+                // Not a JSON object (or not a string): ignored, the fingerprint of the current request is computed below (since 8.5.17)
+                $ret = [];
             }
 
             $ret['user_agent'] = (isset($_SERVER['HTTP_USER_AGENT']))?$_SERVER['HTTP_USER_AGENT']:'unknown';
@@ -6211,14 +6216,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Fingerprint that sendLog() forwards to the log service: getRequestFingerPrint() as pretty JSON, so the values of
          * the sensitive query parameters of 'uri' and 'http_referer' are masked also for a fingerprint gathered from
          * queue (since 8.5.16; before, the queued one was forwarded as it arrived).
+         * Since 8.5.17 a queued fingerprint that is not a JSON object is no longer forwarded as it arrived (it could carry
+         * unmasked values): it is replaced by the fingerprint of the current request, as getRequestFingerPrint() does.
          *
-         * @return mixed The JSON string. A queued fingerprint that is not a JSON object is returned exactly as it arrived.
+         * @return string|false The JSON string (false only if json_encode() fails).
          */
         public function getLogFingerPrint()
         {
-            $queued = $_REQUEST['cloudframework_queued_fingerprint'] ?? null;
-            // Invalid queued fingerprint: keep the previous behaviour and forward it as it arrived (getRequestFingerPrint() can not decode it)
-            if ($queued !== null && (!is_string($queued) || !is_array(json_decode($queued, true)))) return $queued;
             return json_encode($this->core->system->getRequestFingerPrint(), JSON_PRETTY_PRINT);
         }
 
@@ -6251,7 +6255,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if (!is_string($text)) $text = json_encode($text);
             $params['text'] = $text . ((strlen($text)) ? "\n\n" : '');
             if ($this->core->errors->lines) $params['text'] .= "Errors: " . json_encode($this->core->errors->data, JSON_PRETTY_PRINT) . "\n\n";
-            if (count($this->core->logs->lines)) $params['text'] .= "Logs: " . json_encode($this->core->logs->data, JSON_PRETTY_PRINT);
+            if ($this->core->logs->lines) $params['text'] .= "Logs: " . json_encode($this->core->logs->data, JSON_PRETTY_PRINT);
 
             // IP gathered from queue
             if (isset($_REQUEST['cloudframework_queued_ip']))

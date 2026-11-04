@@ -1088,7 +1088,7 @@ public function ENDPOINT_users()
 
 - `$this->core->cfiLog->add()` (`CloudFrameWorkLogs`): `JSON.url`, `JSON.http_referer` and the stored `fingerprint`, including `local_fingerprint` and the fingerprint passed by the caller in `$rewrite_fingerprint`.
 - `$this->core->cfiLog->bitacora()` (`CloudFrameWorkBitacora`): `JSON.url` and `JSON.http_referer`.
-- `$this->core->system->getRequestFingerPrint()`: `uri` and `http_referer`, also for a fingerprint received from a queue (`cloudframework_queued_fingerprint`). The fingerprint `hash` does not use them and does not change.
+- `$this->core->system->getRequestFingerPrint()`: `uri` and `http_referer`, also for a fingerprint received from a queue (`cloudframework_queued_fingerprint`). The fingerprint `hash` does not use them and does not change. Since 8.5.17 a queued value that is not a JSON object is ignored and the fingerprint of the current request is used instead, both here and in what `sendLog()` forwards: before, it was a `TypeError` that any client could trigger, and `sendLog()` forwarded it as it arrived.
 
 The masked parameters by default are `code`, `state`, `token`, `access_token`, `id_token`, `password`, `key` and `secret`. Names are compared like PHP builds `$_GET` (case-insensitive, url-decoded, `.` and space as `_`, without the `[]` suffix), so `CODE`, `access%5Ftoken` or `code[]` are masked and `postcode` or `keyword` are not. The path, the other parameters and their order are kept as they arrived. The `$data` you pass to `add()` or `bitacora()` is not modified: do not put secrets there.
 
