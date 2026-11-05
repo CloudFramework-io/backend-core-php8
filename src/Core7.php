@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.18';  // 2026-11-05
+        var $_version = '8.5.19';  // 2026-11-05
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -5458,7 +5458,35 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         private function addTLSVerifyError(string $route, string $detail): void
         {
             $host = parse_url($route, PHP_URL_HOST) ?: 'unknown-host';
-            $this->addError('tls-verify-failed: the TLS certificate of host '.$host.' could not be verified ('.$detail.'). Fix the certificate or the CA bundle (core.request.ssl.cafile); disable the verification only explicitly with $extra_headers[\'ssl\']');
+            $this->addError('tls-verify-failed: the TLS certificate of host '.$host.' could not be verified ('.$this->logUrl($detail).'). Fix the certificate or the CA bundle (core.request.ssl.cafile); disable the verification only explicitly with $extra_headers[\'ssl\']');
+        }
+
+        /**
+         * Returns the URL to write in logs, performance notes and errors: the value of every sensitive query parameter
+         * (CoreSystem::getSensitiveParams(): code, state, token, access_token, id_token, password, key, secret and the
+         * names added with core.log.sensitive_params) replaced by '***'. The call itself always uses the real URL.
+         * Since 8.5.19: before, an outgoing call like userinfo?access_token=... reached the application log in clear.
+         *
+         * @param string|null $url URL of the call, or a message that may contain it (system or exception messages)
+         * @return string|null
+         */
+        private function logUrl(?string $url): ?string
+        {
+            if(is_object($this->core->system ?? null)) return $this->core->system->maskUrl($url);
+            return CoreSystem::maskSensitiveParamsInUrl($url, CoreSystem::LOG_SENSITIVE_PARAMS);
+        }
+
+        /**
+         * error_get_last() with its message masked by logUrl(): a failed file_get_contents() reports the URL of the
+         * call, query included, in that message (since 8.5.19).
+         *
+         * @return array|null
+         */
+        private function logLastError(): ?array
+        {
+            $error = error_get_last();
+            if(is_array($error) && isset($error['message']) && is_string($error['message'])) $error['message'] = $this->logUrl($error['message']);
+            return $error;
         }
 
         /**
@@ -5529,9 +5557,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $_time = microtime(TRUE);
             if($this->sendSysLogs)
-                $this->core->logs->add("curl request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'),'CoreRequest');
+                $this->core->logs->add("curl request {$verb} {$this->logUrl($route)} ".(($data === null) ? '{no params}' : '{with params}'),'CoreRequest');
 
-            $this->core->__p->add('Request->getCurl: ', "$route " . (($data === null) ? '{no params}' : '{with params}'), 'note');
+            $this->core->__p->add('Request->getCurl: ', $this->logUrl($route) . " " . (($data === null) ? '{no params}' : '{with params}'), 'note');
             $route = $this->getServiceUrl($route);
             $this->responseHeaders = null;
             $options['http']['header'] = ['Connection: close', 'Expect:', 'ACCEPT:']; // improve perfomance and avoid 100 HTTP Header
@@ -5624,9 +5652,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                     $this->addError($ret);
                 }
             } else {
-                $this->addError(error_get_last());
+                $this->addError($this->logLastError());
                 $this->addError([('Curl error ' . curl_errno($ch)) => curl_error($ch)]);
-                $this->addError(['Curl url' => $route]);
+                $this->addError(['Curl url' => $this->logUrl($route)]);
                 // 60: CURLE_PEER_FAILED_VERIFICATION (certificate or host name), 77: CURLE_SSL_CACERT_BADFILE
                 if(in_array(curl_errno($ch),[60,77])) $this->addTLSVerifyError($route, curl_error($ch));
                 $ret = false;
@@ -5635,7 +5663,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             if($this->sendSysLogs) {
                 $_time = round(microtime(TRUE) -$_time,4);
-                $this->core->logs->add("end curl request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}')." {$_time} secs",(($this->error)?'debug':'info'),'CoreRequest');
+                $this->core->logs->add("end curl request {$verb} {$this->logUrl($route)} ".(($data === null) ? '{no params}' : '{with params}')." {$_time} secs",(($this->error)?'debug':'info'),'CoreRequest');
             }
 
             $this->core->__p->add('Request->getCurl: ', '', 'endnote');
@@ -5862,13 +5890,13 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
 
             $_time = microtime(TRUE);
-            $this->core->__p->add("Request->{$verb}: ", "$route " . (($data === null) ? '{no params}' : '{with params}'), 'note');
+            $this->core->__p->add("Request->{$verb}: ", $this->logUrl($route) . " " . (($data === null) ? '{no params}' : '{with params}'), 'note');
             $route = $this->getServiceUrl($route);
             $this->responseHeaders = null;
 
             if($this->sendSysLogs)
-                $this->core->logs->add("request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'),'CoreRequest');
-            //syslog(LOG_INFO,"request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'));
+                $this->core->logs->add("request {$verb} {$this->logUrl($route)} ".(($data === null) ? '{no params}' : '{with params}'),'CoreRequest');
+            //syslog(LOG_INFO,"request {$verb} {$this->logUrl($route)} ".(($data === null) ? '{no params}' : '{with params}'));
 
             //region EVALUATE $extra_headers['ssl'] special headers: they apply to this call only (before 8.5.15 they stayed in $this->default_options)
             $call_ssl = null;
@@ -6042,7 +6070,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
                 // If we have an error
                 if ($ret === false) {
-                    $this->addError(['route_error'=>$route,'reponse_headers'=>$this->responseHeaders,'system_error'=>error_get_last()]);
+                    $this->addError(['route_error'=>$this->logUrl($route),'reponse_headers'=>$this->responseHeaders,'system_error'=>$this->logLastError()]);
                 } else {
                     $code = $this->getLastResponseCode();
                     if ($code === null) {
@@ -6059,8 +6087,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 }
             } catch (Exception $e) {
                 $ret = false;
-                $this->addError(error_get_last());
-                $this->addError($e->getMessage());
+                $this->addError($this->logLastError());
+                $this->addError($this->logUrl($e->getMessage()));
             } finally {
                 restore_error_handler();
             }
@@ -6074,12 +6102,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             if($this->sendSysLogs) {
                 $_time = round(microtime(TRUE) -$_time,4);
-                $this->core->logs->add("end request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}')." - ".($this->getLastResponseCode())." [{$_time} secs]",'CoreRequest');
+                $this->core->logs->add("end request {$verb} {$this->logUrl($route)} ".(($data === null) ? '{no params}' : '{with params}')." - ".($this->getLastResponseCode())." [{$_time} secs]",'CoreRequest');
             }
             $this->core->__p->add("Request->{$verb}: ", '', 'endnote');
 
 
-            //syslog(($this->error)?LOG_DEBUG:LOG_INFO,"end request {$verb} {$route} ".(($data === null) ? '{no params}' : '{with params}'));
+            //syslog(($this->error)?LOG_DEBUG:LOG_INFO,"end request {$verb} {$this->logUrl($route)} ".(($data === null) ? '{no params}' : '{with params}'));
 
             return ($ret);
         }

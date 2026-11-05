@@ -1150,6 +1150,7 @@ $this->core->request->addSSLParameter('verify_peer_name', false);
 <li><code>$this->core->cfiLog->add()</code> (<code>CloudFrameWorkLogs</code>): <code>JSON.url</code>, <code>JSON.http_referer</code> and the stored <code>fingerprint</code>, including <code>local_fingerprint</code> and the fingerprint passed by the caller in <code>$rewrite_fingerprint</code>.</li>
 <li><code>$this->core->cfiLog->bitacora()</code> (<code>CloudFrameWorkBitacora</code>): <code>JSON.url</code> and <code>JSON.http_referer</code>.</li>
 <li><code>$this->core->system->getRequestFingerPrint()</code>: <code>uri</code> and <code>http_referer</code>, also for a fingerprint received from a queue (<code>cloudframework_queued_fingerprint</code>). The fingerprint <code>hash</code> does not use them and does not change. Since 8.5.17 a queued value that is not a JSON object is ignored and the fingerprint of the current request is used instead, both here and in what <code>sendLog()</code> forwards: before, it was a <code>TypeError</code> that any client could trigger, and <code>sendLog()</code> forwarded it as it arrived.</li>
+<li><code>CoreRequest</code> (<code>$this->core->request</code>), since 8.5.19: the URL it calls, with the parameters of <code>$data</code> already added to a GET, in its log lines (<code>sendSysLogs</code>), its performance notes and its errors (<code>errorMsg</code> and <code>$this->core->errors</code>), including the <code>error_get_last()</code> message and the TLS verification error. A call such as <code>get_json_decode($userinfo_url, ['access_token' =&gt; $token])</code> that fails no longer writes the token. The request itself and <code>$this->core->request->options</code>, which keeps the route for debugging, are not modified.</li>
 </ul>
 
 <p>The masked parameters by default are <code>code</code>, <code>state</code>, <code>token</code>, <code>access_token</code>, <code>id_token</code>, <code>password</code>, <code>key</code> and <code>secret</code>. Names are compared like PHP builds <code>$_GET</code> (case-insensitive, url-decoded, <code>.</code> and space as <code>_</code>, without the <code>[]</code> suffix), so <code>CODE</code>, <code>access%5Ftoken</code> or <code>code[]</code> are masked and <code>postcode</code> or <code>keyword</code> are not. The path, the other parameters and their order are kept as they arrived. The <code>$data</code> you pass to <code>add()</code> or <code>bitacora()</code> is not modified: do not put secrets there.</p>
@@ -1166,6 +1167,8 @@ $this->core->cfiLog->add('sso', 'callback', 'Google SSO', 'GET', $user);
 
 // The same masking for your own logs
 $this->core->logs->add($this->core->system->maskUrl($url), 'audit');</code></pre>
+
+<p>When <code>file_get_contents()</code> can not open a URL, PHP itself writes a warning with the full URL to its error log (stderr in App Engine); the framework does not intercept it. Send tokens in a header (<code>Authorization: Bearer …</code>) rather than in the URL.</p>
 
 <p>The request log of App Engine (and of any load balancer or proxy in front of it) records the full URL and is <strong>not</strong> controlled by the framework. Treat it in Cloud Logging, for example with an exclusion filter on the callback routes or a restricted log bucket.</p>
 

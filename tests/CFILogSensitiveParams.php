@@ -5,8 +5,10 @@
  * CFILog::add() / bitacora() (Datastore replaced by an in-memory double that captures the entities).
  * Since 8.5.17 also: a queued fingerprint that is not a JSON object no longer breaks getRequestFingerPrint() nor is
  * forwarded as it arrived, and sendLog() no longer calls count() on the integer counter of the logs (section f).
+ * Since 8.5.19 also: CoreRequest masks the URL it calls in its log lines, notes and errors (section g, through a closed
+ * port of 127.0.0.1, so that both transports fail without leaving the machine).
  *
- * Self-contained: no network, no Datastore, no Redis, no vendor/ autoload and no config.json of an application.
+ * Self-contained: no external network, no Datastore, no Redis, no vendor/ autoload and no config.json of an application.
  * Every code, state and token is synthetic (SYNTH_*).
  *
  * Run from the repository root:
@@ -328,6 +330,38 @@ $core->config->set('LogPath', '');
 $rm = new ReflectionMethod('CoreRequest','sendLog');
 $send_log_src = implode('', array_slice(file($rm->getFileName()), $rm->getStartLine()-1, $rm->getEndLine()-$rm->getStartLine()+1));
 check('sendLog() source no longer calls count() on logs->lines', strpos($send_log_src, 'count($this->core->logs->lines)') === false);
+//endregion
+
+//region g) 8.5.19: CoreRequest does not write the parameters of a URL it calls into its log lines, notes or errors
+// Origin: the API calls userinfo with get_json_decode($url, ['access_token'=>...]) and, when the call failed or the
+// syslog was on, the URL with its access_token reached the log of the application. A closed local port makes the
+// call fail without any network: both transports (call() through file_get_contents and getCurl() through curl)
+section('g) 8.5.19: CoreRequest masks the URL it calls in log lines, notes and errors');
+$g_url = 'http://127.0.0.1:1/userinfo';
+$g_params = ['access_token'=>'SYNTH_ACCESS_TOKEN_789','alt'=>'json'];
+foreach (['call (file_get_contents)'=>'get', 'getCurl (curl)'=>'curl'] as $label => $how) {
+    $core->logs->data = []; $core->errors->data = [];
+    $req = new CoreRequest($core);
+    $req->sendSysLogs = true;
+    $g_warnings = [];
+    set_error_handler(function ($errno, $errstr) use (&$g_warnings) { $g_warnings[] = $errstr; return true; });
+    try {
+        $ret = ($how === 'get') ? $req->get($g_url, $g_params) : $req->getCurl($g_url, $g_params);
+    } finally { restore_error_handler(); }
+    check("$label: the call fails as expected (closed local port)", $ret === false && $req->error, var_export($ret,true));
+    $logs = json_encode($core->logs->data); $errors = json_encode($core->errors->data);
+    $notes = json_encode($core->__p->data); $msg = json_encode($req->errorMsg);
+    check("$label: log lines without SYNTH_ACCESS_TOKEN_789", strpos($logs,'SYNTH_ACCESS_TOKEN_789') === false);
+    check("$label: log lines keep the masked URL (access_token=***)", strpos($logs,'access_token=***') !== false || strpos($logs,'access_token%3D***') !== false, substr($logs,0,300));
+    check("$label: core->errors without SYNTH_ACCESS_TOKEN_789", strpos($errors,'SYNTH_ACCESS_TOKEN_789') === false);
+    check("$label: performance notes (__p) without SYNTH_ACCESS_TOKEN_789", strpos($notes,'SYNTH_ACCESS_TOKEN_789') === false);
+    check("$label: errorMsg without SYNTH_ACCESS_TOKEN_789", strpos($msg,'SYNTH_ACCESS_TOKEN_789') === false);
+    check("$label: errorMsg keeps the masked URL and the other parameters", strpos($msg,'access_token=***') !== false && strpos($msg,'alt=json') !== false, substr($msg,0,300));
+    // informative: what PHP itself emitted as a warning during the call (it goes to stderr, not to CoreLog)
+    $w_leak = (bool)array_filter($g_warnings, fn($w) => strpos($w,'SYNTH_ACCESS_TOKEN_789') !== false);
+    echo "  info: $label emitted ".count($g_warnings)." PHP warning(s)".($w_leak ? ', which CONTAIN the parameter value (stderr, outside CoreLog)' : '')."\n";
+}
+$core->logs->data = []; $core->errors->data = [];
 //endregion
 
 if($php_warnings) { section('PHP warnings'); foreach (array_slice($php_warnings,0,10) as $w) echo "  $w\n"; }

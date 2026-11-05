@@ -1089,6 +1089,7 @@ public function ENDPOINT_users()
 - `$this->core->cfiLog->add()` (`CloudFrameWorkLogs`): `JSON.url`, `JSON.http_referer` and the stored `fingerprint`, including `local_fingerprint` and the fingerprint passed by the caller in `$rewrite_fingerprint`.
 - `$this->core->cfiLog->bitacora()` (`CloudFrameWorkBitacora`): `JSON.url` and `JSON.http_referer`.
 - `$this->core->system->getRequestFingerPrint()`: `uri` and `http_referer`, also for a fingerprint received from a queue (`cloudframework_queued_fingerprint`). The fingerprint `hash` does not use them and does not change. Since 8.5.17 a queued value that is not a JSON object is ignored and the fingerprint of the current request is used instead, both here and in what `sendLog()` forwards: before, it was a `TypeError` that any client could trigger, and `sendLog()` forwarded it as it arrived.
+- `CoreRequest` (`$this->core->request`), since 8.5.19: the URL it calls, with the parameters of `$data` already added to a GET, in its log lines (`sendSysLogs`), its performance notes and its errors (`errorMsg` and `$this->core->errors`), including the `error_get_last()` message and the TLS verification error. A call such as `get_json_decode($userinfo_url, ['access_token' => $token])` that fails no longer writes the token. The request itself and `$this->core->request->options`, which keeps the route for debugging, are not modified.
 
 The masked parameters by default are `code`, `state`, `token`, `access_token`, `id_token`, `password`, `key` and `secret`. Names are compared like PHP builds `$_GET` (case-insensitive, url-decoded, `.` and space as `_`, without the `[]` suffix), so `CODE`, `access%5Ftoken` or `code[]` are masked and `postcode` or `keyword` are not. The path, the other parameters and their order are kept as they arrived. The `$data` you pass to `add()` or `bitacora()` is not modified: do not put secrets there.
 
@@ -1108,6 +1109,8 @@ $this->core->cfiLog->add('sso', 'callback', 'Google SSO', 'GET', $user);
 // The same masking for your own logs
 $this->core->logs->add($this->core->system->maskUrl($url), 'audit');
 ```
+
+When `file_get_contents()` can not open a URL, PHP itself writes a warning with the full URL to its error log (stderr in App Engine); the framework does not intercept it. Send tokens in a header (`Authorization: Bearer …`) rather than in the URL.
 
 The request log of App Engine (and of any load balancer or proxy in front of it) records the full URL and is **not** controlled by the framework. Treat it in Cloud Logging, for example with an exclusion filter on the callback routes or a restricted log bucket.
 
