@@ -1095,6 +1095,8 @@ The masked parameters by default are `code`, `state`, `token`, `access_token`, `
 
 The config-var `core.log.sensitive_params` adds names (an array or a comma-separated string). It only adds: the default names can not be removed.
 
+**Since 8.5.20 the error line of `RESTful::send()` carries only `status`, `code` and `lines`.** The `CloudFramework RESTFul:` line sent to syslog used to hold all of `$this->core->errors->data`, which may include what the caller sent or what a service answered. The client still receives that data in the response. In the same way, the line of a call that comes from a queue or a cron (`RESULT FROM QUEUE`, `USING CRON`) carries only `status` and `code`: it used to hold the whole response.
+
 ```json
 {
   "core.log.sensitive_params": ["otp", "session_id"]

@@ -1088,7 +1088,8 @@ if (!defined("_RESTfull_CLASS_")) {
             } elseif ($this->core->errors->lines) {
                 $error_var = ($this->core->config->get('core.api.errors.var_name'))?$this->core->config->get('core.api.errors.var_name'):'errors';
                 $ret[$error_var] = $this->core->errors->data;
-                $this->core->errors->sendToSysLog('CloudFramework RESTFul: '. json_encode($this->core->errors->data,JSON_FORCE_OBJECT),'error');
+                // Only status, code and number of errors: errors->data may hold what the caller sent or what a service answered
+                $this->core->errors->sendToSysLog('CloudFramework RESTFul: '. json_encode(['status'=>$this->getReturnStatus(),'code'=>$this->getReturnCode(),'lines'=>$this->core->errors->lines],JSON_FORCE_OBJECT),'error');
             }
             //endregion
 
@@ -1164,7 +1165,8 @@ if (!defined("_RESTfull_CLASS_")) {
                 $title = (isset($this->formParams['cloudframework_queued']) && $this->formParams['cloudframework_queued'])?'RESULT FROM QUEUE ':'';
                 if($this->core->security->isCron())
                     $title .= 'USING CRON';
-                $this->core->logs->add($title, $ret, 'debug');
+                // Only status and code: the response may hold what the caller sent or what a service answered
+                $this->core->logs->add(['status'=>$this->getReturnStatus(),'code'=>$this->getReturnCode()], trim($title)?:'RESULT FROM QUEUE', 'debug');
             }
 
             // ending script
