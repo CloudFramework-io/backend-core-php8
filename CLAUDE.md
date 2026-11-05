@@ -919,7 +919,6 @@ None. / List of breaking changes.
 │   └── config-dist.json       # Config template
 ├── runscript.php              # Script execution entry point
 ├── runtest.php                # Test suite runner
-├── runapi.php                 # API testing/mocking tool
 └── install.php                # First-time installation script
 ```
 

@@ -407,7 +407,6 @@ your-project/
             │   ├── Core7.php        # Core framework
             │   ├── class/           # Framework classes
             │   └── dispatcher.php   # Request dispatcher
-            ├── runapi.php          # API entry point
             ├── runscript.php       # Script entry point
             └── install.php         # Installation script
 ```

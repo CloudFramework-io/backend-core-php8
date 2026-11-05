@@ -98,7 +98,7 @@ Your `composer.json` should include these helpful scripts:
 ```json
 {
   "scripts": {
-    "server": "php -S localhost:8080 -t . vendor/cloudframework-io/backend-core-php8/runapi.php",
+    "server": "php -S localhost:8080 vendor/cloudframework-io/backend-core-php8/src/dispatcher.php",
     "serve": "@server",
     "script": "php vendor/cloudframework-io/backend-core-php8/runscript.php",
     "setup": "@script _setup",
@@ -513,7 +513,7 @@ composer require cloudframework-io/backend-core-php8 --ignore-platform-req=ext-g
 Change the port in composer.json:
 
 ```json
-"server": "php -S localhost:8081 -t . vendor/cloudframework-io/backend-core-php8/runapi.php"
+"server": "php -S localhost:8081 vendor/cloudframework-io/backend-core-php8/src/dispatcher.php"
 ```
 
 ### Cache Permission Issues

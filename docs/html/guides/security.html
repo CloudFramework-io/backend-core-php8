@@ -887,7 +887,7 @@
 </tbody>
 </table>
 
-<p><strong>Since 8.5.13 the cache keys are mandatory.</strong> There is no built-in default: without both values the entry points (<code>dispatcher.php</code>, <code>mcp-server.php</code>, <code>runscript.php</code>, <code>runapi.php</code>, <code>runtest.php</code>) stop before serving anything. HTTP calls get a <code>503</code> with a generic message and the detail (<code>security-cache-key-missing</code>) goes to the log; scripts print it and exit with code 1.</p>
+<p><strong>Since 8.5.13 the cache keys are mandatory.</strong> There is no built-in default: without both values the entry points (<code>dispatcher.php</code>, <code>mcp-server.php</code>, <code>runscript.php</code>, <code>runtest.php</code>) stop before serving anything. HTTP calls get a <code>503</code> with a generic message and the detail (<code>security-cache-key-missing</code>) goes to the log; scripts print it and exit with code 1.</p>
 
 <p><strong>Generate each value</strong> with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).</p>
 

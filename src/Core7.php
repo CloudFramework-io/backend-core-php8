@@ -168,7 +168,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.17';  // 2026-11-04
+        var $_version = '8.5.18';  // 2026-11-05
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -321,7 +321,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Stops the execution when getStartupError() returns an error. Used by the entry points of the framework
-         * (dispatcher.php, mcp-server.php, runscript.php, runapi.php, runtest.php).
+         * (dispatcher.php, mcp-server.php, runscript.php, runtest.php).
          * - HTTP: 503 with a generic message (no configuration detail is exposed); the detail goes to the log.
          * - Terminal: the detail to STDERR and exit code 1.
          *

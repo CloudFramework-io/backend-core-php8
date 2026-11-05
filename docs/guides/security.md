@@ -814,7 +814,7 @@ The framework uses two pairs of keys. Generate them yourself: random values, nev
 | Cache keys | Encrypted cache entries: configuration and `env_vars` secret, security groups, daily subkeys | `core.gcp.secrets.cache_encrypt_key` / `core.gcp.secrets.cache_encrypt_iv` | `CF_CACHE_ENCRYPT_KEY` / `CF_CACHE_ENCRYPT_IV` | **Yes, since 8.5.13** |
 | Data keys | `$this->core->security->encrypt()` / `decrypt()` called without explicit keys | `core.security.encrypt_key` / `core.security.encrypt_secret` | `CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET` | Yes in strict mode (`core.security.encrypt_require_key: true`) |
 
-**Since 8.5.13 the cache keys are mandatory.** There is no built-in default: without both values the entry points (`dispatcher.php`, `mcp-server.php`, `runscript.php`, `runapi.php`, `runtest.php`) stop before serving anything. HTTP calls get a `503` with a generic message and the detail (`security-cache-key-missing`) goes to the log; scripts print it and exit with code 1.
+**Since 8.5.13 the cache keys are mandatory.** There is no built-in default: without both values the entry points (`dispatcher.php`, `mcp-server.php`, `runscript.php`, `runtest.php`) stop before serving anything. HTTP calls get a `503` with a generic message and the detail (`security-cache-key-missing`) goes to the log; scripts print it and exit with code 1.
 
 **Generate each value** with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).
 

@@ -34,7 +34,7 @@ class API extends RESTful
 
 ### API Lifecycle
 
-1. Request received by `runapi.php`
+1. Request received by `src/dispatcher.php`
 2. `RESTful` class instantiated
 3. Request parameters parsed
 4. Your `main()` method called
