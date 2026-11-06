@@ -1,4 +1,9 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-platform
+//   Process: /cloud-platform · SubProcess: 4693650502582272
+//   DevUnit: /cloud-development/frameworks/php, /cloud-channels/email/cfmail
+//   Activities: 6243470520090624
 /**
  * [$cfos = $this->core->loadClass('CFOs',$integrationKey);] Class CFOs to handle CFO app for CloudFrameworkInterface
  * https://cloudframework.io/documentation/frameworks/backend-core-php8/classes/CFOs.html
@@ -1050,6 +1055,9 @@ class CFOWorkFlows {
     /** @var WorkFlows $workFlows **/
     var $workFlows;
 
+    /** @var array|null Result of WorkFlows::setMandrillApiKeyFromPlatformConfig() for $this->workFlows (source, subaccount, variables, notes) */
+    var $mandrillResolution = null;
+
     /** @var array $logs to report Workflow results */
     var $logs = [];
     /** @var array $messages included on workflows */
@@ -1882,7 +1890,12 @@ class CFOWorkFlows {
         $_time = microtime(true);
         //endregion
 
-        //region SETUP $this->workFlows and Mandrill SETUP
+        //region SETUP $this->workFlows and the Mandrill key of the platform
+        // The key is resolved with the same contract as CloudFrameworkWorkFlows of the CloudFramework API (own key in
+        // cloud-channels, legacy plain text key in the email config, [cloudframework] account with the declared
+        // subaccount). $this->workFlows is only kept when a key resolves, so a failed resolution is retried on the next
+        // email instead of sending without key. The configuration is only read: no ds:CloudFrameWorkModulesConfigs
+        // entity is created. Reports carry the resolution source and fixed codes only (no key, namespace nor subaccount).
         if(!$this->workFlows) {
 
             //check $this->cfos->integrationKey
@@ -1891,32 +1904,29 @@ class CFOWorkFlows {
                 return;
             }
 
-            // read $this->workFlows
-            $this->workFlows = $this->core->loadClass('WorkFlows',$this->cfos);
-            $config = $this->cfos->ds('CloudFrameWorkModulesConfigs')->fetchOneByKey('email');
-            if ($this->cfos->ds('CloudFrameWorkModulesConfigs')->error) {
-                $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds('CloudFrameWorkModulesConfigs')->errorMsg]);
+            // own WorkFlows instance: Core7::loadClass() shares one instance per CFOs object, and the key resolved here
+            // must never override the key another caller (e.g. CloudFrameworkWorkFlows) set on the shared instance
+            if(!class_exists('WorkFlows')) $this->core->loadClass('WorkFlows',$this->cfos);
+            if(!class_exists('WorkFlows')) {
+                $this->workflows_report($workflow['id'],['error'=>'WorkFlows class is not available']);
                 return;
             }
-            $this->workflows_report($workflow['id'],['namespace'=>$this->cfos->ds('CloudFrameWorkModulesConfigs')->namespace]);
+            $workFlows = new WorkFlows($this->core,$this->cfos);
+            if($workFlows->error) {
+                $this->workflows_report($workflow['id'],['error'=>'WorkFlows class is not available']);
+                return;
+            }
+            if(!$resolution = $workFlows->setMandrillApiKeyFromPlatformConfig()) {
+                $error = $workFlows->errorMsg ? end($workFlows->errorMsg) : 'no Mandrill key resolves';
+                $this->workflows_report($workflow['id'],['error'=>'Missing Mandrill key in workflow ' . $hook_type . "[$_i]: " . (is_string($error) ? $error : 'no Mandrill key resolves')]);
+                return;
+            }
+            $this->workFlows = $workFlows;
+            $this->mandrillResolution = $resolution;
+            $this->workflows_report($workflow['id'],['mandrill'=>['source'=>$resolution['source'],'notes'=>$resolution['notes']]]);
 
-            if (!$config) {
-                $config = ['KeyName' => 'email', 'DateUpdating' => 'now', 'Title' => 'Email Configuration', 'Description' => 'CLOUD-CHANNELS EMAIL Configuration', 'Config' => ['mandrill_api_key' => null]];
-                $this->cfos->ds('CloudFrameWorkModulesConfigs')->createEntities($config);
-                if ($this->cfos->ds('CloudFrameWorkModulesConfigs')->error) {
-                    $this->workflows_report($workflow['id'],['error'=>$this->cfos->ds('CloudFrameWorkModulesConfigs')->errorMsg]);
-                    return;
-                }
-            }
-            if (!($config['Config']['mandrill_api_key'] ?? null)) {
-                $this->workflows_report($workflow['id'],['error'=>'Missing [CLOUD-CHANNELS/config/mandrill_api_key] in workflow ' . $hook_type . "[$_i]"]);
-                return;
-            }
-            if ($config['Config']['mandrill_api_key'] ?? null) {
-                $this->workFlows->setMandrillApiKey($config['Config']['mandrill_api_key']);
-            }
-            if(is_array($config['Config']['variables']??null))
-                $data = array_merge($config['Config']['variables'],$data);
+            if(is_array($resolution['variables']??null) && $resolution['variables'])
+                $data = array_merge($resolution['variables'],$data);
         }
         //endregion
 
@@ -1950,6 +1960,10 @@ class CFOWorkFlows {
         //evaluate to send the email asynchronously
         if($workflow['async']??null)
             $params['async'] = true;
+
+        //a platform without own key sends through the [cloudframework] subaccount it declares in cloud-channels
+        if(($this->mandrillResolution['subaccount']??null) && !($params['subaccount']??null))
+            $params['subaccount'] = $this->mandrillResolution['subaccount'];
         //endregion
 
         //region VALIDATE $params['to']

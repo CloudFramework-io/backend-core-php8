@@ -1,4 +1,9 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-platform
+//   Process: /cloud-platform · SubProcess: 4693650502582272
+//   DevUnit: /cloud-development/frameworks/php, /cloud-channels/email/cfmail
+//   Activities: 6243470520090624
 /**
  * [$workFlows = $this->core->loadClass('WorkFlows',$cfos);] Class to facilitate Email Workflows
  * https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8/03-classes/WorkFlows
@@ -22,6 +27,11 @@ class WorkFlows
 
     var $error = false;                 // When error true
     var $errorMsg = [];                 // When error array of messages
+
+    /** Value of cloud-channels.Config.email.provider that makes a platform send through its own subaccount of the
+     *  [cloudframework] Mandrill account instead of an own API key. Same value as
+     *  CloudFrameworkWorkFlows::MANDRILL_PROVIDER_SUBACCOUNT in the CloudFramework API. */
+    const MANDRILL_PROVIDER_SUBACCOUNT = 'cloudframework-subaccount';
 
     /**
      * DataSQL constructor.
@@ -48,6 +58,164 @@ class WorkFlows
         } catch (Exception $e) {
             $this->addError($e->getMessage());
         }
+    }
+
+    /**
+     * Resolves and sets the Mandrill API key of the platform that owns the namespace of
+     * ds:CloudFrameWorkModulesConfigs in $this->cfos. It follows the same contract as
+     * CloudFrameworkWorkFlows::readConfigAndSetMandrillKey() of the CloudFramework API:
+     *  1. Own key of the platform: secret reference {secret}.{var} in cloud-channels.Config.email.mandrill-api-key-secret
+     *  2. Own key of the platform in plain text in email.Config.mandrill_api_key (DEPRECATED, kept for compatibility):
+     *     a warning with the fixed code [legacy-email-key-used] is written in the logs
+     *  3. Key of the [cloudframework] account (its cloud-channels secret). When the platform declares
+     *     cloud-channels.Config.email.provider=cloudframework-subaccount and cloud-channels.Config.email.subaccount,
+     *     the caller has to send every email with that subaccount ($return['subaccount'] -> $params['subaccount'])
+     * It only READS ds:CloudFrameWorkModulesConfigs: it never creates nor updates any entity.
+     * Logging contract (CASA 6.5.1): the logs, the notes and the error messages only carry field names and fixed
+     * codes. Never a key value, a secret reference, a namespace, a subaccount id, a payload nor a recipient.
+     *
+     * @return array|false On success [
+     *     'source'     => 'cloud-channels' | 'email-legacy' | 'cloudframework-subaccount' | 'cloudframework-fallback',
+     *     'subaccount' => subaccount of the [cloudframework] account to send with, or null. It is data for the
+     *                     Mandrill call: callers must not log nor report it,
+     *     'variables'  => email.Config.variables of the platform (legacy email template variables) or [],
+     *     'notes'      => fixed codes about the resolution (see $reasons below)
+     *   ]. false when no key resolves, with a message made of fixed codes in $this->errorMsg
+     */
+    public function setMandrillApiKeyFromPlatformConfig()
+    {
+        $ds = $this->cfos->ds('CloudFrameWorkModulesConfigs');
+        $namespace = (string)$ds->namespace;
+
+        // Under _dev=1 the CFOs namespace is "{platform}_dev": the secrets layer receives the BASE platform id with
+        // the security DEV environment activated, otherwise it looks for "{platform}_dev_dev" (task 6104600830017536).
+        // The previous DEV state of the security singleton is restored at the end.
+        $platform_id = preg_replace('/_dev$/', '', $namespace);
+        $previous_is_dev = $this->core->security->isDev;
+        if($platform_id !== $namespace) $this->core->security->setDevEnvironment();
+
+        $ret = $this->resolveMandrillApiKeyFromPlatformConfig($ds, $platform_id);
+
+        $this->core->security->setDevEnvironment($previous_is_dev);
+        return $ret;
+    }
+
+    /**
+     * Implements setMandrillApiKeyFromPlatformConfig() once the DEV environment of the security layer is set.
+     * Fixed codes used in notes and errors:
+     *  - config-read-error: ds:CloudFrameWorkModulesConfigs could not be read
+     *  - cloud-channels-missing: cloud-channels does not exist or it is not active
+     *  - cloud-channels-key-secret-missing: cloud-channels has no email.mandrill-api-key-secret
+     *  - cloud-channels-key-secret-wrong-syntax: email.mandrill-api-key-secret is not {secret}.{var}
+     *  - cloud-channels-key-secret-not-resolved: the secret of email.mandrill-api-key-secret does not resolve
+     *  - legacy-email-key-used: the plain text key of email.Config.mandrill_api_key is used (DEPRECATED)
+     *  - legacy-email-key-not-set: email.Config.mandrill_api_key could not be set as Mandrill key
+     *  - subaccount-too-long: email.subaccount is longer than 255 characters and it is ignored
+     *  - cloudframework-subaccount-used / cloudframework-account-used: the [cloudframework] key is used with / without subaccount
+     *  - cloudframework-key-secret-not-resolved: the [cloudframework] fallback secret does not resolve
+     * @param DataStore $ds ds:CloudFrameWorkModulesConfigs object of $this->cfos
+     * @param string $platform_id BASE platform id (without _dev) owning the secrets
+     * @return array|false
+     */
+    private function resolveMandrillApiKeyFromPlatformConfig($ds, string $platform_id)
+    {
+        $ret = ['source'=>null, 'subaccount'=>null, 'variables'=>[], 'notes'=>[]];
+        $reasons = [];
+
+        //region READ cloud-channels and the legacy email configuration of the platform (read only)
+        $channels = $ds->fetchOneByKey('cloud-channels');
+        if($ds->error) return $this->addError('setMandrillApiKeyFromPlatformConfig(): config-read-error [CloudFrameWorkModulesConfigs.cloud-channels]');
+        $channels = ($channels && ($channels['Active'] ?? false)) ? ($channels['Config'] ?? []) : [];
+        if(!is_array($channels)) $channels = [];
+
+        $legacy = $ds->fetchOneByKey('email');
+        if($ds->error) return $this->addError('setMandrillApiKeyFromPlatformConfig(): config-read-error [CloudFrameWorkModulesConfigs.email]');
+        if(is_array($legacy['Config']['variables'] ?? null)) $ret['variables'] = $legacy['Config']['variables'];
+        //endregion
+
+        //region 1. OWN key of the platform in cloud-channels.Config.email.mandrill-api-key-secret
+        $secret_reference = $channels['email']['mandrill-api-key-secret'] ?? null;
+        if(!is_string($secret_reference) || !trim($secret_reference)) {
+            $reasons[] = $channels ? 'cloud-channels-key-secret-missing' : 'cloud-channels-missing';
+        }
+        elseif(!strpos($secret_reference, '.')) {
+            $reasons[] = 'cloud-channels-key-secret-wrong-syntax';
+        }
+        elseif($this->setMandrillApiKeyFromSecretReference($secret_reference, $platform_id)) {
+            $ret['source'] = 'cloud-channels';
+            return $ret;
+        }
+        else {
+            $reasons[] = 'cloud-channels-key-secret-not-resolved';
+        }
+        //endregion
+
+        //region 2. OWN key of the platform in plain text in email.Config.mandrill_api_key (DEPRECATED)
+        $legacy_key = $legacy['Config']['mandrill_api_key'] ?? null;
+        if(is_string($legacy_key) && trim($legacy_key) !== '') {
+            $this->setMandrillApiKey($legacy_key);
+            if($this->mandrill->getApiKey()) {
+                $this->core->logs->add('setMandrillApiKeyFromPlatformConfig(): DEPRECATED legacy-email-key-used [CloudFrameWorkModulesConfigs.email.Config.mandrill_api_key]: move the key to a platform secret referenced by [cloud-channels.Config.email.mandrill-api-key-secret]', 'WorkFlows', 'warning');
+                $ret['source'] = 'email-legacy';
+                $ret['notes'] = array_merge($reasons, ['legacy-email-key-used']);
+                return $ret;
+            }
+            $reasons[] = 'legacy-email-key-not-set';
+        }
+        //endregion
+
+        //region 3. FALLBACK to the [cloudframework] account and the subaccount declared by the platform
+        $declared_subaccount = '';
+        if(($channels['email']['provider'] ?? '') === self::MANDRILL_PROVIDER_SUBACCOUNT)
+            $declared_subaccount = trim((string)($channels['email']['subaccount'] ?? ''));
+        if(strlen($declared_subaccount) > 255) {
+            $reasons[] = 'subaccount-too-long';
+            $declared_subaccount = '';
+        }
+
+        if($platform_id !== 'cloudframework') {
+            $restore_namespace = $ds->namespace;
+            $ds->namespace = 'cloudframework';
+            $fallback = $ds->fetchOneByKey('cloud-channels');
+            $ds_error = $ds->error;
+            $ds->namespace = $restore_namespace;
+            if($ds_error) return $this->addError('setMandrillApiKeyFromPlatformConfig(): config-read-error [CloudFrameWorkModulesConfigs.cloud-channels] of the [cloudframework] account');
+
+            $fallback = ($fallback && ($fallback['Active'] ?? false)) ? ($fallback['Config'] ?? []) : [];
+            $fallback_reference = is_array($fallback) ? ($fallback['email']['mandrill-api-key-secret'] ?? null) : null;
+            if(is_string($fallback_reference) && strpos($fallback_reference, '.')
+                && $this->setMandrillApiKeyFromSecretReference($fallback_reference, 'cloudframework')) {
+                $ret['source'] = ($declared_subaccount !== '') ? 'cloudframework-subaccount' : 'cloudframework-fallback';
+                $ret['subaccount'] = ($declared_subaccount !== '') ? $declared_subaccount : null;
+                $ret['notes'] = array_merge($reasons, [($declared_subaccount !== '') ? 'cloudframework-subaccount-used' : 'cloudframework-account-used']);
+                $this->core->logs->add('setMandrillApiKeyFromPlatformConfig(): '.implode(', ', $ret['notes']), 'WorkFlows');
+                return $ret;
+            }
+            $reasons[] = 'cloudframework-key-secret-not-resolved';
+        }
+        //endregion
+
+        return $this->addError('setMandrillApiKeyFromPlatformConfig(): no Mandrill key resolves: '.implode(', ', $reasons));
+    }
+
+    /**
+     * Resolves a {secret}.{var} platform secret reference and, when it resolves to a non-empty key, sets it as
+     * the Mandrill API key. The value is never logged nor returned.
+     * @param string $secret_reference secret reference with the syntax {secret}.{var}
+     * @param string $platform_id BASE platform id owning the secret
+     * @return bool true when the secret resolves and the key has been set
+     */
+    private function setMandrillApiKeyFromSecretReference(string $secret_reference, string $platform_id): bool
+    {
+        list($secret, $var) = explode('.', $secret_reference, 2);
+        $key = $this->core->security->getPlatformSecretVar($var, $secret, $platform_id);
+        // a failed lookup must not leave the security error state poisoned for the next attempt
+        $this->core->security->error = false;
+        $this->core->security->errorMsg = [];
+        if(is_array($key)) $key = $key['key'] ?? null;
+        if(!$key || !is_string($key)) return false;
+        $this->setMandrillApiKey($key);
+        return (bool)$this->mandrill->getApiKey();
     }
 
     /**
