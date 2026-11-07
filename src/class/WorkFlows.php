@@ -3,7 +3,7 @@
 //   DevGroup: /cf/products/cloud-platform
 //   Process: /cloud-platform · SubProcess: 4693650502582272
 //   DevUnit: /cloud-development/frameworks/php, /cloud-channels/email/cfmail
-//   Activities: 6243470520090624
+//   Activities: 6243470520090624, 6088723519504384
 /**
  * [$workFlows = $this->core->loadClass('WorkFlows',$cfos);] Class to facilitate Email Workflows
  * https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8/03-classes/WorkFlows
@@ -65,17 +65,17 @@ class WorkFlows
      * ds:CloudFrameWorkModulesConfigs in $this->cfos. It follows the same contract as
      * CloudFrameworkWorkFlows::readConfigAndSetMandrillKey() of the CloudFramework API:
      *  1. Own key of the platform: secret reference {secret}.{var} in cloud-channels.Config.email.mandrill-api-key-secret
-     *  2. Own key of the platform in plain text in email.Config.mandrill_api_key (DEPRECATED, kept for compatibility):
-     *     a warning with the fixed code [legacy-email-key-used] is written in the logs
-     *  3. Key of the [cloudframework] account (its cloud-channels secret). When the platform declares
+     *  2. Key of the [cloudframework] account (its cloud-channels secret). When the platform declares
      *     cloud-channels.Config.email.provider=cloudframework-subaccount and cloud-channels.Config.email.subaccount,
      *     the caller has to send every email with that subaccount ($return['subaccount'] -> $params['subaccount'])
+     * The plain text key of the legacy email.Config.mandrill_api_key is NOT read any more: a platform with an own
+     * key keeps it in a platform secret referenced by cloud-channels (task 6088723519504384).
      * It only READS ds:CloudFrameWorkModulesConfigs: it never creates nor updates any entity.
      * Logging contract (CASA 6.5.1): the logs, the notes and the error messages only carry field names and fixed
      * codes. Never a key value, a secret reference, a namespace, a subaccount id, a payload nor a recipient.
      *
      * @return array|false On success [
-     *     'source'     => 'cloud-channels' | 'email-legacy' | 'cloudframework-subaccount' | 'cloudframework-fallback',
+     *     'source'     => 'cloud-channels' | 'cloudframework-subaccount' | 'cloudframework-fallback',
      *     'subaccount' => subaccount of the [cloudframework] account to send with, or null. It is data for the
      *                     Mandrill call: callers must not log nor report it,
      *     'variables'  => email.Config.variables of the platform (legacy email template variables) or [],
@@ -108,8 +108,6 @@ class WorkFlows
      *  - cloud-channels-key-secret-missing: cloud-channels has no email.mandrill-api-key-secret
      *  - cloud-channels-key-secret-wrong-syntax: email.mandrill-api-key-secret is not {secret}.{var}
      *  - cloud-channels-key-secret-not-resolved: the secret of email.mandrill-api-key-secret does not resolve
-     *  - legacy-email-key-used: the plain text key of email.Config.mandrill_api_key is used (DEPRECATED)
-     *  - legacy-email-key-not-set: email.Config.mandrill_api_key could not be set as Mandrill key
      *  - subaccount-too-long: email.subaccount is longer than 255 characters and it is ignored
      *  - cloudframework-subaccount-used / cloudframework-account-used: the [cloudframework] key is used with / without subaccount
      *  - cloudframework-key-secret-not-resolved: the [cloudframework] fallback secret does not resolve
@@ -150,21 +148,7 @@ class WorkFlows
         }
         //endregion
 
-        //region 2. OWN key of the platform in plain text in email.Config.mandrill_api_key (DEPRECATED)
-        $legacy_key = $legacy['Config']['mandrill_api_key'] ?? null;
-        if(is_string($legacy_key) && trim($legacy_key) !== '') {
-            $this->setMandrillApiKey($legacy_key);
-            if($this->mandrill->getApiKey()) {
-                $this->core->logs->add('setMandrillApiKeyFromPlatformConfig(): DEPRECATED legacy-email-key-used [CloudFrameWorkModulesConfigs.email.Config.mandrill_api_key]: move the key to a platform secret referenced by [cloud-channels.Config.email.mandrill-api-key-secret]', 'WorkFlows', 'warning');
-                $ret['source'] = 'email-legacy';
-                $ret['notes'] = array_merge($reasons, ['legacy-email-key-used']);
-                return $ret;
-            }
-            $reasons[] = 'legacy-email-key-not-set';
-        }
-        //endregion
-
-        //region 3. FALLBACK to the [cloudframework] account and the subaccount declared by the platform
+        //region 2. FALLBACK to the [cloudframework] account and the subaccount declared by the platform
         $declared_subaccount = '';
         if(($channels['email']['provider'] ?? '') === self::MANDRILL_PROVIDER_SUBACCOUNT)
             $declared_subaccount = trim((string)($channels['email']['subaccount'] ?? ''));
