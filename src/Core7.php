@@ -5305,7 +5305,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // Avoid to activate the same Cache Path
             if($this->dir == $path && is_object($this->cache) ) return true;
 
-            if (isset($_SESSION['Core_CacheFile_' . $path]) || is_dir($path) || @mkdir($path)) {
+            // since 8.5.23: when mkdir() fails because another process created the folder in between, the folder is valid
+            // (before, that process was left with the in-memory cache)
+            if (isset($_SESSION['Core_CacheFile_' . $path]) || is_dir($path) || @mkdir($path) || $this->cacheDirCreatedMeanwhile($path)) {
                 $this->type = 'directory';
                 $this->dir = $path;
                 if (strlen($spacename)) $spacename = '_' . $spacename;
@@ -5321,6 +5323,18 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->addError($path . ' does not exist and can not be created');
                 return false;
             }
+        }
+
+        /**
+         * Since 8.5.23: called only when mkdir() of the cache folder has failed. Another process may have created it
+         * between is_dir() and mkdir(): the stat cache of $path is cleared and the folder is checked again.
+         * @param string $path
+         * @return bool true when the folder exists now
+         */
+        private function cacheDirCreatedMeanwhile($path): bool
+        {
+            clearstatcache(true,$path);
+            return is_dir($path);
 
         }
 
