@@ -172,7 +172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.22';  // 2026-11-08
+        var $_version = '8.5.23';  // 2026-11-08
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -267,8 +267,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region SET $this->security, $this->cache, $this->request, $this->localization, $this->model, $this->cfiLog
             $this->security = new CoreSecurity($this);
             $this->cache = new CoreCache($this);
-            // since 8.5.22: without cache keys, per-machine keys only in local with the file cache (see CoreSecurity::useLocalCacheKeys())
-            if($this->security->cache_keys_missing && $this->security->useLocalCacheKeys()) {
+            // since 8.5.22/8.5.23: without cache keys in config or env, a fixed Secret Manager version in managed runtimes
+            // (core.gcp.secrets.cache_keys_secret) or per-machine keys only in local (see CoreSecurity::resolveMissingCacheKeys())
+            if($this->security->cache_keys_missing && $this->security->resolveMissingCacheKeys()) {
                 $this->config->cache_secret_key = $this->security->cache_key;
                 $this->config->cache_secret_iv = $this->security->cache_iv;
             }
@@ -2906,6 +2907,23 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /** @var array $notes_sent one-note-per-request control for the encryption notes/warnings */
         private $notes_sent = [];
 
+        /**
+         * Since 8.5.23, injection points of useCacheKeysSecret(). They are static because CoreSecurity is built inside
+         * Core7::__construct(): a test sets them BEFORE new Core7() and restores them afterwards. Production code never
+         * sets them.
+         *   - $cache_keys_secret_reader: callable(string $version_name): string|false that replaces the Secret Manager
+         *     read (GoogleSecrets::getSecretByName()). null = the real reader. A thrown exception counts as a failed read.
+         *   - $cache_keys_instance_dir: folder of the instance copy and of the failure mark when APCu is not used.
+         *   - $cache_keys_use_apcu: null = APCu when extension_loaded('apcu') && apcu_enabled(); false = never APCu.
+         */
+        public static $cache_keys_secret_reader = null;
+        /** @var string folder of the instance copy of the cache keys read from Secret Manager (see $cache_keys_secret_reader) */
+        public static $cache_keys_instance_dir = '/tmp';
+        /** @var bool|null use APCu for the instance copy (see $cache_keys_secret_reader) */
+        public static $cache_keys_use_apcu = null;
+        /** Seconds during which a failed Secret Manager read of the cache keys is not retried in the instance */
+        public const CACHE_KEYS_SECRET_RETRY_SECONDS = 60;
+
 
         /**
          * CoreSecurity constructor.
@@ -2965,6 +2983,251 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
+         * Since 8.5.23: resolves the cache keys when neither the configuration nor the environment brings them. Called by
+         * Core7::__construct() right after CoreCache is created; when it returns true Core7 copies the keys to CoreConfig.
+         * Order:
+         *   a. core.gcp.secrets.cache_keys_secret in a managed runtime: useCacheKeysSecret() (instance copy, then Secret
+         *      Manager). When it applies, its result is final: a failure never falls back to the local file;
+         *   b. otherwise useLocalCacheKeys() (8.5.22, local development only);
+         *   c. otherwise the keys stay missing (security-cache-key-missing).
+         * @return bool true when the cache keys have been set
+         */
+        public function resolveMissingCacheKeys(): bool
+        {
+            if(!$this->cache_keys_missing) return false;
+            $from_secret = $this->useCacheKeysSecret();
+            if($from_secret!==null) return $from_secret;
+            return $this->useLocalCacheKeys();
+        }
+
+        /**
+         * Since 8.5.23: cache keys read from a FIXED version of a Secret Manager secret, so that the applications can
+         * drop core.gcp.secrets.cache_encrypt_key / cache_encrypt_iv from config.json.
+         *
+         * Config-var core.gcp.secrets.cache_keys_secret: full name of a concrete version,
+         * projects/{project}/secrets/{secret}/versions/{number}. A name that ends in latest or in anything that is not a
+         * number is never read (security-cache-keys-secret-version-required): the services that share the same Redis
+         * (e.g. api7 and api8-dev) must use exactly the same keys, and with latest a new version would split them.
+         * Content of the version: {"key": "<base64 of 32 bytes>", "iv": "<base64 of 32 bytes>"}, the same format and the
+         * same validation as local_data/cache-encrypt.json (validateCacheKeysJson()).
+         *
+         * Only in a managed runtime (GAE_SERVICE, K_SERVICE or FUNCTION_TARGET, see isManagedRuntime()):
+         *   1. the copy of the instance is used when it is valid, without calling Secret Manager: APCu when
+         *      extension_loaded('apcu') && apcu_enabled(), otherwise {$cache_keys_instance_dir}/cf-cache-keys-{hash}.json
+         *      (permissions 0600, hash = 16 hex chars of sha256 of the version name). These keys can not live in Redis
+         *      like the env_vars secret, because they are the keys that encrypt Redis;
+         *   2. without a valid copy (none, or corrupt) the version is read once with GoogleSecrets::getSecretByName() and
+         *      the copy is written (APCu without expiration, or the file with the atomic write of placeCacheKeysFile();
+         *      a corrupt copy is replaced);
+         *   3. when the read fails or the content is not valid no copy is written, the failure is marked for
+         *      CACHE_KEYS_SECRET_RETRY_SECONDS (APCu or {$cache_keys_instance_dir}/cf-cache-keys-{hash}.failed) so that the
+         *      secret is not read on every request, and the keys stay missing (security-cache-keys-secret-unavailable).
+         * One log line per request, never with any value: source=secret-manager-read (syslog info), source=instance-copy
+         * (request log) or the error.
+         *
+         * @return bool|null true: keys set. false: it applies but the keys stay missing (no fallback). null: it does not
+         *                   apply (no cache_keys_secret, or not a managed runtime): the caller goes on with the local file
+         */
+        private function useCacheKeysSecret(): ?bool
+        {
+            $configured = $this->core->config->get('core.gcp.secrets.cache_keys_secret');
+            if(empty($configured)) return null;
+            $version_name = (is_string($configured))?trim($configured):''; // anything that is not a string is not a version name
+            // configuration and environment always win; a half pair is a configuration error and is not completed
+            if($this->cache_key || $this->cache_iv) return false;
+
+            $managed = $this->isManagedRuntime();
+            if(!preg_match('#^projects/[^/]+/secrets/[^/]+/versions/[1-9][0-9]*$#',$version_name)) {
+                // the configured value is never logged: it could be a key pasted in the wrong config-var
+                $this->sendNoteOnce('security-cache-keys-secret'
+                    ,'security-cache-keys-secret-version-required: core.gcp.secrets.cache_keys_secret must be the full name of a fixed version, projects/{project}/secrets/{secret}/versions/{number}, never latest: every service sharing the cache must use the same keys. The secret is not read'
+                    ,'error');
+                return ($managed)?false:null;
+            }
+            if(!$managed) return null;
+
+            $hash = substr(hash('sha256',$version_name),0,16);
+            $use_apcu = $this->cacheKeysUseApcu();
+            $dir = rtrim((string)self::$cache_keys_instance_dir,'/')?:'/tmp';
+            $copy_file = $dir.'/cf-cache-keys-'.$hash.'.json';
+            $apcu_key = 'cf-cache-keys-'.$hash;
+
+            //region 1. copy of the instance
+            if($use_apcu) {
+                $found = false;
+                $stored = apcu_fetch($apcu_key,$found);
+                $copy_exists = (bool)$found;
+                $keys = ($found && is_string($stored))?$this->validateCacheKeysJson($stored):null;
+            } else {
+                $copy_exists = (file_exists($copy_file) || is_link($copy_file));
+                $keys = ($copy_exists && !is_link($copy_file))?$this->readLocalCacheKeysFile($copy_file):null;
+            }
+            if($keys) {
+                $this->setResolvedCacheKeys($keys);
+                $this->sendNoteOnce('security-cache-keys-secret'
+                    ,'security-cache-keys-secret-used: source=instance-copy; cache keys of '.$version_name.' read from the copy of the instance');
+                return true;
+            }
+            //endregion
+
+            //region 2. a recent failure is not retried
+            if($this->cacheKeysSecretFailedRecently($use_apcu,$apcu_key.'-failed',$dir.'/cf-cache-keys-'.$hash.'.failed')) {
+                $this->sendNoteOnce('security-cache-keys-secret'
+                    ,'security-cache-keys-secret-unavailable: the read of '.$version_name.' failed less than '.self::CACHE_KEYS_SECRET_RETRY_SECONDS.' seconds ago in this instance and it is not retried yet. The cache keys stay missing'
+                    ,'warning');
+                return false;
+            }
+            //endregion
+
+            //region 3. read the version from Secret Manager
+            $reason = '';
+            $content = $this->readCacheKeysSecret($version_name,$reason);
+            $keys = (is_string($content))?$this->validateCacheKeysJson($content):null;
+            $content = null;
+            if(!$keys) {
+                $this->markCacheKeysSecretFailed($use_apcu,$apcu_key.'-failed',$dir,$dir.'/cf-cache-keys-'.$hash.'.failed');
+                $this->sendNoteOnce('security-cache-keys-secret'
+                    ,'security-cache-keys-secret-unavailable: '.$version_name.' '.(($reason)?'could not be read ('.$reason.')':'does not hold a valid {"key","iv"} pair (base64 of 32 bytes each)')
+                        .'. No copy is written, the read is not retried for '.self::CACHE_KEYS_SECRET_RETRY_SECONDS.' seconds and the cache keys stay missing'
+                    ,'warning');
+                return false;
+            }
+            //endregion
+
+            //region 4. copy of the instance and keys
+            $copy = json_encode(['key'=>$keys['key'],'iv'=>$keys['iv'],'version'=>$version_name,'read'=>gmdate('Y-m-d H:i:s').' UTC'],JSON_UNESCAPED_SLASHES);
+            if($use_apcu) {
+                $copied = (bool)apcu_store($apcu_key,$copy);
+                apcu_delete($apcu_key.'-failed');
+            } else {
+                if($copy_exists) @unlink($copy_file); // a corrupt copy is replaced
+                $copied = $this->placeCacheKeysFile($dir,$copy_file,$copy) || ($this->readLocalCacheKeysFile($copy_file)===$keys);
+                if(file_exists($dir.'/cf-cache-keys-'.$hash.'.failed')) @unlink($dir.'/cf-cache-keys-'.$hash.'.failed');
+            }
+            $copy = null;
+            $this->setResolvedCacheKeys($keys);
+            $this->sendNoteOnce('security-cache-keys-secret'
+                ,'security-cache-keys-secret-used: source=secret-manager-read; cache keys read from '.$version_name
+                    .(($copy_exists)?'; the previous copy of the instance was not valid and it has been replaced':'')
+                    .(($copied)?'':'; the copy of the instance could not be written, the secret will be read again on the next request')
+                ,($copied)?'info':'warning');
+            return true;
+            //endregion
+        }
+
+        /**
+         * Reads the content of a Secret Manager version for useCacheKeysSecret(): the injected reader
+         * ($cache_keys_secret_reader) in tests, otherwise GoogleSecrets::getSecretByName() with its own instance (never the
+         * one shared through Core7::loadClass(), so that a failure here does not leave the env_vars reader in error).
+         * @param string $version_name projects/{project}/secrets/{secret}/versions/{number}
+         * @param string $reason filled with the cause of a failed read, without any value
+         * @return string|false
+         */
+        private function readCacheKeysSecret(string $version_name, string &$reason): string|false
+        {
+            $reason = '';
+            try {
+                if(is_callable(self::$cache_keys_secret_reader)) {
+                    $content = call_user_func(self::$cache_keys_secret_reader,$version_name);
+                } else {
+                    if(!class_exists('GoogleSecrets')) include_once __DIR__.'/class/GoogleSecrets.php';
+                    $gs = new GoogleSecrets($this->core);
+                    $content = $gs->getSecretByName($version_name);
+                    if($content===false) {
+                        $last = end($gs->errorMsg);
+                        $reason = $gs->errorCode.': '.((is_string($last))?$last:json_encode($last,JSON_UNESCAPED_SLASHES));
+                    }
+                }
+            } catch (\Throwable $e) {
+                $content = false;
+                $reason = get_class($e).': '.$e->getMessage();
+            }
+            if(!is_string($content)) {
+                $reason = substr(trim(preg_replace('/\s+/',' ',$reason)),0,300)?:'read-failed';
+                return false;
+            }
+            return $content;
+        }
+
+        /**
+         * True when a failed read of the cache keys secret was marked less than CACHE_KEYS_SECRET_RETRY_SECONDS ago.
+         * @param bool $use_apcu
+         * @param string $apcu_key
+         * @param string $file
+         * @return bool
+         */
+        private function cacheKeysSecretFailedRecently(bool $use_apcu, string $apcu_key, string $file): bool
+        {
+            if($use_apcu) {
+                $found = false;
+                $failed_at = apcu_fetch($apcu_key,$found);
+            } else {
+                if(!is_file($file)) return false;
+                $failed_at = trim((string)@file_get_contents($file));
+                $found = ctype_digit($failed_at);
+            }
+            if(!$found) return false;
+            $age = time() - (int)$failed_at;
+            return ($age>=0 && $age<self::CACHE_KEYS_SECRET_RETRY_SECONDS);
+        }
+
+        /**
+         * Marks a failed read of the cache keys secret: APCu with a TTL of CACHE_KEYS_SECRET_RETRY_SECONDS, or a file
+         * holding the time of the failure (permissions 0600, written through a temporary file and rename()).
+         * @param bool $use_apcu
+         * @param string $apcu_key
+         * @param string $dir
+         * @param string $file
+         * @return void
+         */
+        private function markCacheKeysSecretFailed(bool $use_apcu, string $apcu_key, string $dir, string $file): void
+        {
+            if($use_apcu) {
+                apcu_store($apcu_key,time(),self::CACHE_KEYS_SECRET_RETRY_SECONDS);
+                return;
+            }
+            $tmp = $dir.'/.'.basename($file).'.'.bin2hex(random_bytes(8)).'.tmp';
+            if(@file_put_contents($tmp,(string)time())===false) return;
+            @chmod($tmp,0600);
+            if(!@rename($tmp,$file)) @unlink($tmp);
+        }
+
+        /**
+         * APCu is used for the copy of the instance when the extension is loaded and enabled, unless
+         * $cache_keys_use_apcu is false.
+         * @return bool
+         */
+        private function cacheKeysUseApcu(): bool
+        {
+            if(self::$cache_keys_use_apcu===false) return false;
+            return extension_loaded('apcu') && function_exists('apcu_enabled') && apcu_enabled();
+        }
+
+        /**
+         * Sets resolved cache keys exactly as useLocalCacheKeys() does.
+         * @param array $keys ['key'=>string,'iv'=>string]
+         * @return void
+         */
+        private function setResolvedCacheKeys(array $keys): void
+        {
+            $this->cache_key = $this->cache_key_base = $keys['key'];
+            $this->cache_iv = $this->cache_iv_base = $keys['iv'];
+            $this->cache_keys_missing = false;
+        }
+
+        /**
+         * A managed runtime: GAE_SERVICE (App Engine), K_SERVICE (Cloud Run) or FUNCTION_TARGET (Cloud Functions), in
+         * $_SERVER or in getenv(). CoreIs::development() is not enough: it is true in Cloud Run.
+         * @return bool
+         */
+        private function isManagedRuntime(): bool
+        {
+            foreach (['GAE_SERVICE','K_SERVICE','FUNCTION_TARGET'] as $runtime_var)
+                if(array_key_exists($runtime_var,$_SERVER) || getenv($runtime_var)!==false) return true;
+            return false;
+        }
+
+        /**
          * Since 8.5.22: per-machine cache keys for LOCAL development, so that an application can drop the cache keys from
          * its config.json (they go to Secret Manager) without leaving the developers without cache. Called by
          * Core7::__construct() right after CoreCache is created. It only acts when ALL these conditions are true:
@@ -2990,8 +3253,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             // 1. configuration and environment always win; a half pair is not completed with a generated value
             if($this->cache_key || $this->cache_iv) return false;
             // 2. never in a managed runtime
-            foreach (['GAE_SERVICE','K_SERVICE','FUNCTION_TARGET'] as $runtime_var)
-                if(array_key_exists($runtime_var,$_SERVER) || getenv($runtime_var)!==false) return false;
+            if($this->isManagedRuntime()) return false;
             // 3. only with the file cache
             if(!is_object($this->core->cache) || $this->core->cache->type!=='directory') return false;
             // 4. local_data must already exist and be writable (same folder the entry points use: {root_path}/local_data)
@@ -3023,8 +3285,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->cache_keys_missing = false;
             $this->sendNoteOnce('security-cache-key-local'
                 ,($generated)
-                    ?'security-cache-key-local-generated: no cache keys configured; per-machine local keys generated in local_data/cache-encrypt.json (local only)'
-                    :'security-cache-key-local-used: no cache keys configured; per-machine local keys read from local_data/cache-encrypt.json (local only)'
+                    ?'security-cache-key-local-generated: source=local-file; no cache keys configured; per-machine local keys generated in local_data/cache-encrypt.json (local only)'
+                    :'security-cache-key-local-used: source=local-file; no cache keys configured; per-machine local keys read from local_data/cache-encrypt.json (local only)'
                 ,'info');
             return true;
         }
@@ -3038,7 +3300,19 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         private function readLocalCacheKeysFile(string $file): ?array
         {
             if(!is_file($file) || !is_readable($file)) return null;
-            $data = json_decode((string)@file_get_contents($file),true);
+            return $this->validateCacheKeysJson((string)@file_get_contents($file));
+        }
+
+        /**
+         * Validator shared by local_data/cache-encrypt.json (8.5.22), the content of the Secret Manager version of
+         * core.gcp.secrets.cache_keys_secret and its copy in the instance (8.5.23): a JSON object with 'key' and 'iv',
+         * each one the base64 of 32 bytes. Other properties are ignored. Any other content returns null.
+         * @param string $json
+         * @return array|null ['key'=>string,'iv'=>string]
+         */
+        private function validateCacheKeysJson(string $json): ?array
+        {
+            $data = json_decode($json,true);
             if(!is_array($data)) return null;
             foreach (['key','iv'] as $field) {
                 if(!isset($data[$field]) || !is_string($data[$field])) return null;
@@ -3065,8 +3339,23 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 'created'=>gmdate('Y-m-d H:i:s').' UTC',
                 'note'=>'Per-machine cache keys generated by backend-core-php8 for local development only. Never commit, copy or deploy this file.',
             ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+            return $this->placeCacheKeysFile($dir,$file,$content);
+        }
 
-            $tmp = $dir.'/.cache-encrypt.json.'.bin2hex(random_bytes(8)).'.tmp';
+        /**
+         * Writes $content in $file atomically with permissions 0600 and never replaces an existing file: a temporary file
+         * in $dir named .{basename($file)}.{random}.tmp is created exclusively, chmod 0600 before writing, and hard-linked
+         * to $file (first process wins); without hard links it falls back to rename() only when $file still does not
+         * exist. The temporary file is always removed. Shared by writeLocalCacheKeysFile() (8.5.22) and the instance copy
+         * of the Secret Manager keys (8.5.23).
+         * @param string $dir folder of $file
+         * @param string $file
+         * @param string $content
+         * @return bool true when this call placed the file
+         */
+        private function placeCacheKeysFile(string $dir, string $file, string $content): bool
+        {
+            $tmp = $dir.'/.'.basename($file).'.'.bin2hex(random_bytes(8)).'.tmp';
             if(!$fh = @fopen($tmp,'x')) return false;
             $placed = false;
             if(@chmod($tmp,0600) && @fwrite($fh,$content)===strlen($content) && @fflush($fh)) {

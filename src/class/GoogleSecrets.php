@@ -1,4 +1,8 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-development
+//   DevUnit: /php/classes/Core7/CoreSecurity, /cloud-development/frameworks/php
+//   Activities: 5630949161435136
 use Google\Cloud\SecretManager\V1\Replication;
 use Google\Cloud\SecretManager\V1\Replication\Automatic;
 use Google\Cloud\SecretManager\V1\Client\SecretManagerServiceClient;
@@ -124,6 +128,34 @@ if (!defined ("_GoogleSecrets_CLASS_") ) {
             $request = (new AccessSecretVersionRequest())->setName($formattedName);
 
             try {
+                /** @var AccessSecretVersionResponse $response */
+                $response = $this->client->accessSecretVersion($request);
+                return($response->getPayload()->getData());
+            } catch (Exception $e) {
+                return($this->addError('system-error',$this->core->jsonDecode($e->getMessage())?:$e->getMessage()));
+            }
+        }
+
+
+        /**
+         * Since 8.5.23: retrieves the data of a secret version given its FULL resource name,
+         * projects/{project}/secrets/{secret}/versions/{version}. The project comes from the name, so it does not depend on
+         * the project id resolved by the constructor (PROJECT_ID, core.gcp.project_id, core.gcp.secrets.project_id) and it
+         * works even when the constructor could not resolve one. The error state of previous calls is reset first.
+         * Used by CoreSecurity to read the cache keys from a fixed version (core.gcp.secrets.cache_keys_secret).
+         *
+         * @param string $version_name projects/{project}/secrets/{secret}/versions/{version}
+         * @return string|false the secret data, or false with $this->errorCode / $this->errorMsg (never the data)
+         */
+        public function getSecretByName(string $version_name): bool|string
+        {
+            $this->reset();
+            if(!preg_match('#^projects/[^/]+/secrets/[^/]+/versions/[^/]+$#',$version_name))
+                return($this->addError('params-error','The version name must be projects/{project}/secrets/{secret}/versions/{version}'));
+
+            try {
+                if(!$this->client) $this->client = new SecretManagerServiceClient();
+                $request = (new AccessSecretVersionRequest())->setName($version_name);
                 /** @var AccessSecretVersionResponse $response */
                 $response = $this->client->accessSecretVersion($request);
                 return($response->getPayload()->getData());

@@ -823,7 +823,39 @@ The framework uses two pairs of keys. Generate them yourself: random values, nev
 - The cache is the file cache (`core.cache.cache_path`), never Redis.
 - The `local_data` folder already exists and is writable. The framework does not create it.
 
-The request log gets one line (`security-cache-key-local-generated` or `security-cache-key-local-used`), never the value. A `cache-encrypt.json` that is not valid is never overwritten: the error `security-cache-key-local-file-invalid` is logged and the keys stay missing until the file is fixed or deleted. Keep `local_data/` out of the repository and out of every deployment.
+The request log gets one line (`security-cache-key-local-generated` or `security-cache-key-local-used`), never the value. A `cache-encrypt.json` that is not valid is never overwritten: the error `security-cache-key-local-file-invalid` is logged and the keys stay missing until the file is fixed or deleted. Keep `local_data/` out of the repository and out of every deployment. Since 8.5.23 those lines also say `source=local-file`.
+
+**Since 8.5.23, managed runtimes can read the cache keys from a fixed version of a Secret Manager secret**, so the cache keys can leave `config.json` in production too. Set `core.gcp.secrets.cache_keys_secret` to the full name of a concrete version:
+
+```json
+"core.gcp.secrets.cache_keys_secret": "projects/{project}/secrets/{secret}/versions/{number}"
+```
+
+- **Content of the version**: a JSON object `{"key": "<base64 of 32 bytes>", "iv": "<base64 of 32 bytes>"}`, the same format and the same validation as `local_data/cache-encrypt.json`. Other properties are ignored. To create it without the values going through the terminal or the shell history:
+
+  ```bash
+  printf '{"key":"%s","iv":"%s"}' "$(openssl rand -base64 32)" "$(openssl rand -base64 32)" \
+    | gcloud secrets versions add {secret} --data-file=- --project={project}
+  ```
+
+- **The version must be a fixed number.** A name that ends in `latest` or in anything that is not a number is never read: the error `security-cache-keys-secret-version-required` is logged (without the configured value) and the keys stay missing, so the entry points answer `503`. The reason: the services that share the same Redis (for example a production and a development service) must use exactly the same keys, and with `latest` a new version of the secret would make the instances started after it use different keys over the same cache.
+- **Order of resolution.** The configuration and the environment (`core.gcp.secrets.cache_encrypt_key` / `cache_encrypt_iv`, `CF_CACHE_ENCRYPT_KEY` / `CF_CACHE_ENCRYPT_IV`) always win, and a half-configured pair is not completed. Without them: in a managed runtime (`GAE_SERVICE`, `K_SERVICE` or `FUNCTION_TARGET`) with `cache_keys_secret`, the secret; otherwise the local file of 8.5.22 (local development only); otherwise `security-cache-key-missing`. Outside a managed runtime `cache_keys_secret` is not read; a wrong version name is reported anyway.
+- **Read once per instance.** These keys encrypt Redis, so they can not be cached in Redis like the `env_vars` secret. The first request of an instance reads the version and keeps a copy in the instance: APCu when the extension is loaded and enabled, otherwise `/tmp/cf-cache-keys-{hash}.json` (`hash`: 16 hexadecimal characters of the sha256 of the version name) with permissions `600`, written atomically. The next requests use the copy without calling Secret Manager. A corrupt copy is read again from Secret Manager and replaced.
+- **When the read fails** (permission, network, the version disabled or destroyed) **or the content is not valid**, no copy is written, the keys stay missing (`503`) and the warning `security-cache-keys-secret-unavailable` is logged with the cause, never with a value. The failure is remembered in the instance for 60 seconds, so the secret is not read on every request; after that the next request tries again.
+- **One log line per request, never a value**, saying where the keys came from: `source=secret-manager-read` (syslog, once per instance), `source=instance-copy` (request log) or `source=local-file` (local development).
+- **Permission**: the service account of each service that reads it needs `roles/secretmanager.secretAccessor` on that secret (not on the whole project). The App Engine default service account is `{project}@appspot.gserviceaccount.com` unless `service_account` is set in the `app.yaml`.
+
+  ```bash
+  gcloud secrets add-iam-policy-binding {secret} --project={project} \
+    --member=serviceAccount:{service-account} --role=roles/secretmanager.secretAccessor
+  ```
+
+**Rotating the cache keys stored in Secret Manager:**
+
+1. Add a new version to the secret with a new pair (command above). Do not disable the current one.
+2. Change `core.gcp.secrets.cache_keys_secret` to the new version number in the configuration of **every** service that shares the same Redis.
+3. Deploy those services **at the same time**. The copy of the instance is per version name, so an instance never mixes versions; while old and new instances overlap they use different keys over the same cache, the entries written by one side can not be read by the other and are rebuilt, so keep that overlap short.
+4. When no instance of the previous deployments serves traffic, disable the previous version (destroy it later). An old instance restarted after the version is disabled can not read it and answers `503`.
 
 **Generate each value** with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).
 
