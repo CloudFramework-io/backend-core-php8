@@ -816,6 +816,15 @@ The framework uses two pairs of keys. Generate them yourself: random values, nev
 
 **Since 8.5.13 the cache keys are mandatory.** There is no built-in default: without both values the entry points (`dispatcher.php`, `mcp-server.php`, `runscript.php`, `runtest.php`) stop before serving anything. HTTP calls get a `503` with a generic message and the detail (`security-cache-key-missing`) goes to the log; scripts print it and exit with code 1.
 
+**Since 8.5.22, in local development the framework generates the cache keys itself when none is configured.** It writes a random pair (32 bytes each, base64) to `local_data/cache-encrypt.json` in the root of the application, with permissions `600`, and reuses it on the next requests, so an application can move its cache keys out of `config.json` without breaking local development. It only happens when all these conditions are true; otherwise nothing changes and `security-cache-key-missing` stops the entry points as above:
+
+- Neither cache key is configured, neither in the config-vars nor in the environment. The configuration and the environment always win over the file, and a half-configured pair is not completed.
+- It is not a managed runtime: no `GAE_SERVICE` (App Engine), `K_SERVICE` (Cloud Run) nor `FUNCTION_TARGET` (Cloud Functions), neither in `$_SERVER` nor in the environment.
+- The cache is the file cache (`core.cache.cache_path`), never Redis.
+- The `local_data` folder already exists and is writable. The framework does not create it.
+
+The request log gets one line (`security-cache-key-local-generated` or `security-cache-key-local-used`), never the value. A `cache-encrypt.json` that is not valid is never overwritten: the error `security-cache-key-local-file-invalid` is logged and the keys stay missing until the file is fixed or deleted. Keep `local_data/` out of the repository and out of every deployment.
+
 **Generate each value** with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).
 
 ```bash

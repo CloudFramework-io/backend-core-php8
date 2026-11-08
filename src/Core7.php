@@ -1,4 +1,8 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-development
+//   DevUnit: /php/classes/Core7/CoreSecurity, /php/classes/Core7/CoreCache, /cloud-development/frameworks/php
+//   Activities: 5630949161435136
 /**
  * Core classes developed in ^PHP8.1 to be used to develop APIs, Scripts, Web Pages
  *
@@ -168,7 +172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.21';  // 2026-11-08
+        var $_version = '8.5.22';  // 2026-11-08
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -263,6 +267,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             //region SET $this->security, $this->cache, $this->request, $this->localization, $this->model, $this->cfiLog
             $this->security = new CoreSecurity($this);
             $this->cache = new CoreCache($this);
+            // since 8.5.22: without cache keys, per-machine keys only in local with the file cache (see CoreSecurity::useLocalCacheKeys())
+            if($this->security->cache_keys_missing && $this->security->useLocalCacheKeys()) {
+                $this->config->cache_secret_key = $this->security->cache_key;
+                $this->config->cache_secret_iv = $this->security->cache_iv;
+            }
             $this->request = new CoreRequest($this);
             $this->user = new CoreUser($this);
             $this->localization = new CoreLocalization($this);
@@ -2953,6 +2962,121 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->notes_sent[$id] = true;
             if($syslog_type) $this->core->logs->add($message,'CoreSecurity',$syslog_type);
             else $this->core->logs->add('CoreSecurity: '.$message);
+        }
+
+        /**
+         * Since 8.5.22: per-machine cache keys for LOCAL development, so that an application can drop the cache keys from
+         * its config.json (they go to Secret Manager) without leaving the developers without cache. Called by
+         * Core7::__construct() right after CoreCache is created. It only acts when ALL these conditions are true:
+         *   1. neither cache key is configured (config-vars core.gcp.secrets.cache_encrypt_key / cache_encrypt_iv and
+         *      env vars CF_CACHE_ENCRYPT_KEY / CF_CACHE_ENCRYPT_IV are all empty). A half-configured pair is a
+         *      configuration error and keeps security-cache-key-missing;
+         *   2. it is not a managed runtime: no GAE_SERVICE (App Engine), K_SERVICE (Cloud Run) nor FUNCTION_TARGET
+         *      (Cloud Functions), neither in $_SERVER nor in getenv(). CoreIs::development() is not enough: it is true
+         *      in Cloud Run;
+         *   3. the cache is a file cache ($this->core->cache->type === 'directory'), never Redis or Datastore;
+         *   4. {root_path}/local_data already exists and is writable. It is never created here.
+         * The keys are read from {root_path}/local_data/cache-encrypt.json when it exists and is valid; when it does not
+         * exist a new pair is generated with random_bytes() (32 bytes each, base64, the format of openssl rand -base64 32)
+         * and written atomically with permissions 0600 (temporary file in the same folder, chmod, then link/rename: the
+         * first process wins and the others read its file). An invalid file is never overwritten: the error
+         * security-cache-key-local-file-invalid is logged and the keys stay missing. One log line per request, never
+         * with the value or any part of it. In any other case nothing changes (security-cache-key-missing).
+         *
+         * @return bool true when the cache keys have been set from the local file
+         */
+        public function useLocalCacheKeys(): bool
+        {
+            // 1. configuration and environment always win; a half pair is not completed with a generated value
+            if($this->cache_key || $this->cache_iv) return false;
+            // 2. never in a managed runtime
+            foreach (['GAE_SERVICE','K_SERVICE','FUNCTION_TARGET'] as $runtime_var)
+                if(array_key_exists($runtime_var,$_SERVER) || getenv($runtime_var)!==false) return false;
+            // 3. only with the file cache
+            if(!is_object($this->core->cache) || $this->core->cache->type!=='directory') return false;
+            // 4. local_data must already exist and be writable (same folder the entry points use: {root_path}/local_data)
+            $local_data = $this->core->system->root_path.'/local_data';
+            if(!is_dir($local_data) || !is_writable($local_data)) return false;
+
+            $file = $local_data.'/cache-encrypt.json';
+            $generated = false;
+            if(!file_exists($file)) {
+                if(!$this->writeLocalCacheKeysFile($local_data,$file)) {
+                    if(!file_exists($file)) {
+                        $this->sendNoteOnce('security-cache-key-local'
+                            ,'security-cache-key-local-write-failed: local_data/cache-encrypt.json could not be written. The cache keys stay missing','error');
+                        return false;
+                    }
+                    // another process wrote it first: read its keys
+                } else $generated = true;
+            }
+
+            $keys = $this->readLocalCacheKeysFile($file);
+            if(!$keys) {
+                $this->sendNoteOnce('security-cache-key-local'
+                    ,'security-cache-key-local-file-invalid: local_data/cache-encrypt.json is not valid and it is not overwritten. The cache keys stay missing: fix or delete the file','error');
+                return false;
+            }
+
+            $this->cache_key = $this->cache_key_base = $keys['key'];
+            $this->cache_iv = $this->cache_iv_base = $keys['iv'];
+            $this->cache_keys_missing = false;
+            $this->sendNoteOnce('security-cache-key-local'
+                ,($generated)
+                    ?'security-cache-key-local-generated: no cache keys configured; per-machine local keys generated in local_data/cache-encrypt.json (local only)'
+                    :'security-cache-key-local-used: no cache keys configured; per-machine local keys read from local_data/cache-encrypt.json (local only)'
+                ,'info');
+            return true;
+        }
+
+        /**
+         * Reads and validates local_data/cache-encrypt.json: a JSON object with 'key' and 'iv', each one the base64 of
+         * 32 bytes. Any other content returns null.
+         * @param string $file
+         * @return array|null ['key'=>string,'iv'=>string]
+         */
+        private function readLocalCacheKeysFile(string $file): ?array
+        {
+            if(!is_file($file) || !is_readable($file)) return null;
+            $data = json_decode((string)@file_get_contents($file),true);
+            if(!is_array($data)) return null;
+            foreach (['key','iv'] as $field) {
+                if(!isset($data[$field]) || !is_string($data[$field])) return null;
+                $raw = base64_decode($data[$field],true);
+                if($raw===false || strlen($raw)!==32) return null;
+            }
+            return ['key'=>$data['key'],'iv'=>$data['iv']];
+        }
+
+        /**
+         * Generates a new pair of cache keys and writes it atomically in $file with permissions 0600: a temporary file in
+         * the same folder (created exclusively, chmod 0600 before writing) is hard-linked to $file, which never replaces
+         * an existing file, so the first process wins. Without hard links (some file systems) it falls back to rename()
+         * only when $file still does not exist. The temporary file is always removed.
+         * @param string $dir local_data folder
+         * @param string $file local_data/cache-encrypt.json
+         * @return bool true when this call placed the file
+         */
+        private function writeLocalCacheKeysFile(string $dir, string $file): bool
+        {
+            $content = json_encode([
+                'key'=>base64_encode(random_bytes(32)),
+                'iv'=>base64_encode(random_bytes(32)),
+                'created'=>gmdate('Y-m-d H:i:s').' UTC',
+                'note'=>'Per-machine cache keys generated by backend-core-php8 for local development only. Never commit, copy or deploy this file.',
+            ],JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES);
+
+            $tmp = $dir.'/.cache-encrypt.json.'.bin2hex(random_bytes(8)).'.tmp';
+            if(!$fh = @fopen($tmp,'x')) return false;
+            $placed = false;
+            if(@chmod($tmp,0600) && @fwrite($fh,$content)===strlen($content) && @fflush($fh)) {
+                fclose($fh); $fh = null;
+                $placed = !file_exists($file) && @link($tmp,$file);
+                if(!$placed && !file_exists($file)) $placed = @rename($tmp,$file);
+            }
+            if($fh) fclose($fh);
+            if(file_exists($tmp)) @unlink($tmp);
+            return $placed;
         }
 
 

@@ -888,6 +888,14 @@
 </table>
 
 <p><strong>Since 8.5.13 the cache keys are mandatory.</strong> There is no built-in default: without both values the entry points (<code>dispatcher.php</code>, <code>mcp-server.php</code>, <code>runscript.php</code>, <code>runtest.php</code>) stop before serving anything. HTTP calls get a <code>503</code> with a generic message and the detail (<code>security-cache-key-missing</code>) goes to the log; scripts print it and exit with code 1.</p>
+<p><strong>Since 8.5.22, in local development the framework generates the cache keys itself when none is configured.</strong> It writes a random pair (32 bytes each, base64) to <code>local_data/cache-encrypt.json</code> in the root of the application, with permissions <code>600</code>, and reuses it on the next requests, so an application can move its cache keys out of <code>config.json</code> without breaking local development. It only happens when all these conditions are true; otherwise nothing changes and <code>security-cache-key-missing</code> stops the entry points as above:</p>
+<ul>
+<li>Neither cache key is configured, neither in the config-vars nor in the environment. The configuration and the environment always win over the file, and a half-configured pair is not completed.</li>
+<li>It is not a managed runtime: no <code>GAE_SERVICE</code> (App Engine), <code>K_SERVICE</code> (Cloud Run) nor <code>FUNCTION_TARGET</code> (Cloud Functions), neither in <code>$_SERVER</code> nor in the environment.</li>
+<li>The cache is the file cache (<code>core.cache.cache_path</code>), never Redis.</li>
+<li>The <code>local_data</code> folder already exists and is writable. The framework does not create it.</li>
+</ul>
+<p>The request log gets one line (<code>security-cache-key-local-generated</code> or <code>security-cache-key-local-used</code>), never the value. A <code>cache-encrypt.json</code> that is not valid is never overwritten: the error <code>security-cache-key-local-file-invalid</code> is logged and the keys stay missing until the file is fixed or deleted. Keep <code>local_data/</code> out of the repository and out of every deployment.</p>
 
 <p><strong>Generate each value</strong> with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).</p>
 
