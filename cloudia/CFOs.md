@@ -1109,7 +1109,7 @@ Envía un email usando Mandrill (MailChimp Transactional).
 ```
 
 **Configuración requerida:**
-El sistema busca la configuración de Mandrill en `ds:CloudFrameWorkModulesConfigs` con `KeyName = 'email'` y lee `Config.mandrill_api_key`.
+Desde la 8.5.21 la clave de Mandrill se resuelve solo con CLOUD Channels, con `WorkFlows::setMandrillApiKeyFromPlatformConfig()`: el secreto propio de la plataforma declarado en `ds:CloudFrameWorkModulesConfigs` `cloud-channels` → `Config.email.mandrill-api-key-secret` (`{secreto}.{variable}`), o la cuenta `cloudframework` con la subcuenta que declare la plataforma (`Config.email.provider = cloudframework-subaccount` + `Config.email.subaccount`), o la cuenta `cloudframework` sin subcuenta. La subcuenta resuelta se envía salvo que el workflow indique otra. La clave en claro de `email.Config.mandrill_api_key` no se lee nunca, y ya no se crea la entidad `email` vacía; de ella solo se usan las `variables`. Si no se resuelve ninguna clave, el informe del workflow lo indica y no se envía nada.
 
 ---
 
