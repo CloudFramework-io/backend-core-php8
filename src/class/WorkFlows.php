@@ -3,7 +3,7 @@
 //   DevGroup: /cf/products/cloud-platform
 //   Process: /cloud-platform · SubProcess: 4693650502582272
 //   DevUnit: /cloud-development/frameworks/php, /cloud-channels/email/cfmail
-//   Activities: 6243470520090624, 6088723519504384
+//   Activities: 6243470520090624, 6088723519504384, 4671542084763648
 /**
  * [$workFlows = $this->core->loadClass('WorkFlows',$cfos);] Class to facilitate Email Workflows
  * https://cloudframework.io/docs/es/developers/php-framework/backend-core-php8/03-classes/WorkFlows
@@ -233,13 +233,14 @@ class WorkFlows
         if(!$this->mandrill) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $templates = $this->mandrill->templates->list($options);
+            if($this->mandrillResultIsError($templates,'getMandrillTemplates')) return false;
             $ret=[];
             foreach ($templates as $template) {
                 $ret[] = get_object_vars($template);
             }
             return $ret;
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
     }
 
@@ -253,10 +254,12 @@ class WorkFlows
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $template = $this->mandrill->templates->info(['name'=>$slug]);
+            if($this->mandrillResultIsError($template,'getMandrillTemplate')) return false;
             $template = $this->core->jsonDecode($this->core->jsonEncode($template),true);
+            if(!is_array($template) || !$template) return $this->addError('getMandrillTemplate: Mandrill returned no template');
 
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
 
         return $template;
@@ -284,10 +287,12 @@ class WorkFlows
                 'template_name'=>$slug,
                 'template_content'=>[],
                 'merge_vars'=>$vars]);
+            if($this->mandrillResultIsError($template,'renderMandrillTemplate')) return false;
             $template = $this->core->jsonDecode($this->core->jsonEncode($template),true);
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
+        if(!is_array($template) || !is_string($template['html']??null)) return $this->addError('renderMandrillTemplate: Mandrill returned no html');
 
         return $template['html'];
 
@@ -302,10 +307,11 @@ class WorkFlows
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $webhooks = $this->mandrill->webhooks->list();
+            if($this->mandrillResultIsError($webhooks,'getMandrillWebHooks')) return false;
             $webhooks = $this->core->jsonDecode($this->core->jsonEncode($webhooks),true);
 
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
 
         return $webhooks;
@@ -331,10 +337,11 @@ class WorkFlows
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $domains = $this->mandrill->senders->domains();
+            if($this->mandrillResultIsError($domains,'getMandrillDomains')) return false;
             $domains = $this->core->jsonDecode($this->core->jsonEncode($domains),true);
 
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
 
         return $domains;
@@ -364,10 +371,11 @@ class WorkFlows
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $senders = $this->mandrill->senders->list();
+            if($this->mandrillResultIsError($senders,'getMandrillSenders')) return false;
             $senders = $this->core->jsonDecode($this->core->jsonEncode($senders),true);
 
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
 
         return $senders;
@@ -401,9 +409,10 @@ class WorkFlows
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $info = $this->mandrill->messages->info(['id'=>$id]);
+            if($this->mandrillResultIsError($info,'getMandrillMessageInfo')) return false;
             $info = $this->core->jsonDecode($this->core->jsonEncode($info),true);
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
         return $info;
     }
@@ -431,9 +440,10 @@ class WorkFlows
         if(!$this->mandrill->getApiKey()) return $this->addError('Missing Mandrill API_KEY. use function setMandrillApiKey($pau_key)');
         try {
             $content = $this->mandrill->messages->content(['id'=>$id]);
+            if($this->mandrillResultIsError($content,'getMandrillMessageContent')) return false;
             $content = $this->core->jsonDecode($this->core->jsonEncode($content),true);
-        } catch (Mandrill_Error $e) {
-            return $this->addError($e->getMessage());
+        } catch (\Throwable $e) {
+            return $this->addError($this->mandrillErrorText($e));
         }
         return $content;
     }
@@ -606,7 +616,7 @@ class WorkFlows
                 $template=null;
                 if($slug) {
                     if (!$template = $this->getERPEmailTemplate($slug)) return false;
-                    $html = $this->renderMandrillTemplate($slug,$data);
+                    if(($html = $this->renderMandrillTemplate($slug,$data)) === false) return false;
                 } else {
                     $html = $this->core->replaceCloudFrameworkTagsAndVariables($html,$data);
                 }
@@ -769,7 +779,7 @@ class WorkFlows
         if(!($slug = $params['slug']??null) && !$html) return $this->addError('sendMandrillEmail($params) missing [slug] or [html] in $params for the Body of the Email');
 
         if($slug)
-            if(!$template = $this->getMandrillTemplate($slug)) return;
+            if(!$template = $this->getMandrillTemplate($slug)) return ['success'=>false,'result'=>$this->lastErrorText()];
         else $template = $html;
 
         if(!$from = $params['from']??($template['DefaultFromEmail']??null)) return $this->addError('sendMandrillEmail($params) missing email in $params because the template does not have a default from email');
@@ -886,11 +896,13 @@ class WorkFlows
             }
 
             //$result = $this->mandrill->messages->sendTemplate($slug, $template_content, $message, $async, $ip_pool);
+            if($this->mandrillResultIsError($result,'sendMandrillEmail')) return ['success'=>false,'result'=>$this->lastErrorText()];
             $result = $this->core->jsonDecode($this->core->jsonEncode($result),true);
 
             return ['success'=>true,'result'=>$result];
-        } catch (Error $e) {
-            return ['success'=>false,'result'=>$e->getMessage()];
+        } catch (\Throwable $e) {
+            $this->addError($this->mandrillErrorText($e));
+            return ['success'=>false,'result'=>$this->lastErrorText()];
         }
     }
 
@@ -905,6 +917,63 @@ class WorkFlows
         $this->error = true;
         $this->errorMsg[] = $value;
         return false;
+    }
+
+    /**
+     * Since 8.5.24. The Mailchimp Transactional client does not throw on an HTTP error of the API: its
+     * Configuration::post() RETURNS the GuzzleHttp RequestException, so a try/catch never sees it and the caller used to
+     * convert the exception into an empty array and go on (an empty template, a missing html, a "successful" send with no
+     * result). This turns that return into an error of the class.
+     * @param mixed $result what the Mandrill client returned
+     * @param string $operation name of the method, for the error text
+     * @return bool true when $result is an error, and the error has been added
+     */
+    private function mandrillResultIsError($result, string $operation): bool
+    {
+        if(!($result instanceof \Throwable)) return false;
+        $this->addError($operation.': '.$this->mandrillErrorText($result));
+        return true;
+    }
+
+    /**
+     * Since 8.5.24. Safe text of a Mandrill error: HTTP status plus the name and message that Mandrill returns in the
+     * body of the response. Never the request, which carries the API key and the recipients, nor the message of Guzzle,
+     * which quotes the request. Any email address in the Mandrill message is masked.
+     * @param \Throwable $e
+     * @return string
+     */
+    private function mandrillErrorText(\Throwable $e): string
+    {
+        $status = null; $name = null; $message = null;
+        $response = method_exists($e,'getResponse') ? $e->getResponse() : null;
+        if(is_object($response)) {
+            if(method_exists($response,'getStatusCode')) $status = $response->getStatusCode();
+            if(method_exists($response,'getBody')) {
+                $body = json_decode((string)$response->getBody(), true);
+                if(is_array($body)) {
+                    $name = is_string($body['name']??null) ? $body['name'] : null;
+                    $message = is_string($body['message']??null) ? $body['message'] : null;
+                }
+            }
+        }
+        $text = 'Mandrill error'.($status ? ' '.$status : '').($name ? ' '.$name : '');
+        if($message !== null && $message !== '') {
+            $message = preg_replace('/[^\s"\'<>(),;:]+@[^\s"\'<>(),;:]+/', '[email]', $message);
+            $text .= ': '.mb_substr($message, 0, 300);
+        } elseif(!$status) {
+            $text .= ' ('.get_class($e).')';
+        }
+        return $text;
+    }
+
+    /**
+     * Since 8.5.24. Last error message of the class as text.
+     * @return string
+     */
+    private function lastErrorText(): string
+    {
+        $last = end($this->errorMsg);
+        return is_string($last) ? $last : (string)json_encode($last);
     }
 
     /**
