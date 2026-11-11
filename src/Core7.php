@@ -172,7 +172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.24';  // 2026-11-09
+        var $_version = '8.5.25';  // 2026-11-11
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -2890,15 +2890,12 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         /** @var bool $cache_keys_missing true when $cache_key or $cache_iv is not configured (no config-var, no env var). The encrypted cache of CoreSecurity is then neither read nor written */
         var $cache_keys_missing = false;
 
-        // Built-in default keys for encrypt()/decrypt(). Kept in 8.5.x for backward compatibility; they will be removed in a future major version.
-        private const DEFAULT_ENCRYPT_KEY = 'ybdqfG3MTPfzct3jR28qbix/yvbodtT0';
-        private const DEFAULT_ENCRYPT_SECRET = 'sadf&$sad_dkuYWER$T__6ttre';
 
         /** @var string $cache_key_base $cache_key before the daily subkey is appended (see readERPDeveloperEncryptedSubKeys) */
         private $cache_key_base = '';
         /** @var string $cache_iv_base $cache_iv before the daily subkey is appended (see readERPDeveloperEncryptedSubKeys) */
         private $cache_iv_base = '';
-        /** @var array $encrypt_env_vars lazy memo of CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET read with getEnvVar() */
+        /** @var array $encrypt_env_vars lazy memo of CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET (and, since 8.5.25, CF_LEGACY_ENCRYPT_KEY / CF_LEGACY_ENCRYPT_SECRET) read with getEnvVar() */
         private $encrypt_env_vars = [];
         /** @var bool $resolving_encrypt_env_var re-entrance guard while getEnvVar() is running */
         private $resolving_encrypt_env_var = false;
@@ -4434,18 +4431,20 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * Formats:
          *   - v1 (default in 8.5.x): AES-256-CBC with a static IV derived from $secret_iv, base64 output without prefix.
          *     based on: https://gist.github.com/joashp/a1ae9cb30fa533f4ad94
-         *   - v2: AES-256-GCM, see encryptV2(). Always written in strict mode (config-var core.security.encrypt_require_key,
-         *     see isEncryptStrictMode()); otherwise opt-in with config-var core.security.encrypt_format = 'v2'.
+         *   - v2: AES-256-GCM, see encryptV2(). Written when the config-var core.security.encrypt_format = 'v2' or when
+         *     core.security.encrypt_require_key is active (see isEncryptStrictMode()).
          * decrypt() reads both formats, so v2 can be activated without breaking stored v1 values.
          *
          * When $secret_key or $secret_iv are empty they are resolved with resolveEncryptKeys():
          * config-vars core.security.encrypt_key / core.security.encrypt_secret -> env vars CF_ENCRYPT_KEY /
-         * CF_ENCRYPT_SECRET (getEnvVar) -> built-in default (deprecated, removed in a future major version; never used in strict mode).
+         * CF_ENCRYPT_SECRET (getEnvVar). Since 8.5.25 there is no built-in default: without both keys it returns false
+         * and logs the error 'security-encrypt-key-missing' once per request. The legacy keys
+         * (core.security.legacy_encrypt_key / legacy_encrypt_secret) are never used to encrypt.
          *
          * @param string $text: string to encrypt
          * @param string $secret_key  optional secret key. If empty it will be resolved with resolveEncryptKeys()
          * @param string $secret_iv  optional secret key. If empty it will be resolved with resolveEncryptKeys()
-         * @return string in base64 ('v2:' prefixed when the v2 format is active)
+         * @return string|false in base64 ('v2:' prefixed when the v2 format is active); false when the keys are missing
          */
         function encrypt($text,$secret_key='',$secret_iv='') {
 
@@ -4454,7 +4453,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!$secret_key || !$secret_iv)
                 if(!$this->resolveEncryptKeys($secret_key,$secret_iv)) return false;
 
-            // strict mode always writes v2; otherwise v2 is opt-in, as in 8.5.12
+            // v2 is opt-in (core.security.encrypt_format), and always written with core.security.encrypt_require_key
             if($this->isEncryptStrictMode() || $this->core->config->get('core.security.encrypt_format')==='v2')
                 return $this->encryptV2($text,$secret_key,$secret_iv);
 
@@ -4472,8 +4471,20 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Decrypt Encrypted Text produced by encrypt() in any of its formats:
-         *   - 'v2:' prefix: AES-256-GCM (see decryptV2()). Returns false if it can not be authenticated.
+         *   - 'v2:' prefix: AES-256-GCM (see decryptV2()). Returns false if it can not be authenticated. Without explicit
+         *     keys it needs the configured keys (resolveEncryptKeys()); never the legacy keys.
          *   - no prefix: legacy v1 AES-256-CBC, unchanged. A note 'legacy-cbc-format-read' is added once per request.
+         *
+         * v1 without explicit keys (since 8.5.25, there is no built-in default):
+         *   1. the configured keys (resolveEncryptKeys() order), when both are available: the v1 values that encrypt()
+         *      wrote with them;
+         *   2. when they are missing or can not read it, the legacy keys, only when they are configured explicitly:
+         *      config-vars core.security.legacy_encrypt_key / core.security.legacy_encrypt_secret -> env vars
+         *      CF_LEGACY_ENCRYPT_KEY / CF_LEGACY_ENCRYPT_SECRET (getEnvVar, same order and same reload of the env_vars
+         *      secret as the configured keys). A value read with them leaves the warning 'security-legacy-key-read'
+         *      once per request: encrypt it again to store it with the configured keys.
+         *   3. without the legacy keys it returns false and logs the error 'security-legacy-key-missing' once per request.
+         * With both keys passed explicitly (CoreCache) only those keys are used, as before.
          *
          * @param string $encrypted_text base64 string
          * @param string $secret_key  optional secret key. If empty it will be resolved with resolveEncryptKeys()
@@ -4485,25 +4496,37 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if(!$encrypted_text) return $encrypted_text;
 
             $resolved_keys = (!$secret_key || !$secret_iv);
-            if($resolved_keys)
-                if(!$this->resolveEncryptKeys($secret_key,$secret_iv)) return false;
 
-            if(is_string($encrypted_text) && strncmp($encrypted_text,'v2:',3)===0)
+            if(is_string($encrypted_text) && strncmp($encrypted_text,'v2:',3)===0) {
+                if($resolved_keys)
+                    if(!$this->resolveEncryptKeys($secret_key,$secret_iv)) return false;
                 return $this->decryptV2($encrypted_text,$secret_key,$secret_iv);
+            }
 
             $this->sendNoteOnce('legacy-cbc-format-read','legacy-cbc-format-read');
 
-            $plain = $this->decryptV1($encrypted_text,$secret_key,$secret_iv);
+            if(!$resolved_keys) return $this->decryptV1($encrypted_text,$secret_key,$secret_iv);
 
-            // strict mode: a v1 text that the configured keys can not read is read with the built-in default keys,
-            // only to read it (never to write). Lets an application migrate the values written before it had keys.
-            if($plain===false && $resolved_keys && $this->isEncryptStrictMode()) {
-                $plain = $this->decryptV1($encrypted_text,self::DEFAULT_ENCRYPT_KEY,self::DEFAULT_ENCRYPT_SECRET);
-                if($plain!==false)
-                    $this->sendNoteOnce('security-default-key-legacy-read'
-                        ,'security-default-key-legacy-read: a v1 value was read with the built-in default keys. Encrypt it again to store it with the configured keys'
-                        ,'warning');
+            // 1. configured keys (each value independently, never mixed with a legacy one)
+            $plain = false;
+            if(!$this->fillEncryptKeyPair($secret_key,$secret_iv))
+                $plain = $this->decryptV1($encrypted_text,$secret_key,$secret_iv);
+            if($plain!==false) return $plain;
+
+            // 2. legacy keys, only when they are configured explicitly. Only to read, never to write.
+            $legacy_key = ''; $legacy_secret = '';
+            $missing = $this->fillEncryptKeyPair($legacy_key,$legacy_secret,true);
+            if($missing) {
+                $this->sendNoteOnce('security-legacy-key-missing'
+                    ,'security-legacy-key-missing ['.implode(',',$missing).']: a v1 value could not be read with the configured keys and core.security.legacy_encrypt_key/legacy_encrypt_secret or the env vars CF_LEGACY_ENCRYPT_KEY/CF_LEGACY_ENCRYPT_SECRET are not available. Nothing was decrypted'
+                    ,'error');
+                return false;
             }
+            $plain = $this->decryptV1($encrypted_text,$legacy_key,$legacy_secret);
+            if($plain!==false)
+                $this->sendNoteOnce('security-legacy-key-read'
+                    ,'security-legacy-key-read: a v1 value was read with the legacy keys. Encrypt it again to store it with the configured keys'
+                    ,'warning');
 
             return $plain;
         }
@@ -4590,65 +4613,69 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Fills the empty $secret_key / $secret_iv used by encrypt()/decrypt() when they are called without explicit keys.
-         * Order (each value independently):
+         * Order (each value independently), see fillEncryptKeyPair():
          *   1. config-vars core.security.encrypt_key / core.security.encrypt_secret (read on every call, as before)
          *   2. environment variables CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET via $this->core->config->getEnvVar(), that
          *      reads getenv() and then the env_vars secret. Read lazily, only when a key is missing, and memorized
          *      in this instance for the rest of the request.
-         *   3. built-in default (deprecated, it will be removed in a future major version): one warning per request
-         *      'security-default-encrypt-key-used'.
-         * In strict mode (config-var core.security.encrypt_require_key) step 3 does not exist. Before failing, the env_vars
-         * secret is read again once per request without the cache (see reloadEncryptEnvVars(), since 8.5.14): the cached copy
-         * lives per cache namespace and may predate the keys. If they are still missing an error 'security-encrypt-key-missing'
-         * is left once per request and the method returns false, also when the env_vars secret can not be read.
-         * decrypt() can still read v1 values written with the default keys (see decrypt()).
+         * Before failing, the env_vars secret is read again once per request without the cache (see
+         * reloadEncryptEnvVars(), since 8.5.14): the cached copy lives per cache namespace and may predate the keys.
+         * Since 8.5.25 there is no built-in default, with or without core.security.encrypt_require_key: if a key is still
+         * missing the error 'security-encrypt-key-missing' is left once per request and the method returns false, also
+         * when the env_vars secret can not be read. Only decrypt() of a v1 value can use the legacy keys (see decrypt()).
          * Calls with explicit keys (CoreCache) never reach this method.
          *
          * @param string $secret_key
          * @param string $secret_iv
-         * @return bool false when strict mode is active and a key is missing
+         * @return bool false when a key is missing
          */
         private function resolveEncryptKeys(&$secret_key,&$secret_iv): bool
         {
-            if(!$secret_key)
-                $secret_key = ($this->core->config->get('core.security.encrypt_key'))?:$this->getEncryptEnvVar('CF_ENCRYPT_KEY');
-            if(!$secret_iv)
-                $secret_iv = ($this->core->config->get('core.security.encrypt_secret'))?:$this->getEncryptEnvVar('CF_ENCRYPT_SECRET');
-
-            $missing = [];
-            if(!$secret_key) $missing[] = 'key';
-            if(!$secret_iv) $missing[] = 'secret';
+            $missing = $this->fillEncryptKeyPair($secret_key,$secret_iv);
             if(!$missing) return true;
 
-            if($this->isEncryptStrictMode()) {
-                if($this->reloadEncryptEnvVars()) {
-                    if(!$secret_key)
-                        $secret_key = ($this->core->config->get('core.security.encrypt_key'))?:$this->getEncryptEnvVar('CF_ENCRYPT_KEY');
-                    if(!$secret_iv)
-                        $secret_iv = ($this->core->config->get('core.security.encrypt_secret'))?:$this->getEncryptEnvVar('CF_ENCRYPT_SECRET');
-                    $missing = [];
-                    if(!$secret_key) $missing[] = 'key';
-                    if(!$secret_iv) $missing[] = 'secret';
-                    if(!$missing) return true;
-                }
-                $this->sendNoteOnce('security-encrypt-key-missing'
-                    ,'security-encrypt-key-missing ['.implode(',',$missing).']: core.security.encrypt_require_key is active and core.security.encrypt_key/encrypt_secret or the env vars CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET are not available. Nothing was encrypted or decrypted'
-                    ,'error');
-                return false;
-            }
-
-            if(!$secret_key) $secret_key = self::DEFAULT_ENCRYPT_KEY;
-            if(!$secret_iv) $secret_iv = self::DEFAULT_ENCRYPT_SECRET;
-            $this->sendNoteOnce('security-default-encrypt-key-used'
-                ,'security-default-encrypt-key-used ['.implode(',',$missing).']: set core.security.encrypt_key/encrypt_secret or the env vars CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET. The default keys will be removed in a future major version'
-                ,'warning');
-            return true;
+            $this->sendNoteOnce('security-encrypt-key-missing'
+                ,'security-encrypt-key-missing ['.implode(',',$missing).']: core.security.encrypt_key/encrypt_secret or the env vars CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET are not available. Nothing was encrypted or decrypted'
+                ,'error');
+            return false;
         }
 
         /**
-         * Strict encryption mode, activated with the config-var core.security.encrypt_require_key (true, 1, '1' or 'true').
-         * When active: encrypt() always writes v2, encrypting or decrypting without configured keys fails explicitly and
-         * the built-in default keys are only used by decrypt() to read v1 values written before the keys existed.
+         * Fills the empty values of a pair of encryption keys without logging anything:
+         *   - $legacy false: config-vars core.security.encrypt_key / encrypt_secret -> env vars CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET
+         *   - $legacy true (since 8.5.25): config-vars core.security.legacy_encrypt_key / legacy_encrypt_secret -> env vars
+         *     CF_LEGACY_ENCRYPT_KEY / CF_LEGACY_ENCRYPT_SECRET
+         * Each value independently. When a value is still missing the env_vars secret is read again without the cache
+         * (reloadEncryptEnvVars(), at most once per request for all the pairs) and the pair is filled again.
+         * @param string $secret_key
+         * @param string $secret_iv
+         * @param bool $legacy
+         * @return array the missing values ('key', 'secret'); empty when the pair is complete
+         */
+        private function fillEncryptKeyPair(&$secret_key,&$secret_iv,bool $legacy=false): array
+        {
+            [$config_key,$config_secret,$env_key,$env_secret] = $legacy
+                ? ['core.security.legacy_encrypt_key','core.security.legacy_encrypt_secret','CF_LEGACY_ENCRYPT_KEY','CF_LEGACY_ENCRYPT_SECRET']
+                : ['core.security.encrypt_key','core.security.encrypt_secret','CF_ENCRYPT_KEY','CF_ENCRYPT_SECRET'];
+
+            for($attempt=0;;$attempt++) {
+                if(!$secret_key)
+                    $secret_key = ($this->core->config->get($config_key))?:$this->getEncryptEnvVar($env_key);
+                if(!$secret_iv)
+                    $secret_iv = ($this->core->config->get($config_secret))?:$this->getEncryptEnvVar($env_secret);
+
+                $missing = [];
+                if(!$secret_key) $missing[] = 'key';
+                if(!$secret_iv) $missing[] = 'secret';
+                if(!$missing || $attempt>0 || !$this->reloadEncryptEnvVars()) return $missing;
+            }
+        }
+
+        /**
+         * Config-var core.security.encrypt_require_key (true, 1, '1' or 'true').
+         * Since 8.5.25 its rule on the keys applies to every application: encrypting or decrypting without configured keys
+         * always fails explicitly and there are no built-in default keys. The config-var is still accepted and keeps
+         * only its effect on the format: encrypt() writes v2, the same as core.security.encrypt_format = 'v2'.
          * @return bool
          */
         function isEncryptStrictMode(): bool
@@ -4657,13 +4684,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * Strict mode only (since 8.5.14): reads the env_vars secret again without the cache when CF_ENCRYPT_KEY /
-         * CF_ENCRYPT_SECRET are missing. The secret is cached per cache namespace (each platform keeps its own copy, see
+         * Since 8.5.14 (strict mode only until 8.5.24, always since 8.5.25): reads the env_vars secret again without the
+         * cache when CF_ENCRYPT_KEY / CF_ENCRYPT_SECRET (or, when decrypt() needs them, CF_LEGACY_ENCRYPT_KEY /
+         * CF_LEGACY_ENCRYPT_SECRET) are missing. The secret is cached per cache namespace (each platform keeps its own copy, see
          * CoreConfig::readEnvVarsFromGCPSecrets), so a copy cached before the keys were added to the secret lacks them and
          * resetting the cache of one namespace does not refresh the others. The reload also rewrites the copy of the
          * current namespace, so the next requests of that platform read the keys from the cache again.
          * At most once per request; leaves the warning 'security-encrypt-env-vars-reloaded' when it reads the secret.
-         * @return bool true when the secret was read again and the memo of CF_ENCRYPT_* was cleared
+         * @return bool true when the secret was read again and the memo of CF_ENCRYPT_* / CF_LEGACY_ENCRYPT_* was cleared
          */
         private function reloadEncryptEnvVars(): bool
         {
@@ -4683,9 +4711,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             }
             if(!$reloaded) return false;
 
-            unset($this->encrypt_env_vars['CF_ENCRYPT_KEY'],$this->encrypt_env_vars['CF_ENCRYPT_SECRET']);
+            unset($this->encrypt_env_vars['CF_ENCRYPT_KEY'],$this->encrypt_env_vars['CF_ENCRYPT_SECRET']
+                ,$this->encrypt_env_vars['CF_LEGACY_ENCRYPT_KEY'],$this->encrypt_env_vars['CF_LEGACY_ENCRYPT_SECRET']);
             $this->sendNoteOnce('security-encrypt-env-vars-reloaded'
-                ,'security-encrypt-env-vars-reloaded: CF_ENCRYPT_KEY/CF_ENCRYPT_SECRET were not in the cached env_vars of this cache namespace. The secret '.$secret_id.' was read again without the cache and its cached copy rewritten'
+                ,'security-encrypt-env-vars-reloaded: encryption keys were not in the cached env_vars of this cache namespace. The secret '.$secret_id.' was read again without the cache and its cached copy rewritten'
                 ,'warning');
             return true;
         }

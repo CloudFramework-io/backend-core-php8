@@ -807,12 +807,13 @@ private function checkRateLimit(): bool
 
 ### Framework Encryption Keys
 
-The framework uses two pairs of keys. Generate them yourself: random values, never reused between applications or environments.
+The framework uses two pairs of keys, plus an optional third pair only to read old data. Generate them yourself: random values, never reused between applications or environments.
 
 | Pair | Protects | Config-vars | Environment variables | Required |
 |------|----------|-------------|-----------------------|----------|
 | Cache keys | Encrypted cache entries: configuration and `env_vars` secret, security groups, daily subkeys | `core.gcp.secrets.cache_encrypt_key` / `core.gcp.secrets.cache_encrypt_iv` | `CF_CACHE_ENCRYPT_KEY` / `CF_CACHE_ENCRYPT_IV` | **Yes, since 8.5.13** |
-| Data keys | `$this->core->security->encrypt()` / `decrypt()` called without explicit keys | `core.security.encrypt_key` / `core.security.encrypt_secret` | `CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET` | Yes in strict mode (`core.security.encrypt_require_key: true`) |
+| Data keys | `$this->core->security->encrypt()` / `decrypt()` called without explicit keys | `core.security.encrypt_key` / `core.security.encrypt_secret` | `CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET` | **Yes, since 8.5.25** |
+| Legacy keys | Only reading v1 values (without the `v2:` prefix) that the data keys can not read, with `decrypt()` called without explicit keys | `core.security.legacy_encrypt_key` / `core.security.legacy_encrypt_secret` | `CF_LEGACY_ENCRYPT_KEY` / `CF_LEGACY_ENCRYPT_SECRET` | Only while you keep data encrypted with the built-in default keys of 8.5.24 or before (since 8.5.25) |
 
 **Since 8.5.13 the cache keys are mandatory.** There is no built-in default: without both values the entry points (`dispatcher.php`, `mcp-server.php`, `runscript.php`, `runtest.php`) stop before serving anything. HTTP calls get a `503` with a generic message and the detail (`security-cache-key-missing`) goes to the log; scripts print it and exit with code 1.
 
@@ -857,6 +858,24 @@ The request log gets one line (`security-cache-key-local-generated` or `security
 3. Deploy those services **at the same time**. The copy of the instance is per version name, so an instance never mixes versions; while old and new instances overlap they use different keys over the same cache, the entries written by one side can not be read by the other and are rebuilt, so keep that overlap short.
 4. When no instance of the previous deployments serves traffic, disable the previous version (destroy it later). An old instance restarted after the version is disabled can not read it and answers `503`.
 
+**Since 8.5.25 the data keys are mandatory and the framework has no built-in encryption keys. This is a breaking change.** Up to 8.5.24, `encrypt()` and `decrypt()` called without explicit keys and without data keys used two keys written in the source code of the framework, which is public, with the warning `security-default-encrypt-key-used`. Those keys are gone:
+
+- **`encrypt()` and `encryptV2()` without data keys return `false`** and log the error `security-encrypt-key-missing` once per request, with or without `core.security.encrypt_require_key`. `decrypt()` of a v2 value (`v2:` prefix) without data keys does the same.
+- **`decrypt()` of a v1 value** (without the `v2:` prefix) called without explicit keys tries the data keys first, which read the v1 values that `encrypt()` wrote with them. When they are missing or can not read it, it tries the **legacy keys**, only when they are configured: the value is returned and the warning `security-legacy-key-read` is logged once per request. Without legacy keys it returns `false` and logs the error `security-legacy-key-missing` once per request.
+- **The legacy keys are only for reading.** They are never used by `encrypt()`, never to read a v2 value and never when the keys are passed explicitly (as `CoreCache` does). They are resolved like the data keys, each value independently: config-vars `core.security.legacy_encrypt_key` / `core.security.legacy_encrypt_secret`, then the environment variables `CF_LEGACY_ENCRYPT_KEY` / `CF_LEGACY_ENCRYPT_SECRET` (`getenv()` and then the `env_vars` secret), with the same reload of the `env_vars` secret described below. A half pair is never completed with anything else.
+- **Calls with explicit keys do not change**: `encrypt($text, $key, $secret)` and `decrypt($text, $key, $secret)` behave exactly as before.
+- **`core.security.encrypt_require_key` is still accepted** and does no harm, but its rule on the keys is now the rule for every application. It only keeps its effect on the format: `encrypt()` writes v2, the same as `core.security.encrypt_format: "v2"`.
+
+**Who is affected:** any application that calls `$this->core->security->encrypt()` / `decrypt()` (or `encryptV2()` / `decryptV2()`) without explicit keys and without `core.security.encrypt_key` / `encrypt_secret` or `CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET`. The warning `security-default-encrypt-key-used` in the logs of 8.5.24 or before identifies them. Also any application that **stores values encrypted that way** (v1 with the built-in default keys), including those in strict mode that read them through the warning `security-default-key-legacy-read`.
+
+**Before updating to 8.5.25:**
+
+1. Configure your own data keys (generate them as shown below).
+2. If you keep data encrypted with the old built-in default keys, configure the legacy keys with the values that were those defaults. Take them from the source code of the version you run now, the constants `DEFAULT_ENCRYPT_KEY` and `DEFAULT_ENCRYPT_SECRET` of `CoreSecurity` in `src/Core7.php` of 8.5.24 or before: this guide and the release notes do not reproduce them. Store them like any other secret (the `env_vars` secret or a value injected at deploy time), never in the repository.
+3. Re-encrypt that data: read each value (it is read with the legacy keys) and encrypt it again, which writes it with your data keys. When the warning `security-legacy-key-read` no longer appears, remove the legacy keys.
+
+Applications that require `cloudframework-io/backend-core-php8` with `^8` receive 8.5.25 in their next deployment that resolves dependencies without a `composer.lock` pinning an earlier version, so configure the keys before that deployment.
+
 **Generate each value** with a cryptographically secure generator: 32 random bytes encoded in base64 (44 characters).
 
 ```bash
@@ -871,8 +890,8 @@ Recommendations:
 - **Do not type, reuse or derive the values** from names, passwords or other keys. Short or hand-written values make the encryption guessable.
 - **One pair per environment.** Development must not be able to read production data. Share a pair only between services that share the same data (same Datastore namespaces and cache).
 - **Keep them out of the repository.** Prefer a value injected at deploy time or Secret Manager over a committed `config.json`. Anyone who can read the repository can read a committed key.
-- **The cache keys can not live in the `env_vars` secret**: they encrypt the cached copy of that secret, so they are read with `getenv()` only. The data keys can live in the `env_vars` secret (`CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET`).
-- **Adding the data keys to the `env_vars` secret takes effect without emptying the cache (since 8.5.14).** The cached copy of the secret is kept per cache namespace, so a namespace cached before the keys were added would keep a copy without them. In strict mode, when the data keys are missing, the framework reads the secret again once per request without the cache, rewrites the cached copy of the current namespace and logs the warning `security-encrypt-env-vars-reloaded`. If the keys are still missing after that read, `encrypt()` / `decrypt()` return `false` and the error `security-encrypt-key-missing` is logged as before. Explicit keys, keys in the configuration and calls outside strict mode never trigger that read.
+- **The cache keys can not live in the `env_vars` secret**: they encrypt the cached copy of that secret, so they are read with `getenv()` only. The data keys can live in the `env_vars` secret (`CF_ENCRYPT_KEY` / `CF_ENCRYPT_SECRET`), and so can the legacy keys (`CF_LEGACY_ENCRYPT_KEY` / `CF_LEGACY_ENCRYPT_SECRET`).
+- **Adding the data keys to the `env_vars` secret takes effect without emptying the cache (since 8.5.14).** The cached copy of the secret is kept per cache namespace, so a namespace cached before the keys were added would keep a copy without them. When the data keys are missing (or, for `decrypt()` of a v1 value, the legacy keys), the framework reads the secret again once per request without the cache, rewrites the cached copy of the current namespace and logs the warning `security-encrypt-env-vars-reloaded`. If the keys are still missing after that read, `encrypt()` / `decrypt()` return `false` and the error `security-encrypt-key-missing` (or `security-legacy-key-missing`) is logged. Explicit keys and keys in the configuration never trigger that read. Up to 8.5.24 it only happened in strict mode; since 8.5.25 it does not depend on it.
 - **Never print or log them.** When you check a configuration, compare names or hashes, not values.
 - **Rotating the cache keys** only empties the encrypted cache: it is rebuilt on the next requests. **Rotating the data keys** makes the values encrypted with the old keys unreadable, so decrypt and encrypt them again with the new keys before removing the old ones.
 
