@@ -1,4 +1,8 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-development
+//   DevUnit: /cloud-development/frameworks/php
+//   Activities: 4822239115739136
 
 // CloudSQL Class v10
 if (!defined("_RESTfull_CLASS_")) {
@@ -1062,18 +1066,12 @@ if (!defined("_RESTfull_CLASS_")) {
             //endregion
 
             //region EVALUATE to add log lines into $ret
-            if ($this->core->logs->lines) {
+            // since 8.5.26 the logs, ?__p and ?__debug are returned only when CoreSecurity::debugOutputAllowed() says so:
+            // outside a managed runtime, or from an IP of core.api.debug.allowed_ips compared exactly with the IP that the
+            // platform gives (never X-Forwarded-For), with no exception for cron calls or /queue/ URLs
+            $debug_output_allowed = $this->core->security->debugOutputAllowed();
+            if ($this->core->logs->lines && $debug_output_allowed) {
                 $ret['logs'] = $this->core->logs->data;
-
-                //Restrict output
-                if($this->core->config->get('core_api_logs_allowed_ips') || $this->core->config->get('restful.logs.allowed_ips')) {
-                    $_allowed_ips = ($this->core->config->get('restful.logs.allowed_ips'))?:$this->core->config->get('core_api_logs_allowed_ips');
-                    if($_allowed_ips!='*' && !$this->core->security->isCron() && !strpos($this->core->system->url['url'],'/queue/')) {
-                        if(strpos($_allowed_ips,$this->core->system->ip)===false) {
-                            $ret['logs'] = 'only restful.logs.allowed_ips. Current ip: '.$this->core->system->ip;
-                        }
-                    }
-                }
             }
             //endregion
 
@@ -1105,13 +1103,13 @@ if (!defined("_RESTfull_CLASS_")) {
             $this->core->__p->add("RESTFull: ", '', 'endnote');
             switch ($this->contentTypeReturn) {
                 case 'JSON':
-                    if (isset($this->formParams['__p'])) {
+                    if ($debug_output_allowed && isset($this->formParams['__p'])) {
                         $this->core->__p->data['config loaded'] = $this->core->config->getConfigLoaded();
                         $ret['__p'] = $this->core->__p->data;
                     }
 
                     // Debug params
-                    if (isset($this->formParams['__debug'])) {
+                    if ($debug_output_allowed && isset($this->formParams['__debug'])) {
                         if(!$this->core->is->terminal())
                             $ret['__debug']['url'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
                         $ret['__debug']['method'] = $this->method;

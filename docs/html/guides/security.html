@@ -1221,6 +1221,36 @@ $this->core->logs->add($this->core->system->maskUrl($url), 'audit');</code></pre
 
 <p>The request log of App Engine (and of any load balancer or proxy in front of it) records the full URL and is <strong>not</strong> controlled by the framework. Treat it in Cloud Logging, for example with an exclusion filter on the callback routes or a restricted log bucket.</p>
 
+<h3 id="debug-output-in-api-responses">Debug Output in API Responses</h3>
+
+<p><strong>Since 8.5.26 an API response carries debug output only in local development or for the IPs you configure.</strong> The debug output is the log lines (<code>logs</code>), the trace of the profiler (<code>?__p</code>) and the echo of the request (<code>?__debug</code>: URL, method, IP, headers, session, user agent and parameters). Up to 8.5.25 the logs went to any caller unless <code>restful.logs.allowed_ips</code> was set, and even then the check could be skipped: the IP came from <code>X-Forwarded-For</code> (which the caller writes) and was compared with a partial match, calls from a cron and URLs with <code>/queue/</code> after the first character were exceptions, and <code>?__p</code> and <code>?__debug</code> had no check at all. That is a disclosure of internal details to anyone (ASVS 4.0.3, 4.1.4).</p>
+
+<p>The rule lives in <code>$this-&gt;core-&gt;security-&gt;debugOutputAllowed()</code>, used by <code>RESTful::send()</code> and by <code>dispatcher.php</code>:</p>
+
+<table>
+<thead><tr><th>Where the code runs</th><th>Debug output</th></tr></thead>
+<tbody>
+<tr><td>Local server or local script (no <code>GAE_SERVICE</code>, <code>K_SERVICE</code> nor <code>FUNCTION_TARGET</code>)</td><td>Yes</td></tr>
+<tr><td>App Engine</td><td>Only when the IP of the client is <strong>exactly</strong> one of the configured IPs</td></tr>
+<tr><td>Cloud Run, Cloud Functions</td><td>No: they have no IP header that the caller can not write</td></tr>
+</tbody>
+</table>
+
+<pre><code class="language-json">{
+  "core.api.debug.allowed_ips": ["203.0.113.10", "2001:db8::10"]
+}</code></pre>
+
+<ul>
+<li>The IP is the one the platform gives: <code>X-Appengine-User-Ip</code> in App Engine (App Engine sets it and removes the one sent by the client), <code>REMOTE_ADDR</code> in local. <code>X-Forwarded-For</code> is never used for this. <code>$this-&gt;core-&gt;security-&gt;trustedClientIP()</code> returns it.</li>
+<li>The value is an array or a comma-separated string. Only valid IPv4 and IPv6 addresses count: <code>*</code>, <code>localhost</code>, ranges and anything else are ignored. IPv6 addresses are compared in binary form, so <code>2001:db8::10</code> and <code>2001:0db8:0:0:0:0:0:10</code> are the same.</li>
+<li><code>restful.logs.allowed_ips</code> and <code>core_api_logs_allowed_ips</code> are still read, with the same rules, so a <code>*</code> there no longer opens the logs to everybody. The default of the framework, <code>"restful.logs.allowed_ips": "localhost,127.0.0.1"</code>, opens nothing in a managed runtime: <code>localhost</code> is not an IP and no client of App Engine arrives as <code>127.0.0.1</code>. With that default, nobody receives debug output in App Engine until you configure real IPs.</li>
+<li>Cron calls and <code>/queue/</code> URLs follow the same rule. Cloud Tasks and App Engine cron do not read the body of the response.</li>
+<li>The dump of the profiler at a given line (<code>?__p=N</code>) works only outside a managed runtime: it runs before the configuration is read.</li>
+<li>The errors (<code>errors</code> and <code>queued_return_error</code>) are part of the answer and are not affected. Do not put internal details in them (see Information Disclosure in Common Vulnerabilities).</li>
+</ul>
+
+<p><code>$this-&gt;core-&gt;system-&gt;ip</code> (from <code>getClientIP()</code>) is unchanged and still comes from <code>X-Forwarded-For</code>. Do not use it for security decisions: use <code>trustedClientIP()</code>.</p>
+
 <p>---</p>
 
 <h2>GCP Security</h2>

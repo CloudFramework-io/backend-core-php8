@@ -2,7 +2,7 @@
 // CLOUD Documentum:
 //   DevGroup: /cf/products/cloud-development
 //   DevUnit: /php/classes/Core7/CoreSecurity, /php/classes/Core7/CoreCache, /cloud-development/frameworks/php
-//   Activities: 5630949161435136
+//   Activities: 5630949161435136, 4822239115739136
 /**
  * Core classes developed in ^PHP8.1 to be used to develop APIs, Scripts, Web Pages
  *
@@ -172,7 +172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.25';  // 2026-11-11
+        var $_version = '8.5.26';  // 2026-11-11
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -1037,7 +1037,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             }
 
-            if (isset($_GET['__p']) && $_GET['__p'] == $this->data['lastIndex']) {
+            // since 8.5.26: the dump of the profiler at a given line (?__p=N) only outside a managed runtime. There is no
+            // configuration yet at this point, so the IPs of CoreSecurity::debugOutputAllowed() can not open it
+            if (isset($_GET['__p']) && $_GET['__p'] == $this->data['lastIndex'] && !CoreSecurity::managedRuntime()) {
                 _printe($this->data);
                 exit;
             }
@@ -3219,9 +3221,81 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         private function isManagedRuntime(): bool
         {
+            return self::managedRuntime();
+        }
+
+        /**
+         * Static form of isManagedRuntime(), for code that runs before CoreSecurity exists (CorePerformance). Since 8.5.26.
+         * @return bool
+         */
+        public static function managedRuntime(): bool
+        {
             foreach (['GAE_SERVICE','K_SERVICE','FUNCTION_TARGET'] as $runtime_var)
                 if(array_key_exists($runtime_var,$_SERVER) || getenv($runtime_var)!==false) return true;
             return false;
+        }
+
+        /**
+         * Since 8.5.26: whether the response of this request may carry debug output: the log lines (logs), the trace of
+         * the profiler (?__p) and the echo of the request (?__debug: headers, session, parameters). The single rule used by
+         * RESTful::send() and dispatcher.php:
+         *   - outside a managed runtime (local server or local script, see managedRuntime()): yes;
+         *   - in a managed runtime: only when trustedClientIP() is EXACTLY one of debugAllowedIPs(). No wildcard, no
+         *     partial match, and neither cron calls nor /queue/ URLs are exceptions.
+         * Up to 8.5.25 the logs were returned to anyone unless restful.logs.allowed_ips was set, the IP was compared with
+         * strpos() against X-Forwarded-For (which the caller writes), and URLs with /queue/ after the first character
+         * skipped the check (ASVS 4.0.3 4.1.4).
+         * @return bool
+         */
+        public function debugOutputAllowed(): bool
+        {
+            if(!self::managedRuntime()) return true;
+            $ip = $this->trustedClientIP();
+            if($ip === '') return false;
+            $ip_bin = @inet_pton($ip);
+            foreach ($this->debugAllowedIPs() as $allowed)
+                if($ip_bin !== false && @inet_pton($allowed) === $ip_bin) return true;
+            return false;
+        }
+
+        /**
+         * Since 8.5.26: the IP of the client as the platform gives it, never as the caller writes it. In App Engine the
+         * header X-Appengine-User-Ip, which App Engine sets and removes from the incoming request. Outside a managed
+         * runtime REMOTE_ADDR. In other managed runtimes (Cloud Run, Cloud Functions) '' because there is no header the
+         * caller can not write: debugOutputAllowed() is then false. X-Forwarded-For is never read here.
+         * CoreSystem::getClientIP() still returns X-Forwarded-For: changing it moves the IP of audit records and rate
+         * limits, and is a separate change.
+         * @return string a valid IP or ''
+         */
+        public function trustedClientIP(): string
+        {
+            if(!self::managedRuntime()) $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+            elseif(array_key_exists('GAE_SERVICE',$_SERVER) || getenv('GAE_SERVICE')!==false) $ip = $_SERVER['HTTP_X_APPENGINE_USER_IP'] ?? '';
+            else $ip = '';
+            $ip = is_string($ip) ? trim($ip) : '';
+            return (filter_var($ip, FILTER_VALIDATE_IP) !== false) ? $ip : '';
+        }
+
+        /**
+         * Since 8.5.26: the IPs that receive debug output in a managed runtime. Read from the config-vars
+         * core.api.debug.allowed_ips (canonical) and, for compatibility, restful.logs.allowed_ips and
+         * core_api_logs_allowed_ips. Each one is an array or a comma separated string. Only valid IPs are kept: '*',
+         * 'localhost', ranges and anything else are ignored.
+         * @return string[]
+         */
+        public function debugAllowedIPs(): array
+        {
+            $ips = [];
+            foreach (['core.api.debug.allowed_ips','restful.logs.allowed_ips','core_api_logs_allowed_ips'] as $var) {
+                $value = $this->core->config->get($var);
+                if(is_string($value)) $value = explode(',', $value);
+                if(!is_array($value)) continue;
+                foreach ($value as $ip) {
+                    $ip = is_string($ip) ? trim($ip) : '';
+                    if(filter_var($ip, FILTER_VALIDATE_IP) !== false) $ips[$ip] = $ip;
+                }
+            }
+            return array_values($ips);
         }
 
         /**

@@ -1,4 +1,8 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-development
+//   DevUnit: /cloud-development/frameworks/php
+//   Activities: 4822239115739136
 //region CONTROL OPTIONS METHOD
 if (($_SERVER['REQUEST_METHOD']??'')=='OPTIONS') {
     $_origin = ((array_key_exists('HTTP_ORIGIN',$_SERVER) && strlen($_SERVER['HTTP_ORIGIN'])) ? preg_replace('/\/$/', '', $_SERVER['HTTP_ORIGIN']) : '*');
@@ -82,7 +86,8 @@ $core->dispatch();
 
 //region EVALUATE ?__p GET parameter when we are in a script
 // Apply performance parameter
-if (isset($_GET['__p'])) {
+// since 8.5.26 only when CoreSecurity::debugOutputAllowed() says so (local, or an IP of core.api.debug.allowed_ips)
+if (isset($_GET['__p']) && $core->security->debugOutputAllowed()) {
     _print($core->__p->data['info']);
 
     if ($core->errors->lines)

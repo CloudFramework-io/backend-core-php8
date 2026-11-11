@@ -1176,6 +1176,33 @@ When `file_get_contents()` can not open a URL, PHP itself writes a warning with 
 
 The request log of App Engine (and of any load balancer or proxy in front of it) records the full URL and is **not** controlled by the framework. Treat it in Cloud Logging, for example with an exclusion filter on the callback routes or a restricted log bucket.
 
+### Debug Output in API Responses
+
+**Since 8.5.26 an API response carries debug output only in local development or for the IPs you configure.** The debug output is the log lines (`logs`), the trace of the profiler (`?__p`) and the echo of the request (`?__debug`: URL, method, IP, headers, session, user agent and parameters). Up to 8.5.25 the logs went to any caller unless `restful.logs.allowed_ips` was set, and even then the check could be skipped: the IP came from `X-Forwarded-For` (which the caller writes) and was compared with a partial match, calls from a cron and URLs with `/queue/` after the first character were exceptions, and `?__p` and `?__debug` had no check at all. That is a disclosure of internal details to anyone (ASVS 4.0.3, 4.1.4).
+
+The rule lives in `$this->core->security->debugOutputAllowed()`, used by `RESTful::send()` and by `dispatcher.php`:
+
+| Where the code runs | Debug output |
+|---|---|
+| Local server or local script (no `GAE_SERVICE`, `K_SERVICE` nor `FUNCTION_TARGET`) | Yes |
+| App Engine | Only when the IP of the client is **exactly** one of the configured IPs |
+| Cloud Run, Cloud Functions | No: they have no IP header that the caller can not write |
+
+```json
+{
+  "core.api.debug.allowed_ips": ["203.0.113.10", "2001:db8::10"]
+}
+```
+
+- The IP is the one the platform gives: `X-Appengine-User-Ip` in App Engine (App Engine sets it and removes the one sent by the client), `REMOTE_ADDR` in local. `X-Forwarded-For` is never used for this. `$this->core->security->trustedClientIP()` returns it.
+- The value is an array or a comma-separated string. Only valid IPv4 and IPv6 addresses count: `*`, `localhost`, ranges and anything else are ignored. IPv6 addresses are compared in binary form, so `2001:db8::10` and `2001:0db8:0:0:0:0:0:10` are the same.
+- `restful.logs.allowed_ips` and `core_api_logs_allowed_ips` are still read, with the same rules, so a `*` there no longer opens the logs to everybody. The default of the framework, `"restful.logs.allowed_ips": "localhost,127.0.0.1"`, opens nothing in a managed runtime: `localhost` is not an IP and no client of App Engine arrives as `127.0.0.1`. With that default, nobody receives debug output in App Engine until you configure real IPs.
+- Cron calls and `/queue/` URLs follow the same rule. Cloud Tasks and App Engine cron do not read the body of the response.
+- The dump of the profiler at a given line (`?__p=N`) works only outside a managed runtime: it runs before the configuration is read.
+- The errors (`errors` and `queued_return_error`) are part of the answer and are not affected. Do not put internal details in them (see [Information Disclosure](#3-information-disclosure)).
+
+`$this->core->system->ip` (from `getClientIP()`) is unchanged and still comes from `X-Forwarded-For`. Do not use it for security decisions: use `trustedClientIP()`.
+
 ---
 
 ## GCP Security
