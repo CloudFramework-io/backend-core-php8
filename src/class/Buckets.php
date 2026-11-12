@@ -1,9 +1,11 @@
 <?php
+// CLOUD Documentum:
+//   DevGroup: /cf/products/cloud-development
+//   DevUnit: /cloud-development/frameworks/php
+//   Activities: 6651158731161600
 use Google\Cloud\Storage\StorageClient;
 use Google\Cloud\Storage\StorageObject;
 use Google\Cloud\Kms\V1\Client\KeyManagementServiceClient;
-use Google\Cloud\Kms\V1\EncryptRequest;
-use Google\Cloud\Kms\V1\DecryptRequest;
 
 if (!defined ("_Buckets_CLASS_") ) {
     define ("_Buckets_CLASS_", TRUE);
@@ -34,12 +36,12 @@ if (!defined ("_Buckets_CLASS_") ) {
          * ```
          * @var string $version version of the class
          */
-        var $version = '20260104';
+        var $version = '20261112';
 
         /** @var array $kmsConfig */
         private $kmsConfig = [];
-        /** @var KeyManagementServiceClient $kmsClient */
-        private $kmsClient=null;
+        /** @var GoogleKMS|null $kms since 8.5.27 the data key of encryptLargeFile()/decryptLargeFile() is wrapped with GoogleKMS */
+        private $kms = null;
         private const string AES_ALGORITHM = 'aes-256-gcm';
         private const int GCM_TAG_LENGTH = 16;
 
@@ -230,26 +232,19 @@ if (!defined ("_Buckets_CLASS_") ) {
             }
             //endregion
 
-            //region INIT KeyManagementServiceClient with optional serviceAccount (string path, JSON string, or array)
-            if(!is_object($this->kmsClient)) {
-                $clientOptions = [];
+            //region INIT GoogleKMS (since 8.5.27) with optional serviceAccount (string path, JSON string, or array)
+            // The client of Cloud KMS is created by GoogleKMS the first time it is needed (REST, 3 s per attempt, one
+            // retry only on transient errors). As before, only the first initKMS() of the object sets the credentials.
+            if(!is_object($this->kms)) {
+                if(!class_exists('GoogleKMS')) include_once __DIR__.'/GoogleKMS.php';
+                $kms = new GoogleKMS($this->core);
                 if ($serviceAccount = ($options['serviceAccount'] ?? '')) {
-                    if (is_array($serviceAccount)) {
-                        // Array with credentials directly
-                        $clientOptions['credentials'] = $serviceAccount;
-                    } elseif (is_string($serviceAccount)) {
-                        // Try JSON string first, then file path
-                        $decoded = json_decode($serviceAccount, true);
-                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
-                            $clientOptions['credentials'] = $decoded;
-                        } elseif (is_file($serviceAccount)) {
-                            $clientOptions['credentials'] = $serviceAccount;
-                        } else {
+                    if (is_array($serviceAccount) || is_string($serviceAccount)) {
+                        if(!$kms->setCredentials($serviceAccount))
                             return($this->addError('serviceAccount is not a valid JSON string nor an existing file path', 'params-error'));
-                        }
                     }
                 }
-                $this->kmsClient = new KeyManagementServiceClient($clientOptions);
+                $this->kms = $kms;
             }
             //endregion
 
@@ -288,13 +283,10 @@ if (!defined ("_Buckets_CLASS_") ) {
                 $dek = random_bytes(32);
                 $iv = random_bytes(openssl_cipher_iv_length(self::AES_ALGORITHM));
 
-                // 2. Wrap (Encrypt) the DEK using Google CMEK
-                $encryptRequest = (new EncryptRequest())
-                    ->setName($this->getKMSKeyName())
-                    ->setPlaintext($dek);
-
-                $kmsResponse = $this->kmsClient->encrypt($encryptRequest);
-                $encryptedDek = $kmsResponse->getCiphertext();
+                // 2. Wrap (Encrypt) the DEK using Google CMEK (GoogleKMS, since 8.5.27; same KMS call: no AAD)
+                $encryptedDek = $this->kms->wrapKey($dek,$this->getKMSKeyName());
+                if($encryptedDek===false)
+                    return $this->addError(implode('. ',$this->kms->errorMsg),$this->kms->errorCode);
 
                 // 3. Open streams for GCS (Streaming prevents OOM errors in App Engine)
                 $sourceHandle = fopen($sourceGsPath, 'rb');
@@ -356,8 +348,6 @@ if (!defined ("_Buckets_CLASS_") ) {
         public function decryptLargeFile(string $sourceGsPath, string $targetGsPath): bool
         {
             if(!$this->kmsConfig) return $this->addError('Missing KMS config. Use initKMS','params-error');
-            if(!is_object($this->kmsClient))
-                $this->kmsClient = new KeyManagementServiceClient();
 
 
             try {
@@ -375,13 +365,12 @@ if (!defined ("_Buckets_CLASS_") ) {
 
                 $tag = fread($sourceHandle, self::GCM_TAG_LENGTH);
 
-                // 2. Unwrap (Decrypt) the DEK via KMS
-                $decryptRequest = (new DecryptRequest())
-                    ->setName($this->getKMSKeyName())
-                    ->setCiphertext($encryptedDek);
-
-                $kmsResponse = $this->kmsClient->decrypt($decryptRequest);
-                $dek = $kmsResponse->getPlaintext();
+                // 2. Unwrap (Decrypt) the DEK via KMS (GoogleKMS, since 8.5.27; same KMS call: no AAD)
+                $dek = $this->kms->unwrapKey((string)$encryptedDek,$this->getKMSKeyName());
+                if($dek===false) {
+                    fclose($sourceHandle);
+                    return $this->addError(implode('. ',$this->kms->errorMsg),$this->kms->errorCode);
+                }
 
                 // 3. Decrypt the Ciphertext
                 $ciphertext = stream_get_contents($sourceHandle);

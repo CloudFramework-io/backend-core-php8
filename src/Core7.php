@@ -2,7 +2,7 @@
 // CLOUD Documentum:
 //   DevGroup: /cf/products/cloud-development
 //   DevUnit: /php/classes/Core7/CoreSecurity, /php/classes/Core7/CoreCache, /cloud-development/frameworks/php
-//   Activities: 5630949161435136, 4822239115739136
+//   Activities: 5630949161435136, 4822239115739136, 6651158731161600
 /**
  * Core classes developed in ^PHP8.1 to be used to develop APIs, Scripts, Web Pages
  *
@@ -172,7 +172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.26';  // 2026-11-11
+        var $_version = '8.5.27';  // 2026-11-12
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -2905,6 +2905,17 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         private $encrypt_env_vars_reloaded = false;
         /** @var array $notes_sent one-note-per-request control for the encryption notes/warnings */
         private $notes_sent = [];
+        /** @var GoogleKMS|null $kms since 8.5.27: GoogleKMS of the v3 format, created the first time it is needed */
+        private $kms = null;
+        /** @var bool $cache_previous_resolved since 8.5.27: the previous (read-only) cache keys were already resolved in this request */
+        private $cache_previous_resolved = false;
+        /** @var array|null $cache_previous since 8.5.27: previous (read-only) cache keys ['key'=>string,'iv'=>string] or null */
+        private $cache_previous = null;
+
+        /** Since 8.5.27: prefix of the additional authenticated data (AAD) of the v3 values: 'cloudframework:<usage>' */
+        public const KMS_AAD_PREFIX = 'cloudframework:';
+        /** Since 8.5.27: minimum bcrypt cost of crypt() */
+        public const PASSWORD_BCRYPT_MIN_COST = 12;
 
         /**
          * Since 8.5.23, injection points of useCacheKeysSecret(). They are static because CoreSecurity is built inside
@@ -3212,6 +3223,150 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             $this->cache_key = $this->cache_key_base = $keys['key'];
             $this->cache_iv = $this->cache_iv_base = $keys['iv'];
             $this->cache_keys_missing = false;
+        }
+
+        /**
+         * Since 8.5.27: the PREVIOUS cache keys, only to read, for a rotation without cuts. CoreCache::get() calls it when
+         * an entry can not be read with the keys it was given; when those keys are the current cache keys of this class
+         * (the base pair, or the base pair with the daily subkeys appended by readERPDeveloperEncryptedSubKeys()) it
+         * returns the same pair built on the previous keys, otherwise null. Keys that an application passes on its own
+         * are never mapped. set() always writes with the current keys.
+         * @param string $key the key given to CoreCache::get()
+         * @param string $iv the iv given to CoreCache::get()
+         * @return array|null [previous key, previous iv]
+         */
+        public function previousCacheKeysFor(string $key, string $iv): ?array
+        {
+            if($this->cache_keys_missing || $this->cache_key_base==='' || $this->cache_iv_base==='') return null;
+            if($key===$this->cache_key_base && $iv===$this->cache_iv_base) {
+                $key_suffix = ''; $iv_suffix = '';
+            } elseif(strncmp($key,$this->cache_key_base.'__',strlen($this->cache_key_base)+2)===0
+                && strncmp($iv,$this->cache_iv_base.'__',strlen($this->cache_iv_base)+2)===0) {
+                $key_suffix = substr($key,strlen($this->cache_key_base));
+                $iv_suffix = substr($iv,strlen($this->cache_iv_base));
+            } else return null;
+
+            $previous = $this->previousCacheKeys();
+            if(!$previous) return null;
+            return [$previous['key'].$key_suffix,$previous['iv'].$iv_suffix];
+        }
+
+        /**
+         * Since 8.5.27: resolves the previous cache keys once per request, only when an entry could not be read. Order:
+         *   1. config-vars core.gcp.secrets.cache_encrypt_key_previous / cache_encrypt_iv_previous, then the env vars
+         *      CF_CACHE_ENCRYPT_KEY_PREVIOUS / CF_CACHE_ENCRYPT_IV_PREVIOUS (getenv() only, like the current ones).
+         *      A half pair is never completed (security-cache-previous-key-incomplete);
+         *   2. config-var core.gcp.secrets.cache_keys_secret_previous: a FIXED version of Secret Manager, with the same
+         *      rules as core.gcp.secrets.cache_keys_secret (managed runtime only, copy of the instance, failure not
+         *      retried for CACHE_KEYS_SECRET_RETRY_SECONDS), see readPreviousCacheKeysSecret().
+         * A previous pair equal to the current one is ignored.
+         * @return array|null ['key'=>string,'iv'=>string]
+         */
+        private function previousCacheKeys(): ?array
+        {
+            if($this->cache_previous_resolved) return $this->cache_previous;
+            $this->cache_previous_resolved = true;
+
+            $key = ($this->core->config->get('core.gcp.secrets.cache_encrypt_key_previous'))?:(getenv('CF_CACHE_ENCRYPT_KEY_PREVIOUS')?:'');
+            $iv = ($this->core->config->get('core.gcp.secrets.cache_encrypt_iv_previous'))?:(getenv('CF_CACHE_ENCRYPT_IV_PREVIOUS')?:'');
+            if($key || $iv) {
+                if(!$key || !$iv || !is_string($key) || !is_string($iv)) {
+                    $this->sendNoteOnce('security-cache-previous-key'
+                        ,'security-cache-previous-key-incomplete: set both core.gcp.secrets.cache_encrypt_key_previous/cache_encrypt_iv_previous (or CF_CACHE_ENCRYPT_KEY_PREVIOUS/CF_CACHE_ENCRYPT_IV_PREVIOUS). The previous cache keys are not used'
+                        ,'warning');
+                    return null;
+                }
+                $previous = ['key'=>$key,'iv'=>$iv];
+            } else {
+                $previous = $this->readPreviousCacheKeysSecret();
+                if(!$previous) return null;
+            }
+            if($previous['key']===$this->cache_key_base && $previous['iv']===$this->cache_iv_base) return null;
+            return $this->cache_previous = $previous;
+        }
+
+        /**
+         * Since 8.5.27: previous cache keys from the fixed Secret Manager version of
+         * core.gcp.secrets.cache_keys_secret_previous. Same rules as useCacheKeysSecret(): only a version number
+         * (security-cache-keys-secret-version-required), only in a managed runtime, the copy of the instance first
+         * (APCu or {$cache_keys_instance_dir}/cf-cache-keys-{hash}.json, the hash of this version name), a read of
+         * Secret Manager without a valid copy, and a failure not retried for CACHE_KEYS_SECRET_RETRY_SECONDS. One note per
+         * request (security-cache-keys-secret-previous), never with a value.
+         * @return array|null ['key'=>string,'iv'=>string]
+         */
+        private function readPreviousCacheKeysSecret(): ?array
+        {
+            $configured = $this->core->config->get('core.gcp.secrets.cache_keys_secret_previous');
+            if(empty($configured)) return null;
+            $version_name = (is_string($configured))?trim($configured):'';
+            if(!preg_match('#^projects/[^/]+/secrets/[^/]+/versions/[1-9][0-9]*$#',$version_name)) {
+                $this->sendNoteOnce('security-cache-keys-secret-previous'
+                    ,'security-cache-keys-secret-version-required: core.gcp.secrets.cache_keys_secret_previous must be the full name of a fixed version, projects/{project}/secrets/{secret}/versions/{number}, never latest. The previous cache keys are not used'
+                    ,'error');
+                return null;
+            }
+            if(!$this->isManagedRuntime()) return null;
+
+            $hash = substr(hash('sha256',$version_name),0,16);
+            $use_apcu = $this->cacheKeysUseApcu();
+            $dir = rtrim((string)self::$cache_keys_instance_dir,'/')?:'/tmp';
+            $copy_file = $dir.'/cf-cache-keys-'.$hash.'.json';
+            $apcu_key = 'cf-cache-keys-'.$hash;
+
+            // 1. copy of the instance
+            if($use_apcu) {
+                $found = false;
+                $stored = apcu_fetch($apcu_key,$found);
+                $copy_exists = (bool)$found;
+                $keys = ($found && is_string($stored))?$this->validateCacheKeysJson($stored):null;
+            } else {
+                $copy_exists = (file_exists($copy_file) || is_link($copy_file));
+                $keys = ($copy_exists && !is_link($copy_file))?$this->readLocalCacheKeysFile($copy_file):null;
+            }
+            if($keys) {
+                $this->sendNoteOnce('security-cache-keys-secret-previous'
+                    ,'security-cache-keys-secret-previous-used: source=instance-copy; previous cache keys of '.$version_name.' read from the copy of the instance');
+                return $keys;
+            }
+
+            // 2. a recent failure is not retried
+            if($this->cacheKeysSecretFailedRecently($use_apcu,$apcu_key.'-failed',$dir.'/cf-cache-keys-'.$hash.'.failed')) {
+                $this->sendNoteOnce('security-cache-keys-secret-previous'
+                    ,'security-cache-keys-secret-previous-unavailable: the read of '.$version_name.' failed less than '.self::CACHE_KEYS_SECRET_RETRY_SECONDS.' seconds ago in this instance and it is not retried yet. The previous cache keys are not used'
+                    ,'warning');
+                return null;
+            }
+
+            // 3. read the version from Secret Manager
+            $reason = '';
+            $content = $this->readCacheKeysSecret($version_name,$reason);
+            $keys = (is_string($content))?$this->validateCacheKeysJson($content):null;
+            $content = null;
+            if(!$keys) {
+                $this->markCacheKeysSecretFailed($use_apcu,$apcu_key.'-failed',$dir,$dir.'/cf-cache-keys-'.$hash.'.failed');
+                $this->sendNoteOnce('security-cache-keys-secret-previous'
+                    ,'security-cache-keys-secret-previous-unavailable: '.$version_name.' '.(($reason)?'could not be read ('.$reason.')':'does not hold a valid {"key","iv"} pair (base64 of 32 bytes each)')
+                        .'. No copy is written, the read is not retried for '.self::CACHE_KEYS_SECRET_RETRY_SECONDS.' seconds and the previous cache keys are not used'
+                    ,'warning');
+                return null;
+            }
+
+            // 4. copy of the instance
+            $copy = json_encode(['key'=>$keys['key'],'iv'=>$keys['iv'],'version'=>$version_name,'read'=>gmdate('Y-m-d H:i:s').' UTC'],JSON_UNESCAPED_SLASHES);
+            if($use_apcu) {
+                $copied = (bool)apcu_store($apcu_key,$copy);
+                apcu_delete($apcu_key.'-failed');
+            } else {
+                if($copy_exists) @unlink($copy_file); // a corrupt copy is replaced
+                $copied = $this->placeCacheKeysFile($dir,$copy_file,$copy) || ($this->readLocalCacheKeysFile($copy_file)===$keys);
+                if(file_exists($dir.'/cf-cache-keys-'.$hash.'.failed')) @unlink($dir.'/cf-cache-keys-'.$hash.'.failed');
+            }
+            $copy = null;
+            $this->sendNoteOnce('security-cache-keys-secret-previous'
+                ,'security-cache-keys-secret-previous-used: source=secret-manager-read; previous cache keys read from '.$version_name
+                    .(($copied)?'':'; the copy of the instance could not be written, the secret will be read again on the next request')
+                ,($copied)?'info':'warning');
+            return $keys;
         }
 
         /**
@@ -4507,7 +4662,11 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          *     based on: https://gist.github.com/joashp/a1ae9cb30fa533f4ad94
          *   - v2: AES-256-GCM, see encryptV2(). Written when the config-var core.security.encrypt_format = 'v2' or when
          *     core.security.encrypt_require_key is active (see isEncryptStrictMode()).
-         * decrypt() reads both formats, so v2 can be activated without breaking stored v1 values.
+         *   - v3 (since 8.5.27): Cloud KMS, 'v3:<alias>:<version>:<base64 of the KMS ciphertext>', see encryptV3(). Written
+         *     ONLY when the call passes no key at all ($secret_key and $secret_iv empty) and a primary data key is
+         *     configured (core.gcp.kms.data_key_primary or the env var CF_KMS_DATA_KEY_PRIMARY). It wins over
+         *     encrypt_format. It fails closed: when Cloud KMS fails it returns false, never a v1/v2 value.
+         * decrypt() reads every format, so v2 or v3 can be activated without breaking stored v1/v2 values.
          *
          * When $secret_key or $secret_iv are empty they are resolved with resolveEncryptKeys():
          * config-vars core.security.encrypt_key / core.security.encrypt_secret -> env vars CF_ENCRYPT_KEY /
@@ -4518,11 +4677,21 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $text: string to encrypt
          * @param string $secret_key  optional secret key. If empty it will be resolved with resolveEncryptKeys()
          * @param string $secret_iv  optional secret key. If empty it will be resolved with resolveEncryptKeys()
-         * @return string|false in base64 ('v2:' prefixed when the v2 format is active); false when the keys are missing
+         * @param string $usage since 8.5.27, optional: purpose of the value, [a-z0-9-]{1,40}. In v3 it is bound to the
+         *                      ciphertext (AAD 'cloudframework:<usage>', 'cloudframework:default' when empty) and the same
+         *                      usage is required to decrypt it. Ignored by v1/v2. An invalid usage returns false.
+         * @return string|false in base64 ('v2:' / 'v3:' prefixed when that format is active); false when the keys are
+         *                      missing, the usage is invalid or Cloud KMS fails (v3)
          */
-        function encrypt($text,$secret_key='',$secret_iv='') {
+        function encrypt($text,$secret_key='',$secret_iv='',string $usage='') {
 
             if(!$text) return $text;
+
+            if(!$this->validEncryptUsage($usage)) return false;
+
+            // since 8.5.27: v3 (Cloud KMS) only when no key is passed and a primary data key is configured
+            if(!$secret_key && !$secret_iv && $this->kmsPrimaryAlias()!=='')
+                return $this->encryptV3((string)$text,$usage);
 
             if(!$secret_key || !$secret_iv)
                 if(!$this->resolveEncryptKeys($secret_key,$secret_iv)) return false;
@@ -4545,6 +4714,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
         /**
          * Decrypt Encrypted Text produced by encrypt() in any of its formats:
+         *   - 'v3:' prefix (since 8.5.27): Cloud KMS (see decryptV3()). The alias must be in core.gcp.kms.data_keys (or
+         *     CF_KMS_DATA_KEYS) and $usage must be the one used to encrypt it. It never uses keys: a call that passes
+         *     keys explicitly (CoreCache) gets false without calling Cloud KMS.
          *   - 'v2:' prefix: AES-256-GCM (see decryptV2()). Returns false if it can not be authenticated. Without explicit
          *     keys it needs the configured keys (resolveEncryptKeys()); never the legacy keys.
          *   - no prefix: legacy v1 AES-256-CBC, unchanged. A note 'legacy-cbc-format-read' is added once per request.
@@ -4563,11 +4735,24 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $encrypted_text base64 string
          * @param string $secret_key  optional secret key. If empty it will be resolved with resolveEncryptKeys()
          * @param string $secret_iv  optional secret key. If empty it will be resolved with resolveEncryptKeys()
+         * @param string $usage since 8.5.27, optional: the usage given to encrypt() ([a-z0-9-]{1,40}); only v3 checks it
          * @return string|false
          */
-        function decrypt($encrypted_text,$secret_key='',$secret_iv='') {
+        function decrypt($encrypted_text,$secret_key='',$secret_iv='',string $usage='') {
 
             if(!$encrypted_text) return $encrypted_text;
+
+            if(!$this->validEncryptUsage($usage)) return false;
+
+            if(is_string($encrypted_text) && strncmp($encrypted_text,'v3:',3)===0) {
+                if($secret_key || $secret_iv) {
+                    $this->sendNoteOnce('security-kms-explicit-keys'
+                        ,'security-kms-explicit-keys: a v3 value was given to decrypt() with explicit keys. v3 values are decrypted only with Cloud KMS and without keys. Nothing was decrypted'
+                        ,'warning');
+                    return false;
+                }
+                return $this->decryptV3($encrypted_text,$usage);
+            }
 
             $resolved_keys = (!$secret_key || !$secret_iv);
 
@@ -4672,6 +4857,251 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $plain = openssl_decrypt(substr($raw,28),'aes-256-gcm',$this->deriveEncryptV2Key($secret_key,$secret_iv),OPENSSL_RAW_DATA,substr($raw,0,12),substr($raw,12,16));
             return ($plain===false)?false:$plain;
+        }
+
+        /**
+         * Since 8.5.27: encrypts $text with the primary Cloud KMS data key. Output: 'v3:<alias>:<N>:<base64>' where
+         * <alias> is core.gcp.kms.data_key_primary, <N> the number of the key version that encrypted it (from the
+         * response of Cloud KMS, never read from the key metadata) and <base64> the ciphertext of Cloud KMS. The AAD is
+         * 'cloudframework:<usage>' ('cloudframework:default' when $usage is empty).
+         *
+         * Fails closed: a configuration error (security-kms-config-invalid), a plaintext larger than 64 KiB
+         * (security-kms-plaintext-too-large) or a failure of Cloud KMS after its retry (security-kms-unavailable) return
+         * false with an error note once per request. It never falls back to v1/v2.
+         *
+         * @param string $text
+         * @param string $usage already validated
+         * @return string|false
+         */
+        private function encryptV3(string $text, string $usage): string|false
+        {
+            $alias = $this->kmsPrimaryAlias();
+            $resource = $this->kmsKeyResource($alias);
+            if(!$resource) {
+                $this->sendNoteOnce('security-kms-config-invalid'
+                    ,'security-kms-config-invalid: core.gcp.kms.data_key_primary (or CF_KMS_DATA_KEY_PRIMARY) must be an alias [a-z0-9]{1,8} present in core.gcp.kms.data_keys (or CF_KMS_DATA_KEYS) with a key resource projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{key}. Nothing was encrypted'
+                    ,'error');
+                return false;
+            }
+            if(!$kms = $this->getKMS()) return false;
+            if(strlen($text)>$kms::MAX_PLAINTEXT_BYTES) {
+                $this->sendNoteOnce('security-kms-plaintext-too-large'
+                    ,'security-kms-plaintext-too-large: v3 values are limited to '.$kms::MAX_PLAINTEXT_BYTES.' bytes (Cloud KMS). Nothing was encrypted'
+                    ,'error');
+                return false;
+            }
+            $res = $kms->encrypt($text,self::KMS_AAD_PREFIX.(($usage!=='')?$usage:'default'),$resource);
+            if($res===false) {
+                $this->kmsFailureNote($kms,'encrypt');
+                return false;
+            }
+            return 'v3:'.$alias.':'.$res['version'].':'.base64_encode($res['ciphertext']);
+        }
+
+        /**
+         * Since 8.5.27: decrypts a 'v3:<alias>:<N>:<base64>' value with the Cloud KMS key of <alias> and the AAD of $usage.
+         * An unknown alias returns false without calling Cloud KMS (security-kms-unknown-alias), a malformed value too
+         * (security-kms-format-invalid). A wrong usage or a corrupted value is rejected by Cloud KMS
+         * (security-kms-decrypt-failed); any other failure after its retry is security-kms-unavailable.
+         * @param string $value
+         * @param string $usage already validated
+         * @return string|false
+         */
+        private function decryptV3(string $value, string $usage): string|false
+        {
+            $parsed = $this->parseV3($value);
+            if(!$parsed) {
+                $this->sendNoteOnce('security-kms-format-invalid'
+                    ,'security-kms-format-invalid: a value with the v3: prefix is not v3:<alias>:<version>:<base64>. Nothing was decrypted'
+                    ,'warning');
+                return false;
+            }
+            $resource = $this->kmsKeyResource($parsed['alias']);
+            if(!$resource) {
+                $this->sendNoteOnce('security-kms-unknown-alias'
+                    ,'security-kms-unknown-alias: the alias '.$parsed['alias'].' of a v3 value is not in core.gcp.kms.data_keys (or CF_KMS_DATA_KEYS). Nothing was decrypted'
+                    ,'error');
+                return false;
+            }
+            if(!$kms = $this->getKMS()) return false;
+            $plain = $kms->decrypt($parsed['ciphertext'],self::KMS_AAD_PREFIX.(($usage!=='')?$usage:'default'),$resource);
+            if($plain===false) {
+                $this->kmsFailureNote($kms,'decrypt');
+                return false;
+            }
+            return $plain;
+        }
+
+        /**
+         * Since 8.5.27: the encryption format of a value, without decrypting it and without any network call.
+         *   - 'v3:<alias>:<N>' for a well formed v3 value (the alias does not need to be configured);
+         *   - 'v2' for 'v2:' + base64 of at least 28 bytes;
+         *   - 'v1' for base64 without prefix whose length is a multiple of 16 bytes (AES-256-CBC);
+         *   - null for anything else (empty, not a string, malformed v2/v3, plain text).
+         * @param mixed $value
+         * @return string|null
+         */
+        public function encryptionVersionOf($value): ?string
+        {
+            if(!is_string($value) || $value==='') return null;
+            if(strncmp($value,'v3:',3)===0) {
+                $parsed = $this->parseV3($value);
+                return ($parsed)?'v3:'.$parsed['alias'].':'.$parsed['version']:null;
+            }
+            if(strncmp($value,'v2:',3)===0) {
+                $raw = base64_decode(substr($value,3),true);
+                return ($raw!==false && strlen($raw)>=28)?'v2':null;
+            }
+            if(!preg_match('#^[A-Za-z0-9+/]+={0,2}$#',$value) || strlen($value)%4!==0) return null;
+            $raw = base64_decode($value,true);
+            return ($raw!==false && $raw!=='' && strlen($raw)%16===0)?'v1':null;
+        }
+
+        /**
+         * Since 8.5.27: brings a stored value to the primary Cloud KMS data key.
+         *   - a v3 value of the primary alias is returned unchanged (the primary version of the key in Cloud KMS is never
+         *     read: Cloud KMS rotates the versions behind the same key and decrypts every enabled version);
+         *   - any other value (v1, v2 or v3 of another alias) is decrypted with $usage and encrypted again with the
+         *     primary key (v3).
+         * It returns false, and never invents a value, when there is no primary key configured
+         * (security-kms-not-configured), the value is not recognised, it can not be decrypted or the new encryption fails.
+         * @param mixed $value
+         * @param string $usage the usage of the value ([a-z0-9-]{1,40}); the same is used to encrypt it again
+         * @return string|false
+         */
+        public function reEncrypt($value, string $usage=''): string|false
+        {
+            if(!$this->validEncryptUsage($usage)) return false;
+            $primary = $this->kmsPrimaryAlias();
+            if($primary==='') {
+                $this->sendNoteOnce('security-kms-not-configured'
+                    ,'security-kms-not-configured: reEncrypt() needs core.gcp.kms.data_key_primary (or CF_KMS_DATA_KEY_PRIMARY). Nothing was re-encrypted'
+                    ,'error');
+                return false;
+            }
+            $version = $this->encryptionVersionOf($value);
+            if($version===null) return false;
+            if(strncmp($version,'v3:'.$primary.':',strlen('v3:'.$primary.':'))===0) return $value;
+
+            $plain = $this->decrypt($value,'','',$usage);
+            if($plain===false || $plain==='' || $plain===null) return false;
+            $encrypted = $this->encrypt($plain,'','',$usage);
+            $plain = null;
+            if(!is_string($encrypted) || strncmp((string)$this->encryptionVersionOf($encrypted),'v3:'.$primary.':',strlen('v3:'.$primary.':'))!==0) return false;
+            return $encrypted;
+        }
+
+        /**
+         * Since 8.5.27: alias of the primary Cloud KMS data key: config-var core.gcp.kms.data_key_primary, then the env var
+         * CF_KMS_DATA_KEY_PRIMARY (getenv() only: it is not a secret and it is read on every encrypt()). '' when none.
+         * @return string
+         */
+        private function kmsPrimaryAlias(): string
+        {
+            $alias = $this->core->config->get('core.gcp.kms.data_key_primary');
+            if(!is_string($alias) || trim($alias)==='') $alias = getenv('CF_KMS_DATA_KEY_PRIMARY');
+            return (is_string($alias))?trim($alias):'';
+        }
+
+        /**
+         * Since 8.5.27: Cloud KMS data keys {alias: key resource}: config-var core.gcp.kms.data_keys (an object, or its
+         * JSON as a string), then the env var CF_KMS_DATA_KEYS (JSON, getenv() only). Only the entries with a valid alias
+         * ([a-z0-9]{1,8}) and a valid resource (projects/{p}/locations/{l}/keyRings/{r}/cryptoKeys/{k}) are returned.
+         * @return array
+         */
+        private function kmsDataKeys(): array
+        {
+            $keys = $this->core->config->get('core.gcp.kms.data_keys');
+            if(is_string($keys) && trim($keys)!=='') $keys = json_decode($keys,true);
+            if(!is_array($keys) || !$keys) {
+                $env = getenv('CF_KMS_DATA_KEYS');
+                $keys = (is_string($env) && trim($env)!=='')?json_decode($env,true):[];
+            }
+            if(!is_array($keys)) return [];
+            $valid = [];
+            foreach ($keys as $alias=>$resource) {
+                if(is_string($alias) && preg_match('/^[a-z0-9]{1,8}$/',$alias) && is_string($resource)
+                    && preg_match('#^projects/[^/\s]+/locations/[^/\s]+/keyRings/[^/\s]+/cryptoKeys/[^/\s]+$#',$resource))
+                    $valid[$alias] = $resource;
+            }
+            return $valid;
+        }
+
+        /**
+         * Since 8.5.27: key resource of a Cloud KMS data key alias, or null when the alias is not valid or not configured.
+         * @param string $alias
+         * @return string|null
+         */
+        private function kmsKeyResource(string $alias): ?string
+        {
+            if(!preg_match('/^[a-z0-9]{1,8}$/',$alias)) return null;
+            return $this->kmsDataKeys()[$alias] ?? null;
+        }
+
+        /**
+         * Since 8.5.27: parses 'v3:<alias>:<N>:<base64>'.
+         * @param string $value
+         * @return array|null ['alias'=>string,'version'=>string,'ciphertext'=>binary string]
+         */
+        private function parseV3(string $value): ?array
+        {
+            if(!preg_match('#^v3:([a-z0-9]{1,8}):([1-9][0-9]{0,9}):([A-Za-z0-9+/]+={0,2})$#',$value,$m)) return null;
+            $ciphertext = base64_decode($m[3],true);
+            if($ciphertext===false || $ciphertext==='') return null;
+            return ['alias'=>$m[1],'version'=>$m[2],'ciphertext'=>$ciphertext];
+        }
+
+        /**
+         * Since 8.5.27: the usage of encrypt()/decrypt()/reEncrypt(): '' or [a-z0-9-]{1,40}. An invalid one leaves the
+         * error security-encrypt-usage-invalid once per request (never with the value) and returns false.
+         * @param string $usage
+         * @return bool
+         */
+        private function validEncryptUsage(string $usage): bool
+        {
+            if($usage==='' || preg_match('/^[a-z0-9-]{1,40}$/',$usage)) return true;
+            $this->sendNoteOnce('security-encrypt-usage-invalid'
+                ,'security-encrypt-usage-invalid: the usage of encrypt()/decrypt() must be [a-z0-9-]{1,40}. Nothing was encrypted or decrypted'
+                ,'error');
+            return false;
+        }
+
+        /**
+         * Since 8.5.27: the GoogleKMS of this request, created the first time it is needed (Application Default
+         * Credentials of the runtime). Tests inject the client with GoogleKMS::$client_factory.
+         * @return GoogleKMS|null
+         */
+        private function getKMS(): ?GoogleKMS
+        {
+            if($this->kms) return $this->kms;
+            if(!class_exists('GoogleKMS')) include_once __DIR__.'/class/GoogleKMS.php';
+            if(!class_exists('GoogleKMS')) {
+                $this->sendNoteOnce('security-kms-unavailable','security-kms-unavailable: the class GoogleKMS can not be loaded. Nothing was encrypted or decrypted','error');
+                return null;
+            }
+            return $this->kms = new GoogleKMS($this->core);
+        }
+
+        /**
+         * Since 8.5.27: the note of a failed Cloud KMS call, once per request and never with any value. A decrypt
+         * rejected by Cloud KMS as INVALID_ARGUMENT (wrong usage, corrupted value) is security-kms-decrypt-failed
+         * (warning); everything else is security-kms-unavailable (error).
+         * @param GoogleKMS $kms
+         * @param string $operation encrypt|decrypt
+         * @return void
+         */
+        private function kmsFailureNote(GoogleKMS $kms, string $operation): void
+        {
+            $detail = $kms->errorCode.(($kms->lastStatus)?' '.$kms->lastStatus:'').' after '.$kms->lastAttempts.' attempt(s)';
+            if($operation==='decrypt' && $kms->errorCode==='kms-invalid-argument') {
+                $this->sendNoteOnce('security-kms-decrypt-failed'
+                    ,'security-kms-decrypt-failed: Cloud KMS rejected a v3 value ('.$detail.'): wrong usage or corrupted value. Nothing was decrypted'
+                    ,'warning');
+                return;
+            }
+            $this->sendNoteOnce('security-kms-unavailable'
+                ,'security-kms-unavailable: Cloud KMS '.$operation.' failed ('.$detail.'). It fails closed: nothing was '.$operation.'ed and no v1/v2 value was written'
+                ,'error');
         }
 
         /**
@@ -5271,42 +5701,88 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * One-way string encryption (hashing)
-         * @param string|array $input The string or array to encrypt. If array is provided it will be converted to string with json_encoded. If length of $input > 72 then it returns null
-         * @param int $rounds
-         * @return string|null
+         * One-way string hashing (passwords, recovery codes, token secrets).
+         *
+         * Since 8.5.27: password_hash() with bcrypt and a cost of at least PASSWORD_BCRYPT_MIN_COST (12). Up to 8.5.26
+         * it was crypt() with '$2a$' and a cost of 7. The output is still a 60-character bcrypt string ('$2y$12$...'),
+         * verified with checkCrypt() (also by the versions before 8.5.27), and the hashes written before keep verifying:
+         * use needsRehash() after a successful checkCrypt() to store them again with the current policy.
+         *
+         * $rounds is kept for compatibility: it is the bcrypt cost, with a minimum of 12 (a lower value, including the
+         * old default 7, is raised to 12) and a maximum of 31.
+         *
+         * Input longer than 72 bytes: bcrypt only uses the first 72 bytes, so two inputs that share them would get the
+         * same hash. It is rejected explicitly, as before 8.5.27: it returns null and leaves the error
+         * security-password-too-long once per request (never with the value). A NUL byte (bcrypt can not hash it) also
+         * returns null (security-password-invalid).
+         *
+         * @param string|array $input The string or array to hash. An array is converted to string with json_encode
+         * @param int $rounds bcrypt cost, minimum 12
+         * @return string|null null when the input is empty, longer than 72 bytes or not valid for bcrypt
          */
-        function crypt($input, $rounds = 7)
+        function crypt($input, $rounds = self::PASSWORD_BCRYPT_MIN_COST)
         {
             if($input && !is_string($input)) $input = json_encode($input);
             if(!$input) return null;
-            if(strlen($input)>72) return null; // This method only admin string with max 72 chars
-
-            $salt = "";
-            $salt_chars = array_merge(range('A', 'Z'), range('a', 'z'), range(0, 9));
-            for ($i = 0; $i < 22; $i++) {
-                $salt .= $salt_chars[array_rand($salt_chars)];
+            if(strlen($input)>72) {
+                // This method only admits strings up to 72 bytes (bcrypt)
+                $this->sendNoteOnce('security-password-too-long'
+                    ,'security-password-too-long: crypt()/checkCrypt() admit up to 72 bytes (bcrypt). The value was rejected','error');
+                return null;
             }
-            return crypt($input, sprintf('$2a$%02d$', $rounds) . $salt);
+            $cost = min(31,max(self::PASSWORD_BCRYPT_MIN_COST,(int)$rounds));
+            try {
+                $hash = password_hash($input,PASSWORD_BCRYPT,['cost'=>$cost]);
+            } catch (\ValueError $e) {
+                $this->sendNoteOnce('security-password-invalid'
+                    ,'security-password-invalid: crypt() can not hash a value with a NUL byte (bcrypt). The value was rejected','error');
+                return null;
+            }
+            return (is_string($hash))?$hash:null;
         }
 
         /**
-         * Verify a string with its encrypted value to verify the match
-         * @param string|array $input  original input encrypted
-         * @param string|null $input_encrypted Encrypted string to compare. If null or empty is provided it will try to get the value from $this->core->config->get("core.security.password")
+         * Verify a string with its hash, in constant time (password_verify()).
+         *
+         * Since 8.5.27 it uses password_verify(), which accepts every hash of crypt(): the bcrypt '$2y$' of crypt() since
+         * 8.5.27 and the '$2a$' (cost 7) that crypt() wrote up to 8.5.26. Input longer than 72 bytes returns false and
+         * leaves the error security-password-too-long once per request (see crypt()).
+         *
+         * @param string|array $input  original input
+         * @param string|null $input_encrypted Hash to compare. If null or empty is provided it will try to get the value from $this->core->config->get("core.security.password")
          * @return bool
          */
         function checkCrypt($input, $input_encrypted=null): bool
         {
             if($input && !is_string($input)) $input = json_encode($input);
             if(!$input) return false;
-            if(strlen($input)>72) return false; // This method only admin string with max 72 chars
+            if(strlen($input)>72) {
+                // This method only admits strings up to 72 bytes (bcrypt)
+                $this->sendNoteOnce('security-password-too-long'
+                    ,'security-password-too-long: crypt()/checkCrypt() admit up to 72 bytes (bcrypt). The value was rejected','error');
+                return false;
+            }
 
             // IF $input_encrypted empty try to get it from core.security.password config var
             if(!$input_encrypted) $input_encrypted = $this->core->config->get("core.security.password");
 
             if(!$input_encrypted || !is_string($input_encrypted)) return false;
-            return (crypt($input, $input_encrypted) == $input_encrypted);
+            return password_verify($input,$input_encrypted);
+        }
+
+        /**
+         * Since 8.5.27: whether a hash of crypt() should be computed again with the current policy (bcrypt '$2y$' with a
+         * cost of at least PASSWORD_BCRYPT_MIN_COST). True for the '$2a$' cost 7 hashes written up to 8.5.26 and for any
+         * other algorithm; false for a '$2y$' bcrypt with cost >= 12 (a higher cost is not lowered). Call it after a
+         * successful checkCrypt(), when the plain value is at hand, and store crypt($input) when it says true.
+         * @param string $hash
+         * @return bool
+         */
+        public function needsRehash(string $hash): bool
+        {
+            $info = password_get_info($hash);
+            if(($info['algo']??null)!==PASSWORD_BCRYPT) return true;
+            return ((int)($info['options']['cost']??0))<self::PASSWORD_BCRYPT_MIN_COST;
         }
 
         /**
@@ -5353,6 +5829,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         var $lastExpireTime = null;
         var $atom = null;
         var $errorSecurity = false; // It will change to true when you try to get a value using a wrong $cache_secret_key,$cache_secret_iv
+        /** @var bool $previous_keys_noted since 8.5.27: the note security-cache-previous-key-read was already left */
+        private $previous_keys_noted = false;
         /** @var Core  */
         var $core=null;
 
@@ -5595,16 +6073,33 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 // Normal return
 
                 // decrypt data if $cache_secret_key and $cache_secret_iv are not empty
+                $encrypted_data = null;
                 if($cache_secret_key && $cache_secret_iv) {
                     $this->errorSecurity = false;
+                    $encrypted_data = $info['_data_'] ?? null;
                     $info['_data_'] = $this->core->security->decrypt($info['_data_'],$cache_secret_key,$cache_secret_iv);
                 }
 
                 // unserialize vars
                 $ret = null;
                 try {
-                    if(isset($info['_data_']) && $info['_data_']) {
+                    if(isset($info['_data_']) && $info['_data_'])
                         $ret = @unserialize(@gzuncompress($info['_data_']));
+
+                    // since 8.5.27: an entry that the current cache keys can not read is tried with the previous cache keys
+                    // (rotation without cuts, see CoreSecurity::previousCacheKeysFor()). It is returned and never deleted
+                    // nor rewritten: its age (expiration) stays the one it had.
+                    if($encrypted_data && ($ret===false || !$info['_data_'])) {
+                        $previous_value = $this->getWithPreviousCacheKeys($encrypted_data,$cache_secret_key,$cache_secret_iv);
+                        if($previous_value!==false) {
+                            if($this->debug)
+                                $this->core->logs->add("get(\$key=$key) read with the previous cache keys in namespace ".$this->spacename,'CoreCache');
+                            $this->core->__p->add("CoreCache.get [{$this->type}{$encrypted}]", '', 'endnote');
+                            return $previous_value;
+                        }
+                    }
+
+                    if(isset($info['_data_']) && $info['_data_']) {
                         if($ret===false && $cache_secret_key && $cache_secret_iv) {
                             $this->delete( $key);
                             $this->errorSecurity = true;
@@ -5630,6 +6125,32 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
                 $this->core->__p->add("CoreCache.get [{$this->type}{$encrypted}]", 'error', 'endnote');
                 return null;
             }
+        }
+
+        /**
+         * Since 8.5.27: reads an encrypted entry with the previous cache keys mapped by
+         * CoreSecurity::previousCacheKeysFor(). Only for the current cache keys of CoreSecurity; false when there are no
+         * previous keys or they can not read it either. One note per instance when an entry is read this way.
+         * @param string $encrypted_data
+         * @param string $cache_secret_key
+         * @param string $cache_secret_iv
+         * @return mixed|false
+         */
+        private function getWithPreviousCacheKeys($encrypted_data, string $cache_secret_key, string $cache_secret_iv)
+        {
+            if(!is_object($this->core->security) || !method_exists($this->core->security,'previousCacheKeysFor')) return false;
+            $previous = $this->core->security->previousCacheKeysFor($cache_secret_key,$cache_secret_iv);
+            if(!$previous) return false;
+            $plain = $this->core->security->decrypt($encrypted_data,$previous[0],$previous[1]);
+            $value = ($plain)?@unserialize(@gzuncompress($plain)):false;
+            $plain = null;
+            if($value===false) return false;
+            $this->errorSecurity = false;
+            if(!$this->previous_keys_noted) {
+                $this->previous_keys_noted = true;
+                $this->core->logs->add('CoreCache: security-cache-previous-key-read: an entry was read with the previous cache keys. It is kept until it expires or is written again with the current keys');
+            }
+            return $value;
         }
 
         /**

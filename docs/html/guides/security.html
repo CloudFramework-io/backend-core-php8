@@ -885,8 +885,11 @@
 <tr><td>Cache keys</td><td>Encrypted cache entries: configuration and <code>env_vars</code> secret, security groups, daily subkeys</td><td><code>core.gcp.secrets.cache_encrypt_key</code> / <code>core.gcp.secrets.cache_encrypt_iv</code></td><td><code>CF_CACHE_ENCRYPT_KEY</code> / <code>CF_CACHE_ENCRYPT_IV</code></td><td><strong>Yes, since 8.5.13</strong></td></tr>
 <tr><td>Data keys</td><td><code>$this->core->security->encrypt()</code> / <code>decrypt()</code> called without explicit keys</td><td><code>core.security.encrypt_key</code> / <code>core.security.encrypt_secret</code></td><td><code>CF_ENCRYPT_KEY</code> / <code>CF_ENCRYPT_SECRET</code></td><td><strong>Yes, since 8.5.25</strong></td></tr>
 <tr><td>Legacy keys</td><td>Only reading v1 values (without the <code>v2:</code> prefix) that the data keys can not read, with <code>decrypt()</code> called without explicit keys</td><td><code>core.security.legacy_encrypt_key</code> / <code>core.security.legacy_encrypt_secret</code></td><td><code>CF_LEGACY_ENCRYPT_KEY</code> / <code>CF_LEGACY_ENCRYPT_SECRET</code></td><td>Only while you keep data encrypted with the built-in default keys of 8.5.24 or before (since 8.5.25)</td></tr>
+<tr><td>Previous cache keys</td><td>Only reading cache entries written with the cache keys before a rotation (since 8.5.27)</td><td><code>core.gcp.secrets.cache_encrypt_key_previous</code> / <code>core.gcp.secrets.cache_encrypt_iv_previous</code>, or <code>core.gcp.secrets.cache_keys_secret_previous</code></td><td><code>CF_CACHE_ENCRYPT_KEY_PREVIOUS</code> / <code>CF_CACHE_ENCRYPT_IV_PREVIOUS</code></td><td>Only during a rotation of the cache keys (see <a href="#rotating-the-cache-keys-without-cuts">Rotating the cache keys without cuts</a>)</td></tr>
 </tbody>
 </table>
+
+<p>Since 8.5.27 <code>encrypt()</code> / <code>decrypt()</code> called without keys can use <strong>Cloud KMS keys</strong> instead of the data keys: see <a href="#cloud-kms-data-keys-v3">Cloud KMS Data Keys (v3)</a>. They are key <em>names</em>, not secrets, and the cache never uses them.</p>
 
 <p><strong>Since 8.5.13 the cache keys are mandatory.</strong> There is no built-in default: without both values the entry points (<code>dispatcher.php</code>, <code>mcp-server.php</code>, <code>runscript.php</code>, <code>runtest.php</code>) stop before serving anything. HTTP calls get a <code>503</code> with a generic message and the detail (<code>security-cache-key-missing</code>) goes to the log; scripts print it and exit with code 1.</p>
 <p><strong>Since 8.5.22, in local development the framework generates the cache keys itself when none is configured.</strong> It writes a random pair (32 bytes each, base64) to <code>local_data/cache-encrypt.json</code> in the root of the application, with permissions <code>600</code>, and reuses it on the next requests, so an application can move its cache keys out of <code>config.json</code> without breaking local development. It only happens when all these conditions are true; otherwise nothing changes and <code>security-cache-key-missing</code> stops the entry points as above:</p>
@@ -920,6 +923,32 @@
 <li>When no instance of the previous deployments serves traffic, disable the previous version (destroy it later). An old instance restarted after the version is disabled can not read it and answers <code>503</code>.</li>
 </ol>
 
+<p>Since 8.5.27 the overlap of step 3 no longer empties the cache: use the previous cache keys as described in <a href="#rotating-the-cache-keys-without-cuts">Rotating the cache keys without cuts</a>.</p>
+<h4 id="rotating-the-cache-keys-without-cuts">Rotating the cache keys without cuts</h4>
+<p><strong>Since 8.5.27 the cache keys can be rotated without losing the cache</strong>, also when several services share the same Redis (for example a production and a development service). Up to 8.5.26, while one service had the new keys and another the old ones, neither could read the entries of the other: each one took them as missing and wrote them again with its own keys, so the cache was rebuilt over and over until every service had the same keys.</p>
+<p>A service can now have a <strong>previous pair of cache keys, only to read</strong>:</p>
+<table>
+<thead><tr><th>Source</th><th>Config-vars</th><th>Environment variables</th></tr></thead>
+<tbody>
+<tr><td>Values</td><td><code>core.gcp.secrets.cache_encrypt_key_previous</code> / <code>core.gcp.secrets.cache_encrypt_iv_previous</code></td><td><code>CF_CACHE_ENCRYPT_KEY_PREVIOUS</code> / <code>CF_CACHE_ENCRYPT_IV_PREVIOUS</code> (<code>getenv()</code> only, like the current ones)</td></tr>
+<tr><td>Secret Manager</td><td><code>core.gcp.secrets.cache_keys_secret_previous</code>: a <strong>fixed</strong> version, <code>projects/{project}/secrets/{secret}/versions/{number}</code>, with exactly the same rules as <code>core.gcp.secrets.cache_keys_secret</code> (managed runtime only, copy of the instance, failure not retried for 60 seconds, never <code>latest</code>)</td><td>-</td></tr>
+</tbody>
+</table>
+<ul>
+<li><strong>How it is used.</strong> <code>$this-&gt;core-&gt;cache-&gt;get()</code> first decrypts with the current keys. Only when they can not read the entry, and only when the keys it was given are the current cache keys of the framework (also with the daily subkeys appended), it tries the previous keys. An entry read that way is returned and <strong>never deleted nor rewritten</strong>: it keeps its age, so its expiration does not change. It is replaced the next time the application writes it.</li>
+<li><strong><code>set()</code> always writes with the current keys.</strong> No entry is ever written with the previous keys.</li>
+<li><strong>Keys that an application passes on its own</strong> to <code>get()</code> / <code>set()</code> are never mapped to the previous keys.</li>
+<li><strong>Resolved only when needed</strong>: the previous keys are read the first time an entry can not be read in a request, at most once per request. With Secret Manager, the version is read once per instance like the current one. Notes, never with a value: <code>security-cache-previous-key-read</code> (an entry was read with the previous keys, request log), <code>security-cache-previous-key-incomplete</code> (a half pair, not used), <code>security-cache-keys-secret-previous-used</code> / <code>security-cache-keys-secret-previous-unavailable</code> and <code>security-cache-keys-secret-version-required</code>.</li>
+<li><strong>Without previous keys everything is as in 8.5.26.</strong> A previous pair equal to the current one is ignored. There is no Cloud KMS in the cache.</li>
+</ul>
+<p><strong>Procedure for every service that shares the same cache (same Redis):</strong></p>
+<ol>
+<li><strong>Prepare.</strong> Generate the new pair (or the new Secret Manager version). Deploy every service with the <strong>current</strong> keys unchanged and the <strong>new</strong> keys as the <strong>previous</strong> ones. Nothing changes yet: nobody writes with the new keys, but every service will be able to read them.</li>
+<li><strong>Switch.</strong> Deploy every service with the <strong>new</strong> keys as current and the <strong>old</strong> ones as previous. During this deployment the services already switched read the old entries with their previous keys, and the services not switched yet read the new entries with theirs (step 1), so no entry is lost on either side.</li>
+<li><strong>Retire.</strong> When every service runs with the new keys, wait for the longest expiration of the cache entries of your application (with no expiration, until the entries have been written again), then remove the previous keys from every service. Then disable (and later destroy) the old Secret Manager version.</li>
+</ol>
+<p>Without step 1 the switch still works, only in one direction: the services already switched read the old entries, while those not switched yet can not read the new entries until they are deployed.</p>
+
 <p><strong>Since 8.5.25 the data keys are mandatory and the framework has no built-in encryption keys. This is a breaking change.</strong> Up to 8.5.24, <code>encrypt()</code> and <code>decrypt()</code> called without explicit keys and without data keys used two keys written in the source code of the framework, which is public, with the warning <code>security-default-encrypt-key-used</code>. Those keys are gone:</p>
 <ul>
 <li><strong><code>encrypt()</code> and <code>encryptV2()</code> without data keys return <code>false</code></strong> and log the error <code>security-encrypt-key-missing</code> once per request, with or without <code>core.security.encrypt_require_key</code>. <code>decrypt()</code> of a v2 value (<code>v2:</code> prefix) without data keys does the same.</li>
@@ -952,8 +981,49 @@ openssl rand -base64 32   # encrypt_secret     (or CF_ENCRYPT_SECRET)</code></pr
 <li><strong>The cache keys can not live in the <code>env_vars</code> secret</strong>: they encrypt the cached copy of that secret, so they are read with <code>getenv()</code> only. The data keys can live in the <code>env_vars</code> secret (<code>CF_ENCRYPT_KEY</code> / <code>CF_ENCRYPT_SECRET</code>), and so can the legacy keys (<code>CF_LEGACY_ENCRYPT_KEY</code> / <code>CF_LEGACY_ENCRYPT_SECRET</code>).</li>
 <li><strong>Adding the data keys to the <code>env_vars</code> secret takes effect without emptying the cache (since 8.5.14).</strong> The cached copy of the secret is kept per cache namespace, so a namespace cached before the keys were added would keep a copy without them. When the data keys are missing (or, for <code>decrypt()</code> of a v1 value, the legacy keys), the framework reads the secret again once per request without the cache, rewrites the cached copy of the current namespace and logs the warning <code>security-encrypt-env-vars-reloaded</code>. If the keys are still missing after that read, <code>encrypt()</code> / <code>decrypt()</code> return <code>false</code> and the error <code>security-encrypt-key-missing</code> (or <code>security-legacy-key-missing</code>) is logged. Explicit keys and keys in the configuration never trigger that read. Up to 8.5.24 it only happened in strict mode; since 8.5.25 it does not depend on it.</li>
 <li><strong>Never print or log them.</strong> When you check a configuration, compare names or hashes, not values.</li>
-<li><strong>Rotating the cache keys</strong> only empties the encrypted cache: it is rebuilt on the next requests. <strong>Rotating the data keys</strong> makes the values encrypted with the old keys unreadable, so decrypt and encrypt them again with the new keys before removing the old ones.</li>
+<li><strong>Rotating the cache keys</strong> only empties the encrypted cache: it is rebuilt on the next requests (since 8.5.27, without losing it, see <a href="#rotating-the-cache-keys-without-cuts">Rotating the cache keys without cuts</a>). <strong>Rotating the data keys</strong> makes the values encrypted with the old keys unreadable, so decrypt and encrypt them again with the new keys before removing the old ones.</li>
 </ul>
+
+<h3 id="cloud-kms-data-keys-v3">Cloud KMS Data Keys (v3)</h3>
+<p><strong>Since 8.5.27 <code>$this-&gt;core-&gt;security-&gt;encrypt()</code> can encrypt with a Cloud KMS key</strong>, so the key that protects the stored values is never in the application: Cloud KMS keeps it, rotates its versions and records every use. Values encrypted that way have the format <strong>v3</strong>:</p>
+<pre><code>v3:&lt;alias&gt;:&lt;version&gt;:&lt;base64 of the ciphertext of Cloud KMS&gt;</code></pre>
+<p><strong>Configuration</strong> (names of keys, not secrets):</p>
+<pre><code>{
+  "core.gcp.kms.data_keys": {
+    "main": "projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{key}",
+    "old": "projects/{project}/locations/{location}/keyRings/{ring}/cryptoKeys/{previous-key}"
+  },
+  "core.gcp.kms.data_key_primary": "main"
+}</code></pre>
+<p>or the environment variables <code>CF_KMS_DATA_KEYS</code> (the same object as JSON) and <code>CF_KMS_DATA_KEY_PRIMARY</code>, read with <code>getenv()</code> only. The configuration wins over the environment. An alias is <code>[a-z0-9]{1,8}</code>; a resource is the CryptoKey (never a version). Invalid entries are ignored.</p>
+<ul>
+<li><strong>When v3 is written.</strong> <code>encrypt($text)</code> writes v3 only when the call passes <strong>no key at all</strong> and <code>data_key_primary</code> is set. It wins over <code>core.security.encrypt_format</code>. With explicit keys (as <code>CoreCache</code> does), or without <code>data_key_primary</code>, <code>encrypt()</code> behaves exactly as in 8.5.26 (v1 or v2). <code>encryptV2()</code> still writes v2.</li>
+<li><strong>Usage (additional authenticated data).</strong> <code>encrypt()</code> and <code>decrypt()</code> accept a fourth parameter, <code>$usage</code> (<code>[a-z0-9-]{1,40}</code>): <code>encrypt($text, '', '', 'user-token')</code>. In v3 it is bound to the ciphertext as the AAD <code>cloudframework:&lt;usage&gt;</code> (<code>cloudframework:default</code> when it is empty), and the same usage is required to decrypt it, so a value copied from one field to another does not decrypt. v1 and v2 ignore it. An invalid usage returns <code>false</code> (<code>security-encrypt-usage-invalid</code>).</li>
+<li><strong>Reading.</strong> <code>decrypt()</code> reads v1, v2 and v3. For v3 it takes the alias of the value and looks for it in <code>data_keys</code> (not only the primary), so values of a previous key keep decrypting while its alias stays configured. An alias that is not configured returns <code>false</code> without calling Cloud KMS (<code>security-kms-unknown-alias</code>). A v3 value given with explicit keys returns <code>false</code> (<code>security-kms-explicit-keys</code>).</li>
+<li><strong>It fails closed.</strong> When Cloud KMS does not answer (after one retry) or refuses the call, <code>encrypt()</code> and <code>decrypt()</code> return <code>false</code> and log the error <code>security-kms-unavailable</code> once per request. <code>encrypt()</code> <strong>never</strong> falls back to v1 or v2. A v3 value rejected by Cloud KMS because of a wrong usage or a corrupted value logs <code>security-kms-decrypt-failed</code>. Plan the callers for a <code>false</code>.</li>
+<li><strong>Limits.</strong> Cloud KMS encrypts up to 64 KiB: a longer text returns <code>false</code> (<code>security-kms-plaintext-too-large</code>). Each <code>encrypt()</code> / <code>decrypt()</code> of a v3 value is one call to Cloud KMS (3 seconds at most per attempt): do not use v3 for values read in a loop; keep them in memory once decrypted.</li>
+<li><strong>Quota.</strong> The framework never reads the metadata of the key (its primary version, its state): the version written in the value comes from the answer of Cloud KMS. Cloud KMS has a small quota of reads of metadata per project, and <code>Encrypt</code> / <code>Decrypt</code> have their own, larger quota.</li>
+<li><strong>Permissions.</strong> The service account of the service needs <code>roles/cloudkms.cryptoKeyEncrypterDecrypter</code> on each key (not on the project).
+<pre><code>gcloud kms keys add-iam-policy-binding {key} --keyring={ring} --location={location} --project={project} \
+  --member=serviceAccount:{service-account} --role=roles/cloudkms.cryptoKeyEncrypterDecrypter</code></pre></li>
+</ul>
+<p><strong>Rotation.</strong> There are two levels:</p>
+<ol>
+<li><strong>Versions of the same key</strong> (automatic rotation of Cloud KMS). Nothing to do in the application: new values are written with the new primary version (the number in the value changes) and the old values keep decrypting while their version is enabled. Never disable or destroy a version while values encrypted with it are stored.</li>
+<li><strong>Another key.</strong> Add it to <code>data_keys</code> with a new alias and make it the primary; keep the old alias in <code>data_keys</code> so its values decrypt. Re-encrypt the stored values and, when none is left with the old alias, remove it.</li>
+</ol>
+<p><strong>Moving stored values to the primary key:</strong></p>
+<pre><code>// v1, v2 or v3 of another alias -&gt; v3 of the primary key. A v3 value of the primary alias is returned unchanged.
+$version = $this-&gt;core-&gt;security-&gt;encryptionVersionOf($stored);   // 'v1', 'v2', 'v3:&lt;alias&gt;:&lt;N&gt;' or null
+$value = $this-&gt;core-&gt;security-&gt;reEncrypt($stored, 'user-token'); // false when it can not decrypt or encrypt it
+if($value !== false &amp;&amp; $value !== $stored) { /* save $value */ }</code></pre>
+<p><code>encryptionVersionOf()</code> never decrypts and never calls Cloud KMS. <code>reEncrypt()</code> returns <code>false</code> and invents nothing when there is no primary key (<code>security-kms-not-configured</code>), the value is not recognised, it can not be decrypted with that usage or Cloud KMS fails.</p>
+<p><strong><code>GoogleKMS</code> class.</strong> <code>src/class/GoogleKMS.php</code> is the only code of the framework that calls Cloud KMS, and it can be used directly:</p>
+<pre><code>$kms = $this-&gt;core-&gt;loadClass('GoogleKMS');            // or new GoogleKMS($core, ['credentials' =&gt; $serviceAccount])
+$res = $kms-&gt;encrypt($plaintext, 'cloudframework:my-usage', $keyResource); // ['ciphertext' =&gt; bytes, 'version' =&gt; 'N'] or false
+$plain = $kms-&gt;decrypt($res['ciphertext'], 'cloudframework:my-usage', $keyResource);
+if($plain === false) { /* $kms-&gt;errorCode: kms-unavailable, kms-permission-denied, kms-invalid-argument, ... */ }</code></pre>
+<p>One client per object (REST transport), created when first needed; at most 3 seconds per attempt; one retry, only when Cloud KMS is unavailable or the call times out, never on a permission or AAD error; no plaintext, ciphertext or AAD in <code>errorMsg</code> or in the logs. <code>wrapKey()</code> / <code>unwrapKey()</code> wrap a data key without AAD. Since 8.5.27 <code>Buckets::encryptLargeFile()</code> / <code>decryptLargeFile()</code> wrap their data key with <code>GoogleKMS</code>: <code>initKMS()</code> takes the same options and the format of the encrypted files does not change, so files encrypted before 8.5.27 decrypt with 8.5.27 and the other way round.</p>
 
 <h3 id="outgoing-tls-verification">Outgoing TLS Verification</h3>
 
@@ -1005,33 +1075,48 @@ $this->core->request->addSSLParameter('verify_peer_name', false);
 <p>$user = $ds->fetchOne($userId);</p>
 <p>$decrypted = $this->core->security->decrypt($user['payment_info'], $encryptionKey);</code></pre></p>
 
-<h3>Hash Passwords</h3>
-
+<h3 id="hash-passwords">Hash Passwords</h3>
+<p>Use <code>$this-&gt;core-&gt;security-&gt;crypt()</code> to hash a password (or any secret that only has to be verified, such as a recovery code) and <code>checkCrypt()</code> to verify it.</p>
+<p><strong>Since 8.5.27</strong> <code>crypt()</code> uses <code>password_hash()</code> with bcrypt and a cost of <strong>at least 12</strong> (<code>$2y$12$...</code>, 60 characters) and <code>checkCrypt()</code> uses <code>password_verify()</code>, which compares in constant time. Up to 8.5.26 <code>crypt()</code> wrote <code>$2a$07$</code> hashes (cost 7) and <code>checkCrypt()</code> compared with <code>==</code>.</p>
+<ul>
+<li><strong>Old hashes keep working.</strong> <code>checkCrypt()</code> verifies the <code>$2a$07$</code> hashes written before, and <code>checkCrypt()</code> of 8.5.26 or before verifies the new ones, so services with different versions can share the same data.</li>
+<li><strong>Upgrade them on login.</strong> After a successful <code>checkCrypt()</code>, <code>needsRehash($hash)</code> says whether the hash should be computed again with the current policy (true for the old <code>$2a$07$</code> hashes and for any other algorithm; a higher cost is not lowered). Store <code>crypt($password)</code> when it says true.</li>
+<li><strong>The second parameter is the cost.</strong> <code>crypt($input, $rounds)</code> keeps it for compatibility, with a minimum of 12 (a lower value, including the old default 7, is raised to 12) and a maximum of 31. A cost of 12 takes about 0.2-0.3 seconds per hash: hash once per login, never per request.</li>
+<li><strong>Up to 72 bytes.</strong> bcrypt only uses the first 72 bytes of the input, so two inputs that share them would get the same hash. Longer input is refused explicitly, as before 8.5.27: <code>crypt()</code> returns <code>null</code>, <code>checkCrypt()</code> returns <code>false</code> and the error <code>security-password-too-long</code> is logged once per request (never with the value). Limit the length of passwords at the input (72 bytes, not characters: a multi-byte character counts more). A NUL byte also returns <code>null</code> (<code>security-password-invalid</code>).</li>
+<li><strong>Arrays</strong> are converted with <code>json_encode()</code> before hashing and verifying, as before. <code>checkCrypt($input)</code> without a hash verifies against the config-var <code>core.security.password</code>.</li>
+</ul>
 <pre><code>public function ENDPOINT_register()
-<p>{</p>
-<p>    if(!$this->checkMethod('POST')) return;</p>
-<p>    if(!$this->checkMandatoryFormParams(['email', 'password'])) return;</p>
+{
+    if(!$this-&gt;checkMethod('POST')) return;
+    if(!$this-&gt;checkMandatoryFormParams(['email', 'password'])) return;
 
-<p>    $password = $this->formParams['password'];</p>
+    $password = $this-&gt;formParams['password'];
 
-<p>    // Validate password strength</p>
-<p>    if(strlen($password) < 8) {</p>
-<p>        return $this->setError('Password must be at least 8 characters', 400);</p>
-<p>    }</p>
+    // Validate password strength (and at most 72 bytes)
+    if(strlen($password) &lt; 8 || strlen($password) &gt; 72) {
+        return $this-&gt;setError('Password must have between 8 and 72 bytes', 400);
+    }
 
-<p>    // Hash password</p>
-<p>    $hashedPassword = password_hash($password, PASSWORD_ARGON2ID);</p>
+    // Hash password
+    $hashedPassword = $this-&gt;core-&gt;security-&gt;crypt($password);
 
-<p>    // Create user</p>
-<p>    $ds = $this->core->loadClass('DataStore', ['Users']);</p>
-<p>    $userId = $ds->createEntity([</p>
-<p>        'email' => $this->formParams['email'],</p>
-<p>        'password' => $hashedPassword,</p>
-<p>        'created_at' => date('c')</p>
-<p>    ]);</p>
+    // Create user
+    $ds = $this-&gt;core-&gt;loadClass('DataStore', ['Users']);
+    $userId = $ds-&gt;createEntity([
+        'email' =&gt; $this-&gt;formParams['email'],
+        'password' =&gt; $hashedPassword,
+        'created_at' =&gt; date('c')
+    ]);
 
-<p>    $this->addReturnData(['user_id' => $userId]);</p>
-<p>}</code></pre></p>
+    $this-&gt;addReturnData(['user_id' =&gt; $userId]);
+}
+
+// Login: verify, then upgrade an old hash
+if(!$this-&gt;core-&gt;security-&gt;checkCrypt($password, $user['password'])) return $this-&gt;setError('Invalid credentials', 401);
+if($this-&gt;core-&gt;security-&gt;needsRehash($user['password'])) {
+    $user['password'] = $this-&gt;core-&gt;security-&gt;crypt($password);
+    // save $user
+}</code></pre>
 
 <h3>Secure Session Handling</h3>
 
