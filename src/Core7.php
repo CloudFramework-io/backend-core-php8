@@ -172,7 +172,7 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
     final class Core7
     {
         // Version of the Core7 CloudFrameWork
-        var $_version = '8.5.27';  // 2026-11-12
+        var $_version = '8.5.28';  // 2026-11-12
         /** @var CorePerformance $__p */
         var  $__p;
         /** @var CoreIs $is */
@@ -1510,15 +1510,95 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
 
         /**
-         * Return the IP of the client:
-         * https://cloud.google.com/appengine/docs/standard/php7/runtime#https_and_forwarding_proxies
-         * @return mixed|string
+         * Return the IP of the client as the platform gives it, never as the caller writes it. Since 8.5.28.
+         *
+         * Until 8.5.27 it returned X-Forwarded-For as it arrived. App Engine keeps what the caller writes in that header
+         * and appends the real address at the end, so a caller could put any text (an IP of its choice, or free text)
+         * in front of its IP in audit records, in the Bitacora, in the IP of a login and in the IP allow lists.
+         * See platformClientIP() for the source in each runtime. X-Forwarded-For as declared by the caller is kept
+         * apart, only with valid IPs, in the fingerprint (forwarded_for), and decides nothing.
+         * https://cloud.google.com/appengine/docs/standard/php-gen2/runtime#https_and_forwarding_proxies
+         * @return string a valid IP, 'localhost' outside a managed runtime when the peer is the local machine, or 'unknown'
          */
         public function getClientIP() {
+            return self::platformClientIP();
+        }
 
-            $remote_address = (array_key_exists('HTTP_X_FORWARDED_FOR',$_SERVER))?$_SERVER['HTTP_X_FORWARDED_FOR']:'localhost';
-            return  ($remote_address == '::1') ? 'localhost' : $remote_address;
+        /**
+         * Since 8.5.28: the IP of the client from the source each runtime gives:
+         *  - App Engine: the header X-Appengine-User-Ip, which App Engine sets and removes from the incoming request.
+         *    Without it (it should not happen in a request from the internet), the last element of X-Forwarded-For.
+         *  - Cloud Run and Cloud Functions: the last element of X-Forwarded-For, the one the Google front end appends.
+         *  - Outside a managed runtime: REMOTE_ADDR; 'localhost' for the local machine or when there is none (a terminal).
+         * The value is always a valid IP (or 'localhost' / 'unknown'): never the text the caller wrote.
+         * CoreSecurity::trustedClientIP() is stricter on purpose (it gives '' in Cloud Run and Cloud Functions), because
+         * it decides the debug output; this one is the IP that is recorded and compared with the allow lists.
+         * @param array|null $server the $_SERVER array to read (null = $_SERVER); a parameter for the tests
+         * @return string
+         */
+        public static function platformClientIP(?array $server = null): string
+        {
+            $server = $server ?? $_SERVER;
+            $env = function (string $var) use ($server): bool { return array_key_exists($var, $server) || getenv($var) !== false; };
+            $managed = $env('GAE_SERVICE') || $env('K_SERVICE') || $env('FUNCTION_TARGET');
 
+            if(!$managed) {
+                $ip = self::validIP($server['REMOTE_ADDR'] ?? '');
+                return ($ip === '' || $ip === '127.0.0.1' || $ip === '::1') ? 'localhost' : $ip;
+            }
+            if($env('GAE_SERVICE') && ($ip = self::validIP($server['HTTP_X_APPENGINE_USER_IP'] ?? '')) !== '') return $ip;
+
+            $forwarded = is_string($server['HTTP_X_FORWARDED_FOR'] ?? null) ? explode(',', $server['HTTP_X_FORWARDED_FOR']) : [];
+            $ip = self::validIP((string)end($forwarded));
+            return ($ip !== '') ? $ip : 'unknown';
+        }
+
+        /**
+         * Since 8.5.28: the IPs of X-Forwarded-For as the caller (or a proxy of the caller) declared them, in order,
+         * keeping only valid IPs and at most $max of them. For investigation only: it never decides anything.
+         * @param array|null $server the $_SERVER array to read (null = $_SERVER)
+         * @param int $max maximum number of IPs returned
+         * @return string[]
+         */
+        public static function forwardedForIPs(?array $server = null, int $max = 10): array
+        {
+            $server = $server ?? $_SERVER;
+            $header = $server['HTTP_X_FORWARDED_FOR'] ?? null;
+            if(!is_string($header) || $header === '') return [];
+            $ips = [];
+            foreach (explode(',', $header) as $part) {
+                if(($ip = self::validIP($part)) !== '') $ips[] = $ip;
+                if(count($ips) >= $max) break;
+            }
+            return $ips;
+        }
+
+        /**
+         * Since 8.5.28: whether this request is a task of a queue, the only case where the IP and the fingerprint of the
+         * original call (cloudframework_queued_ip / cloudframework_queued_fingerprint) are read from the request.
+         * In App Engine, the header X-AppEngine-QueueName, which App Engine removes from requests that come from the
+         * internet. Outside a managed runtime always true (local development). In Cloud Run and Cloud Functions false:
+         * there is no header there that the caller can not write.
+         * @param array|null $server the $_SERVER array to read (null = $_SERVER)
+         * @return bool
+         */
+        public static function isQueuedTask(?array $server = null): bool
+        {
+            $server = $server ?? $_SERVER;
+            $env = function (string $var) use ($server): bool { return array_key_exists($var, $server) || getenv($var) !== false; };
+            if(!($env('GAE_SERVICE') || $env('K_SERVICE') || $env('FUNCTION_TARGET'))) return true;
+            return $env('GAE_SERVICE') && is_string($server['HTTP_X_APPENGINE_QUEUENAME'] ?? null) && $server['HTTP_X_APPENGINE_QUEUENAME'] !== '';
+        }
+
+        /**
+         * Since 8.5.28: $value trimmed if it is a valid IPv4 or IPv6, '' otherwise.
+         * @param mixed $value
+         * @return string
+         */
+        public static function validIP($value): string
+        {
+            $value = is_string($value) ? trim($value) : '';
+            return (filter_var($value, FILTER_VALIDATE_IP) !== false) ? $value : '';
         }
 
         /**
@@ -1601,8 +1681,9 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          */
         public function getRequestFingerPrint(): array
         {
-            // Return the fingerprint coming from a queue
-            if (isset($_REQUEST['cloudframework_queued_fingerprint'])) {
+            // Return the fingerprint coming from a queue. Since 8.5.28 only in a real task of a queue (isQueuedTask()):
+            // before, any request could send it and choose the IP and the user agent written in the logs.
+            if (isset($_REQUEST['cloudframework_queued_fingerprint']) && self::isQueuedTask()) {
                 $queued = $_REQUEST['cloudframework_queued_fingerprint'];
                 $ret = is_string($queued) ? json_decode($queued, true) : null;
                 if (is_array($ret)) return $this->maskFingerPrint($ret);
@@ -1617,6 +1698,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
 
             $ret['hash'] = sha1(implode(",", $ret));
             $ret['ip'] = $this->ip;
+            // Since 8.5.28: X-Forwarded-For as the caller declared it (valid IPs only), when it says something else than ip.
+            // For investigation (proxies, VPNs): it decides nothing.
+            $forwarded = self::forwardedForIPs();
+            if($forwarded && $forwarded !== [$this->ip]) $ret['forwarded_for'] = implode(', ', $forwarded);
 
             if(isset($_SERVER['HTTP_X_APPENGINE_CITY'])) $ret['getData']['city'] = $_SERVER['HTTP_X_APPENGINE_CITY'];
             if(isset($_SERVER['HTTP_X_APPENGINE_COUNTRY'])) $ret['getData']['country'] = $_SERVER['HTTP_X_APPENGINE_COUNTRY'];
@@ -3418,8 +3503,8 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * header X-Appengine-User-Ip, which App Engine sets and removes from the incoming request. Outside a managed
          * runtime REMOTE_ADDR. In other managed runtimes (Cloud Run, Cloud Functions) '' because there is no header the
          * caller can not write: debugOutputAllowed() is then false. X-Forwarded-For is never read here.
-         * CoreSystem::getClientIP() still returns X-Forwarded-For: changing it moves the IP of audit records and rate
-         * limits, and is a separate change.
+         * Since 8.5.28 CoreSystem::getClientIP() also reads the IP from the platform (CoreSystem::platformClientIP()),
+         * but in Cloud Run and Cloud Functions it takes the last element of X-Forwarded-For; this one stays '' there.
          * @return string a valid IP or ''
          */
         public function trustedClientIP(): string
@@ -4349,15 +4434,72 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
         }
 
         /**
-         * @param array|string $allows string to compare with the current IP
+         * Whether the IP of the client is in $allows (see ipInList()).
+         * Since 8.5.28 the comparison is exact or by CIDR. Until 8.5.27 it was preg_match('/^.*ENTRY.*$/'): an entry
+         * matched anywhere in the IP (1.2.3.4 matched 11.2.3.45) and, with the IP read from X-Forwarded-For, a caller
+         * that wrote an allowed IP in that header passed.
+         * @param array|string $allows IPs, CIDR ranges or legacy prefixes ending in '.' or ':', separated by ','
          * @return bool
          */
         private function checkIPs($allows)
         {
-            if (is_string($allows)) $allows = explode(',', $allows);
-            foreach ($allows as $host) {
-                $host = trim($host);
-                if ($host == '*' || preg_match('/^.*' . $host . '.*$/', $this->core->system->ip) > 0) return true;
+            return self::ipInList((string)$this->core->system->ip, $allows);
+        }
+
+        /**
+         * Since 8.5.28: the single comparator of IP allow lists of the framework (checkIPs(), checkAllowedIPs()), public
+         * so that applications compare the same way. $ip must be one IP (as CoreSystem::getClientIP() returns it).
+         * Each entry of $allows (an array, or a string separated by ',') is one of:
+         *  - '*': any IP;
+         *  - an IPv4 or IPv6: equal to $ip (IPv6 compared in binary form, so any notation of the same address matches);
+         *  - a CIDR range, IPv4 or IPv6 (10.0.0.0/8, 2001:db8::/32);
+         *  - 'localhost': $ip is localhost, 127.0.0.1 or ::1;
+         *  - a legacy prefix ending in '.' or ':' (192.168.1.): $ip starts with it. Kept for allow lists written for the
+         *    old checkIPs(), now on a validated IP only.
+         * Anything else in an entry is ignored. An $ip that is not a valid IP (nor 'localhost') only matches '*'.
+         * @param string $ip
+         * @param array|string|null $allows
+         * @return bool
+         */
+        public static function ipInList(string $ip, $allows): bool
+        {
+            if(is_string($allows)) $allows = explode(',', $allows);
+            if(!is_array($allows)) return false;
+            $ip = trim($ip);
+            $is_local = in_array($ip, ['localhost', '127.0.0.1', '::1'], true);
+            $ip_bin = (filter_var($ip, FILTER_VALIDATE_IP) !== false) ? inet_pton($ip) : false;
+            if($ip === 'localhost') $ip_bin = inet_pton('127.0.0.1');
+
+            foreach ($allows as $allow) {
+                $allow = is_string($allow) ? trim($allow) : '';
+                if($allow === '') continue;
+                if($allow === '*') return true;
+                if($ip_bin === false) continue;
+                if($allow === 'localhost') { if($is_local) return true; continue; }
+
+                if(strpos($allow, '/') !== false) {
+                    [$net, $bits] = explode('/', $allow, 2);
+                    if(filter_var($net, FILTER_VALIDATE_IP) === false || !ctype_digit($bits)) continue;
+                    $net_bin = inet_pton($net);
+                    $bits = (int)$bits;
+                    if(strlen($net_bin) !== strlen($ip_bin) || $bits > strlen($net_bin) * 8) continue;
+                    $full = intdiv($bits, 8);
+                    $rest = $bits % 8;
+                    if(substr($net_bin, 0, $full) !== substr($ip_bin, 0, $full)) continue;
+                    if($rest === 0) return true;
+                    $mask = chr((0xFF << (8 - $rest)) & 0xFF);
+                    if((($net_bin[$full] & $mask) === ($ip_bin[$full] & $mask))) return true;
+                    continue;
+                }
+
+                if(filter_var($allow, FILTER_VALIDATE_IP) !== false) {
+                    if(inet_pton($allow) === $ip_bin) return true;
+                    continue;
+                }
+
+                $last = substr($allow, -1);
+                if(($last === '.' || $last === ':') && preg_match('/^[0-9a-fA-F.:]+$/', $allow)
+                    && $ip !== 'localhost' && stripos($ip, $allow) === 0) return true;
             }
             return false;
         }
@@ -5650,29 +5792,14 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
          * @param string $allowed_ips  Here You describe the IPs or subnets separated by ','. '*' value means any IP
          * @param null $myip  Optional. By default it is $this->core->system->ip
          * @return boolean
+         *
+         * An empty $allowed_ips allows any IP, as before. Since 8.5.28 the comparison is ipInList(): IPv6 and a single
+         * CIDR range (without ',') are supported; until 8.5.27 a single range never matched and IPv6 ranges failed.
          */
         public function checkAllowedIPs($allowed_ips,$myip=null) {
             if(!$myip) $myip=$this->core->system->ip;
-            if($allowed_ips && $allowed_ips!='*' && $allowed_ips!=$myip) {
-                if(strpos($allowed_ips,',')!==false) {
-                    $allows = explode(',',$allowed_ips);
-                    foreach ($allows as $allow) if(trim($allow)) {
-                        if($allow=='*' || $allow==$myip) return true;
-                        if(strpos($allow,'/')!==false) {
-                            $myip_local = ($myip=='localhost')?'127.0.0.1':$myip;
-                            list ($net, $mask) = explode("/", trim($allow),2);
-                            $ip_net = ip2long ($net);
-                            $ip_mask = ~((1 << (32 - $mask)) - 1);
-                            $ip_ip = ip2long ($myip_local);
-                            $ip_ip_net = $ip_ip & $ip_mask;
-
-                            if(strval($ip_ip_net) == strval($ip_net)) return true;
-                        }
-                    }
-                }
-                return false;
-            }
-            return true;
+            if(!$allowed_ips) return true;
+            return self::ipInList((string)$myip, $allowed_ips);
         }
 
         /**
@@ -7336,11 +7463,10 @@ if (!defined("_CLOUDFRAMEWORK_CORE_CLASSES_")) {
             if ($this->core->errors->lines) $params['text'] .= "Errors: " . json_encode($this->core->errors->data, JSON_PRETTY_PRINT) . "\n\n";
             if ($this->core->logs->lines) $params['text'] .= "Logs: " . json_encode($this->core->logs->data, JSON_PRETTY_PRINT);
 
-            // IP gathered from queue
-            if (isset($_REQUEST['cloudframework_queued_ip']))
-                $params['ip'] = $_REQUEST['cloudframework_queued_ip'];
-            else
-                $params['ip'] = $this->core->system->ip;
+            // IP gathered from queue. Since 8.5.28 only in a real task of a queue and only a valid IP: before, any
+            // request could send cloudframework_queued_ip and choose the IP written in the log.
+            $queued_ip = CoreSystem::isQueuedTask() ? CoreSystem::validIP($_REQUEST['cloudframework_queued_ip'] ?? '') : '';
+            $params['ip'] = ($queued_ip !== '') ? $queued_ip : $this->core->system->ip;
 
             // Fingerprint of the request, or the one gathered from queue, with its URLs masked (since 8.5.16)
             $params['fingerprint'] = $this->getLogFingerPrint();

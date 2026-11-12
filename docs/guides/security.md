@@ -741,6 +741,29 @@ function main()
 
 ## Rate Limiting
 
+### The IP of the client
+
+Since 8.5.28 `$this->core->system->ip` (and `$this->core->system->getClientIP()`) is the IP that the platform gives, never the text the caller writes in `X-Forwarded-For`:
+
+| Runtime | Source of the IP |
+|---|---|
+| App Engine | `X-Appengine-User-Ip` (App Engine sets it and removes the one sent by the client); without it, the last element of `X-Forwarded-For` |
+| Cloud Run, Cloud Functions | the last element of `X-Forwarded-For`, the one the Google front end appends |
+| Local server or script | `REMOTE_ADDR`; `localhost` for the local machine or a terminal |
+
+- The value is always a valid IPv4 or IPv6, `localhost` (only outside a managed runtime) or `unknown`. Until 8.5.27 it was `X-Forwarded-For` as it arrived: App Engine keeps what the caller writes in that header and appends the real address, so a caller could put any IP, or free text, in front of its own.
+- Do not read `REMOTE_ADDR` in a managed runtime: in App Engine it is the address of the internal front end, not of the client.
+- The chain the caller declared (a proxy or a VPN of the client) is kept apart, only with valid IPs, as `forwarded_for` in the fingerprint of the logs (`CoreSystem::forwardedForIPs()`). It decides nothing.
+- Allow lists of IPs: compare with `CoreSecurity::ipInList($ip, $allows)`, the same comparator of `checkAllowedIPs()` and of the IPs of Basic Auth and server keys. Each entry is `*`, an exact IPv4 or IPv6, a CIDR range (`10.0.0.0/8`, `2001:db8::/32`), `localhost`, or a legacy prefix ending in `.` or `:`. Never compare IPs with `strpos()` or a regular expression: `1.2.3.4` is inside `11.2.3.45`.
+- `cloudframework_queued_ip` and `cloudframework_queued_fingerprint` (the IP and the fingerprint of the call that created a task of `/queue/`) are read from the request only in a real task of a queue: in App Engine, a request with `X-AppEngine-QueueName`, which App Engine removes from requests from the internet (`CoreSystem::isQueuedTask()`).
+
+```php
+// An allow list of a configuration
+if(!CoreSecurity::ipInList($this->core->system->ip, $this->core->config->get('my-api.allowed_ips'))) {
+    return $this->setErrorFromCodelib('security-error', 'IP not allowed');
+}
+```
+
 ### IP-Based Rate Limiting
 
 ```php
@@ -761,7 +784,7 @@ class API extends RESTful
 
     private function checkRateLimit(): bool
     {
-        $ip = $_SERVER['REMOTE_ADDR'];
+        $ip = $this->core->system->ip; // the IP of the platform, see above
         $cacheKey = "rate_limit:{$ip}";
 
         // Get current count
@@ -1214,7 +1237,7 @@ private function logAuthAttempt(string $email, bool $success)
         'event' => 'auth_attempt',
         'email' => $email,
         'success' => $success,
-        'ip' => $_SERVER['REMOTE_ADDR'],
+        'ip' => $this->core->system->ip,
         'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
         'timestamp' => time()
     ], 'security');
@@ -1228,7 +1251,7 @@ private function logDataAccess(string $resource, string $action)
         'resource' => $resource,
         'action' => $action,
         'user_id' => $this->currentUser['user_id'] ?? 'anonymous',
-        'ip' => $_SERVER['REMOTE_ADDR'],
+        'ip' => $this->core->system->ip,
         'timestamp' => time()
     ], 'audit');
 }

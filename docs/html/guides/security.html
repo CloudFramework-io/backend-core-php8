@@ -814,6 +814,28 @@
 
 <h2>Rate Limiting</h2>
 
+<h3>The IP of the client</h3>
+<p>Since 8.5.28 <code>$this-&gt;core-&gt;system-&gt;ip</code> (and <code>$this-&gt;core-&gt;system-&gt;getClientIP()</code>) is the IP that the platform gives, never the text the caller writes in <code>X-Forwarded-For</code>:</p>
+<table>
+<thead><tr><th>Runtime</th><th>Source of the IP</th></tr></thead>
+<tbody>
+<tr><td>App Engine</td><td><code>X-Appengine-User-Ip</code> (App Engine sets it and removes the one sent by the client); without it, the last element of <code>X-Forwarded-For</code></td></tr>
+<tr><td>Cloud Run, Cloud Functions</td><td>the last element of <code>X-Forwarded-For</code>, the one the Google front end appends</td></tr>
+<tr><td>Local server or script</td><td><code>REMOTE_ADDR</code>; <code>localhost</code> for the local machine or a terminal</td></tr>
+</tbody>
+</table>
+<ul>
+<li>The value is always a valid IPv4 or IPv6, <code>localhost</code> (only outside a managed runtime) or <code>unknown</code>. Until 8.5.27 it was <code>X-Forwarded-For</code> as it arrived: App Engine keeps what the caller writes in that header and appends the real address, so a caller could put any IP, or free text, in front of its own.</li>
+<li>Do not read <code>REMOTE_ADDR</code> in a managed runtime: in App Engine it is the address of the internal front end, not of the client.</li>
+<li>The chain the caller declared (a proxy or a VPN of the client) is kept apart, only with valid IPs, as <code>forwarded_for</code> in the fingerprint of the logs (<code>CoreSystem::forwardedForIPs()</code>). It decides nothing.</li>
+<li>Allow lists of IPs: compare with <code>CoreSecurity::ipInList($ip, $allows)</code>, the same comparator of <code>checkAllowedIPs()</code> and of the IPs of Basic Auth and server keys. Each entry is <code>*</code>, an exact IPv4 or IPv6, a CIDR range (<code>10.0.0.0/8</code>, <code>2001:db8::/32</code>), <code>localhost</code>, or a legacy prefix ending in <code>.</code> or <code>:</code>. Never compare IPs with <code>strpos()</code> or a regular expression: <code>1.2.3.4</code> is inside <code>11.2.3.45</code>.</li>
+<li><code>cloudframework_queued_ip</code> and <code>cloudframework_queued_fingerprint</code> (the IP and the fingerprint of the call that created a task of <code>/queue/</code>) are read from the request only in a real task of a queue: in App Engine, a request with <code>X-AppEngine-QueueName</code>, which App Engine removes from requests from the internet (<code>CoreSystem::isQueuedTask()</code>).</li>
+</ul>
+<pre><code>// An allow list of a configuration
+if(!CoreSecurity::ipInList($this-&gt;core-&gt;system-&gt;ip, $this-&gt;core-&gt;config-&gt;get('my-api.allowed_ips'))) {
+    return $this-&gt;setErrorFromCodelib('security-error', 'IP not allowed');
+}</code></pre>
+
 <h3>IP-Based Rate Limiting</h3>
 
 <pre><code>class API extends RESTful
@@ -833,7 +855,7 @@
 
 <p>    private function checkRateLimit(): bool</p>
 <p>    {</p>
-<p>        $ip = $_SERVER['REMOTE_ADDR'];</p>
+<p>        $ip = $this->core->system->ip; // the IP of the platform, see above</p>
 <p>        $cacheKey = "rate_limit:{$ip}";</p>
 
 <p>        // Get current count</p>
@@ -1238,7 +1260,7 @@ if($this-&gt;core-&gt;security-&gt;needsRehash($user['password'])) {
 <p>        'event' => 'auth_attempt',</p>
 <p>        'email' => $email,</p>
 <p>        'success' => $success,</p>
-<p>        'ip' => $_SERVER['REMOTE_ADDR'],</p>
+<p>        'ip' => $this->core->system->ip,</p>
 <p>        'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',</p>
 <p>        'timestamp' => time()</p>
 <p>    ], 'security');</p>
@@ -1252,7 +1274,7 @@ if($this-&gt;core-&gt;security-&gt;needsRehash($user['password'])) {
 <p>        'resource' => $resource,</p>
 <p>        'action' => $action,</p>
 <p>        'user_id' => $this->currentUser['user_id'] ?? 'anonymous',</p>
-<p>        'ip' => $_SERVER['REMOTE_ADDR'],</p>
+<p>        'ip' => $this->core->system->ip,</p>
 <p>        'timestamp' => time()</p>
 <p>    ], 'audit');</p>
 <p>}</p>
